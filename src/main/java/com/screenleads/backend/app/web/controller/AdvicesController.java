@@ -1,0 +1,65 @@
+package com.screenleads.backend.app.web.controller;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import com.screenleads.backend.app.application.service.AdviceService;
+import com.screenleads.backend.app.web.dto.AdviceDTO;
+
+@Controller
+public class AdvicesController {
+    @Autowired
+    private AdviceService adviceService;
+
+    public AdvicesController(AdviceService adviceService) {
+        this.adviceService = adviceService;
+    }
+
+    @CrossOrigin
+    @GetMapping("/advices")
+    public ResponseEntity<List<AdviceDTO>> getAllAdvices() {
+        return ResponseEntity.ok(adviceService.getAllAdvices());
+    }
+
+    @CrossOrigin
+    @GetMapping("/advices/{id}")
+    public ResponseEntity<AdviceDTO> getAdviceById(@PathVariable Long id) {
+        Optional<AdviceDTO> advice = adviceService.getAdviceById(id);
+        return advice.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @CrossOrigin
+    @PostMapping(value = "/advices")
+    public ResponseEntity<AdviceDTO> createAdvice(@RequestBody AdviceDTO adviceDTO) {
+        return ResponseEntity.ok(adviceService.saveAdvice(adviceDTO));
+    }
+
+    @CrossOrigin
+    @PutMapping("/advices/{id}")
+    public ResponseEntity<AdviceDTO> updateAdvice(@PathVariable Long id, @RequestBody AdviceDTO adviceDTO) {
+        try {
+            AdviceDTO updatedAdvice = adviceService.updateAdvice(id, adviceDTO);
+            return ResponseEntity.ok(updatedAdvice);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @CrossOrigin
+    @DeleteMapping("/advices/{id}")
+    public ResponseEntity<Void> deleteAdvice(@PathVariable Long id) {
+        adviceService.deleteAdvice(id);
+        return ResponseEntity.noContent().build();
+    }
+}
