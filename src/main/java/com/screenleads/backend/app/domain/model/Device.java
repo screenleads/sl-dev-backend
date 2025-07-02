@@ -35,7 +35,7 @@ public class Device {
     private String descriptionName;
     private Number width;
     private Number height;
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "type", referencedColumnName = "id")
     private DeviceType type;
 
