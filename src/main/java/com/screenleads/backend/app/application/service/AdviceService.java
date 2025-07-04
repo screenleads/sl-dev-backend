@@ -8,6 +8,8 @@ import com.screenleads.backend.app.web.dto.AdviceDTO;
 public interface AdviceService {
     List<AdviceDTO> getAllAdvices();
 
+    List<AdviceDTO> getVisibleAdvicesNow();
+
     Optional<AdviceDTO> getAdviceById(Long id);
 
     AdviceDTO saveAdvice(AdviceDTO AdviceDTO);

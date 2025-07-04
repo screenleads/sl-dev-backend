@@ -33,6 +33,12 @@ public class AdvicesController {
     }
 
     @CrossOrigin
+    @GetMapping("/advices/visibles")
+    public ResponseEntity<List<AdviceDTO>> getVisibleAdvicesNow() {
+        return ResponseEntity.ok(adviceService.getVisibleAdvicesNow());
+    }
+
+    @CrossOrigin
     @GetMapping("/advices/{id}")
     public ResponseEntity<AdviceDTO> getAdviceById(@PathVariable Long id) {
         Optional<AdviceDTO> advice = adviceService.getAdviceById(id);
