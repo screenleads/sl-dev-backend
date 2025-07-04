@@ -39,11 +39,11 @@ public class Advice {
     @JsonIgnore
     private Company company;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "media", referencedColumnName = "id")
     private Media media;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "promotion", referencedColumnName = "id")
     private Promotion promotion;
 
