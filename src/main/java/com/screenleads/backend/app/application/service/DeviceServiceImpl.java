@@ -4,16 +4,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.screenleads.backend.app.domain.model.Advice;
 import com.screenleads.backend.app.domain.model.Device;
 import com.screenleads.backend.app.domain.model.DeviceType;
+import com.screenleads.backend.app.domain.repositories.AdviceRepository;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.DeviceRepository;
 import com.screenleads.backend.app.domain.repositories.DeviceTypeRepository;
+import com.screenleads.backend.app.web.dto.AdviceDTO;
 import com.screenleads.backend.app.web.dto.DeviceDTO;
+import com.screenleads.backend.app.web.mapper.AdviceMapper;
 
 @Service
 public class DeviceServiceImpl implements DeviceService {
@@ -21,13 +23,20 @@ public class DeviceServiceImpl implements DeviceService {
     private final DeviceRepository deviceRepository;
     private final DeviceTypeRepository deviceTypeRepository;
     private final CompanyRepository companyRepository;
+    private final AdviceRepository adviceRepository;
 
-    public DeviceServiceImpl(DeviceRepository deviceRepository, DeviceTypeRepository deviceTypeRepository,
-            CompanyRepository companyRepository) {
+    public DeviceServiceImpl(
+            DeviceRepository deviceRepository,
+            DeviceTypeRepository deviceTypeRepository,
+            CompanyRepository companyRepository,
+            AdviceRepository adviceRepository) {
         this.deviceRepository = deviceRepository;
         this.deviceTypeRepository = deviceTypeRepository;
         this.companyRepository = companyRepository;
+        this.adviceRepository = adviceRepository;
     }
+
+    // EXISTENTES
 
     @Override
     public List<DeviceDTO> getAllDevices() {
@@ -52,12 +61,10 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public DeviceDTO updateDevice(Long id, DeviceDTO deviceDTO) {
-        DeviceType type = null;
-        Optional<DeviceType> aux = deviceTypeRepository.findById(deviceDTO.type().getId());
-        if (aux.isPresent()) {
-            type = aux.get();
-        }
-        Device device = deviceRepository.findById(id).orElseThrow();
+        DeviceType type = deviceTypeRepository.findById(deviceDTO.type().getId())
+                .orElseThrow(() -> new RuntimeException("Device type not found"));
+        Device device = deviceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Device not found"));
         device.setUuid(deviceDTO.uuid());
         device.setDescriptionName(deviceDTO.descriptionName());
         device.setWidth(deviceDTO.width());
@@ -72,26 +79,62 @@ public class DeviceServiceImpl implements DeviceService {
         deviceRepository.deleteById(id);
     }
 
-    // Convert Device Entity to DeviceDTO
-    private DeviceDTO convertToDTO(Device Device) {
-        DeviceType type = null;
-        Optional<DeviceType> aux = deviceTypeRepository.findById(Device.getType().getId());
-        if (aux.isPresent()) {
-            type = aux.get();
-        }
-        return new DeviceDTO(Device.getId(), Device.getUuid(), Device.getDescriptionName(), Device.getWidth(),
-                Device.getHeight(), type);
+    // NUEVOS
+
+    @Override
+    public List<AdviceDTO> getAdvicesForDevice(Long deviceId) {
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found"));
+        return device.getAdvices().stream()
+                .map(AdviceMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
-    // Convert DeviceDTO to Device Entity
-    private Device convertToEntity(DeviceDTO DeviceDTO) {
-        Device device = new Device();
-        device.setUuid(DeviceDTO.uuid());
-        device.setDescriptionName(DeviceDTO.descriptionName());
-        device.setWidth(DeviceDTO.width());
-        device.setHeight(DeviceDTO.height());
-        device.setType(deviceTypeRepository.findById(DeviceDTO.type().getId()).get());
+    @Override
+    public void assignAdviceToDevice(Long deviceId, Long adviceId) {
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found"));
+        Advice advice = adviceRepository.findById(adviceId)
+                .orElseThrow(() -> new RuntimeException("Advice not found"));
 
+        device.getAdvices().add(advice);
+        deviceRepository.save(device);
+    }
+
+    @Override
+    public void removeAdviceFromDevice(Long deviceId, Long adviceId) {
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new RuntimeException("Dispositivo no encontrado"));
+
+        Advice advice = adviceRepository.findById(adviceId)
+                .orElseThrow(() -> new RuntimeException("Anuncio no encontrado"));
+
+        device.getAdvices().remove(advice);
+        deviceRepository.save(device);
+    }
+
+    // MÉTODOS DE CONVERSIÓN
+
+    private DeviceDTO convertToDTO(Device device) {
+        DeviceType type = deviceTypeRepository.findById(device.getType().getId())
+                .orElseThrow(() -> new RuntimeException("Device type not found"));
+        return new DeviceDTO(
+                device.getId(),
+                device.getUuid(),
+                device.getDescriptionName(),
+                device.getWidth(),
+                device.getHeight(),
+                type);
+    }
+
+    private Device convertToEntity(DeviceDTO deviceDTO) {
+        Device device = new Device();
+        device.setUuid(deviceDTO.uuid());
+        device.setDescriptionName(deviceDTO.descriptionName());
+        device.setWidth(deviceDTO.width());
+        device.setHeight(deviceDTO.height());
+        device.setType(deviceTypeRepository.findById(deviceDTO.type().getId())
+                .orElseThrow(() -> new RuntimeException("Device type not found")));
         return device;
     }
 }

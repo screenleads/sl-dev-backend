@@ -1,6 +1,7 @@
 package com.screenleads.backend.app.domain.model;
 
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -10,10 +11,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,6 +23,7 @@ import lombok.Setter;
 
 @Entity
 @Builder(toBuilder = true)
+@Table(uniqueConstraints = {})
 @Setter
 @Getter
 @NoArgsConstructor
@@ -50,4 +52,7 @@ public class Advice {
     @OneToMany(mappedBy = "advice", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AdviceVisibilityRule> visibilityRules;
 
+    @JsonIgnore
+    @ManyToMany(mappedBy = "advices")
+    private Set<Device> devices;
 }
