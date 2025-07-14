@@ -3,6 +3,7 @@ package com.screenleads.backend.app.web.controller;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -15,10 +16,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.screenleads.backend.app.application.service.AdviceService;
+import com.screenleads.backend.app.application.service.DeviceService;
 import com.screenleads.backend.app.web.dto.AdviceDTO;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 public class AdvicesController {
+    private static final Logger logger = LoggerFactory.getLogger(DeviceService.class);
     @Autowired
     private AdviceService adviceService;
 
@@ -55,6 +61,7 @@ public class AdvicesController {
     @PutMapping("/advices/{id}")
     public ResponseEntity<AdviceDTO> updateAdvice(@PathVariable Long id, @RequestBody AdviceDTO adviceDTO) {
         try {
+            logger.info("adviceDTO object: {}", adviceDTO);
             AdviceDTO updatedAdvice = adviceService.updateAdvice(id, adviceDTO);
             return ResponseEntity.ok(updatedAdvice);
         } catch (Exception e) {

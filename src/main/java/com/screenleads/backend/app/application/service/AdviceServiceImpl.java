@@ -80,6 +80,34 @@ public class AdviceServiceImpl implements AdviceService {
         advice.setInterval(adviceDTO.interval());
         advice.setMedia(mediaRepository.findById(adviceDTO.media().getId()).get());
         advice.setPromotion(adviceDTO.promotion());
+        // Limpia reglas actuales (esto activa el orphanRemoval)
+        advice.getVisibilityRules().clear();
+
+        // Si hay reglas nuevas en el DTO, reconstrúyelas manualmente
+        List<AdviceVisibilityRule> newRules = new ArrayList<>();
+
+        if (adviceDTO.visibilityRules() != null) {
+            for (AdviceVisibilityRule ruleDto : adviceDTO.visibilityRules()) {
+                AdviceVisibilityRule rule = new AdviceVisibilityRule();
+                rule.setDay(ruleDto.getDay());
+                rule.setAdvice(advice); // ¡clave! relacionar con el padre
+
+                List<TimeRange> newRanges = new ArrayList<>();
+                if (ruleDto.getTimeRanges() != null) {
+                    for (TimeRange rangeDto : ruleDto.getTimeRanges()) {
+                        TimeRange range = new TimeRange();
+                        range.setFromTime(rangeDto.getFromTime());
+                        range.setToTime(rangeDto.getToTime());
+                        range.setRule(rule); // ¡clave! relacionar con la regla
+                        newRanges.add(range);
+                    }
+                }
+                rule.setTimeRanges(newRanges);
+                newRules.add(rule);
+            }
+        }
+
+        advice.getVisibilityRules().addAll(newRules);
 
         Advice updatedAdvice = adviceRepository.save(advice);
         return convertToDTO(updatedAdvice);
