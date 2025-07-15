@@ -10,4 +10,9 @@ public interface MediaTypeRepository extends JpaRepository<MediaType, Long> {
     Optional<MediaType> findByExtension(String extension);
 
     Optional<MediaType> findByType(String type);
+
+    boolean existsByExtension(String extension);
+
+    boolean existsByType(String type);
+
 }

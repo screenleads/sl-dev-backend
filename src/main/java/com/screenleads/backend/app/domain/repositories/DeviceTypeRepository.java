@@ -8,5 +8,5 @@ import com.screenleads.backend.app.domain.model.DeviceType;
 
 public interface DeviceTypeRepository extends JpaRepository<DeviceType, Long> {
     Optional<DeviceType> findByType(String type);
-
+    boolean existsByType(String type);
 }
