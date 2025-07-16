@@ -1,5 +1,6 @@
 package com.screenleads.backend.app.application.service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -14,6 +15,7 @@ import com.screenleads.backend.app.domain.repositories.AdviceRepository;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.DeviceRepository;
 import com.screenleads.backend.app.domain.repositories.MediaRepository;
+import com.screenleads.backend.app.web.dto.AdviceDTO;
 import com.screenleads.backend.app.web.dto.CompanyDTO;
 
 @Service
@@ -36,6 +38,7 @@ public class CompaniesServiceImpl implements CompaniesService {
     public List<CompanyDTO> getAllCompanies() {
         return companyRepository.findAll().stream()
                 .map(this::convertToDTO)
+                .sorted(Comparator.comparing(CompanyDTO::id))
                 .collect(Collectors.toList());
     }
 

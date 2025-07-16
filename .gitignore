@@ -36,3 +36,5 @@ build/
 
 /.m2/
 /.gradle/
+
+**/clave-firebase.json

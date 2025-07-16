@@ -1,5 +1,17 @@
 package com.screenleads.backend.app.init;
 
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.screenleads.backend.app.domain.model.DeviceType;
+import com.screenleads.backend.app.domain.model.MediaType;
+import com.screenleads.backend.app.domain.model.Role;
+import com.screenleads.backend.app.domain.repositories.DeviceTypeRepository;
+import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
+import com.screenleads.backend.app.domain.repositories.RoleRepository;
+
+import lombok.RequiredArgsConstructor;
+
 @Component
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
@@ -31,33 +43,32 @@ public class DataInitializer implements CommandLineRunner {
         createDeviceTypes("tablet");
         createDeviceTypes("other");
 
-        
-
     }
 
     private void createRole(String role, String desc, int level) {
         if (!roleRepository.existsByRole(role)) {
             roleRepository.save(Role.builder()
-                .role(role)
-                .description(desc)
-                .level(level)
-                .build());
+                    .role(role)
+                    .description(desc)
+                    .level(level)
+                    .build());
         }
     }
 
     private void createMediaTypes(String type, String extension) {
         if (!mediaTypeRepository.existsByType(type)) {
             mediaTypeRepository.save(MediaType.builder()
-                .type(type)
-                .extension(extension)
-                .build());
+                    .type(type)
+                    .extension(extension)
+                    .build());
         }
     }
+
     private void createDeviceTypes(String type) {
         if (!deviceTypeRepository.existsByType(type)) {
             deviceTypeRepository.save(DeviceType.builder()
-                .type(type)
-                .build());
+                    .type(type)
+                    .build());
         }
     }
 }

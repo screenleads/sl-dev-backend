@@ -1,5 +1,6 @@
 package com.screenleads.backend.app.application.service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -42,6 +43,7 @@ public class DeviceServiceImpl implements DeviceService {
     public List<DeviceDTO> getAllDevices() {
         return deviceRepository.findAll().stream()
                 .map(this::convertToDTO)
+                .sorted(Comparator.comparing(DeviceDTO::id))
                 .collect(Collectors.toList());
     }
 
@@ -86,6 +88,7 @@ public class DeviceServiceImpl implements DeviceService {
         Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new RuntimeException("Device not found"));
         return device.getAdvices().stream()
+                .sorted(Comparator.comparing(Advice::getId))
                 .map(AdviceMapper::toDTO)
                 .collect(Collectors.toList());
     }

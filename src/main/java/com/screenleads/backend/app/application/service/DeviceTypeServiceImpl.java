@@ -1,5 +1,6 @@
 package com.screenleads.backend.app.application.service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.screenleads.backend.app.domain.model.DeviceType;
 import com.screenleads.backend.app.domain.repositories.DeviceTypeRepository;
+import com.screenleads.backend.app.web.dto.AdviceDTO;
 import com.screenleads.backend.app.web.dto.DeviceTypeDTO;
 
 @Service
@@ -23,6 +25,7 @@ public class DeviceTypeServiceImpl implements DeviceTypeService {
     public List<DeviceTypeDTO> getAllDeviceTypes() {
         return deviceTypeRepository.findAll().stream()
                 .map(this::convertToDTO)
+                .sorted(Comparator.comparing(DeviceTypeDTO::id))
                 .collect(Collectors.toList());
     }
 

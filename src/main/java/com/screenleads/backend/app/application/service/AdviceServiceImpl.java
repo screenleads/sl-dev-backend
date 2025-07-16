@@ -4,10 +4,13 @@ import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.screenleads.backend.app.domain.model.Advice;
@@ -23,6 +26,7 @@ import com.screenleads.backend.app.web.dto.TimeRangeDTO;
 
 @Service
 public class AdviceServiceImpl implements AdviceService {
+    private static final Logger logger = LoggerFactory.getLogger(DeviceService.class);
 
     private final AdviceRepository adviceRepository;
     private final MediaRepository mediaRepository;
@@ -36,6 +40,7 @@ public class AdviceServiceImpl implements AdviceService {
     public List<AdviceDTO> getAllAdvices() {
         return adviceRepository.findAll().stream()
                 .map(this::convertToDTO)
+                .sorted(Comparator.comparing(AdviceDTO::id))
                 .collect(Collectors.toList());
     }
 
@@ -54,6 +59,7 @@ public class AdviceServiceImpl implements AdviceService {
                                                 .anyMatch(range -> !time.isBefore(range.getFromTime()) &&
                                                         !time.isAfter(range.getToTime()))))
                 .map(this::convertToDTO)
+                .sorted(Comparator.comparing(AdviceDTO::id))
                 .collect(Collectors.toList());
     }
 
@@ -78,7 +84,14 @@ public class AdviceServiceImpl implements AdviceService {
         advice.setCustomInterval(adviceDTO.customInterval());
         advice.setDescription(adviceDTO.description());
         advice.setInterval(adviceDTO.interval());
-        advice.setMedia(mediaRepository.findById(adviceDTO.media().getId()).get());
+        // advice.setMedia(mediaRepository.findById(adviceDTO.media().getId()).get());
+        if (adviceDTO.media() != null && adviceDTO.media().getId() != null) {
+            Media media = mediaRepository.findById(adviceDTO.media().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Media no encontrada"));
+            advice.setMedia(media);
+        } else {
+            advice.setMedia(null); // o mantenla como estaba, según tu lógica
+        }
         advice.setPromotion(adviceDTO.promotion());
         // Limpia reglas actuales (esto activa el orphanRemoval)
         advice.getVisibilityRules().clear();
@@ -108,6 +121,7 @@ public class AdviceServiceImpl implements AdviceService {
         }
 
         advice.getVisibilityRules().addAll(newRules);
+        logger.info("advice object: {}", advice);
 
         Advice updatedAdvice = adviceRepository.save(advice);
         return convertToDTO(updatedAdvice);

@@ -1,5 +1,6 @@
 package com.screenleads.backend.app.application.service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.screenleads.backend.app.domain.model.Media;
 import com.screenleads.backend.app.domain.repositories.MediaRepository;
 import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
+import com.screenleads.backend.app.web.dto.AdviceDTO;
 import com.screenleads.backend.app.web.dto.MediaDTO;
 
 @Service
@@ -26,6 +28,7 @@ public class MediaServiceImpl implements MediaService {
     public List<MediaDTO> getAllMedias() {
         return mediaRepository.findAll().stream()
                 .map(this::convertToDTO)
+                .sorted(Comparator.comparing(MediaDTO::id))
                 .collect(Collectors.toList());
     }
 
