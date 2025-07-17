@@ -22,10 +22,10 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        createRole("admin", "Acceso total", 1);
-        createRole("company_admin", "Administrador de empresa", 2);
-        createRole("compañy_manager", "Gestor de empresa", 3);
-        createRole("company_viewer", "Visualizador de empresa", 4);
+        createRole("ROLE_ADMIN", "Acceso total", 1);
+        createRole("ROLE_COMPANY_ADMIN", "Administrador de empresa", 2);
+        createRole("ROLE_COMPANY_MANAGER", "Gestor de empresa", 3);
+        createRole("ROLE_COMPANY_VIEWER", "Visualizador de empresa", 4);
         createMediaTypes("video/mp4", "mp4");
         createMediaTypes("video/webm", "webm");
         createMediaTypes("video/avi", "avi");
