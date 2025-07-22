@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import com.screenleads.backend.app.domain.model.Advice;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Device;
-import com.screenleads.backend.app.domain.model.Media;
 import com.screenleads.backend.app.domain.repositories.AdviceRepository;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.DeviceRepository;
@@ -50,9 +49,8 @@ public class CompaniesServiceImpl implements CompaniesService {
     public CompanyDTO saveCompany(CompanyDTO companyDTO) {
         Company company = convertToEntity(companyDTO);
         Optional<Company> exist = companyRepository.findByName(company.getName());
-        if (exist.isPresent()) {
+        if (exist.isPresent())
             return convertToDTO(exist.get());
-        }
         Company savedCompany = companyRepository.save(company);
         return convertToDTO(savedCompany);
     }
@@ -61,14 +59,8 @@ public class CompaniesServiceImpl implements CompaniesService {
     public CompanyDTO updateCompany(Long id, CompanyDTO companyDTO) {
         Company company = companyRepository.findById(id).orElseThrow();
         company.setName(companyDTO.name());
+        company.setLogo(companyDTO.logo());
         company.setObservations(companyDTO.observations());
-
-        if (companyDTO.logo() != null && companyDTO.logo().getId() != null) {
-            company.setLogo(mediaRepository.findById(companyDTO.logo().getId()).orElse(null));
-        } else {
-            company.setLogo(null);
-        }
-
         Company updatedCompany = companyRepository.save(company);
         return convertToDTO(updatedCompany);
     }
@@ -78,6 +70,7 @@ public class CompaniesServiceImpl implements CompaniesService {
         companyRepository.deleteById(id);
     }
 
+    // Convert Company Entity to CompanyDTO
     private CompanyDTO convertToDTO(Company company) {
         return new CompanyDTO(
                 company.getId(),
@@ -89,6 +82,7 @@ public class CompaniesServiceImpl implements CompaniesService {
         );
     }
 
+    // Convert CompanyDTO to Company Entity
     private Company convertToEntity(CompanyDTO companyDTO) {
         Company company = new Company();
         company.setId(companyDTO.id());
@@ -96,26 +90,32 @@ public class CompaniesServiceImpl implements CompaniesService {
         company.setObservations(companyDTO.observations());
 
         if (companyDTO.logo() != null && companyDTO.logo().getId() != null) {
-            company.setLogo(mediaRepository.findById(companyDTO.logo().getId()).orElse(null));
+            mediaRepository.findById(companyDTO.logo().getId()).ifPresent(company::setLogo);
         } else {
             company.setLogo(null);
         }
 
-        List<Advice> advices = companyDTO.advices().stream()
-                .map(dto -> adviceRepository.findById(dto.getId()).map(advice -> {
-                    advice.setCompany(company);
-                    return advice;
-                }).orElse(null))
-                .collect(Collectors.toList());
-        company.setAdvices(advices);
+        if (companyDTO.advices() != null) {
+            List<Advice> advices = companyDTO.advices().stream()
+                    .map(adviceDTO -> adviceRepository.findById(adviceDTO.getId()).orElse(null))
+                    .filter(a -> a != null)
+                    .peek(a -> a.setCompany(company))
+                    .collect(Collectors.toList());
+            company.setAdvices(advices);
+        } else {
+            company.setAdvices(List.of());
+        }
 
-        List<Device> devices = companyDTO.devices().stream()
-                .map(dto -> deviceRepository.findById(dto.getId()).map(device -> {
-                    device.setCompany(company);
-                    return device;
-                }).orElse(null))
-                .collect(Collectors.toList());
-        company.setDevices(devices);
+        if (companyDTO.devices() != null) {
+            List<Device> devices = companyDTO.devices().stream()
+                    .map(deviceDTO -> deviceRepository.findById(deviceDTO.getId()).orElse(null))
+                    .filter(d -> d != null)
+                    .peek(d -> d.setCompany(company))
+                    .collect(Collectors.toList());
+            company.setDevices(devices);
+        } else {
+            company.setDevices(List.of());
+        }
 
         return company;
     }
