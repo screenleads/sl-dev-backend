@@ -17,6 +17,7 @@ import lombok.Setter;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -38,12 +39,14 @@ public class Company {
     private Media logo;
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Device> devices;
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Advice> advices;
 
     @OneToMany(mappedBy = "company")
-    @JsonIgnoreProperties("company")
+    @JsonIgnore
     private List<User> users;
 }
