@@ -60,7 +60,7 @@ public class JwtService {
         return Jwts
                 .builder()
                 .setSubject(user.getUsername())
-                claim("roles", user.getAuthorities().stream()
+                .claim("roles", user.getAuthorities().stream()
                     .map(Object::toString)
                     .toList())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
