@@ -1,6 +1,8 @@
 package com.screenleads.backend.app.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,7 +47,7 @@ public class Device {
 
     @ManyToOne
     @JoinColumn(name = "company_id", referencedColumnName = "id")
-    @JsonIgnore
+    @JsonIgnoreProperties({"users", "devices", "advices"}) 
     private Company company;
 
     @ManyToMany
