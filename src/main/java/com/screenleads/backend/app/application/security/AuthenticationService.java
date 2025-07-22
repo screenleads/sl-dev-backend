@@ -36,6 +36,7 @@ public class AuthenticationService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setName(request.getName());
         user.setLastName(request.getLastName());
+        System.out.println("Usuarios registrados?: " + userRepository.count());
 
         if (userRepository.count() == 0) {
             // Primer usuario: asignamos el rol ADMIN
