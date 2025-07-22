@@ -16,6 +16,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
@@ -42,5 +44,6 @@ public class Company {
     private List<Advice> advices;
 
     @OneToMany(mappedBy = "company")
+    @JsonIgnoreProperties("company")
     private List<User> users;
 }
