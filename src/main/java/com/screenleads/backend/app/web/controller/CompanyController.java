@@ -4,6 +4,7 @@ import com.screenleads.backend.app.application.service.CompaniesService;
 import com.screenleads.backend.app.web.dto.CompanyDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,7 @@ public class CompanyController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<CompanyDTO>> getAllCompanies() {
         return ResponseEntity.ok(companiesService.getAllCompanies());
     }
@@ -30,11 +32,13 @@ public class CompanyController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<CompanyDTO> createCompany(@RequestBody CompanyDTO companyDTO) {
         return ResponseEntity.ok(companiesService.saveCompany(companyDTO));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<CompanyDTO> updateCompany(@PathVariable Long id, @RequestBody CompanyDTO companyDTO) {
         try {
             CompanyDTO updatedCompany = companiesService.updateCompany(id, companyDTO);
@@ -45,6 +49,7 @@ public class CompanyController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteCompany(@PathVariable Long id) {
         companiesService.deleteCompany(id);
         return ResponseEntity.noContent().build();
