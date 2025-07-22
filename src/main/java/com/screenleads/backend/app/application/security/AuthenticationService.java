@@ -4,6 +4,7 @@ import com.screenleads.backend.app.application.security.jwt.JwtService;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Role;
 import com.screenleads.backend.app.domain.model.User;
+import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.RoleRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
 import com.screenleads.backend.app.web.dto.JwtResponse;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 public class AuthenticationService {
 
     private final UserRepository userRepository;
+    private final CompanyRepository companyRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final JwtService jwtService;
