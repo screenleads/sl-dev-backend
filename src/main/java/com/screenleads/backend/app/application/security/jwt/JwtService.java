@@ -60,6 +60,9 @@ public class JwtService {
         return Jwts
                 .builder()
                 .setSubject(user.getUsername())
+                claim("roles", user.getAuthorities().stream()
+                    .map(Object::toString)
+                    .toList())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24h
                 .signWith(signingKey, SignatureAlgorithm.HS256)
