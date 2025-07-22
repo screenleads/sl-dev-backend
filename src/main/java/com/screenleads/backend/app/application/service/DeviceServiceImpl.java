@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.screenleads.backend.app.domain.model.Advice;
+import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Device;
 import com.screenleads.backend.app.domain.model.DeviceType;
 import com.screenleads.backend.app.domain.repositories.AdviceRepository;
@@ -37,8 +38,6 @@ public class DeviceServiceImpl implements DeviceService {
         this.adviceRepository = adviceRepository;
     }
 
-    // EXISTENTES
-
     @Override
     public List<DeviceDTO> getAllDevices() {
         return deviceRepository.findAll().stream()
@@ -55,8 +54,9 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public DeviceDTO saveDevice(DeviceDTO deviceDTO) {
         Device device = convertToEntity(deviceDTO);
-        if (deviceRepository.existsByUuid(device.getUuid()))
+        if (deviceRepository.existsByUuid(device.getUuid())) {
             return convertToDTO(deviceRepository.findByUuid(device.getUuid()));
+        }
         Device savedDevice = deviceRepository.save(device);
         return convertToDTO(savedDevice);
     }
@@ -72,6 +72,13 @@ public class DeviceServiceImpl implements DeviceService {
         device.setWidth(deviceDTO.width());
         device.setHeight(deviceDTO.height());
         device.setType(type);
+
+        if (deviceDTO.company() != null && deviceDTO.company().getId() != null) {
+            Company company = companyRepository.findById(deviceDTO.company().getId())
+                    .orElseThrow(() -> new RuntimeException("Company not found"));
+            device.setCompany(company);
+        }
+
         Device updatedDevice = deviceRepository.save(device);
         return convertToDTO(updatedDevice);
     }
@@ -80,8 +87,6 @@ public class DeviceServiceImpl implements DeviceService {
     public void deleteDevice(Long id) {
         deviceRepository.deleteById(id);
     }
-
-    // NUEVOS
 
     @Override
     public List<AdviceDTO> getAdvicesForDevice(Long deviceId) {
@@ -107,16 +112,14 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public void removeAdviceFromDevice(Long deviceId, Long adviceId) {
         Device device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new RuntimeException("Dispositivo no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Device not found"));
 
         Advice advice = adviceRepository.findById(adviceId)
-                .orElseThrow(() -> new RuntimeException("Anuncio no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Advice not found"));
 
         device.getAdvices().remove(advice);
         deviceRepository.save(device);
     }
-
-    // MÉTODOS DE CONVERSIÓN
 
     private DeviceDTO convertToDTO(Device device) {
         DeviceType type = deviceTypeRepository.findById(device.getType().getId())
@@ -127,7 +130,9 @@ public class DeviceServiceImpl implements DeviceService {
                 device.getDescriptionName(),
                 device.getWidth(),
                 device.getHeight(),
-                type);
+                type,
+                device.getCompany() != null ? device.getCompany() : null
+        );
     }
 
     private Device convertToEntity(DeviceDTO deviceDTO) {
@@ -138,6 +143,13 @@ public class DeviceServiceImpl implements DeviceService {
         device.setHeight(deviceDTO.height());
         device.setType(deviceTypeRepository.findById(deviceDTO.type().getId())
                 .orElseThrow(() -> new RuntimeException("Device type not found")));
+
+        if (deviceDTO.company() != null && deviceDTO.company().getId() != null) {
+            Company company = companyRepository.findById(deviceDTO.company().getId())
+                    .orElseThrow(() -> new RuntimeException("Company not found"));
+            device.setCompany(company);
+        }
+
         return device;
     }
 }
