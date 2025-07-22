@@ -10,6 +10,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -38,6 +40,7 @@ public class User implements UserDetails {
     private String lastName;
 
     @ManyToOne
+    @JsonIgnoreProperties({"users", "devices", "advices"}) 
     private Company company;
 
     @OneToOne
