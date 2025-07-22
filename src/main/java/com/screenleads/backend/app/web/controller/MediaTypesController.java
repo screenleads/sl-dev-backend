@@ -60,6 +60,6 @@ public class MediaTypesController {
     @DeleteMapping("/medias/types/{id}")
     public ResponseEntity<String> deleteMediaType(@PathVariable Long id) {
         deviceTypeService.deleteMediaType(id);
-        return ResponseEntity.ok("Media Type (" + id + ") deleted succesfully");
+        return ResponseEntity.noContent().build();
     }
 }

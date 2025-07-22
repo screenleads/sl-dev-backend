@@ -141,7 +141,7 @@ public class MediaController {
     @DeleteMapping("/medias/{id}")
     public ResponseEntity<String> deleteMedia(@PathVariable Long id) {
         mediaService.deleteMedia(id);
-        return ResponseEntity.ok("Media Type (" + id + ") deleted succesfully");
+        return ResponseEntity.noContent().build();
     }
 
     @CrossOrigin
