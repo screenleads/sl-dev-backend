@@ -12,14 +12,19 @@ import com.screenleads.backend.app.web.dto.LoginRequest;
 import com.screenleads.backend.app.web.dto.RegisterRequest;
 import lombok.RequiredArgsConstructor;
 
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
+import java.sql.SQLException;
+
 
 @Service
 @RequiredArgsConstructor
@@ -57,7 +62,20 @@ public class AuthenticationService {
         user.setRoles(Set.of(defaultRole));
     }
 
-    userRepository.save(user);
+    try {
+        userRepository.save(user);
+    } catch (DataIntegrityViolationException ex) {
+        Throwable rootCause = ex.getRootCause();
+        if (rootCause instanceof SQLException sqlEx) {
+            String message = sqlEx.getMessage();
+            if (message != null && message.toLowerCase().contains("duplicate")) {
+                throw new RuntimeException("El nombre de usuario o email ya está registrado.");
+            } else {
+                throw new RuntimeException("Error de integridad de datos: " + message);
+            }
+        }
+        throw new RuntimeException("Error inesperado al registrar usuario.");
+    }
     return new JwtResponse(jwtService.generateToken(user), user);
 }
 
