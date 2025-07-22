@@ -49,8 +49,9 @@ public class CompaniesServiceImpl implements CompaniesService {
     public CompanyDTO saveCompany(CompanyDTO companyDTO) {
         Company company = convertToEntity(companyDTO);
         Optional<Company> exist = companyRepository.findByName(company.getName());
-        if (exist.isPresent())
+        if (exist.isPresent()) {
             return convertToDTO(exist.get());
+        }
         Company savedCompany = companyRepository.save(company);
         return convertToDTO(savedCompany);
     }
@@ -59,8 +60,15 @@ public class CompaniesServiceImpl implements CompaniesService {
     public CompanyDTO updateCompany(Long id, CompanyDTO companyDTO) {
         Company company = companyRepository.findById(id).orElseThrow();
         company.setName(companyDTO.name());
-        company.setLogo(companyDTO.logo());
         company.setObservations(companyDTO.observations());
+
+        // Manejo seguro del logo
+        if (companyDTO.logo() != null && companyDTO.logo().getId() != null) {
+            mediaRepository.findById(companyDTO.logo().getId()).ifPresent(company::setLogo);
+        } else {
+            company.setLogo(null);
+        }
+
         Company updatedCompany = companyRepository.save(company);
         return convertToDTO(updatedCompany);
     }
@@ -70,7 +78,6 @@ public class CompaniesServiceImpl implements CompaniesService {
         companyRepository.deleteById(id);
     }
 
-    // Convert Company Entity to CompanyDTO
     private CompanyDTO convertToDTO(Company company) {
         return new CompanyDTO(
                 company.getId(),
@@ -82,13 +89,13 @@ public class CompaniesServiceImpl implements CompaniesService {
         );
     }
 
-    // Convert CompanyDTO to Company Entity
     private Company convertToEntity(CompanyDTO companyDTO) {
         Company company = new Company();
         company.setId(companyDTO.id());
         company.setName(companyDTO.name());
         company.setObservations(companyDTO.observations());
 
+        // Manejo seguro del logo
         if (companyDTO.logo() != null && companyDTO.logo().getId() != null) {
             mediaRepository.findById(companyDTO.logo().getId()).ifPresent(company::setLogo);
         } else {
