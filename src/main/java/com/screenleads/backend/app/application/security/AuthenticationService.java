@@ -1,6 +1,7 @@
 package com.screenleads.backend.app.application.security;
 
 import com.screenleads.backend.app.application.security.jwt.JwtService;
+import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Role;
 import com.screenleads.backend.app.domain.model.User;
 import com.screenleads.backend.app.domain.repositories.RoleRepository;
@@ -30,29 +31,33 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     public JwtResponse register(RegisterRequest request) {
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setUsername(request.getUsername());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setName(request.getName());
-        user.setLastName(request.getLastName());
-        System.out.println("Usuarios registrados?: " + userRepository.count());
+    User user = new User();
+    user.setEmail(request.getEmail());
+    user.setUsername(request.getUsername());
+    user.setPassword(passwordEncoder.encode(request.getPassword()));
+    user.setName(request.getName());
+    user.setLastName(request.getLastName());
 
-        if (userRepository.count() == 0) {
-            // Primer usuario: asignamos el rol ADMIN
-            Role adminRole = roleRepository.findByRole("ROLE_ADMIN")
-                    .orElseThrow(() -> new RuntimeException("Role ROLE_ADMIN not found"));
-            user.setRoles(Set.of(adminRole));
-        } else {
-            // Por defecto podrías asignar un rol básico si quieres
-            Role defaultRole = roleRepository.findByRole("ROLE_COMPANY_VIEWER")
-                    .orElseThrow(() -> new RuntimeException("Default role not found"));
-            user.setRoles(Set.of(defaultRole));
-        }
-
-        userRepository.save(user);
-        return new JwtResponse(jwtService.generateToken(user), user);
+    // Setea la compañía si viene en la request
+    if (request.getCompanyId() != null) {
+        Company company = companyRepository.findById(request.getCompanyId())
+            .orElseThrow(() -> new RuntimeException("Company not found with id: " + request.getCompanyId()));
+        user.setCompany(company);
     }
+
+    if (userRepository.count() == 0) {
+        Role adminRole = roleRepository.findByRole("ROLE_ADMIN")
+                .orElseThrow(() -> new RuntimeException("Role ROLE_ADMIN not found"));
+        user.setRoles(Set.of(adminRole));
+    } else {
+        Role defaultRole = roleRepository.findByRole("ROLE_COMPANY_VIEWER")
+                .orElseThrow(() -> new RuntimeException("Default role not found"));
+        user.setRoles(Set.of(defaultRole));
+    }
+
+    userRepository.save(user);
+    return new JwtResponse(jwtService.generateToken(user), user);
+}
 
     public JwtResponse login(LoginRequest request) throws AuthenticationException {
         authenticationManager.authenticate(
