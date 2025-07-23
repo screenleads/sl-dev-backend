@@ -48,7 +48,8 @@ public class MediaController {
 
         // 1. Subir archivo a carpeta temporal 'raw/' en Firebase
         String originalFileName = file.getOriginalFilename();
-        String rawPath = "raw/" + UUID.randomUUID() + "-" + originalFileName;
+        String fileName = UUID.randomUUID() + "-" + originalFileName;
+        String rawPath = "raw/" + fileName;
 
         File tempFile = File.createTempFile("upload-", originalFileName);
         file.transferTo(tempFile);
@@ -57,7 +58,7 @@ public class MediaController {
         log.info("📤 Archivo subido a Firebase en {}", rawPath);
 
         // 2. Polling para esperar a que aparezca el archivo comprimido
-        String compressedPath = rawPath.replace("raw/", "media/").replaceAll("\\.(mp4|mov|webm)$", "_compressed.mp4");
+        String compressedPath = "media/compressed-" + fileName;
 
         int maxAttempts = 20;
         int waitMs = 10000;
