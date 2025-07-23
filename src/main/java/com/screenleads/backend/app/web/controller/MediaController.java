@@ -69,7 +69,7 @@ public class MediaController {
             log.info("📹 Tipo de archivo: Video - se comprimirá");
 
             ProcessBuilder builder = new ProcessBuilder(
-                    "C:\\ProgramData\\chocolatey\\bin\\ffmpeg.exe",
+                    "ffmpeg", // C:\\ProgramData\\chocolatey\\bin\\ffmpeg.exe
                     "-y",
                     "-i", tempInput.getAbsolutePath(),
                     "-vf", "scale=1080:-2",
