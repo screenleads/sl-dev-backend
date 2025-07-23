@@ -60,7 +60,7 @@ public class MediaController {
         String compressedPath = rawPath.replace("raw/", "media/").replaceAll("\\.(mp4|mov|webm)$", "_compressed.mp4");
 
         int maxAttempts = 20;
-        int waitMs = 3000;
+        int waitMs = 10000;
         boolean exists = false;
 
         for (int i = 0; i < maxAttempts; i++) {
