@@ -25,4 +25,12 @@ public class FirebaseStorageService {
         // firmada si no.
         return String.format("https://storage.googleapis.com/%s/%s", bucket.getName(), blob.getName());
     }
+
+    public boolean exists(String path) {
+        return StorageClient.getInstance().bucket().get(path) != null;
+    }
+
+    public String getPublicUrl(String path) {
+        return "https://storage.googleapis.com/" + StorageClient.getInstance().bucket().getName() + "/" + path;
+    }
 }
