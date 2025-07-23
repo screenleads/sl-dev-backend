@@ -46,7 +46,7 @@ public class MediaController {
     public ResponseEntity<Map<String, String>> upload(@RequestParam("file") MultipartFile file) throws Exception {
         log.info("🚀 Iniciando proceso de subida...");
 
-        // 1. Subir archivo a carpeta temporal 'raw/' en Firebase
+        // 1. Subir archivo a 'raw/'
         String originalFileName = file.getOriginalFilename();
         String fileName = UUID.randomUUID() + "-" + originalFileName;
         String rawPath = "raw/" + fileName;
@@ -57,30 +57,23 @@ public class MediaController {
         firebaseService.upload(tempFile, rawPath);
         log.info("📤 Archivo subido a Firebase en {}", rawPath);
 
-        // 2. Polling para esperar a que aparezca el archivo comprimido
-        String compressedPath = "media/compressed-" + fileName;
+        // 2. Responder sincrónicamente con el nombre del archivo para posterior
+        // consulta
+        return ResponseEntity.accepted().body(Map.of("filename", fileName));
+    }
 
-        int maxAttempts = 20;
-        int waitMs = 10000;
-        boolean exists = false;
+    @CrossOrigin
+    @GetMapping("/medias/status/{filename}")
+    public ResponseEntity<Map<String, String>> checkCompressionStatus(@PathVariable String filename) {
+        String compressedPath = "media/compressed-" + filename;
 
-        for (int i = 0; i < maxAttempts; i++) {
-            Thread.sleep(waitMs);
-            if (firebaseService.exists(compressedPath)) {
-                exists = true;
-                break;
-            }
-            log.info("⌛ Esperando archivo comprimido... intento {}/{}", i + 1, maxAttempts);
-        }
-
-        // 3. Resultado
-        if (exists) {
+        if (firebaseService.exists(compressedPath)) {
             String publicUrl = firebaseService.getPublicUrl(compressedPath);
-            log.info("✅ Archivo comprimido disponible en {}", publicUrl);
+            log.info("✅ Archivo comprimido disponible: {}", publicUrl);
             return ResponseEntity.ok(Map.of("url", publicUrl));
         } else {
-            log.warn("⏱️ Timeout esperando archivo comprimido.");
-            return ResponseEntity.status(504).body(Map.of("error", "Timeout esperando la compresión"));
+            log.info("🕓 Archivo aún no está comprimido: {}", compressedPath);
+            return ResponseEntity.status(202).body(Map.of("status", "processing"));
         }
     }
 
