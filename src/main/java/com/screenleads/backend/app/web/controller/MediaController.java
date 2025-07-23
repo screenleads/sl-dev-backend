@@ -1,34 +1,25 @@
 package com.screenleads.backend.app.web.controller;
 
+import com.screenleads.backend.app.application.service.FirebaseStorageService;
+import com.screenleads.backend.app.application.service.MediaService;
+import com.screenleads.backend.app.web.dto.MediaDTO;
+import jakarta.servlet.annotation.MultipartConfig;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-
-import com.screenleads.backend.app.application.service.FirebaseStorageService;
-import com.screenleads.backend.app.application.service.MediaService;
-import com.screenleads.backend.app.web.dto.MediaDTO;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import java.io.File;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.util.Map;
-
-import jakarta.servlet.annotation.MultipartConfig;
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
 
 @Controller
 @Slf4j
@@ -56,59 +47,18 @@ public class MediaController {
         log.info("🚀 Iniciando proceso de subida...");
 
         // 1. Guardar archivo temporalmente
-        File tempInput = File.createTempFile("input-", file.getOriginalFilename());
-        file.transferTo(tempInput);
-        log.info("📁 Archivo recibido y guardado: {}", tempInput.getAbsolutePath());
+        File tempFile = File.createTempFile("upload-", file.getOriginalFilename());
+        file.transferTo(tempFile);
+        log.info("📁 Archivo recibido: {}", tempFile.getAbsolutePath());
 
-        String filename = file.getOriginalFilename().toLowerCase();
-        boolean isVideo = filename.endsWith(".mp4") || filename.endsWith(".mov") || filename.endsWith(".webm");
+        // 2. Subir a carpeta "raw/" del bucket
+        String filename = UUID.randomUUID() + ".mp4";
+        String firebasePath = "raw/" + filename;
+        String publicUrl = firebaseService.upload(tempFile, firebasePath);
+        log.info("📤 Archivo subido a Firebase Storage (raw): {}", publicUrl);
 
-        File output = isVideo ? File.createTempFile("compressed-", ".mp4") : tempInput;
-
-        if (isVideo) {
-            log.info("📹 Tipo de archivo: Video - se comprimirá");
-
-            ProcessBuilder builder = new ProcessBuilder(
-                    "ffmpeg", // C:\\ProgramData\\chocolatey\\bin\\ffmpeg.exe
-                    "-y",
-                    "-i", tempInput.getAbsolutePath(),
-                    "-vf", "scale=1080:-2",
-                    "-c:v", "libx264",
-                    "-crf", "28",
-                    "-preset", "slow",
-                    "-an", // <-- elimina el audio
-                    output.getAbsolutePath());
-
-            builder.redirectErrorStream(true);
-            log.info("⚙️ Ejecutando ffmpeg...");
-            Process process = builder.start();
-
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    log.debug("ffmpeg >> {}", line);
-                }
-            }
-
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                log.info("✅ ffmpeg finalizó correctamente");
-            } else {
-                log.warn("⚠️ ffmpeg terminó con código {}", exitCode);
-                throw new RuntimeException("La compresión falló con código " + exitCode);
-            }
-        }
-
-        // 3. Subir a Firebase
-        String storagePath = "media/" + UUID.randomUUID() + "-" + output.getName();
-        String publicUrl = firebaseService.upload(output, storagePath);
-        log.info("📤 Archivo subido a Firebase con URL: {}", publicUrl);
-
-        // 4. Limpiar archivos temporales
-        tempInput.delete();
-        if (!output.equals(tempInput))
-            output.delete();
-        log.info("🧹 Archivos temporales eliminados");
+        // 3. Limpiar archivo temporal
+        tempFile.delete();
 
         return ResponseEntity.ok(Map.of("url", publicUrl));
     }
