@@ -29,4 +29,17 @@ public class AuthSecurityChecker {
         return auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
+
+    public boolean isAuthenticated() {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        // Si no hay autenticación válida o no tiene roles, denegar
+        if (auth == null || !auth.isAuthenticated() || auth.getAuthorities() == null) {
+            return false;
+        } else {
+            return true;
+        }
+
+    }
 }

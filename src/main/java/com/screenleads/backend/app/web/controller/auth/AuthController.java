@@ -3,6 +3,7 @@ package com.screenleads.backend.app.web.controller.auth;
 import com.screenleads.backend.app.application.security.AuthenticationService;
 import com.screenleads.backend.app.web.dto.JwtResponse;
 import com.screenleads.backend.app.web.dto.LoginRequest;
+import com.screenleads.backend.app.web.dto.PasswordChangeRequest;
 import com.screenleads.backend.app.web.dto.RegisterRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,4 +28,12 @@ public class AuthController {
     public ResponseEntity<JwtResponse> register(@RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authenticationService.register(request));
     }
+
+    @PreAuthorize("@authSecurityChecker.isAuthenticated()")
+    @PostMapping("/change-password")
+    public ResponseEntity<Void> changePassword(@RequestBody PasswordChangeRequest request) {
+        authenticationService.changePassword(request);
+        return ResponseEntity.ok().build();
+    }
+
 }
