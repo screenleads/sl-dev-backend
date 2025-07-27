@@ -1,4 +1,4 @@
-package com.screenleads.backend.app.application.security;
+package com.screenleads.backend.app.application.security.jwt;
 
 import com.screenleads.backend.app.domain.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
