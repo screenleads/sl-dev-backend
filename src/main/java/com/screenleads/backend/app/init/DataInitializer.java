@@ -3,9 +3,11 @@ package com.screenleads.backend.app.init;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.DeviceType;
 import com.screenleads.backend.app.domain.model.MediaType;
 import com.screenleads.backend.app.domain.model.Role;
+import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.DeviceTypeRepository;
 import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
 import com.screenleads.backend.app.domain.repositories.RoleRepository;
@@ -19,9 +21,11 @@ public class DataInitializer implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final MediaTypeRepository mediaTypeRepository;
     private final DeviceTypeRepository deviceTypeRepository;
+    private final CompanyRepository companyRepository;
 
     @Override
     public void run(String... args) {
+        createDefaultCompany("ScreenLeads", "Compañía por defecto para demo");
         createRole("ROLE_ADMIN", "Acceso total", 1);
         createRole("ROLE_COMPANY_ADMIN", "Administrador de empresa", 2);
         createRole("ROLE_COMPANY_MANAGER", "Gestor de empresa", 3);
@@ -68,6 +72,15 @@ public class DataInitializer implements CommandLineRunner {
         if (!deviceTypeRepository.existsByType(type)) {
             deviceTypeRepository.save(DeviceType.builder()
                     .type(type)
+                    .build());
+        }
+    }
+
+    private void createDefaultCompany(String name, String observations) {
+        if (!companyRepository.existsByName(name)) {
+            companyRepository.save(Company.builder()
+                    .name(name)
+                    .observations(observations)
                     .build());
         }
     }
