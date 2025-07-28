@@ -63,6 +63,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
+                "https://localhost",
                 "http://localhost:4200",
                 "http://localhost:8100",
                 "https://sl-device-connector.web.app",
