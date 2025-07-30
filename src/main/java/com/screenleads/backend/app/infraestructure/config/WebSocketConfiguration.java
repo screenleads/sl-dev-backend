@@ -6,10 +6,23 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.config.ChannelRegistration;
+import com.screenleads.backend.app.infraestructure.websocket.PresenceChannelInterceptor;
+
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer {
 
+    @Autowired
+    private PresenceChannelInterceptor presenceChannelInterceptor;
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(presenceChannelInterceptor);
+    }
+
+    // ya tienes esto definido correctamente:
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/topic");
@@ -22,5 +35,4 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
                 .setAllowedOrigins("http://localhost:4200", "http://localhost:8100", "https://localhost")
                 .withSockJS();
     }
-
 }
