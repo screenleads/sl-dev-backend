@@ -44,4 +44,10 @@ public class AuthController {
         return ResponseEntity.ok(authenticationService.getCurrentUser());
     }
 
+    @PreAuthorize("@authSecurityChecker.isAuthenticated()")
+    @PostMapping("/refresh")
+    public ResponseEntity<JwtResponse> refreshToken() {
+        return ResponseEntity.ok(authenticationService.refreshToken());
+    }
+
 }

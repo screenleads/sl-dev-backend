@@ -110,4 +110,10 @@ public class AuthenticationService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
+    public JwtResponse refreshToken() {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return new JwtResponse(jwtService.generateToken(user), user);
+    }
+    
+
 }
