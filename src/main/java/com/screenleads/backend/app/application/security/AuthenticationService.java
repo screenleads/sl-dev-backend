@@ -1,5 +1,6 @@
 package com.screenleads.backend.app.application.security;
 
+import com.google.firebase.remoteconfig.internal.TemplateResponse.UserResponse;
 import com.screenleads.backend.app.application.security.jwt.JwtService;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Role;
@@ -11,6 +12,9 @@ import com.screenleads.backend.app.web.dto.JwtResponse;
 import com.screenleads.backend.app.web.dto.LoginRequest;
 import com.screenleads.backend.app.web.dto.PasswordChangeRequest;
 import com.screenleads.backend.app.web.dto.RegisterRequest;
+import com.screenleads.backend.app.web.dto.UserDto;
+import com.screenleads.backend.app.web.mapper.UserMapper;
+
 import lombok.RequiredArgsConstructor;
 
 import java.sql.SQLException;
@@ -79,6 +83,11 @@ public class AuthenticationService {
             throw new RuntimeException("Error inesperado al registrar usuario.");
         }
         return new JwtResponse(jwtService.generateToken(user), user);
+    }
+
+    public UserDto getCurrentUser() {
+        var user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return UserMapper.toDto(user);
     }
 
     public JwtResponse login(LoginRequest request) throws AuthenticationException {

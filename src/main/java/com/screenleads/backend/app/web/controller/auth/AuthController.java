@@ -5,6 +5,8 @@ import com.screenleads.backend.app.web.dto.JwtResponse;
 import com.screenleads.backend.app.web.dto.LoginRequest;
 import com.screenleads.backend.app.web.dto.PasswordChangeRequest;
 import com.screenleads.backend.app.web.dto.RegisterRequest;
+import com.screenleads.backend.app.web.dto.UserDto;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,6 +36,12 @@ public class AuthController {
     public ResponseEntity<Void> changePassword(@RequestBody PasswordChangeRequest request) {
         authenticationService.changePassword(request);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserDto> getCurrentUser() {
+        return ResponseEntity.ok(authenticationService.getCurrentUser());
     }
 
 }
