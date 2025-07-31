@@ -39,7 +39,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@authSecurityChecker.isAuthenticated()")
     public ResponseEntity<UserDto> getCurrentUser() {
         return ResponseEntity.ok(authenticationService.getCurrentUser());
     }
