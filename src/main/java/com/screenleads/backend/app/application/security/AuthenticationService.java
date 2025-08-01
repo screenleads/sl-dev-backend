@@ -1,6 +1,5 @@
 package com.screenleads.backend.app.application.security;
 
-import com.google.firebase.remoteconfig.internal.TemplateResponse.UserResponse;
 import com.screenleads.backend.app.application.security.jwt.JwtService;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Role;
@@ -16,11 +15,6 @@ import com.screenleads.backend.app.web.dto.UserDto;
 import com.screenleads.backend.app.web.mapper.UserMapper;
 
 import lombok.RequiredArgsConstructor;
-
-import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,8 +23,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.dao.DataIntegrityViolationException;
+
 import java.sql.SQLException;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +46,6 @@ public class AuthenticationService {
         user.setName(request.getName());
         user.setLastName(request.getLastName());
 
-        // Setea la compañía si viene en la request
         if (request.getCompanyId() != null) {
             Company company = companyRepository.findById(request.getCompanyId())
                     .orElseThrow(() -> new RuntimeException("Company not found with id: " + request.getCompanyId()));
@@ -85,16 +79,21 @@ public class AuthenticationService {
         return new JwtResponse(jwtService.generateToken(user), user);
     }
 
-    public UserDto getCurrentUser() {
-        var user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return UserMapper.toDto(user);
-    }
-
     public JwtResponse login(LoginRequest request) throws AuthenticationException {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        return new JwtResponse(jwtService.generateToken(user), user);
+    }
+
+    public UserDto getCurrentUser() {
+        var user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return UserMapper.toDto(user);
+    }
+
+    public JwtResponse refreshToken() {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return new JwtResponse(jwtService.generateToken(user), user);
     }
 
@@ -110,10 +109,4 @@ public class AuthenticationService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
-    public JwtResponse refreshToken() {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return new JwtResponse(jwtService.generateToken(user), user);
-    }
-    
-
 }
