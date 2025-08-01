@@ -9,6 +9,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import com.screenleads.backend.app.infraestructure.websocket.PresenceChannelInterceptor;
+import com.screenleads.backend.app.application.security.websocket.AuthChannelInterceptor;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -17,12 +18,15 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
     @Autowired
     private PresenceChannelInterceptor presenceChannelInterceptor;
 
+    @Autowired
+    private AuthChannelInterceptor authChannelInterceptor;
+
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(presenceChannelInterceptor);
+        // Interceptores de presencia y autenticación JWT
+        registration.interceptors(presenceChannelInterceptor, authChannelInterceptor);
     }
 
-    // ya tienes esto definido correctamente:
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/topic");
@@ -32,7 +36,13 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/chat-socket")
-                .setAllowedOrigins("http://localhost:4200", "http://localhost:8100", "https://localhost")
+                .setAllowedOriginPatterns(
+                        "http://localhost:*",
+                        "https://localhost",
+                        "http://localhost:4200",
+                        "http://localhost:8100",
+                        "https://sl-device-connector.web.app",
+                        "https://sl-dev-dashboard-pre-c4a3c4b00c91.herokuapp.com")
                 .withSockJS();
     }
 }
