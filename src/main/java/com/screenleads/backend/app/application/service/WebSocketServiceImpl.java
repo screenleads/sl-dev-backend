@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.screenleads.backend.app.domain.model.ChatMessage;
 
 @Service
@@ -18,7 +20,11 @@ public class WebSocketServiceImpl implements WebSocketService {
 
     public void notifyFrontend(final ChatMessage message, final String roomId) {
 
-        System.out.println(new ObjectMapper().writeValueAsString(message));
+        try {
+            System.out.println(new ObjectMapper().writeValueAsString(message));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace(); // o usa logger
+        }
         System.out.println("Llega aqui" + roomId + message.getMessage());
 
         messagingTemplate.convertAndSend("/topic/" + roomId, message);
