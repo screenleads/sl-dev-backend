@@ -17,6 +17,8 @@ public class WebSocketServiceImpl implements WebSocketService {
     }
 
     public void notifyFrontend(final ChatMessage message, final String roomId) {
+
+        System.out.println(new ObjectMapper().writeValueAsString(message));
         System.out.println("Llega aqui" + roomId + message.getMessage());
 
         messagingTemplate.convertAndSend("/topic/" + roomId, message);
