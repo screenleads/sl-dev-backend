@@ -1,5 +1,7 @@
 package com.screenleads.backend.app.web.controller;
 
+import java.time.Instant;
+
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -14,6 +16,8 @@ public class WebsocketController {
     @MessageMapping("/chat/{roomId}")
     @SendTo("/topic/{roomId}")
     public ChatMessage chat(@DestinationVariable String roomId, ChatMessage message) {
-        return new ChatMessage(message.getMessage(), message.getUser());
+        message.setRoomId(roomId);
+        message.setTimestamp(Instant.now());
+        return message;
     }
 }
