@@ -51,6 +51,7 @@ public class PromotionServiceImpl implements PromotionService {
         return new PromotionDTO(
                 entity.getId(),
                 entity.getLegal_url(),
+                entity.getUrl(),
                 entity.getDescription(),
                 entity.getTemplateHtml());
     }
@@ -59,6 +60,7 @@ public class PromotionServiceImpl implements PromotionService {
         return Promotion.builder()
                 .id(dto.id())
                 .legal_url(dto.legal_url())
+                .url(dto.url())
                 .description(dto.description())
                 .templateHtml(dto.templateHtml())
                 .build();

@@ -25,6 +25,7 @@ public class Promotion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String legal_url;
+    private String url;
     private String description;
     @Column(columnDefinition = "TEXT") // Para permitir HTML largo
     private String templateHtml;
