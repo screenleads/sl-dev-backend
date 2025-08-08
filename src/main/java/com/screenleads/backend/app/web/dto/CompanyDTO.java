@@ -7,5 +7,5 @@ import com.screenleads.backend.app.domain.model.Device;
 import com.screenleads.backend.app.domain.model.Media;
 
 public record CompanyDTO(Long id, String name, String observations, Media logo, List<Device> devices,
-        List<Advice> advices) {
+        List<Advice> advices, String primaryColor, String secondaryColor) {
 }
