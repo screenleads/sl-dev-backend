@@ -61,6 +61,8 @@ public class CompaniesServiceImpl implements CompaniesService {
         Company company = companyRepository.findById(id).orElseThrow();
         company.setName(companyDTO.name());
         company.setObservations(companyDTO.observations());
+        company.setPrimaryColor(companyDTO.primaryColor());
+        company.setSecondaryColor(companyDTO.secondaryColor());
 
         // Manejo seguro del logo
         if (companyDTO.logo() != null && companyDTO.logo().getId() != null) {
@@ -94,6 +96,8 @@ public class CompaniesServiceImpl implements CompaniesService {
         Company company = new Company();
         company.setId(companyDTO.id());
         company.setName(companyDTO.name());
+        company.setPrimaryColor(companyDTO.primaryColor());
+        company.setSecondaryColor(companyDTO.secondaryColor());
         company.setObservations(companyDTO.observations());
 
         // Manejo seguro del logo
