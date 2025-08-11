@@ -25,7 +25,7 @@ public class CompaniesServiceImpl implements CompaniesService {
     private final DeviceRepository deviceRepository;
 
     public CompaniesServiceImpl(CompanyRepository companyRepository, MediaRepository mediaRepository,
-                                 AdviceRepository adviceRepository, DeviceRepository deviceRepository) {
+            AdviceRepository adviceRepository, DeviceRepository deviceRepository) {
         this.companyRepository = companyRepository;
         this.mediaRepository = mediaRepository;
         this.adviceRepository = adviceRepository;
@@ -85,8 +85,9 @@ public class CompaniesServiceImpl implements CompaniesService {
                 company.getObservations(),
                 company.getLogo(),
                 company.getDevices(),
-                company.getAdvices()
-        );
+                company.getAdvices(),
+                company.getPrimaryColor(),
+                company.getSecondaryColor());
     }
 
     private Company convertToEntity(CompanyDTO companyDTO) {
