@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.screenleads.backend.app.domain.model.Advice;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Device;
+import com.screenleads.backend.app.domain.model.Media;
 import com.screenleads.backend.app.domain.repositories.AdviceRepository;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.DeviceRepository;
@@ -66,7 +67,18 @@ public class CompaniesServiceImpl implements CompaniesService {
 
         // Manejo seguro del logo
         if (companyDTO.logo() != null && companyDTO.logo().getId() != null) {
-            mediaRepository.findById(companyDTO.logo().getId()).ifPresent(company::setLogo);
+            Media media = mediaRepository.findById(companyDTO.logo().getId()).orElseThrow();
+
+            // si viene un src y es distinto, actualízalo
+            String newSrc = companyDTO.logo().getSrc();
+            if (newSrc != null && !newSrc.isBlank() && !java.util.Objects.equals(media.getSrc(), newSrc)) {
+                media.setSrc(newSrc);
+                // si Company.logo no tiene cascade MERGE/PERSIST, guarda el media
+                // explícitamente
+                mediaRepository.save(media);
+            }
+
+            company.setLogo(media);
         } else {
             company.setLogo(null);
         }
