@@ -48,12 +48,10 @@ public class DeviceTypesController {
     @CrossOrigin
     @PutMapping("/devices/types/{id}")
     public ResponseEntity<DeviceTypeDTO> updateDeviceType(@PathVariable Long id, @RequestBody DeviceTypeDTO deviceDTO) {
-        try {
-            DeviceTypeDTO updatedDevice = deviceTypeService.updateDeviceType(id, deviceDTO);
-            return ResponseEntity.ok(updatedDevice);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+
+        DeviceTypeDTO updatedDevice = deviceTypeService.updateDeviceType(id, deviceDTO);
+        return ResponseEntity.ok(updatedDevice);
+
     }
 
     @CrossOrigin

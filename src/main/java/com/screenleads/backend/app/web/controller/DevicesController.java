@@ -60,12 +60,10 @@ public class DevicesController {
     @CrossOrigin
     @PutMapping("/{id}")
     public ResponseEntity<DeviceDTO> updateDevice(@PathVariable Long id, @RequestBody DeviceDTO deviceDTO) {
-        try {
-            DeviceDTO updatedDevice = deviceService.updateDevice(id, deviceDTO);
-            return ResponseEntity.ok(updatedDevice);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+
+        DeviceDTO updatedDevice = deviceService.updateDevice(id, deviceDTO);
+        return ResponseEntity.ok(updatedDevice);
+
     }
 
     @CrossOrigin

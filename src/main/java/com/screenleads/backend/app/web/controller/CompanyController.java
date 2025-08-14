@@ -41,12 +41,10 @@ public class CompanyController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<CompanyDTO> updateCompany(@PathVariable Long id, @RequestBody CompanyDTO companyDTO) {
-        try {
-            CompanyDTO updatedCompany = companiesService.updateCompany(id, companyDTO);
-            return ResponseEntity.ok(updatedCompany);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+
+        CompanyDTO updatedCompany = companiesService.updateCompany(id, companyDTO);
+        return ResponseEntity.ok(updatedCompany);
+
     }
 
     @DeleteMapping("/{id}")

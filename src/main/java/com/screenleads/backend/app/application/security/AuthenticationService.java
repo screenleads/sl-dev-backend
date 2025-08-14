@@ -62,20 +62,8 @@ public class AuthenticationService {
             user.setRoles(Set.of(defaultRole));
         }
 
-        try {
-            userRepository.save(user);
-        } catch (DataIntegrityViolationException ex) {
-            Throwable rootCause = ex.getRootCause();
-            if (rootCause instanceof SQLException sqlEx) {
-                String message = sqlEx.getMessage();
-                if (message != null && message.toLowerCase().contains("duplicate")) {
-                    throw new RuntimeException("El nombre de usuario o email ya está registrado.");
-                } else {
-                    throw new RuntimeException("Error de integridad de datos: " + message);
-                }
-            }
-            throw new RuntimeException("Error inesperado al registrar usuario.");
-        }
+        userRepository.save(user);
+
         return new JwtResponse(jwtService.generateToken(user), user);
     }
 

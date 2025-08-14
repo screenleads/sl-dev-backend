@@ -48,12 +48,10 @@ public class MediaTypesController {
     @CrossOrigin
     @PutMapping("/medias/types/{id}")
     public ResponseEntity<MediaTypeDTO> updateMediaType(@PathVariable Long id, @RequestBody MediaTypeDTO deviceDTO) {
-        try {
-            MediaTypeDTO updatedDevice = deviceTypeService.updateMediaType(id, deviceDTO);
-            return ResponseEntity.ok(updatedDevice);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+
+        MediaTypeDTO updatedDevice = deviceTypeService.updateMediaType(id, deviceDTO);
+        return ResponseEntity.ok(updatedDevice);
+
     }
 
     @CrossOrigin

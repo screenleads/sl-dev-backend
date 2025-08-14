@@ -191,12 +191,10 @@ public class MediaController {
     @CrossOrigin
     @PutMapping("/medias/{id}")
     public ResponseEntity<MediaDTO> updateMedia(@PathVariable Long id, @RequestBody MediaDTO deviceDTO) {
-        try {
-            MediaDTO updatedDevice = mediaService.updateMedia(id, deviceDTO);
-            return ResponseEntity.ok(updatedDevice);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+
+        MediaDTO updatedDevice = mediaService.updateMedia(id, deviceDTO);
+        return ResponseEntity.ok(updatedDevice);
+
     }
 
     @CrossOrigin
@@ -209,26 +207,23 @@ public class MediaController {
     @CrossOrigin
     @GetMapping("/medias/render/{id}")
     public ResponseEntity<Resource> getImage(@PathVariable Long id) throws Exception {
-        try {
-            Optional<MediaDTO> mediaaux = mediaService.getMediaById(id);
-            Path filePath = Paths.get("src/main/resources/static/medias/").resolve(mediaaux.get().src()).normalize();
-            log.info("📂 Cargando archivo desde: {}", filePath.toString());
 
-            Resource resource = new UrlResource(filePath.toUri());
+        Optional<MediaDTO> mediaaux = mediaService.getMediaById(id);
+        Path filePath = Paths.get("src/main/resources/static/medias/").resolve(mediaaux.get().src()).normalize();
+        log.info("📂 Cargando archivo desde: {}", filePath.toString());
 
-            if (!resource.exists()) {
-                return ResponseEntity.notFound().build();
-            }
+        Resource resource = new UrlResource(filePath.toUri());
 
-            String contentType = "application/octet-stream";
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                    .body(resource);
-
-        } catch (MalformedURLException e) {
-            return ResponseEntity.badRequest().build();
+        if (!resource.exists()) {
+            return ResponseEntity.notFound().build();
         }
+
+        String contentType = "application/octet-stream";
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
+
     }
 }

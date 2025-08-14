@@ -60,13 +60,11 @@ public class AdvicesController {
     @CrossOrigin
     @PutMapping("/advices/{id}")
     public ResponseEntity<AdviceDTO> updateAdvice(@PathVariable Long id, @RequestBody AdviceDTO adviceDTO) {
-        try {
-            logger.info("adviceDTO object: {}", adviceDTO);
-            AdviceDTO updatedAdvice = adviceService.updateAdvice(id, adviceDTO);
-            return ResponseEntity.ok(updatedAdvice);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+
+        logger.info("adviceDTO object: {}", adviceDTO);
+        AdviceDTO updatedAdvice = adviceService.updateAdvice(id, adviceDTO);
+        return ResponseEntity.ok(updatedAdvice);
+
     }
 
     @CrossOrigin
