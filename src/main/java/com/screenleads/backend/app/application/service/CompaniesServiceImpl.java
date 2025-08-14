@@ -11,14 +11,13 @@ import com.screenleads.backend.app.domain.model.Advice;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Device;
 import com.screenleads.backend.app.domain.model.Media;
-import com.screenleads.backend.app.domain.repositories.AdviceRepository;
-import com.screenleads.backend.app.domain.repositories.CompanyRepository;
-import com.screenleads.backend.app.domain.repositories.DeviceRepository;
-import com.screenleads.backend.app.domain.repositories.MediaRepository;
+import com.screenleads.backend.app.domain.repositories.*;
 import com.screenleads.backend.app.web.dto.CompanyDTO;
 
 @Service
 public class CompaniesServiceImpl implements CompaniesService {
+
+    private final MediaTypeRepository mediaTypeRepository;
 
     private final CompanyRepository companyRepository;
     private final MediaRepository mediaRepository;
@@ -26,11 +25,13 @@ public class CompaniesServiceImpl implements CompaniesService {
     private final DeviceRepository deviceRepository;
 
     public CompaniesServiceImpl(CompanyRepository companyRepository, MediaRepository mediaRepository,
-            AdviceRepository adviceRepository, DeviceRepository deviceRepository) {
+            AdviceRepository adviceRepository, DeviceRepository deviceRepository,
+            MediaTypeRepository mediaTypeRepository) {
         this.companyRepository = companyRepository;
         this.mediaRepository = mediaRepository;
         this.adviceRepository = adviceRepository;
         this.deviceRepository = deviceRepository;
+        this.mediaTypeRepository = mediaTypeRepository;
     }
 
     @Override
@@ -66,22 +67,39 @@ public class CompaniesServiceImpl implements CompaniesService {
         company.setSecondaryColor(companyDTO.secondaryColor());
 
         // Manejo seguro del logo
-        if (companyDTO.logo() != null && companyDTO.logo().getId() != null) {
-            Media media = mediaRepository.findById(companyDTO.logo().getId()).orElseThrow();
+        if (companyDTO.logo() != null) {
+            if (companyDTO.logo().getId() != null) {
+                Media media = mediaRepository.findById(companyDTO.logo().getId()).orElseThrow();
 
-            // si viene un src y es distinto, actualízalo
-            String newSrc = companyDTO.logo().getSrc();
-            if (newSrc != null && !newSrc.isBlank() && !java.util.Objects.equals(media.getSrc(), newSrc)) {
-                media.setSrc(newSrc);
-                // si Company.logo no tiene cascade MERGE/PERSIST, guarda el media
-                // explícitamente
-                mediaRepository.save(media);
+                String newSrc = companyDTO.logo().getSrc();
+                if (newSrc != null && !newSrc.isBlank() && !java.util.Objects.equals(media.getSrc(), newSrc)) {
+                    media.setSrc(newSrc);
+                    mediaRepository.save(media);
+                }
+
+                company.setLogo(media);
+
+            } else if (companyDTO.logo().getSrc() != null && !companyDTO.logo().getSrc().isBlank()) {
+                // Crear nuevo Media desde cero
+                Media newLogo = new Media();
+                newLogo.setSrc(companyDTO.logo().getSrc());
+                String srcLower = companyDTO.logo().getSrc().toLowerCase();
+                String extension = null;
+                int dotIndex = srcLower.lastIndexOf('.');
+                if (dotIndex != -1 && dotIndex < srcLower.length() - 1) {
+                    extension = srcLower.substring(dotIndex + 1);
+                }
+
+                // Asignar MediaType según extensión
+                if (extension != null) {
+                    mediaTypeRepository.findByExtension(extension).ifPresent(newLogo::setType);
+                }
+                Media savedLogo = mediaRepository.save(newLogo);
+                company.setLogo(savedLogo);
+
+            } else {
+                company.setLogo(null);
             }
-
-            company.setLogo(media);
-        } else if (companyDTO.logo() != null && companyDTO.logo().getId() == null
-                && companyDTO.logo().getSrc() == null) {
-            mediaRepository.save(companyDTO.logo());
         } else {
             company.setLogo(null);
         }
