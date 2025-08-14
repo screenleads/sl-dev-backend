@@ -79,6 +79,9 @@ public class CompaniesServiceImpl implements CompaniesService {
             }
 
             company.setLogo(media);
+        } else if (companyDTO.logo() != null && companyDTO.logo().getId() == null
+                && companyDTO.logo().getSrc() == null) {
+            mediaRepository.save(companyDTO.logo());
         } else {
             company.setLogo(null);
         }
