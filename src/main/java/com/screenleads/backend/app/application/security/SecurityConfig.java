@@ -1,81 +1,119 @@
 package com.screenleads.backend.app.application.security;
 
+import com.screenleads.backend.app.application.security.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.screenleads.backend.app.application.security.jwt.JwtAuthenticationFilter;
-
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
-@EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtFilter; // Tu filtro existente
-    private final AuthenticationProvider authenticationProvider; // Tu provider existente
-    private final CustomAuthenticationEntryPoint authEntryPoint;
-    private final CustomAccessDeniedHandler accessDeniedHandler;
+        // === Tus dependencias existentes ===
+        private final JwtAuthenticationFilter jwtAuthFilter;
+        private final UserDetailsService userDetailsService;
 
-    @Value("${cors.allowed-origins:*}")
-    private String allowedOrigins; // CSV o "*"
+        // === NUEVO: handlers para respuestas JSON limpias ===
+        private final CustomAuthenticationEntryPoint authEntryPoint;
+        private final CustomAccessDeniedHandler accessDeniedHandler;
 
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable()) // API JWT
-                .cors(Customizer.withDefaults())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(eh -> eh
-                        .authenticationEntryPoint(authEntryPoint) // 401
-                        .accessDeniedHandler(accessDeniedHandler) // 403
-                )
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/auth/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/actuator/health")
-                        .permitAll()
-                        .anyRequest().authenticated())
-                .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .csrf(csrf -> csrf.disable())
+                                .cors(Customizer.withDefaults())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .exceptionHandling(eh -> eh
+                                                .authenticationEntryPoint(authEntryPoint) // 401 JSON cuando no hay
+                                                                                          // token / token inválido
+                                                .accessDeniedHandler(accessDeniedHandler) // 403 JSON cuando falta
+                                                                                          // rol/permiso
+                                )
+                                .authorizeHttpRequests(auth -> auth
+                                                // Preflight
+                                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-        return http.build();
-    }
+                                                // WebSocket público para handshake/GET (como tenías)
+                                                .requestMatchers(HttpMethod.GET, "/chat-socket/**").permitAll()
+                                                .requestMatchers(HttpMethod.OPTIONS, "/chat-socket/**").permitAll()
 
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration cfg = new CorsConfiguration();
-        List<String> origins = "*".equals(allowedOrigins.trim())
-                ? List.of("*")
-                : Arrays.stream(allowedOrigins.split(",")).map(String::trim).toList();
+                                                // Auth público
+                                                .requestMatchers("/auth/**").permitAll()
 
-        // allowedOriginPatterns soporta comodines; funciona con credenciales
-        cfg.setAllowedOriginPatterns(origins);
-        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin"));
-        cfg.setExposedHeaders(List.of("Authorization"));
-        cfg.setAllowCredentials(true);
+                                                // Swagger / OpenAPI / Actuator (health) públicos para probar
+                                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**",
+                                                                "/swagger-ui.html")
+                                                .permitAll()
+                                                .requestMatchers("/actuator/health").permitAll()
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cfg);
-        return source;
-    }
+                                                // El resto requiere autenticación
+                                                .anyRequest().authenticated())
+                                .authenticationProvider(authenticationProvider())
+                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
+
+        @Bean
+        public AuthenticationProvider authenticationProvider() {
+                DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+                provider.setUserDetailsService(userDetailsService);
+                provider.setPasswordEncoder(passwordEncoder());
+                return provider;
+        }
+
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+                return config.getAuthenticationManager();
+        }
+
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                // Ajusta la "strength" si lo deseas (por defecto razonable)
+                return new BCryptPasswordEncoder();
+        }
+
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration config = new CorsConfiguration();
+
+                // === Tus orígenes tal como los tenías ===
+                config.setAllowedOrigins(List.of(
+                                "https://localhost",
+                                "http://localhost:4200",
+                                "http://localhost:8100",
+                                "https://sl-device-connector.web.app",
+                                "https://sl-dev-dashboard-pre-c4a3c4b00c91.herokuapp.com"));
+
+                // Métodos/headers típicos para REST + preflight
+                config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+                config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin"));
+                config.setExposedHeaders(List.of("Authorization"));
+                config.setAllowCredentials(true);
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", config);
+                return source;
+        }
 }
