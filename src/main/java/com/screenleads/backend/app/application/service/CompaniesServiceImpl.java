@@ -50,10 +50,50 @@ public class CompaniesServiceImpl implements CompaniesService {
     @Override
     public CompanyDTO saveCompany(CompanyDTO companyDTO) {
         Company company = convertToEntity(companyDTO);
+
+        // Si ya existe por nombre, devolver el existente
         Optional<Company> exist = companyRepository.findByName(company.getName());
         if (exist.isPresent()) {
             return convertToDTO(exist.get());
         }
+
+        // --- Manejo del logo ---
+        if (companyDTO.logo() != null) {
+            if (companyDTO.logo().getId() != null) {
+                // Buscar el Media existente por id
+                Media media = mediaRepository.findById(companyDTO.logo().getId())
+                        .orElseThrow(
+                                () -> new RuntimeException("Media no encontrado con id: " + companyDTO.logo().getId()));
+                company.setLogo(media);
+
+            } else if (companyDTO.logo().getSrc() != null && !companyDTO.logo().getSrc().isBlank()) {
+                // Crear un nuevo Media con el src
+                Media newLogo = new Media();
+                newLogo.setSrc(companyDTO.logo().getSrc());
+
+                // Detectar extensión
+                String srcLower = companyDTO.logo().getSrc().toLowerCase();
+                String extension = null;
+                int dotIndex = srcLower.lastIndexOf('.');
+                if (dotIndex != -1 && dotIndex < srcLower.length() - 1) {
+                    extension = srcLower.substring(dotIndex + 1);
+                }
+
+                // Asignar MediaType según extensión
+                if (extension != null) {
+                    mediaTypeRepository.findByExtension(extension).ifPresent(newLogo::setType);
+                }
+
+                Media savedLogo = mediaRepository.save(newLogo);
+                company.setLogo(savedLogo);
+
+            } else {
+                company.setLogo(null);
+            }
+        } else {
+            company.setLogo(null);
+        }
+
         Company savedCompany = companyRepository.save(company);
         return convertToDTO(savedCompany);
     }
