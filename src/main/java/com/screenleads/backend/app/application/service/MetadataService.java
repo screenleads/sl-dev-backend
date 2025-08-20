@@ -1,7 +1,7 @@
-// src/main/java/com/screenleads/backend/app/service/MetadataService.java
 package com.screenleads.backend.app.application.service;
 
 import com.screenleads.backend.app.web.dto.EntityInfo;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.slf4j.Logger;
@@ -22,59 +22,52 @@ public class MetadataService {
     private final Repositories repositories;
 
     public MetadataService(ApplicationContext applicationContext) {
-        // Explora todos los repositorios Spring Data del contexto
         this.repositories = new Repositories(applicationContext);
     }
 
-    /**
-     * Lista entidades a partir de los repositorios registrados.
-     * No ejecuta ninguna query ni toca el metamodel de JPA.
-     */
     public List<EntityInfo> getAllEntities(boolean withCount) {
         List<EntityInfo> list = new ArrayList<>();
 
+        // ✅ Iteración compatible con todas las versiones: Repositories implements
+        // Iterable<Class<?>>
         for (Class<?> domainType : repositories) {
             try {
-                // Filtra solo tus paquetes (ajusta prefijos si conviene)
-                String fqn = domainType.getName();
-                if (!fqn.startsWith("com.screenleads.") && !fqn.startsWith("com.sl."))
+                final String fqn = domainType.getName();
+                // Ajusta estos prefijos a tus paquetes
+                if (!fqn.startsWith("com.screenleads.") && !fqn.startsWith("com.sl.")) {
                     continue;
+                }
 
-                String entityName = domainType.getSimpleName();
+                final String entityName = domainType.getSimpleName();
 
-                // @Table(name=...) si existe
-                String tableName = Optional.ofNullable(domainType.getAnnotation(Table.class))
+                final String tableName = Optional.ofNullable(domainType.getAnnotation(Table.class))
                         .map(Table::name)
                         .filter(s -> !s.isBlank())
                         .orElse(null);
 
-                // idType buscando @Id o @EmbeddedId en fields
-                String idType = resolveIdType(domainType);
+                final String idType = resolveIdType(domainType);
 
-                // atributos públicos ÚTILES (por simplicidad: fields declarados, no estáticos,
-                // no transient)
+                // Atributos básicos (fields no estáticos ni transient; incluye heredados)
                 Map<String, String> attributes = new LinkedHashMap<>();
                 for (Field f : getAllFields(domainType)) {
                     if (Modifier.isStatic(f.getModifiers()))
                         continue;
                     if (Modifier.isTransient(f.getModifiers()))
                         continue;
-                    f.setAccessible(true);
                     attributes.put(f.getName(), f.getType().getSimpleName());
                 }
 
-                // Por defecto no contamos (para evitar toques a DB y problemas de filtros)
                 Long rowCount = null;
                 if (withCount) {
-                    // Sugerencia: solo si quieres, intenta contar usando el repo asociado
-                    // var repo = repositories.getRepositoryFor(domainType).orElse(null);
-                    // if (repo instanceof org.springframework.data.repository.CrudRepository<?, ?>
-                    // cr) {
-                    // rowCount = cr.count(); // ¡Esto sí toca DB! Úsalo si estás seguro
-                    // } else {
-                    // rowCount = -1L;
+                    // Marcador seguro para no tocar la BD
+                    rowCount = -1L;
+
+                    // Si quieres contar de verdad (esto SÍ hace query), descomenta:
+                    // Optional<Object> repoOpt = repositories.getRepositoryFor(domainType);
+                    // if (repoOpt.isPresent() && repoOpt.get() instanceof
+                    // org.springframework.data.repository.CrudRepository<?, ?> cr) {
+                    // try { rowCount = cr.count(); } catch (Exception e) { rowCount = -1L; }
                     // }
-                    rowCount = -1L; // Placeholder seguro
                 }
 
                 list.add(new EntityInfo(entityName, fqn, tableName, idType, attributes, rowCount));
@@ -93,8 +86,10 @@ public class MetadataService {
             if (f.isAnnotationPresent(Id.class)) {
                 return f.getType().getSimpleName();
             }
+            if (f.isAnnotationPresent(EmbeddedId.class)) {
+                return f.getType().getSimpleName() + " (EmbeddedId)";
+            }
         }
-        // Si usas @EmbeddedId o no encuentras @Id, devuelve un marcador
         return "UnknownId";
     }
 
