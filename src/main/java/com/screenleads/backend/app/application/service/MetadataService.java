@@ -1,100 +1,86 @@
-// src/main/java/com/sl/dev/backend/services/MetadataService.java
+// src/main/java/com/screenleads/backend/app/service/MetadataService.java
 package com.screenleads.backend.app.application.service;
 
-import jakarta.persistence.EntityManager;
+import com.screenleads.backend.app.web.dto.EntityInfo;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.metamodel.Attribute;
-import jakarta.persistence.metamodel.EntityType;
-import jakarta.persistence.metamodel.Metamodel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.data.repository.support.Repositories;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import com.screenleads.backend.app.web.dto.EntityInfo;
-
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 
 @Service
 public class MetadataService {
 
     private static final Logger log = LoggerFactory.getLogger(MetadataService.class);
-    private final EntityManager em;
 
-    public MetadataService(EntityManager em) {
-        this.em = em;
+    private final Repositories repositories;
+
+    public MetadataService(ApplicationContext applicationContext) {
+        // Explora todos los repositorios Spring Data del contexto
+        this.repositories = new Repositories(applicationContext);
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Lista entidades a partir de los repositorios registrados.
+     * No ejecuta ninguna query ni toca el metamodel de JPA.
+     */
     public List<EntityInfo> getAllEntities(boolean withCount) {
-        Metamodel metamodel = em.getMetamodel();
-        Set<EntityType<?>> entities = metamodel.getEntities();
-
         List<EntityInfo> list = new ArrayList<>();
-        for (EntityType<?> et : entities) {
+
+        for (Class<?> domainType : repositories) {
             try {
-                Class<?> javaType = et.getJavaType();
-                if (javaType == null)
+                // Filtra solo tus paquetes (ajusta prefijos si conviene)
+                String fqn = domainType.getName();
+                if (!fqn.startsWith("com.screenleads.") && !fqn.startsWith("com.sl."))
                     continue;
 
-                // (Opcional) filtra cualquier clase fuera de tu paquete
-                String fqn = javaType.getName();
-                if (!fqn.startsWith("com.screenleads.") && !fqn.startsWith("com.sl.")) {
-                    // evita clases internas de Hibernate o libs
-                    continue;
-                }
+                String entityName = domainType.getSimpleName();
 
-                String entityName = javaType.getSimpleName();
-                String className = fqn;
-
-                String tableName = Optional.ofNullable(javaType.getAnnotation(Table.class))
+                // @Table(name=...) si existe
+                String tableName = Optional.ofNullable(domainType.getAnnotation(Table.class))
                         .map(Table::name)
                         .filter(s -> !s.isBlank())
                         .orElse(null);
 
-                String idType = null;
-                try {
-                    if (et.getIdType() != null && et.getIdType().getJavaType() != null) {
-                        idType = et.getIdType().getJavaType().getSimpleName();
-                    }
-                } catch (IllegalArgumentException ex) {
-                    // IDs compuestas u otros casos
-                    idType = "CompositeId";
-                } catch (Exception ex) {
-                    log.warn("No se pudo resolver idType para {}", entityName, ex);
-                }
+                // idType buscando @Id o @EmbeddedId en fields
+                String idType = resolveIdType(domainType);
 
+                // atributos públicos ÚTILES (por simplicidad: fields declarados, no estáticos,
+                // no transient)
                 Map<String, String> attributes = new LinkedHashMap<>();
-                for (Attribute<?, ?> attr : et.getAttributes()) {
-                    try {
-                        String aName = attr.getName();
-                        Class<?> aType = attr.getJavaType();
-                        attributes.put(aName, aType != null ? aType.getSimpleName() : "Object");
-                    } catch (Exception ex) {
-                        // sigue si un atributo concreto falla
-                        log.warn("No se pudo resolver atributo en {}: {}", entityName, attr, ex);
-                    }
+                for (Field f : getAllFields(domainType)) {
+                    if (Modifier.isStatic(f.getModifiers()))
+                        continue;
+                    if (Modifier.isTransient(f.getModifiers()))
+                        continue;
+                    f.setAccessible(true);
+                    attributes.put(f.getName(), f.getType().getSimpleName());
                 }
 
+                // Por defecto no contamos (para evitar toques a DB y problemas de filtros)
                 Long rowCount = null;
                 if (withCount) {
-                    try {
-                        var cb = em.getCriteriaBuilder();
-                        var cq = cb.createQuery(Long.class);
-                        cq.select(cb.count(cq.from(javaType)));
-                        rowCount = em.createQuery(cq).getSingleResult();
-                    } catch (Exception ex) {
-                        // no rompas el endpoint por conteo de una entidad
-                        log.warn("COUNT falló en entidad {}: {}", entityName, ex.getMessage());
-                        rowCount = -1L;
-                    }
+                    // Sugerencia: solo si quieres, intenta contar usando el repo asociado
+                    // var repo = repositories.getRepositoryFor(domainType).orElse(null);
+                    // if (repo instanceof org.springframework.data.repository.CrudRepository<?, ?>
+                    // cr) {
+                    // rowCount = cr.count(); // ¡Esto sí toca DB! Úsalo si estás seguro
+                    // } else {
+                    // rowCount = -1L;
+                    // }
+                    rowCount = -1L; // Placeholder seguro
                 }
 
-                list.add(new EntityInfo(entityName, className, tableName, idType, attributes, rowCount));
+                list.add(new EntityInfo(entityName, fqn, tableName, idType, attributes, rowCount));
 
-            } catch (Exception e) {
-                // Nunca tumbes la respuesta por una entidad problemática
-                log.error("Fallo recopilando metadatos de entidad {}: {}", safeName(et), e.toString());
+            } catch (Exception ex) {
+                log.warn("No se pudo construir metadata de {}", domainType, ex);
             }
         }
 
@@ -102,11 +88,23 @@ public class MetadataService {
         return list;
     }
 
-    private String safeName(EntityType<?> et) {
-        try {
-            return et.getJavaType() != null ? et.getJavaType().getName() : "<unknown>";
-        } catch (Exception ignored) {
-            return "<unknown>";
+    private String resolveIdType(Class<?> domainType) {
+        for (Field f : getAllFields(domainType)) {
+            if (f.isAnnotationPresent(Id.class)) {
+                return f.getType().getSimpleName();
+            }
         }
+        // Si usas @EmbeddedId o no encuentras @Id, devuelve un marcador
+        return "UnknownId";
+    }
+
+    private List<Field> getAllFields(Class<?> type) {
+        List<Field> fields = new ArrayList<>();
+        Class<?> current = type;
+        while (current != null && current != Object.class) {
+            fields.addAll(Arrays.asList(current.getDeclaredFields()));
+            current = current.getSuperclass();
+        }
+        return fields;
     }
 }
