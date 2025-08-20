@@ -16,19 +16,12 @@ import java.util.List;
 // @PreAuthorize("hasAnyRole('admin','company_admin')") // opcional: proteger el
 // recurso
 public class MetaDataController {
-    private MetadataService metadataService = null;
+    private MetadataService metadataService;
 
     public void MetadataController(MetadataService metadataService) {
         this.metadataService = metadataService;
     }
 
-    /**
-     * GET /metadata/entities
-     * Devuelve todas las entidades JPA registradas (dinámico).
-     * Ejemplos:
-     * - /metadata/entities -> sin conteo
-     * - /metadata/entities?withCount=true -> incluye rowCount por entidad
-     */
     @GetMapping("/entities")
     public ResponseEntity<List<EntityInfo>> getEntities(
             @RequestParam(name = "withCount", defaultValue = "false") boolean withCount) {

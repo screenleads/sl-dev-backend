@@ -1,3 +1,4 @@
+// src/main/java/com/sl/dev/backend/services/MetadataService.java
 package com.screenleads.backend.app.application.service;
 
 import jakarta.persistence.EntityManager;
@@ -5,6 +6,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.Metamodel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,17 +18,13 @@ import java.util.*;
 @Service
 public class MetadataService {
 
+    private static final Logger log = LoggerFactory.getLogger(MetadataService.class);
     private final EntityManager em;
 
     public MetadataService(EntityManager em) {
         this.em = em;
     }
 
-    /**
-     * Obtiene la lista de entidades JPA registradas en el Metamodel con metadatos.
-     * 
-     * @param withCount si true, calcula COUNT(*) por entidad
-     */
     @Transactional(readOnly = true)
     public List<EntityInfo> getAllEntities(boolean withCount) {
         Metamodel metamodel = em.getMetamodel();
@@ -33,53 +32,81 @@ public class MetadataService {
 
         List<EntityInfo> list = new ArrayList<>();
         for (EntityType<?> et : entities) {
-            // Nombre simple de la clase
-            Class<?> javaType = et.getJavaType();
-            String className = javaType.getName();
-            String entityName = javaType.getSimpleName();
-
-            // Table name (si tiene @Table; si no, null)
-            String tableName = Optional.ofNullable(javaType.getAnnotation(Table.class))
-                    .map(Table::name)
-                    .filter(s -> !s.isBlank())
-                    .orElse(null);
-
-            // Tipo de ID (si lo conoce el metamodel)
-            String idType = null;
             try {
-                if (et.getIdType() != null && et.getIdType().getJavaType() != null) {
-                    idType = et.getIdType().getJavaType().getSimpleName();
+                Class<?> javaType = et.getJavaType();
+                if (javaType == null)
+                    continue;
+
+                // (Opcional) filtra cualquier clase fuera de tu paquete
+                String fqn = javaType.getName();
+                if (!fqn.startsWith("com.screenleads.") && !fqn.startsWith("com.sl.")) {
+                    // evita clases internas de Hibernate o libs
+                    continue;
                 }
-            } catch (IllegalArgumentException ignored) {
-                /* composite IDs u otros casos */ }
 
-            // Atributos: nombre -> tipo simple
-            Map<String, String> attributes = new LinkedHashMap<>();
-            for (Attribute<?, ?> attr : et.getAttributes()) {
-                Class<?> attrType = attr.getJavaType();
-                attributes.put(attr.getName(), attrType != null ? attrType.getSimpleName() : "Object");
-            }
+                String entityName = javaType.getSimpleName();
+                String className = fqn;
 
-            // COUNT(*) opcional vía Criteria API
-            Long rowCount = null;
-            if (withCount) {
+                String tableName = Optional.ofNullable(javaType.getAnnotation(Table.class))
+                        .map(Table::name)
+                        .filter(s -> !s.isBlank())
+                        .orElse(null);
+
+                String idType = null;
                 try {
-                    var cb = em.getCriteriaBuilder();
-                    var cq = cb.createQuery(Long.class);
-                    var root = cq.from(javaType);
-                    cq.select(cb.count(root));
-                    rowCount = em.createQuery(cq).getSingleResult();
-                } catch (Exception e) {
-                    // Evitamos romper el endpoint si alguna entidad falla (vistas, permisos, etc.)
-                    rowCount = -1L;
+                    if (et.getIdType() != null && et.getIdType().getJavaType() != null) {
+                        idType = et.getIdType().getJavaType().getSimpleName();
+                    }
+                } catch (IllegalArgumentException ex) {
+                    // IDs compuestas u otros casos
+                    idType = "CompositeId";
+                } catch (Exception ex) {
+                    log.warn("No se pudo resolver idType para {}", entityName, ex);
                 }
-            }
 
-            list.add(new EntityInfo(entityName, className, tableName, idType, attributes, rowCount));
+                Map<String, String> attributes = new LinkedHashMap<>();
+                for (Attribute<?, ?> attr : et.getAttributes()) {
+                    try {
+                        String aName = attr.getName();
+                        Class<?> aType = attr.getJavaType();
+                        attributes.put(aName, aType != null ? aType.getSimpleName() : "Object");
+                    } catch (Exception ex) {
+                        // sigue si un atributo concreto falla
+                        log.warn("No se pudo resolver atributo en {}: {}", entityName, attr, ex);
+                    }
+                }
+
+                Long rowCount = null;
+                if (withCount) {
+                    try {
+                        var cb = em.getCriteriaBuilder();
+                        var cq = cb.createQuery(Long.class);
+                        cq.select(cb.count(cq.from(javaType)));
+                        rowCount = em.createQuery(cq).getSingleResult();
+                    } catch (Exception ex) {
+                        // no rompas el endpoint por conteo de una entidad
+                        log.warn("COUNT falló en entidad {}: {}", entityName, ex.getMessage());
+                        rowCount = -1L;
+                    }
+                }
+
+                list.add(new EntityInfo(entityName, className, tableName, idType, attributes, rowCount));
+
+            } catch (Exception e) {
+                // Nunca tumbes la respuesta por una entidad problemática
+                log.error("Fallo recopilando metadatos de entidad {}: {}", safeName(et), e.toString());
+            }
         }
 
-        // Orden estable: por nombre de entidad
         list.sort(Comparator.comparing(EntityInfo::getEntityName));
         return list;
+    }
+
+    private String safeName(EntityType<?> et) {
+        try {
+            return et.getJavaType() != null ? et.getJavaType().getName() : "<unknown>";
+        } catch (Exception ignored) {
+            return "<unknown>";
+        }
     }
 }
