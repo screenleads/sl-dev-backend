@@ -1,6 +1,6 @@
 package com.screenleads.backend.app.application.service;
 
-import com.screenleads.backend.app.web.dto.UserDto; // <-- usa tu UserDto existente
+import com.screenleads.backend.app.web.dto.UserDto;
 
 import java.util.List;
 
@@ -9,9 +9,9 @@ public interface UserService {
 
     UserDto getById(Long id);
 
-    void delete(Long id);
+    UserDto create(UserDto dto);
 
-    // Si más adelante quieres CRUD completo:
-    // UserDto create(UserDto dto);
-    // UserDto update(Long id, UserDto dto);
+    UserDto update(Long id, UserDto dto);
+
+    void delete(Long id);
 }
