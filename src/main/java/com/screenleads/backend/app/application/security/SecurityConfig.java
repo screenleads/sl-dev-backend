@@ -29,11 +29,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-        // === Tus dependencias existentes ===
         private final JwtAuthenticationFilter jwtAuthFilter;
         private final UserDetailsService userDetailsService;
 
-        // === NUEVO: handlers para respuestas JSON limpias ===
+        // Respuestas JSON limpias para 401 / 403
         private final CustomAuthenticationEntryPoint authEntryPoint;
         private final CustomAccessDeniedHandler accessDeniedHandler;
 
@@ -45,31 +44,32 @@ public class SecurityConfig {
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .exceptionHandling(eh -> eh
-                                                .authenticationEntryPoint(authEntryPoint) // 401 JSON cuando no hay
-                                                                                          // token / token inválido
-                                                .accessDeniedHandler(accessDeniedHandler) // 403 JSON cuando falta
-                                                                                          // rol/permiso
+                                                .authenticationEntryPoint(authEntryPoint) // 401
+                                                .accessDeniedHandler(accessDeniedHandler) // 403
                                 )
                                 .authorizeHttpRequests(auth -> auth
                                                 // Preflight
                                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                                                // WebSocket público para handshake/GET (como tenías)
+                                                // WebSocket público (handshake/info) y status
                                                 .requestMatchers(HttpMethod.GET, "/chat-socket/**").permitAll()
                                                 .requestMatchers(HttpMethod.OPTIONS, "/chat-socket/**").permitAll()
                                                 .requestMatchers(HttpMethod.GET, "/ws/status").permitAll()
                                                 .requestMatchers(HttpMethod.OPTIONS, "/ws/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/ws/command/**").authenticated()
-                                                // Auth público
-                                                .requestMatchers("/auth/**").permitAll()
 
-                                                // Swagger / OpenAPI / Actuator (health) públicos para probar
+                                                // Auth: solo login/refresh públicos
+                                                .requestMatchers("/auth/login", "/auth/refresh").permitAll()
+                                                // /auth/me requiere autenticación
+                                                .requestMatchers("/auth/me").authenticated()
+
+                                                // Swagger / OpenAPI / Health
                                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**",
                                                                 "/swagger-ui.html")
                                                 .permitAll()
                                                 .requestMatchers("/actuator/health").permitAll()
 
-                                                // El resto requiere autenticación
+                                                // El resto autenticado
                                                 .anyRequest().authenticated())
                                 .authenticationProvider(authenticationProvider())
                                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -92,7 +92,6 @@ public class SecurityConfig {
 
         @Bean
         public PasswordEncoder passwordEncoder() {
-                // Ajusta la "strength" si lo deseas (por defecto razonable)
                 return new BCryptPasswordEncoder();
         }
 
@@ -100,15 +99,16 @@ public class SecurityConfig {
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration config = new CorsConfiguration();
 
-                // === Tus orígenes tal como los tenías ===
+                // Orígenes explícitos (HTTP y HTTPS en local + tus despliegues)
                 config.setAllowedOrigins(List.of(
                                 "https://localhost",
+                                "https://localhost:4200",
+                                "https://localhost:8100",
                                 "http://localhost:4200",
                                 "http://localhost:8100",
                                 "https://sl-device-connector.web.app",
                                 "https://sl-dev-dashboard-pre-c4a3c4b00c91.herokuapp.com"));
 
-                // Métodos/headers típicos para REST + preflight
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                 config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin"));
                 config.setExposedHeaders(List.of("Authorization"));
