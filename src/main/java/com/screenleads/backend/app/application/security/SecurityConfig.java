@@ -57,7 +57,9 @@ public class SecurityConfig {
                                                 // WebSocket público para handshake/GET (como tenías)
                                                 .requestMatchers(HttpMethod.GET, "/chat-socket/**").permitAll()
                                                 .requestMatchers(HttpMethod.OPTIONS, "/chat-socket/**").permitAll()
-
+                                                .requestMatchers(HttpMethod.GET, "/ws/status").permitAll()
+                                                .requestMatchers(HttpMethod.OPTIONS, "/ws/**").permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/ws/command/**").authenticated()
                                                 // Auth público
                                                 .requestMatchers("/auth/**").permitAll()
 
