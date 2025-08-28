@@ -22,7 +22,10 @@ import com.screenleads.backend.app.domain.model.TimeRange;
 import com.screenleads.backend.app.domain.repositories.AdviceRepository;
 import com.screenleads.backend.app.domain.repositories.MediaRepository;
 import com.screenleads.backend.app.web.dto.AdviceDTO;
+import com.screenleads.backend.app.web.dto.AdviceVisibilityRuleDTO;
 import com.screenleads.backend.app.web.dto.TimeRangeDTO;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class AdviceServiceImpl implements AdviceService {
@@ -69,62 +72,108 @@ public class AdviceServiceImpl implements AdviceService {
     }
 
     @Override
-    public AdviceDTO saveAdvice(AdviceDTO adviceDTO) {
-        Advice advice = convertToEntity(adviceDTO);
-        // Optional<Advice> exist = adviceRepository.findById(advice.getId());
-        // if (exist.isPresent())
-        // return convertToDTO(exist.get());
-        Advice savedAdvice = adviceRepository.save(advice);
-        return convertToDTO(savedAdvice);
-    }
+    @Transactional
+    public AdviceDTO saveAdvice(AdviceDTO dto) {
+        // 1) Crear Advice "limpio"
+        Advice advice = new Advice();
+        advice.setDescription(dto.description());
+        advice.setCustomInterval(dto.customInterval());
+        advice.setInterval(dto.interval());
 
-    @Override
-    public AdviceDTO updateAdvice(Long id, AdviceDTO adviceDTO) {
-        Advice advice = adviceRepository.findById(id).orElseThrow();
-        advice.setCustomInterval(adviceDTO.customInterval());
-        advice.setDescription(adviceDTO.description());
-        advice.setInterval(adviceDTO.interval());
-        // advice.setMedia(mediaRepository.findById(adviceDTO.media().getId()).get());
-        if (adviceDTO.media() != null && adviceDTO.media().getId() != null) {
-            Media media = mediaRepository.findById(adviceDTO.media().getId())
+        // 2) Resolver Media (si viene id)
+        if (dto.media() != null && dto.media().getId() != null) {
+            Media media = mediaRepository.findById(dto.media().getId())
                     .orElseThrow(() -> new IllegalArgumentException("Media no encontrada"));
             advice.setMedia(media);
         } else {
-            advice.setMedia(null); // o mantenla como estaba, según tu lógica
+            advice.setMedia(null);
         }
-        advice.setPromotion(adviceDTO.promotion());
-        // Limpia reglas actuales (esto activa el orphanRemoval)
-        advice.getVisibilityRules().clear();
 
-        // Si hay reglas nuevas en el DTO, reconstrúyelas manualmente
-        List<AdviceVisibilityRule> newRules = new ArrayList<>();
+        // 3) Resolver Promotion (si trabajas por id; si no, ajusta a tu diseño)
+        if (dto.promotion() != null && dto.promotion().getId() != null) {
+            advice.setPromotion(dto.promotion()); // o promotionRepository.getReferenceById(dto.promotion().getId())
+        } else {
+            advice.setPromotion(null);
+        }
 
-        if (adviceDTO.visibilityRules() != null) {
-            for (AdviceVisibilityRule ruleDto : adviceDTO.visibilityRules()) {
+        // 4) (Multi-tenant) Fijar compañía si no es admin
+        // CompanyWriteGuards.enforceCompanyOnWrite(advice);
+
+        // 5) Construir visibilityRules + timeRanges
+        advice.setVisibilityRules(new ArrayList<>());
+        if (dto.visibilityRules() != null) {
+            for (AdviceVisibilityRule ruleIn : dto.visibilityRules()) { // <-- ENTIDAD, no DTO
                 AdviceVisibilityRule rule = new AdviceVisibilityRule();
-                rule.setDay(ruleDto.getDay());
-                rule.setAdvice(advice); // ¡clave! relacionar con el padre
+                rule.setDay(ruleIn.getDay());
+                rule.setAdvice(advice);
 
-                List<TimeRange> newRanges = new ArrayList<>();
-                if (ruleDto.getTimeRanges() != null) {
-                    for (TimeRange rangeDto : ruleDto.getTimeRanges()) {
-                        TimeRange range = new TimeRange();
-                        range.setFromTime(rangeDto.getFromTime());
-                        range.setToTime(rangeDto.getToTime());
-                        range.setRule(rule); // ¡clave! relacionar con la regla
-                        newRanges.add(range);
+                List<TimeRange> ranges = new ArrayList<>();
+                if (ruleIn.getTimeRanges() != null) {
+                    for (TimeRange rangeIn : ruleIn.getTimeRanges()) { // <-- ENTIDAD, no DTO
+                        TimeRange tr = new TimeRange();
+                        tr.setFromTime(rangeIn.getFromTime());
+                        tr.setToTime(rangeIn.getToTime());
+                        tr.setRule(rule);
+                        ranges.add(tr);
                     }
                 }
-                rule.setTimeRanges(newRanges);
-                newRules.add(rule);
+                rule.setTimeRanges(ranges);
+                advice.getVisibilityRules().add(rule);
             }
         }
 
-        advice.getVisibilityRules().addAll(newRules);
-        logger.info("advice object: {}", advice);
+        // 6) Guardar
+        Advice saved = adviceRepository.save(advice);
+        return convertToDTO(saved);
+    }
 
-        Advice updatedAdvice = adviceRepository.save(advice);
-        return convertToDTO(updatedAdvice);
+    @Override
+    @Transactional
+    public AdviceDTO updateAdvice(Long id, AdviceDTO dto) {
+        Advice advice = adviceRepository.findById(id).orElseThrow();
+
+        advice.setCustomInterval(dto.customInterval());
+        advice.setDescription(dto.description());
+        advice.setInterval(dto.interval());
+
+        if (dto.media() != null && dto.media().getId() != null) {
+            Media media = mediaRepository.findById(dto.media().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Media no encontrada"));
+            advice.setMedia(media);
+        } else {
+            advice.setMedia(null);
+        }
+
+        advice.setPromotion(dto.promotion());
+
+        // Reemplazo completo de reglas (orphanRemoval aplicado)
+        advice.getVisibilityRules().clear();
+
+        if (dto.visibilityRules() != null) {
+            for (AdviceVisibilityRule ruleDto : dto.visibilityRules()) {
+                AdviceVisibilityRule rule = new AdviceVisibilityRule();
+                rule.setDay(ruleDto.getDay());
+                rule.setAdvice(advice);
+
+                List<TimeRange> ranges = new ArrayList<>();
+                if (ruleDto.getTimeRanges() != null) {
+                    for (TimeRange rangeDto : ruleDto.getTimeRanges()) {
+                        TimeRange tr = new TimeRange();
+                        tr.setFromTime(rangeDto.getFromTime());
+                        tr.setToTime(rangeDto.getToTime());
+                        tr.setRule(rule);
+                        ranges.add(tr);
+                    }
+                }
+                rule.setTimeRanges(ranges);
+
+                // Añade a la colección MANAGED del padre
+                advice.getVisibilityRules().add(rule);
+            }
+        }
+
+        Advice saved = adviceRepository.save(advice); // asegura flush/commit
+        return convertToDTO(saved);
     }
 
     @Override

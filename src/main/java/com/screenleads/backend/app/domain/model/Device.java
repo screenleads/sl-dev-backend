@@ -6,6 +6,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,6 +34,8 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@FilterDef(name = "companyFilter", parameters = @ParamDef(name = "companyId", type = Long.class))
+@Filter(name = "companyFilter", condition = "company_id = :companyId")
 public class Device {
 
     @Id
@@ -47,7 +53,7 @@ public class Device {
 
     @ManyToOne
     @JoinColumn(name = "company_id", referencedColumnName = "id")
-    @JsonIgnoreProperties({"users", "devices", "advices"}) 
+    @JsonIgnoreProperties({ "users", "devices", "advices" })
     private Company company;
 
     @ManyToMany
