@@ -9,23 +9,28 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
+
+import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.screenleads.backend.app.domain.model.Advice;
 import com.screenleads.backend.app.domain.model.AdviceVisibilityRule;
-import com.screenleads.backend.app.domain.model.Device;
-import com.screenleads.backend.app.domain.model.DeviceType;
+import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Media;
 import com.screenleads.backend.app.domain.model.TimeRange;
 import com.screenleads.backend.app.domain.repositories.AdviceRepository;
 import com.screenleads.backend.app.domain.repositories.MediaRepository;
+import com.screenleads.backend.app.domain.repositories.UserRepository;
 import com.screenleads.backend.app.web.dto.AdviceDTO;
-import com.screenleads.backend.app.web.dto.AdviceVisibilityRuleDTO;
-import com.screenleads.backend.app.web.dto.TimeRangeDTO;
-
-import jakarta.transaction.Transactional;
 
 @Service
 public class AdviceServiceImpl implements AdviceService {
@@ -33,14 +38,26 @@ public class AdviceServiceImpl implements AdviceService {
 
     private final AdviceRepository adviceRepository;
     private final MediaRepository mediaRepository;
+    private final UserRepository userRepository;
 
-    public AdviceServiceImpl(AdviceRepository adviceRepository, MediaRepository mediaRepository) {
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    public AdviceServiceImpl(AdviceRepository adviceRepository,
+            MediaRepository mediaRepository,
+            UserRepository userRepository) {
         this.adviceRepository = adviceRepository;
         this.mediaRepository = mediaRepository;
+        this.userRepository = userRepository;
     }
 
+    // ======================= LECTURAS (filtradas por compañía)
+    // =======================
+
     @Override
+    @Transactional
     public List<AdviceDTO> getAllAdvices() {
+        enableCompanyFilterIfNeeded();
         return adviceRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .sorted(Comparator.comparing(AdviceDTO::id))
@@ -48,7 +65,10 @@ public class AdviceServiceImpl implements AdviceService {
     }
 
     @Override
+    @Transactional
     public List<AdviceDTO> getVisibleAdvicesNow() {
+        enableCompanyFilterIfNeeded();
+
         LocalDateTime now = LocalDateTime.now();
         DayOfWeek today = now.getDayOfWeek();
         LocalTime time = now.toLocalTime();
@@ -67,13 +87,19 @@ public class AdviceServiceImpl implements AdviceService {
     }
 
     @Override
+    @Transactional
     public Optional<AdviceDTO> getAdviceById(Long id) {
+        enableCompanyFilterIfNeeded();
         return adviceRepository.findById(id).map(this::convertToDTO);
     }
+
+    // ============================= ESCRITURAS =============================
 
     @Override
     @Transactional
     public AdviceDTO saveAdvice(AdviceDTO dto) {
+        enableCompanyFilterIfNeeded(); // por si hay lecturas internas
+
         // 1) Crear Advice "limpio"
         Advice advice = new Advice();
         advice.setDescription(dto.description());
@@ -89,27 +115,23 @@ public class AdviceServiceImpl implements AdviceService {
             advice.setMedia(null);
         }
 
-        // 3) Resolver Promotion (si trabajas por id; si no, ajusta a tu diseño)
-        if (dto.promotion() != null && dto.promotion().getId() != null) {
-            advice.setPromotion(dto.promotion()); // o promotionRepository.getReferenceById(dto.promotion().getId())
-        } else {
-            advice.setPromotion(null);
-        }
+        // 3) Resolver Promotion (según tu diseño actual)
+        advice.setPromotion(dto.promotion());
 
         // 4) (Multi-tenant) Fijar compañía si no es admin
-        // CompanyWriteGuards.enforceCompanyOnWrite(advice);
+        enforceCompanyOnWrite(advice);
 
         // 5) Construir visibilityRules + timeRanges
         advice.setVisibilityRules(new ArrayList<>());
         if (dto.visibilityRules() != null) {
-            for (AdviceVisibilityRule ruleIn : dto.visibilityRules()) { // <-- ENTIDAD, no DTO
+            for (AdviceVisibilityRule ruleIn : dto.visibilityRules()) { // ENTIDAD (tu DTO usa entidades)
                 AdviceVisibilityRule rule = new AdviceVisibilityRule();
                 rule.setDay(ruleIn.getDay());
                 rule.setAdvice(advice);
 
                 List<TimeRange> ranges = new ArrayList<>();
                 if (ruleIn.getTimeRanges() != null) {
-                    for (TimeRange rangeIn : ruleIn.getTimeRanges()) { // <-- ENTIDAD, no DTO
+                    for (TimeRange rangeIn : ruleIn.getTimeRanges()) { // ENTIDAD
                         TimeRange tr = new TimeRange();
                         tr.setFromTime(rangeIn.getFromTime());
                         tr.setToTime(rangeIn.getToTime());
@@ -130,6 +152,8 @@ public class AdviceServiceImpl implements AdviceService {
     @Override
     @Transactional
     public AdviceDTO updateAdvice(Long id, AdviceDTO dto) {
+        enableCompanyFilterIfNeeded(); // findById ya vendrá filtrado por compañía
+
         Advice advice = adviceRepository.findById(id).orElseThrow();
 
         advice.setCustomInterval(dto.customInterval());
@@ -172,57 +196,121 @@ public class AdviceServiceImpl implements AdviceService {
             }
         }
 
-        Advice saved = adviceRepository.save(advice); // asegura flush/commit
+        // (Multi-tenant) Por si llega un company ajeno en el body
+        enforceCompanyOnWrite(advice);
+
+        Advice saved = adviceRepository.save(advice);
         return convertToDTO(saved);
     }
 
     @Override
+    @Transactional
     public void deleteAdvice(Long id) {
-        adviceRepository.deleteById(id);
+        enableCompanyFilterIfNeeded();
+        adviceRepository.findById(id).ifPresent(adviceRepository::delete);
     }
+
+    // ============================= MAPPERS =============================
 
     // Convert Advice Entity to AdviceDTO
     private AdviceDTO convertToDTO(Advice advice) {
         Media media = null;
-        Optional<Media> aux = mediaRepository.findById(advice.getMedia().getId());
-        if (aux.isPresent()) {
-            media = aux.get();
+        if (advice.getMedia() != null && advice.getMedia().getId() != null) {
+            media = mediaRepository.findById(advice.getMedia().getId()).orElse(null);
         }
-        return new AdviceDTO(advice.getId(), advice.getDescription(), advice.getCustomInterval(), advice.getInterval(),
-                media, advice.getPromotion(), advice.getVisibilityRules());
+        return new AdviceDTO(
+                advice.getId(),
+                advice.getDescription(),
+                advice.getCustomInterval(),
+                advice.getInterval(),
+                media,
+                advice.getPromotion(),
+                advice.getVisibilityRules());
     }
 
-    // Convert AdviceDTO to Advice Entity
-    private Advice convertToEntity(AdviceDTO adviceDTO) {
-        Advice advice = new Advice();
-        advice.setId(adviceDTO.id());
-        advice.setDescription(adviceDTO.description());
-        advice.setCustomInterval(adviceDTO.customInterval());
-        advice.setInterval(adviceDTO.interval());
-        advice.setMedia(mediaRepository.findById(adviceDTO.media().getId()).get());
-        advice.setPromotion(adviceDTO.promotion());
-        List<AdviceVisibilityRule> rules = new ArrayList<>();
-        if (adviceDTO.visibilityRules() != null) {
-            for (AdviceVisibilityRule ruleDto : adviceDTO.visibilityRules()) {
-                AdviceVisibilityRule rule = new AdviceVisibilityRule();
-                rule.setDay(ruleDto.getDay());
-                rule.setAdvice(advice);
+    // ============================= HELPERS MT =============================
 
-                List<TimeRange> ranges = new ArrayList<>();
-                if (ruleDto.getTimeRanges() != null) {
-                    for (TimeRange rangeDto : ruleDto.getTimeRanges()) {
-                        TimeRange range = new TimeRange();
-                        range.setFromTime(rangeDto.getFromTime());
-                        range.setToTime(rangeDto.getToTime());
-                        range.setRule(rule);
-                        ranges.add(range);
-                    }
-                }
-                rule.setTimeRanges(ranges);
-                rules.add(rule);
-            }
+    /**
+     * Activa el filtro "companyFilter" en la misma Session/Tx usada por los repos
+     * si NO es admin.
+     */
+    private void enableCompanyFilterIfNeeded() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated())
+            return;
+
+        boolean isAdmin = auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> "ROLE_ADMIN".equals(a) || "ADMIN".equals(a));
+        if (isAdmin)
+            return;
+
+        Long companyId = resolveCompanyId(auth);
+        if (companyId == null)
+            return;
+
+        Session session = entityManager.unwrap(Session.class);
+        var filter = session.getEnabledFilter("companyFilter");
+        if (filter == null) {
+            session.enableFilter("companyFilter").setParameter("companyId", companyId);
+        } else {
+            filter.setParameter("companyId", companyId);
         }
-        advice.setVisibilityRules(rules);
-        return advice;
+    }
+
+    /** Si el usuario NO es admin, fuerza que el Advice pertenezca a su compañía. */
+    private void enforceCompanyOnWrite(Advice advice) {
+        if (advice == null || isCurrentUserAdmin())
+            return;
+        Long companyId = currentCompanyId();
+        if (companyId == null)
+            return;
+        if (advice.getCompany() == null || advice.getCompany().getId() == null
+                || !companyId.equals(advice.getCompany().getId())) {
+            Company c = new Company();
+            c.setId(companyId);
+            advice.setCompany(c);
+        }
+    }
+
+    private boolean isCurrentUserAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated())
+            return false;
+        return auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> "ROLE_ADMIN".equals(a) || "ADMIN".equals(a));
+    }
+
+    private Long currentCompanyId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated())
+            return null;
+        return resolveCompanyId(auth);
+    }
+
+    private Long resolveCompanyId(Authentication auth) {
+        Object principal = auth.getPrincipal();
+
+        // 1) Entidad de dominio como principal
+        if (principal instanceof com.screenleads.backend.app.domain.model.User u) {
+            return (u.getCompany() != null) ? u.getCompany().getId() : null;
+        }
+
+        // 2) UserDetails estándar
+        if (principal instanceof UserDetails ud) {
+            return userRepository.findByUsername(ud.getUsername())
+                    .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
+                    .orElse(null);
+        }
+
+        // 3) Principal como String (username) - típico JWT con "sub"
+        if (principal instanceof String username) {
+            return userRepository.findByUsername(username)
+                    .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
+                    .orElse(null);
+        }
+
+        return null;
     }
 }

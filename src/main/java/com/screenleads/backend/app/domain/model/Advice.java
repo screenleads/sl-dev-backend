@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.ParamDef;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -33,15 +32,17 @@ import lombok.Setter;
 @AllArgsConstructor
 @Filter(name = "companyFilter", condition = "company_id = :companyId")
 public class Advice {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String description;
     private Boolean customInterval;
     private Number interval;
 
     @ManyToOne
-    @JoinColumn(name = "company_id", referencedColumnName = "id")
+    @JoinColumn(name = "company_id", referencedColumnName = "id") // <-- clave: coincide con el @Filter
     @JsonIgnore
     private Company company;
 
