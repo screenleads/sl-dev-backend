@@ -62,31 +62,29 @@ public class UserServiceImpl implements UserService {
         if (dto.getUsername() == null || dto.getUsername().isBlank())
             throw new IllegalArgumentException("username requerido");
 
-        // Evita duplicados de username (opcional; también puedes delegar en unique
-        // constraint)
         repo.findByUsername(dto.getUsername()).ifPresent(u -> {
             throw new IllegalArgumentException("username ya existe");
         });
 
         User u = new User();
-        // Campos escalares
         u.setUsername(dto.getUsername());
         u.setEmail(dto.getEmail());
         u.setName(dto.getName());
         u.setLastName(dto.getLastName());
 
-        // Password temporal
-        String tempPassword = generateTempPassword(12);
-        u.setPassword(passwordEncoder.encode(tempPassword));
+        // <<< CAMBIO CLAVE >>>
+        String rawPassword = (dto.getPassword() != null && !dto.getPassword().isBlank())
+                ? dto.getPassword()
+                : generateTempPassword(12);
+        u.setPassword(passwordEncoder.encode(rawPassword));
+        // <<< FIN CAMBIO >>>
 
-        // company
         if (dto.getCompanyId() != null) {
             Company c = companyRepo.findById(dto.getCompanyId())
                     .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + dto.getCompanyId()));
             u.setCompany(c);
         }
 
-        // roles por nombre
         if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
             Set<Role> roles = new HashSet<>();
             for (String rn : dto.getRoles()) {
@@ -96,18 +94,22 @@ public class UserServiceImpl implements UserService {
             }
             u.setRoles(roles);
         } else {
-            u.setRoles(Set.of()); // o deja roles por defecto si quieres
+            u.setRoles(Set.of());
         }
 
         User saved = repo.save(u);
-        // No devolvemos password; el DTO sigue tu contrato
-        return UserMapper.toDto(saved);
+
+        // Opcional: si generaste una contraseña temporal, devuélvela aparte
+        // (mejor por email o solo una vez en la respuesta)
+        UserDto res = UserMapper.toDto(saved);
+        // res.setTempPassword(dto.getPassword() == null ? rawPassword : null); // si tu
+        // DTO lo soporta
+        return res;
     }
 
     @Override
     public UserDto update(Long id, UserDto dto) {
         return repo.findById(id).map(existing -> {
-            // Escalares (solo si vienen no nulos)
             if (dto.getUsername() != null)
                 existing.setUsername(dto.getUsername());
             if (dto.getEmail() != null)
@@ -117,14 +119,18 @@ public class UserServiceImpl implements UserService {
             if (dto.getLastName() != null)
                 existing.setLastName(dto.getLastName());
 
-            // company (si viene null, no lo tocamos; si viene un id, lo cambiamos)
+            // <<< PERMITIR CAMBIO DE PASSWORD >>>
+            if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+                existing.setPassword(passwordEncoder.encode(dto.getPassword()));
+            }
+            // <<< FIN >>>
+
             if (dto.getCompanyId() != null) {
                 Company c = companyRepo.findById(dto.getCompanyId())
                         .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + dto.getCompanyId()));
                 existing.setCompany(c);
             }
 
-            // roles (si viene null, no tocar; si viene lista, reemplazar)
             if (dto.getRoles() != null) {
                 Set<Role> roles = new HashSet<>();
                 for (String rn : dto.getRoles()) {
