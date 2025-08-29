@@ -46,6 +46,7 @@ public class User implements UserDetails {
     private String lastName;
 
     @ManyToOne
+    @JoinColumn(name = "company_id")
     @JsonIgnoreProperties({ "users", "devices", "advices" })
     private Company company;
 
