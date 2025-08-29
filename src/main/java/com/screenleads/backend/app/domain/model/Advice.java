@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -32,7 +31,6 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@FilterDef(name = "companyFilter", parameters = @ParamDef(name = "companyId", type = Long.class))
 @Filter(name = "companyFilter", condition = "company_id = :companyId")
 public class Advice {
     @Id
