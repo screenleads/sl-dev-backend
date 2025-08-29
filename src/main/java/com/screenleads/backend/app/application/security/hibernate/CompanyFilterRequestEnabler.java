@@ -8,6 +8,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -19,8 +21,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-@Order(20)
+@Order(20) // ejecuta después del filtro JWT
 public class CompanyFilterRequestEnabler extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(CompanyFilterRequestEnabler.class);
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -40,15 +44,23 @@ public class CompanyFilterRequestEnabler extends OncePerRequestFilter {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
             if (auth != null && auth.isAuthenticated()) {
+                log.debug("Auth class={}, principal={}, authorities={}",
+                        auth.getClass().getName(),
+                        auth.getPrincipal(),
+                        auth.getAuthorities());
+
                 boolean isAdmin = auth.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
                         .anyMatch(a -> "ROLE_ADMIN".equals(a) || "ADMIN".equals(a));
 
                 Long companyId = resolveCompanyId(auth);
+                log.debug("Resolved companyId={} (isAdmin={})", companyId, isAdmin);
+
                 if (!isAdmin && companyId != null) {
                     Session session = entityManager.unwrap(Session.class);
                     var filter = session.enableFilter("companyFilter");
                     filter.setParameter("companyId", companyId);
+                    log.info("Enabled companyFilter with companyId={}", companyId);
                 }
             }
 
@@ -56,8 +68,10 @@ public class CompanyFilterRequestEnabler extends OncePerRequestFilter {
         } finally {
             try {
                 Session s = entityManager.unwrap(Session.class);
-                if (s.getEnabledFilter("companyFilter") != null)
+                if (s.getEnabledFilter("companyFilter") != null) {
                     s.disableFilter("companyFilter");
+                    log.debug("Disabled companyFilter at end of request");
+                }
             } catch (Exception ignored) {
             }
         }
@@ -78,7 +92,7 @@ public class CompanyFilterRequestEnabler extends OncePerRequestFilter {
                     .orElse(null);
         }
 
-        // 3) Principal como String (username)
+        // 3) Principal como String (username), típico en JWT con claim "sub"
         if (principal instanceof String username) {
             return userRepository.findByUsername(username)
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
