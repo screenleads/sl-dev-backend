@@ -24,6 +24,7 @@ public class UserMapper {
                 u.getId(),
                 u.getEmail(),
                 u.getUsername(),
+                u.getPassword(),
                 u.getName(),
                 u.getLastName(),
                 companyId,
