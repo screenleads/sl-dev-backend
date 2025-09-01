@@ -1,7 +1,7 @@
 package com.screenleads.backend.app.web.controller;
 
-import com.screenleads.backend.app.application.service.PermissionService;
 import com.screenleads.backend.app.application.service.RoleService;
+import com.screenleads.backend.app.application.service.PermissionService; // <-- IMPORT CORRECTO
 import com.screenleads.backend.app.web.dto.RoleDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,12 +11,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/roles")
-// @PreAuthorize("hasAnyRole('admin','company_admin')") // opcional si aún lo
-// usas
 public class RoleController {
 
     private final RoleService service;
-    private final PermissionService perm;
+    private final PermissionService perm; // inyectamos el bean real
 
     public RoleController(RoleService service, PermissionService perm) {
         this.service = service;
@@ -24,7 +22,7 @@ public class RoleController {
     }
 
     @GetMapping
-    @PreAuthorize("@perm.can('user','read')") // lectura de roles suele requerir permiso de gestión de usuarios
+    @PreAuthorize("@perm.can('user','read')")
     public ResponseEntity<List<RoleDTO>> list() {
         return ResponseEntity.ok(service.getAll());
     }
@@ -37,7 +35,7 @@ public class RoleController {
     }
 
     @PostMapping
-    @PreAuthorize("@perm.can('user','update')") // o define permisos específicos de role si lo prefieres
+    @PreAuthorize("@perm.can('user','update')")
     public ResponseEntity<RoleDTO> create(@RequestBody RoleDTO dto) {
         return ResponseEntity.ok(service.create(dto));
     }
@@ -56,9 +54,8 @@ public class RoleController {
     }
 
     /**
-     * Devuelve SOLO los roles asignables por el usuario actual:
-     * - requiere permiso para crear o actualizar usuarios
-     * - filtra por jerarquía: level >= level efectivo del solicitante
+     * Roles asignables = roles con level >= nivel efectivo del solicitante.
+     * Requiere permiso de crear o actualizar usuarios.
      */
     @GetMapping("/assignable")
     @PreAuthorize("@perm.can('user','create') or @perm.can('user','update')")
