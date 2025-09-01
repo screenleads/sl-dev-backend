@@ -22,17 +22,20 @@ public class UserController {
     }
 
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('user','read')")
     public ResponseEntity<List<UserDto>> list() {
         return ResponseEntity.ok(service.getAll());
     }
 
     @GetMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('user','read')")
     public ResponseEntity<UserDto> get(@PathVariable Long id) {
         UserDto dto = service.getById(id);
         return dto != null ? ResponseEntity.ok(dto) : ResponseEntity.notFound().build();
     }
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('user','create')")
     public ResponseEntity<?> create(@RequestBody UserDto dto) {
         try {
             UserDto created = service.create(dto);
@@ -49,6 +52,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('user','update')")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody UserDto dto) {
         try {
             UserDto updated = service.update(id, dto);
@@ -65,6 +69,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('user','delete')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();

@@ -2,6 +2,7 @@ package com.screenleads.backend.app.init;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.DeviceType;
@@ -24,12 +25,17 @@ public class DataInitializer implements CommandLineRunner {
     private final CompanyRepository companyRepository;
 
     @Override
+    @Transactional
     public void run(String... args) {
         createDefaultCompany("ScreenLeads", "Compañía por defecto para demo");
-        createRole("ROLE_ADMIN", "Acceso total", 1);
-        createRole("ROLE_COMPANY_ADMIN", "Administrador de empresa", 2);
-        createRole("ROLE_COMPANY_MANAGER", "Gestor de empresa", 3);
-        createRole("ROLE_COMPANY_VIEWER", "Visualizador de empresa", 4);
+
+        // ===== ROLES (crea o actualiza con flags y nivel) =====
+        initRoleAdmin();
+        initRoleCompanyAdmin();
+        initRoleCompanyManager();
+        initRoleCompanyViewer();
+
+        // ===== Tipos de media / dispositivos =====
         createMediaTypes("video/mp4", "mp4");
         createMediaTypes("video/webm", "webm");
         createMediaTypes("video/avi", "avi");
@@ -41,23 +47,226 @@ public class DataInitializer implements CommandLineRunner {
         createMediaTypes("image/png", "png");
         createMediaTypes("image/gif", "gif");
         createMediaTypes("image/webp", "webp");
+
         createDeviceTypes("tv");
         createDeviceTypes("mobile");
         createDeviceTypes("desktop");
         createDeviceTypes("tablet");
         createDeviceTypes("other");
-
     }
 
-    private void createRole(String role, String desc, int level) {
-        if (!roleRepository.existsByRole(role)) {
-            roleRepository.save(Role.builder()
-                    .role(role)
-                    .description(desc)
-                    .level(level)
-                    .build());
-        }
+    // ============================================================
+    // ===================== ROLES & PERMISOS =====================
+    // ============================================================
+
+    private void initRoleAdmin() {
+        Role r = upsertRoleSkeleton("ROLE_ADMIN", "Acceso total", 1);
+
+        // Admin: TODO TRUE (lectura/escritura sobre todo)
+        r.setUserRead(true);
+        r.setUserCreate(true);
+        r.setUserUpdate(true);
+        r.setUserDelete(true);
+        r.setCompanyRead(true);
+        r.setCompanyCreate(true);
+        r.setCompanyUpdate(true);
+        r.setCompanyDelete(true);
+        r.setDeviceRead(true);
+        r.setDeviceCreate(true);
+        r.setDeviceUpdate(true);
+        r.setDeviceDelete(true);
+        r.setDeviceTypeRead(true);
+        r.setDeviceTypeCreate(true);
+        r.setDeviceTypeUpdate(true);
+        r.setDeviceTypeDelete(true);
+        r.setMediaRead(true);
+        r.setMediaCreate(true);
+        r.setMediaUpdate(true);
+        r.setMediaDelete(true);
+        r.setMediaTypeRead(true);
+        r.setMediaTypeCreate(true);
+        r.setMediaTypeUpdate(true);
+        r.setMediaTypeDelete(true);
+        r.setPromotionRead(true);
+        r.setPromotionCreate(true);
+        r.setPromotionUpdate(true);
+        r.setPromotionDelete(true);
+        r.setAdviceRead(true);
+        r.setAdviceCreate(true);
+        r.setAdviceUpdate(true);
+        r.setAdviceDelete(true);
+        r.setAppVersionRead(true);
+        r.setAppVersionCreate(true);
+        r.setAppVersionUpdate(true);
+        r.setAppVersionDelete(true);
+
+        roleRepository.save(r);
     }
+
+    private void initRoleCompanyAdmin() {
+        Role r = upsertRoleSkeleton("ROLE_COMPANY_ADMIN", "Administrador de empresa", 2);
+
+        // Solo niveles 1 o 2 pueden crear usuarios → dar userCreate aquí
+        r.setUserRead(true);
+        r.setUserCreate(true);
+        r.setUserUpdate(true);
+        r.setUserDelete(true);
+
+        // Gestión de su contexto de empresa (ajusta a tu política)
+        r.setCompanyRead(true);
+        r.setCompanyCreate(false);
+        r.setCompanyUpdate(true);
+        r.setCompanyDelete(false);
+
+        r.setDeviceRead(true);
+        r.setDeviceCreate(true);
+        r.setDeviceUpdate(true);
+        r.setDeviceDelete(true);
+        r.setMediaRead(true);
+        r.setMediaCreate(true);
+        r.setMediaUpdate(true);
+        r.setMediaDelete(true);
+        r.setPromotionRead(true);
+        r.setPromotionCreate(true);
+        r.setPromotionUpdate(true);
+        r.setPromotionDelete(true);
+        r.setAdviceRead(true);
+        r.setAdviceCreate(true);
+        r.setAdviceUpdate(true);
+        r.setAdviceDelete(true);
+
+        // Tipologías y versiones: suele ser de plataforma → solo lectura
+        r.setDeviceTypeRead(true);
+        r.setDeviceTypeCreate(false);
+        r.setDeviceTypeUpdate(false);
+        r.setDeviceTypeDelete(false);
+        r.setMediaTypeRead(true);
+        r.setMediaTypeCreate(false);
+        r.setMediaTypeUpdate(false);
+        r.setMediaTypeDelete(false);
+        r.setAppVersionRead(true);
+        r.setAppVersionCreate(false);
+        r.setAppVersionUpdate(false);
+        r.setAppVersionDelete(false);
+
+        roleRepository.save(r);
+    }
+
+    private void initRoleCompanyManager() {
+        Role r = upsertRoleSkeleton("ROLE_COMPANY_MANAGER", "Gestor de empresa", 3);
+
+        // No puede crear usuarios; lectura/edición opcional
+        r.setUserRead(true);
+        r.setUserCreate(false);
+        r.setUserUpdate(true);
+        r.setUserDelete(false);
+
+        r.setCompanyRead(true);
+        r.setCompanyCreate(false);
+        r.setCompanyUpdate(false);
+        r.setCompanyDelete(false);
+
+        // CRUD parcial (sin delete) para operativa diaria
+        r.setDeviceRead(true);
+        r.setDeviceCreate(true);
+        r.setDeviceUpdate(true);
+        r.setDeviceDelete(false);
+        r.setMediaRead(true);
+        r.setMediaCreate(true);
+        r.setMediaUpdate(true);
+        r.setMediaDelete(false);
+        r.setPromotionRead(true);
+        r.setPromotionCreate(true);
+        r.setPromotionUpdate(true);
+        r.setPromotionDelete(false);
+        r.setAdviceRead(true);
+        r.setAdviceCreate(true);
+        r.setAdviceUpdate(true);
+        r.setAdviceDelete(false);
+
+        // Tipologías/Versiones: solo lectura
+        r.setDeviceTypeRead(true);
+        r.setDeviceTypeCreate(false);
+        r.setDeviceTypeUpdate(false);
+        r.setDeviceTypeDelete(false);
+        r.setMediaTypeRead(true);
+        r.setMediaTypeCreate(false);
+        r.setMediaTypeUpdate(false);
+        r.setMediaTypeDelete(false);
+        r.setAppVersionRead(true);
+        r.setAppVersionCreate(false);
+        r.setAppVersionUpdate(false);
+        r.setAppVersionDelete(false);
+
+        roleRepository.save(r);
+    }
+
+    private void initRoleCompanyViewer() {
+        Role r = upsertRoleSkeleton("ROLE_COMPANY_VIEWER", "Visualizador de empresa", 4);
+
+        // Solo lectura en todo
+        r.setUserRead(true);
+        r.setUserCreate(false);
+        r.setUserUpdate(false);
+        r.setUserDelete(false);
+        r.setCompanyRead(true);
+        r.setCompanyCreate(false);
+        r.setCompanyUpdate(false);
+        r.setCompanyDelete(false);
+        r.setDeviceRead(true);
+        r.setDeviceCreate(false);
+        r.setDeviceUpdate(false);
+        r.setDeviceDelete(false);
+        r.setDeviceTypeRead(true);
+        r.setDeviceTypeCreate(false);
+        r.setDeviceTypeUpdate(false);
+        r.setDeviceTypeDelete(false);
+        r.setMediaRead(true);
+        r.setMediaCreate(false);
+        r.setMediaUpdate(false);
+        r.setMediaDelete(false);
+        r.setMediaTypeRead(true);
+        r.setMediaTypeCreate(false);
+        r.setMediaTypeUpdate(false);
+        r.setMediaTypeDelete(false);
+        r.setPromotionRead(true);
+        r.setPromotionCreate(false);
+        r.setPromotionUpdate(false);
+        r.setPromotionDelete(false);
+        r.setAdviceRead(true);
+        r.setAdviceCreate(false);
+        r.setAdviceUpdate(false);
+        r.setAdviceDelete(false);
+        r.setAppVersionRead(true);
+        r.setAppVersionCreate(false);
+        r.setAppVersionUpdate(false);
+        r.setAppVersionDelete(false);
+
+        roleRepository.save(r);
+    }
+
+    /**
+     * Crea o actualiza el esqueleto del rol: si existe, actualiza descripción y
+     * nivel;
+     * si no, lo crea con esos valores. Devuelve la instancia a completar con flags.
+     */
+    private Role upsertRoleSkeleton(String roleName, String desc, int level) {
+        return roleRepository.findByRole(roleName)
+                .map(existing -> {
+                    existing.setDescription(desc);
+                    existing.setLevel(level);
+                    return existing;
+                })
+                .orElseGet(() -> Role.builder()
+                        .role(roleName)
+                        .description(desc)
+                        .level(level)
+                        .build());
+    }
+
+    // ============================================================
+    // =================== MEDIA/DEVICE/COMPANY ===================
+    // ============================================================
 
     private void createMediaTypes(String type, String extension) {
         if (!mediaTypeRepository.existsByType(type)) {

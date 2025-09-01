@@ -31,6 +31,7 @@ public class UserServiceImpl implements UserService {
     private final CompanyRepository companyRepo;
     private final RoleRepository roleRepo;
     private final PasswordEncoder passwordEncoder;
+    private final PermissionService perm;
     private final SecureRandom random = new SecureRandom();
 
     @PersistenceContext
@@ -40,11 +41,13 @@ public class UserServiceImpl implements UserService {
             UserRepository repo,
             CompanyRepository companyRepo,
             RoleRepository roleRepo,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            PermissionService perm) {
         this.repo = repo;
         this.companyRepo = companyRepo;
         this.roleRepo = roleRepo;
         this.passwordEncoder = passwordEncoder;
+        this.perm = perm;
     }
 
     // ---------- LECTURAS (activamos filtro en la misma Session/Tx) ----------
@@ -84,6 +87,9 @@ public class UserServiceImpl implements UserService {
         if (dto.getUsername() == null || dto.getUsername().isBlank())
             throw new IllegalArgumentException("username requerido");
 
+        // Permisos para crear y jerarquía de nivel 1 o 2
+        assertCanCreateUser();
+
         repo.findByUsername(dto.getUsername()).ifPresent(u -> {
             throw new IllegalArgumentException("username ya existe");
         });
@@ -116,17 +122,21 @@ public class UserServiceImpl implements UserService {
         }
 
         // Roles
+        Set<Role> roles = new HashSet<>();
         if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
-            Set<Role> roles = new HashSet<>();
             for (String rn : dto.getRoles()) {
                 Role r = roleRepo.findByRole(rn)
                         .orElseThrow(() -> new IllegalArgumentException("role inválido: " + rn));
                 roles.add(r);
             }
-            u.setRoles(roles);
-        } else {
-            u.setRoles(Set.of());
         }
+        if (roles.isEmpty())
+            throw new IllegalArgumentException("Se requiere al menos un rol");
+
+        // Verificación de jerarquía: no puedes asignar un nivel superior al tuyo
+        assertAssignableRoles(roles);
+
+        u.setRoles(roles);
 
         User saved = repo.save(u);
         return UserMapper.toDto(saved);
@@ -167,14 +177,20 @@ public class UserServiceImpl implements UserService {
                 existing.setCompany(c);
             }
 
-            // Roles
+            // Roles (si vienen, aplicar mismas reglas de permiso y jerarquía)
             if (dto.getRoles() != null) {
+                if (!perm.can("user", "update")) {
+                    throw new IllegalArgumentException("No autorizado a actualizar usuarios");
+                }
                 Set<Role> roles = new HashSet<>();
                 for (String rn : dto.getRoles()) {
                     Role r = roleRepo.findByRole(rn)
                             .orElseThrow(() -> new IllegalArgumentException("role inválido: " + rn));
                     roles.add(r);
                 }
+                if (roles.isEmpty())
+                    throw new IllegalArgumentException("Se requiere al menos un rol");
+                assertAssignableRoles(roles);
                 existing.setRoles(roles);
             }
 
@@ -261,5 +277,29 @@ public class UserServiceImpl implements UserService {
         for (int i = 0; i < length; i++)
             sb.append(alphabet.charAt(random.nextInt(alphabet.length())));
         return sb.toString();
+    }
+
+    // ======== NUEVOS HELPERS DE PERMISOS/NIVELES ========
+
+    private int currentEffectiveLevel() {
+        return perm.effectiveLevel();
+    }
+
+    private void assertCanCreateUser() {
+        if (!perm.can("user", "create"))
+            throw new IllegalArgumentException("No autorizado a crear usuarios");
+        int L = currentEffectiveLevel();
+        if (L > 2) // solo niveles 1 o 2 pueden crear
+            throw new IllegalArgumentException("Solo roles de nivel 1 o 2 pueden crear usuarios");
+    }
+
+    private void assertAssignableRoles(Set<Role> targetRoles) {
+        int myLevel = currentEffectiveLevel();
+        int newUserLevel = targetRoles.stream().map(Role::getLevel).min(Integer::compareTo)
+                .orElse(Integer.MAX_VALUE);
+        if (newUserLevel < myLevel) {
+            // ej.: soy nivel 2, intento asignar nivel 1 → prohibido
+            throw new IllegalArgumentException("No puedes asignar un rol superior al tuyo");
+        }
     }
 }
