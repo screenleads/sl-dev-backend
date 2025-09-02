@@ -1,6 +1,9 @@
 package com.screenleads.backend.app.init;
 
+import java.util.Set;
+
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -8,10 +11,12 @@ import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.DeviceType;
 import com.screenleads.backend.app.domain.model.MediaType;
 import com.screenleads.backend.app.domain.model.Role;
+import com.screenleads.backend.app.domain.model.User;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.DeviceTypeRepository;
 import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
 import com.screenleads.backend.app.domain.repositories.RoleRepository;
+import com.screenleads.backend.app.domain.repositories.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,10 +28,13 @@ public class DataInitializer implements CommandLineRunner {
     private final MediaTypeRepository mediaTypeRepository;
     private final DeviceTypeRepository deviceTypeRepository;
     private final CompanyRepository companyRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder; // BCrypt u otro
 
     @Override
     @Transactional
     public void run(String... args) {
+        // ============ Entidades base ============
         createDefaultCompany("ScreenLeads", "Compañía por defecto para demo");
 
         // ===== ROLES (crea o actualiza con flags y nivel) =====
@@ -35,7 +43,7 @@ public class DataInitializer implements CommandLineRunner {
         initRoleCompanyManager();
         initRoleCompanyViewer();
 
-        // ===== Tipos de media / dispositivos =====
+        // ===== Tipos de media =====
         createMediaTypes("video/mp4", "mp4");
         createMediaTypes("video/webm", "webm");
         createMediaTypes("video/avi", "avi");
@@ -48,11 +56,21 @@ public class DataInitializer implements CommandLineRunner {
         createMediaTypes("image/gif", "gif");
         createMediaTypes("image/webp", "webp");
 
+        // ===== Tipos de dispositivo =====
         createDeviceTypes("tv");
         createDeviceTypes("mobile");
         createDeviceTypes("desktop");
         createDeviceTypes("tablet");
         createDeviceTypes("other");
+
+        // ===== Usuario administrador inicial =====
+        createDefaultAdminUser(
+                "admin", // username
+                "admin@screenleads.com", // email
+                "admin123", // contraseña temporal
+                "Admin", // nombre
+                "Root" // apellidos
+        );
     }
 
     // ============================================================
@@ -106,13 +124,13 @@ public class DataInitializer implements CommandLineRunner {
     private void initRoleCompanyAdmin() {
         Role r = upsertRoleSkeleton("ROLE_COMPANY_ADMIN", "Administrador de empresa", 2);
 
-        // Solo niveles 1 o 2 pueden crear usuarios → dar userCreate aquí
+        // Gestión de usuarios (según tu política)
         r.setUserRead(true);
         r.setUserCreate(true);
         r.setUserUpdate(true);
         r.setUserDelete(true);
 
-        // Gestión de su contexto de empresa (ajusta a tu política)
+        // Gestión de su empresa
         r.setCompanyRead(true);
         r.setCompanyCreate(false);
         r.setCompanyUpdate(true);
@@ -135,7 +153,7 @@ public class DataInitializer implements CommandLineRunner {
         r.setAdviceUpdate(true);
         r.setAdviceDelete(true);
 
-        // Tipologías y versiones: suele ser de plataforma → solo lectura
+        // Tipologías/Versiones: solo lectura
         r.setDeviceTypeRead(true);
         r.setDeviceTypeCreate(false);
         r.setDeviceTypeUpdate(false);
@@ -155,7 +173,7 @@ public class DataInitializer implements CommandLineRunner {
     private void initRoleCompanyManager() {
         Role r = upsertRoleSkeleton("ROLE_COMPANY_MANAGER", "Gestor de empresa", 3);
 
-        // No puede crear usuarios; lectura/edición opcional
+        // No puede crear usuarios; edición limitada
         r.setUserRead(true);
         r.setUserCreate(false);
         r.setUserUpdate(true);
@@ -166,7 +184,7 @@ public class DataInitializer implements CommandLineRunner {
         r.setCompanyUpdate(false);
         r.setCompanyDelete(false);
 
-        // CRUD parcial (sin delete) para operativa diaria
+        // CRUD parcial (sin delete)
         r.setDeviceRead(true);
         r.setDeviceCreate(true);
         r.setDeviceUpdate(true);
@@ -204,7 +222,7 @@ public class DataInitializer implements CommandLineRunner {
     private void initRoleCompanyViewer() {
         Role r = upsertRoleSkeleton("ROLE_COMPANY_VIEWER", "Visualizador de empresa", 4);
 
-        // Solo lectura en todo
+        // Solo lectura
         r.setUserRead(true);
         r.setUserCreate(false);
         r.setUserUpdate(false);
@@ -292,5 +310,38 @@ public class DataInitializer implements CommandLineRunner {
                     .observations(observations)
                     .build());
         }
+    }
+
+    // ============================================================
+    // ======================= ADMIN USER =========================
+    // ============================================================
+
+    private void createDefaultAdminUser(String username, String email, String rawPassword, String name,
+            String lastName) {
+        // Si ya existe por username, no hacemos nada
+        if (userRepository.existsByUsername(username)) {
+            System.out.println("ℹ️  Usuario admin ya existe: " + username);
+            return;
+        }
+
+        Company company = companyRepository.findByName("ScreenLeads")
+                .orElseThrow(() -> new IllegalStateException("Company 'ScreenLeads' no encontrada."));
+        Role adminRole = roleRepository.findByRole("ROLE_ADMIN")
+                .orElseThrow(() -> new IllegalStateException("Role 'ROLE_ADMIN' no encontrado."));
+
+        User user = User.builder()
+                .username(username)
+                .email(email)
+                .password(passwordEncoder.encode(rawPassword))
+                .name(name)
+                .lastName(lastName)
+                .company(company)
+                .roles(Set.of(adminRole))
+                // sin .enabled(true) porque tu entidad no tiene ese campo
+                .build();
+
+        userRepository.save(user);
+        System.out.println(
+                "✅ Usuario admin creado: " + username + " / " + email + " (cambia la contraseña tras el primer login)");
     }
 }
