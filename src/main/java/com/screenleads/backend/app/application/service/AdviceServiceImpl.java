@@ -34,7 +34,7 @@ import com.screenleads.backend.app.web.dto.AdviceDTO;
 
 @Service
 public class AdviceServiceImpl implements AdviceService {
-    private static final Logger logger = LoggerFactory.getLogger(DeviceService.class);
+    private static final Logger logger = LoggerFactory.getLogger(AdviceServiceImpl.class);
 
     private final AdviceRepository adviceRepository;
     private final MediaRepository mediaRepository;
@@ -100,38 +100,32 @@ public class AdviceServiceImpl implements AdviceService {
     public AdviceDTO saveAdvice(AdviceDTO dto) {
         enableCompanyFilterIfNeeded(); // por si hay lecturas internas
 
-        // 1) Crear Advice "limpio"
         Advice advice = new Advice();
         advice.setDescription(dto.description());
         advice.setCustomInterval(dto.customInterval());
         advice.setInterval(dto.interval());
 
-        // 2) Resolver Media (si viene id)
-        if (dto.media() != null && dto.media().getId() != null) {
-            Media media = mediaRepository.findById(dto.media().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Media no encontrada"));
-            advice.setMedia(media);
-        } else {
-            advice.setMedia(null);
-        }
+        // Media: si viene id -> existe; si viene sólo src -> crear y asociar; si null
+        // -> null
+        advice.setMedia(resolveMediaFromDto(dto.media()));
 
-        // 3) Resolver Promotion (según tu diseño actual)
+        // Promotion (según tu diseño actual, sin cambios)
         advice.setPromotion(dto.promotion());
 
-        // 4) (Multi-tenant) Fijar compañía si no es admin
+        // (Multi-tenant) Fijar compañía si no es admin
         enforceCompanyOnWrite(advice);
 
-        // 5) Construir visibilityRules + timeRanges
+        // visibilityRules + timeRanges
         advice.setVisibilityRules(new ArrayList<>());
         if (dto.visibilityRules() != null) {
-            for (AdviceVisibilityRule ruleIn : dto.visibilityRules()) { // ENTIDAD (tu DTO usa entidades)
+            for (AdviceVisibilityRule ruleIn : dto.visibilityRules()) {
                 AdviceVisibilityRule rule = new AdviceVisibilityRule();
                 rule.setDay(ruleIn.getDay());
                 rule.setAdvice(advice);
 
                 List<TimeRange> ranges = new ArrayList<>();
                 if (ruleIn.getTimeRanges() != null) {
-                    for (TimeRange rangeIn : ruleIn.getTimeRanges()) { // ENTIDAD
+                    for (TimeRange rangeIn : ruleIn.getTimeRanges()) {
                         TimeRange tr = new TimeRange();
                         tr.setFromTime(rangeIn.getFromTime());
                         tr.setToTime(rangeIn.getToTime());
@@ -144,7 +138,6 @@ public class AdviceServiceImpl implements AdviceService {
             }
         }
 
-        // 6) Guardar
         Advice saved = adviceRepository.save(advice);
         return convertToDTO(saved);
     }
@@ -160,19 +153,13 @@ public class AdviceServiceImpl implements AdviceService {
         advice.setDescription(dto.description());
         advice.setInterval(dto.interval());
 
-        if (dto.media() != null && dto.media().getId() != null) {
-            Media media = mediaRepository.findById(dto.media().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Media no encontrada"));
-            advice.setMedia(media);
-        } else {
-            advice.setMedia(null);
-        }
+        // Media: igual lógica que en create (acepta id o sólo src)
+        advice.setMedia(resolveMediaFromDto(dto.media()));
 
         advice.setPromotion(dto.promotion());
 
         // Reemplazo completo de reglas (orphanRemoval aplicado)
         advice.getVisibilityRules().clear();
-
         if (dto.visibilityRules() != null) {
             for (AdviceVisibilityRule ruleDto : dto.visibilityRules()) {
                 AdviceVisibilityRule rule = new AdviceVisibilityRule();
@@ -190,8 +177,6 @@ public class AdviceServiceImpl implements AdviceService {
                     }
                 }
                 rule.setTimeRanges(ranges);
-
-                // Añade a la colección MANAGED del padre
                 advice.getVisibilityRules().add(rule);
             }
         }
@@ -210,30 +195,63 @@ public class AdviceServiceImpl implements AdviceService {
         adviceRepository.findById(id).ifPresent(adviceRepository::delete);
     }
 
-    // ============================= MAPPERS =============================
+    // ============================= MAPPERS/HELPERS =============================
 
-    // Convert Advice Entity to AdviceDTO
     private AdviceDTO convertToDTO(Advice advice) {
-        Media media = null;
-        if (advice.getMedia() != null && advice.getMedia().getId() != null) {
-            media = mediaRepository.findById(advice.getMedia().getId()).orElse(null);
-        }
+        // devolvemos el media tal cual está en la entidad (ManyToOne suele ser EAGER)
         return new AdviceDTO(
                 advice.getId(),
                 advice.getDescription(),
                 advice.getCustomInterval(),
                 advice.getInterval(),
-                media,
+                advice.getMedia(),
                 advice.getPromotion(),
                 advice.getVisibilityRules());
     }
 
+    /**
+     * Acepta tres formatos:
+     * - null -> null
+     * - Media con id -> busca y devuelve (o lanza si no existe)
+     * - Media sin id pero con src -> crea y persiste un Media nuevo con ese src
+     */
+    private Media resolveMediaFromDto(Media incoming) {
+        if (incoming == null)
+            return null;
+
+        // Si viene id, resolvemos existente
+        if (incoming.getId() != null) {
+            return mediaRepository.findById(incoming.getId())
+                    .orElseThrow(
+                            () -> new IllegalArgumentException("Media no encontrada (id=" + incoming.getId() + ")"));
+        }
+
+        // Si viene sólo src, creamos uno nuevo
+        String src = (incoming.getSrc() != null) ? incoming.getSrc().trim() : null;
+        if (src != null && !src.isEmpty()) {
+            Media m = new Media();
+            m.setSrc(src);
+
+            // Si el cliente envía 'type' con id, puedes setearlo:
+            if (incoming.getType() != null && incoming.getType().getId() != null) {
+                m.setType(incoming.getType()); // asumiendo que Media.type es @ManyToOne y el id es válido
+            }
+
+            // Si tu entidad Media tiene más campos obligatorios (enabled, company, etc.),
+            // inicialízalos aquí. Por ejemplo:
+            // m.setEnabled(true);
+            // m.setCompany( ... ) // sólo si Media es multi-tenant
+
+            return mediaRepository.save(m);
+        }
+
+        // Ni id ni src -> no asociar media
+        return null;
+    }
+
     // ============================= HELPERS MT =============================
 
-    /**
-     * Activa el filtro "companyFilter" en la misma Session/Tx usada por los repos
-     * si NO es admin.
-     */
+    /** Activa el filtro "companyFilter" si NO es admin. */
     private void enableCompanyFilterIfNeeded() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated())
