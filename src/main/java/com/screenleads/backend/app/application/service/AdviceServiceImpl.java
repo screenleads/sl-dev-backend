@@ -26,6 +26,7 @@ import com.screenleads.backend.app.domain.model.Advice;
 import com.screenleads.backend.app.domain.model.AdviceVisibilityRule;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Media;
+import com.screenleads.backend.app.domain.model.Promotion;
 import com.screenleads.backend.app.domain.model.TimeRange;
 import com.screenleads.backend.app.domain.repositories.AdviceRepository;
 import com.screenleads.backend.app.domain.repositories.MediaRepository;
@@ -51,8 +52,7 @@ public class AdviceServiceImpl implements AdviceService {
         this.userRepository = userRepository;
     }
 
-    // ======================= LECTURAS (filtradas por compañía)
-    // =======================
+    // ======================= LECTURAS =======================
 
     @Override
     @Transactional
@@ -98,24 +98,21 @@ public class AdviceServiceImpl implements AdviceService {
     @Override
     @Transactional
     public AdviceDTO saveAdvice(AdviceDTO dto) {
-        enableCompanyFilterIfNeeded(); // por si hay lecturas internas
+        enableCompanyFilterIfNeeded();
 
         Advice advice = new Advice();
         advice.setDescription(dto.description());
         advice.setCustomInterval(dto.customInterval());
         advice.setInterval(dto.interval());
 
-        // Media: si viene id -> existe; si viene sólo src -> crear y asociar; si null
-        // -> null
+        // Media: id -> existente; solo src -> crear; null -> null
         advice.setMedia(resolveMediaFromDto(dto.media()));
 
-        // Promotion (según tu diseño actual, sin cambios)
-        advice.setPromotion(dto.promotion());
+        // Promotion: id>0 -> referencia; 0/null -> null
+        advice.setPromotion(resolvePromotionFromDto(dto.promotion()));
 
-        // (Multi-tenant) Fijar compañía si no es admin
         enforceCompanyOnWrite(advice);
 
-        // visibilityRules + timeRanges
         advice.setVisibilityRules(new ArrayList<>());
         if (dto.visibilityRules() != null) {
             for (AdviceVisibilityRule ruleIn : dto.visibilityRules()) {
@@ -145,7 +142,7 @@ public class AdviceServiceImpl implements AdviceService {
     @Override
     @Transactional
     public AdviceDTO updateAdvice(Long id, AdviceDTO dto) {
-        enableCompanyFilterIfNeeded(); // findById ya vendrá filtrado por compañía
+        enableCompanyFilterIfNeeded();
 
         Advice advice = adviceRepository.findById(id).orElseThrow();
 
@@ -153,12 +150,10 @@ public class AdviceServiceImpl implements AdviceService {
         advice.setDescription(dto.description());
         advice.setInterval(dto.interval());
 
-        // Media: igual lógica que en create (acepta id o sólo src)
         advice.setMedia(resolveMediaFromDto(dto.media()));
+        advice.setPromotion(resolvePromotionFromDto(dto.promotion()));
 
-        advice.setPromotion(dto.promotion());
-
-        // Reemplazo completo de reglas (orphanRemoval aplicado)
+        // Reemplazo completo de reglas (orphanRemoval en entidad)
         advice.getVisibilityRules().clear();
         if (dto.visibilityRules() != null) {
             for (AdviceVisibilityRule ruleDto : dto.visibilityRules()) {
@@ -181,7 +176,6 @@ public class AdviceServiceImpl implements AdviceService {
             }
         }
 
-        // (Multi-tenant) Por si llega un company ajeno en el body
         enforceCompanyOnWrite(advice);
 
         Advice saved = adviceRepository.save(advice);
@@ -198,7 +192,6 @@ public class AdviceServiceImpl implements AdviceService {
     // ============================= MAPPERS/HELPERS =============================
 
     private AdviceDTO convertToDTO(Advice advice) {
-        // devolvemos el media tal cual está en la entidad (ManyToOne suele ser EAGER)
         return new AdviceDTO(
                 advice.getId(),
                 advice.getDescription(),
@@ -209,49 +202,39 @@ public class AdviceServiceImpl implements AdviceService {
                 advice.getVisibilityRules());
     }
 
-    /**
-     * Acepta tres formatos:
-     * - null -> null
-     * - Media con id -> busca y devuelve (o lanza si no existe)
-     * - Media sin id pero con src -> crea y persiste un Media nuevo con ese src
-     */
     private Media resolveMediaFromDto(Media incoming) {
         if (incoming == null)
             return null;
 
-        // Si viene id, resolvemos existente
-        if (incoming.getId() != null) {
+        if (incoming.getId() != null && incoming.getId() > 0) {
             return mediaRepository.findById(incoming.getId())
                     .orElseThrow(
                             () -> new IllegalArgumentException("Media no encontrada (id=" + incoming.getId() + ")"));
         }
 
-        // Si viene sólo src, creamos uno nuevo
-        String src = (incoming.getSrc() != null) ? incoming.getSrc().trim() : null;
+        String src = incoming.getSrc() != null ? incoming.getSrc().trim() : null;
         if (src != null && !src.isEmpty()) {
             Media m = new Media();
             m.setSrc(src);
-
-            // Si el cliente envía 'type' con id, puedes setearlo:
-            if (incoming.getType() != null && incoming.getType().getId() != null) {
-                m.setType(incoming.getType()); // asumiendo que Media.type es @ManyToOne y el id es válido
-            }
-
-            // Si tu entidad Media tiene más campos obligatorios (enabled, company, etc.),
-            // inicialízalos aquí. Por ejemplo:
-            // m.setEnabled(true);
-            // m.setCompany( ... ) // sólo si Media es multi-tenant
-
+            // Si tu Media requiere más campos (type, enabled, company...), setéalos aquí.
             return mediaRepository.save(m);
         }
 
-        // Ni id ni src -> no asociar media
         return null;
     }
 
-    // ============================= HELPERS MT =============================
+    private Promotion resolvePromotionFromDto(Promotion incoming) {
+        if (incoming == null)
+            return null;
+        Long id = incoming.getId();
+        if (id == null || id <= 0)
+            return null; // evita FK con 0
+        // Referencia "perezosa" sin SELECT (válido si existe en BBDD)
+        return entityManager.getReference(Promotion.class, id);
+    }
 
-    /** Activa el filtro "companyFilter" si NO es admin. */
+    // ============================= MT Helpers =============================
+
     private void enableCompanyFilterIfNeeded() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated())
@@ -276,7 +259,6 @@ public class AdviceServiceImpl implements AdviceService {
         }
     }
 
-    /** Si el usuario NO es admin, fuerza que el Advice pertenezca a su compañía. */
     private void enforceCompanyOnWrite(Advice advice) {
         if (advice == null || isCurrentUserAdmin())
             return;
@@ -310,19 +292,16 @@ public class AdviceServiceImpl implements AdviceService {
     private Long resolveCompanyId(Authentication auth) {
         Object principal = auth.getPrincipal();
 
-        // 1) Entidad de dominio como principal
         if (principal instanceof com.screenleads.backend.app.domain.model.User u) {
             return (u.getCompany() != null) ? u.getCompany().getId() : null;
         }
 
-        // 2) UserDetails estándar
         if (principal instanceof UserDetails ud) {
             return userRepository.findByUsername(ud.getUsername())
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
 
-        // 3) Principal como String (username) - típico JWT con "sub"
         if (principal instanceof String username) {
             return userRepository.findByUsername(username)
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
