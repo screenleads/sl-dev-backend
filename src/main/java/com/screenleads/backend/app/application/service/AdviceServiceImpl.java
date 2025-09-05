@@ -32,10 +32,13 @@ import com.screenleads.backend.app.domain.repositories.AdviceRepository;
 import com.screenleads.backend.app.domain.repositories.MediaRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
 import com.screenleads.backend.app.web.dto.AdviceDTO;
+import com.screenleads.backend.app.web.dto.CompanyRefDTO;
+import com.screenleads.backend.app.web.dto.MediaUpsertDTO;
+import com.screenleads.backend.app.web.dto.PromotionRefDTO;
 
 @Service
 public class AdviceServiceImpl implements AdviceService {
-    private static final Logger logger = LoggerFactory.getLogger(AdviceServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(AdviceServiceImpl.class);
 
     private final AdviceRepository adviceRepository;
     private final MediaRepository mediaRepository;
@@ -105,14 +108,11 @@ public class AdviceServiceImpl implements AdviceService {
         advice.setCustomInterval(dto.customInterval());
         advice.setInterval(dto.interval());
 
-        // Media: id -> existente; solo src -> crear; null -> null
-        advice.setMedia(resolveMediaFromDto(dto.media()));
-
-        // Promotion: id>0 -> referencia; 0/null -> null
+        advice.setCompany(resolveCompanyForWrite(dto.company(), /* existing */ null));
+        advice.setMedia(resolveMediaFromDto(dto.media(), advice.getCompany()));
         advice.setPromotion(resolvePromotionFromDto(dto.promotion()));
 
-        enforceCompanyOnWrite(advice);
-
+        // reglas
         advice.setVisibilityRules(new ArrayList<>());
         if (dto.visibilityRules() != null) {
             for (AdviceVisibilityRule ruleIn : dto.visibilityRules()) {
@@ -146,14 +146,15 @@ public class AdviceServiceImpl implements AdviceService {
 
         Advice advice = adviceRepository.findById(id).orElseThrow();
 
-        advice.setCustomInterval(dto.customInterval());
         advice.setDescription(dto.description());
+        advice.setCustomInterval(dto.customInterval());
         advice.setInterval(dto.interval());
 
-        advice.setMedia(resolveMediaFromDto(dto.media()));
+        advice.setCompany(resolveCompanyForWrite(dto.company(), advice.getCompany()));
+        advice.setMedia(resolveMediaFromDto(dto.media(), advice.getCompany()));
         advice.setPromotion(resolvePromotionFromDto(dto.promotion()));
 
-        // Reemplazo completo de reglas (orphanRemoval en entidad)
+        // Reemplazo completo de reglas
         advice.getVisibilityRules().clear();
         if (dto.visibilityRules() != null) {
             for (AdviceVisibilityRule ruleDto : dto.visibilityRules()) {
@@ -176,8 +177,6 @@ public class AdviceServiceImpl implements AdviceService {
             }
         }
 
-        enforceCompanyOnWrite(advice);
-
         Advice saved = adviceRepository.save(advice);
         return convertToDTO(saved);
     }
@@ -192,49 +191,116 @@ public class AdviceServiceImpl implements AdviceService {
     // ============================= MAPPERS/HELPERS =============================
 
     private AdviceDTO convertToDTO(Advice advice) {
+        var mediaDto = (advice.getMedia() != null)
+                ? new com.screenleads.backend.app.web.dto.MediaUpsertDTO(advice.getMedia().getId(),
+                        advice.getMedia().getSrc())
+                : null;
+
+        var promoDto = (advice.getPromotion() != null)
+                ? new com.screenleads.backend.app.web.dto.PromotionRefDTO(advice.getPromotion().getId())
+                : null;
+
+        var companyDto = (advice.getCompany() != null)
+                ? new com.screenleads.backend.app.web.dto.CompanyRefDTO(advice.getCompany().getId(),
+                        advice.getCompany().getName())
+                : null;
+
         return new AdviceDTO(
                 advice.getId(),
                 advice.getDescription(),
                 advice.getCustomInterval(),
                 advice.getInterval(),
-                advice.getMedia(),
-                advice.getPromotion(),
-                advice.getVisibilityRules());
+                mediaDto,
+                promoDto,
+                advice.getVisibilityRules(),
+                companyDto);
     }
 
-    private Media resolveMediaFromDto(Media incoming) {
+    /**
+     * Media:
+     * - {id} -> existente
+     * - {src} -> crear (si no existe por src) y relacionar
+     * - null -> null
+     * Si tu entidad Media es multi-tenant, aquí puedes setear la company del Media
+     * = company del Advice.
+     */
+    private Media resolveMediaFromDto(MediaUpsertDTO incoming, Company ownerCompany) {
         if (incoming == null)
             return null;
 
-        if (incoming.getId() != null && incoming.getId() > 0) {
-            return mediaRepository.findById(incoming.getId())
-                    .orElseThrow(
-                            () -> new IllegalArgumentException("Media no encontrada (id=" + incoming.getId() + ")"));
+        if (incoming.id() != null && incoming.id() > 0) {
+            return mediaRepository.findById(incoming.id())
+                    .orElseThrow(() -> new IllegalArgumentException("Media no encontrada (id=" + incoming.id() + ")"));
         }
 
-        String src = incoming.getSrc() != null ? incoming.getSrc().trim() : null;
+        String src = incoming.src() != null ? incoming.src().trim() : null;
         if (src != null && !src.isEmpty()) {
+            Media existing = mediaRepository.findBySrc(src).orElse(null);
+            if (existing != null)
+                return existing;
+
             Media m = new Media();
             m.setSrc(src);
-            // Si tu Media requiere más campos (type, enabled, company...), setéalos aquí.
+            // Si Media tuviera company:
+            // if (ownerCompany != null) m.setCompany(ownerCompany);
             return mediaRepository.save(m);
         }
 
         return null;
     }
 
-    private Promotion resolvePromotionFromDto(Promotion incoming) {
+    private Promotion resolvePromotionFromDto(PromotionRefDTO incoming) {
         if (incoming == null)
             return null;
-        Long id = incoming.getId();
+        Long id = incoming.id();
         if (id == null || id <= 0)
-            return null; // evita FK con 0
-        // Referencia "perezosa" sin SELECT (válido si existe en BBDD)
+            return null;
         return entityManager.getReference(Promotion.class, id);
+    }
+
+    /**
+     * Company:
+     * - Si eres ADMIN: usa dto.company.id si llega (>0); si no, mantiene/usa la
+     * actual.
+     * - Si NO eres ADMIN: fuerza la compañía del usuario actual SIEMPRE.
+     * - En creación, si al final queda null -> intenta la del usuario actual.
+     */
+    private Company resolveCompanyForWrite(CompanyRefDTO incoming, Company current) {
+        boolean isAdmin = isCurrentUserAdmin();
+        Long userCompanyId = currentCompanyId();
+
+        if (!isAdmin) {
+            if (userCompanyId != null) {
+                Company c = new Company();
+                c.setId(userCompanyId);
+                return c;
+            }
+            // si por alguna razón no hay company en el usuario, devuelve la actual (puede
+            // ser null)
+            return current;
+        }
+
+        // Admin
+        Long desiredId = (incoming != null) ? incoming.id() : null;
+        if (desiredId != null && desiredId > 0) {
+            Company c = new Company();
+            c.setId(desiredId);
+            return c;
+        }
+        // si no especificó, conserva la actual o usa la del usuario si hay
+        if (current != null)
+            return current;
+        if (userCompanyId != null) {
+            Company c = new Company();
+            c.setId(userCompanyId);
+            return c;
+        }
+        return null;
     }
 
     // ============================= MT Helpers =============================
 
+    /** Activa el filtro "companyFilter" si NO es admin. */
     private void enableCompanyFilterIfNeeded() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated())
@@ -256,20 +322,6 @@ public class AdviceServiceImpl implements AdviceService {
             session.enableFilter("companyFilter").setParameter("companyId", companyId);
         } else {
             filter.setParameter("companyId", companyId);
-        }
-    }
-
-    private void enforceCompanyOnWrite(Advice advice) {
-        if (advice == null || isCurrentUserAdmin())
-            return;
-        Long companyId = currentCompanyId();
-        if (companyId == null)
-            return;
-        if (advice.getCompany() == null || advice.getCompany().getId() == null
-                || !companyId.equals(advice.getCompany().getId())) {
-            Company c = new Company();
-            c.setId(companyId);
-            advice.setCompany(c);
         }
     }
 
@@ -295,19 +347,16 @@ public class AdviceServiceImpl implements AdviceService {
         if (principal instanceof com.screenleads.backend.app.domain.model.User u) {
             return (u.getCompany() != null) ? u.getCompany().getId() : null;
         }
-
         if (principal instanceof UserDetails ud) {
             return userRepository.findByUsername(ud.getUsername())
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
-
         if (principal instanceof String username) {
             return userRepository.findByUsername(username)
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
-
         return null;
     }
 }
