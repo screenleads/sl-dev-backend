@@ -95,11 +95,16 @@ public class SecurityConfig {
                 return new BCryptPasswordEncoder();
         }
 
+        /**
+         * CORS global: permite orígenes y *headers* usados por tu interceptor.
+         * Importante: como allowCredentials=true, no se puede usar "*" en
+         * allowedOrigins.
+         */
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration config = new CorsConfiguration();
 
-                // Orígenes explícitos (HTTP y HTTPS en local + tus despliegues)
+                // Orígenes explícitos (ajusta según tus entornos)
                 config.setAllowedOrigins(List.of(
                                 "https://localhost",
                                 "https://localhost:4200",
@@ -107,12 +112,35 @@ public class SecurityConfig {
                                 "http://localhost:4200",
                                 "http://localhost:8100",
                                 "https://sl-device-connector.web.app",
-                                "https://sl-dev-dashboard-pre-c4a3c4b00c91.herokuapp.com"));
+                                "https://sl-dev-dashboard-pre-c4a3c4b00c91.herokuapp.com"
+                // añade aquí preprod/prod si procede
+                ));
 
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-                config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin"));
-                config.setExposedHeaders(List.of("Authorization"));
+
+                // 🔴 Añadimos los headers que envía el interceptor
+                config.setAllowedHeaders(List.of(
+                                "Authorization",
+                                "Content-Type",
+                                "Accept",
+                                "Origin",
+                                "X-Requested-With",
+                                "X-Timezone",
+                                "X-Timezone-Offset",
+                                "Accept-Language" // útil si lo usas
+                ));
+
+                // (Opcional) Headers expuestos al frontend si necesitas leerlos
+                config.setExposedHeaders(List.of(
+                                "Authorization",
+                                "X-Timezone",
+                                "X-Timezone-Offset"));
+
+                // Cookies/JWT entre dominios
                 config.setAllowCredentials(true);
+
+                // Cache de preflight
+                config.setMaxAge(3600L);
 
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                 source.registerCorsConfiguration("/**", config);
