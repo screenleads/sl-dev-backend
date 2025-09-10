@@ -3,18 +3,9 @@ package com.screenleads.backend.app.web.controller;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.DeviceService;
 import com.screenleads.backend.app.web.dto.AdviceDTO;
@@ -25,71 +16,97 @@ import com.screenleads.backend.app.web.dto.DeviceDTO;
 @CrossOrigin
 public class DevicesController {
 
-    @Autowired
     private final DeviceService deviceService;
 
     public DevicesController(DeviceService deviceService) {
         this.deviceService = deviceService;
     }
 
-    @CrossOrigin
+    // -------------------------------------------------------------------------
+    // CRUD básico
+    // -------------------------------------------------------------------------
+
     @GetMapping
     public ResponseEntity<List<DeviceDTO>> getAllDevices() {
         return ResponseEntity.ok(deviceService.getAllDevices());
     }
 
-    @CrossOrigin
-    @GetMapping("/code/{uuid}")
-    public ResponseEntity<List<DeviceDTO>> createConnectionCodeForDevice(@PathVariable Long id) {
-        return ResponseEntity.ok(deviceService.getAllDevices());
-    }
-
-    @CrossOrigin
     @GetMapping("/{id}")
     public ResponseEntity<DeviceDTO> getDeviceById(@PathVariable Long id) {
         Optional<DeviceDTO> device = deviceService.getDeviceById(id);
         return device.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @CrossOrigin
     @PostMapping
     public ResponseEntity<DeviceDTO> createDevice(@RequestBody DeviceDTO deviceDTO) {
-        return ResponseEntity.ok(deviceService.saveDevice(deviceDTO));
+        DeviceDTO saved = deviceService.saveDevice(deviceDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    @CrossOrigin
     @PutMapping("/{id}")
     public ResponseEntity<DeviceDTO> updateDevice(@PathVariable Long id, @RequestBody DeviceDTO deviceDTO) {
-
         DeviceDTO updatedDevice = deviceService.updateDevice(id, deviceDTO);
         return ResponseEntity.ok(updatedDevice);
-
     }
 
-    @CrossOrigin
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDevice(@PathVariable Long id) {
         deviceService.deleteDevice(id);
         return ResponseEntity.noContent().build();
     }
 
-    @CrossOrigin
+    // -------------------------------------------------------------------------
+    // Búsqueda / existencia por UUID (para que el frontend se "autocure")
+    // -------------------------------------------------------------------------
+
+    @GetMapping("/uuid/{uuid}")
+    public ResponseEntity<DeviceDTO> getDeviceByUuid(@PathVariable String uuid) {
+        return deviceService.getDeviceByUuid(uuid)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    @RequestMapping(value = "/uuid/{uuid}", method = RequestMethod.HEAD)
+    public ResponseEntity<Void> headDeviceByUuid(@PathVariable String uuid) {
+        return deviceService.getDeviceByUuid(uuid).isPresent()
+                ? ResponseEntity.ok().build()
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    // -------------------------------------------------------------------------
+    // Gestión de advices por dispositivo
+    // -------------------------------------------------------------------------
+
     @GetMapping("/{deviceId}/advices")
     public ResponseEntity<List<AdviceDTO>> getAdvicesForDevice(@PathVariable Long deviceId) {
         return ResponseEntity.ok(deviceService.getAdvicesForDevice(deviceId));
     }
 
-    @CrossOrigin
     @PostMapping("/{deviceId}/advices/{adviceId}")
     public ResponseEntity<Void> assignAdviceToDevice(@PathVariable Long deviceId, @PathVariable Long adviceId) {
         deviceService.assignAdviceToDevice(deviceId, adviceId);
         return ResponseEntity.ok().build();
     }
 
-    @CrossOrigin
     @DeleteMapping("/{deviceId}/advices/{adviceId}")
     public ResponseEntity<Void> removeAdviceFromDevice(@PathVariable Long deviceId, @PathVariable Long adviceId) {
         deviceService.removeAdviceFromDevice(deviceId, adviceId);
         return ResponseEntity.noContent().build();
+    }
+
+    // -------------------------------------------------------------------------
+    // (Opcional) Endpoint placeholder para /code/{uuid} si realmente lo necesitas
+    // -------------------------------------------------------------------------
+
+    /**
+     * TODO: Implementar generación/lectura de código de conexión para el
+     * dispositivo.
+     * La firma original no coincidía con el path variable y devolvía la lista
+     * completa.
+     * De momento respondemos 501 Not Implemented para evitar confusión.
+     */
+    @GetMapping("/code/{uuid}")
+    public ResponseEntity<Void> createConnectionCodeForDevice(@PathVariable String uuid) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 }

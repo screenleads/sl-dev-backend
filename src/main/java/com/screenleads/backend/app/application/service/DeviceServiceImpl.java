@@ -5,7 +5,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.screenleads.backend.app.domain.model.Advice;
 import com.screenleads.backend.app.domain.model.Company;
@@ -20,6 +23,7 @@ import com.screenleads.backend.app.web.dto.DeviceDTO;
 import com.screenleads.backend.app.web.mapper.AdviceMapper;
 
 @Service
+@Transactional
 public class DeviceServiceImpl implements DeviceService {
 
     private final DeviceRepository deviceRepository;
@@ -39,6 +43,7 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DeviceDTO> getAllDevices() {
         return deviceRepository.findAll().stream()
                 .map(this::convertToDTO)
@@ -47,34 +52,62 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<DeviceDTO> getDeviceById(Long id) {
         return deviceRepository.findById(id).map(this::convertToDTO);
     }
 
     @Override
-    public DeviceDTO saveDevice(DeviceDTO deviceDTO) {
-        Device device = convertToEntity(deviceDTO);
-        if (deviceRepository.existsByUuid(device.getUuid()))
-            return convertToDTO(deviceRepository.findByUuid(device.getUuid()));
-        Device savedDevice = deviceRepository.save(device);
-        return convertToDTO(savedDevice);
+    @Transactional(readOnly = true)
+    public Optional<DeviceDTO> getDeviceByUuid(String uuid) {
+        return deviceRepository.findOptionalByUuid(uuid).map(this::convertToDTO);
+    }
+
+    @Override
+    public DeviceDTO saveDevice(DeviceDTO dto) {
+        // Upsert idempotente por UUID
+        DeviceType type = deviceTypeRepository.findById(dto.type().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device type not found"));
+
+        Device device = deviceRepository.findOptionalByUuid(dto.uuid()).orElseGet(Device::new);
+        device.setUuid(dto.uuid());
+        device.setDescriptionName(dto.descriptionName());
+        device.setWidth(dto.width());
+        device.setHeight(dto.height());
+        device.setType(type);
+
+        if (dto.company() != null && dto.company().getId() != null) {
+            Company company = companyRepository.findById(dto.company().getId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found"));
+            device.setCompany(company);
+        } else {
+            device.setCompany(null);
+        }
+
+        return convertToDTO(deviceRepository.save(device));
     }
 
     @Override
     public DeviceDTO updateDevice(Long id, DeviceDTO deviceDTO) {
         Device device = deviceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Device not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found"));
+
+        if (deviceDTO.type() == null || deviceDTO.type().getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Device type is required");
+        }
+
+        DeviceType type = deviceTypeRepository.findById(deviceDTO.type().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device type not found"));
 
         device.setUuid(deviceDTO.uuid());
         device.setDescriptionName(deviceDTO.descriptionName());
         device.setWidth(deviceDTO.width());
         device.setHeight(deviceDTO.height());
-        device.setType(deviceTypeRepository.findById(deviceDTO.type().getId())
-                .orElseThrow(() -> new RuntimeException("Device type not found")));
+        device.setType(type);
 
         if (deviceDTO.company() != null && deviceDTO.company().getId() != null) {
             Company company = companyRepository.findById(deviceDTO.company().getId())
-                    .orElseThrow(() -> new RuntimeException("Company not found"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found"));
             device.setCompany(company);
         } else {
             device.setCompany(null);
@@ -90,9 +123,15 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
+    public void deleteByUuid(String uuid) {
+        deviceRepository.findOptionalByUuid(uuid).ifPresent(deviceRepository::delete);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<AdviceDTO> getAdvicesForDevice(Long deviceId) {
         Device device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new RuntimeException("Device not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found"));
         return device.getAdvices().stream()
                 .sorted(Comparator.comparing(Advice::getId))
                 .map(AdviceMapper::toDTO)
@@ -102,9 +141,9 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public void assignAdviceToDevice(Long deviceId, Long adviceId) {
         Device device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new RuntimeException("Device not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found"));
         Advice advice = adviceRepository.findById(adviceId)
-                .orElseThrow(() -> new RuntimeException("Advice not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Advice not found"));
         device.getAdvices().add(advice);
         deviceRepository.save(device);
     }
@@ -112,9 +151,9 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public void removeAdviceFromDevice(Long deviceId, Long adviceId) {
         Device device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new RuntimeException("Device not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found"));
         Advice advice = adviceRepository.findById(adviceId)
-                .orElseThrow(() -> new RuntimeException("Advice not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Advice not found"));
         device.getAdvices().remove(advice);
         deviceRepository.save(device);
     }
@@ -127,25 +166,6 @@ public class DeviceServiceImpl implements DeviceService {
                 device.getWidth(),
                 device.getHeight(),
                 device.getType(),
-                device.getCompany()
-        );
-    }
-
-    private Device convertToEntity(DeviceDTO deviceDTO) {
-        Device device = new Device();
-        device.setUuid(deviceDTO.uuid());
-        device.setDescriptionName(deviceDTO.descriptionName());
-        device.setWidth(deviceDTO.width());
-        device.setHeight(deviceDTO.height());
-        device.setType(deviceTypeRepository.findById(deviceDTO.type().getId())
-                .orElseThrow(() -> new RuntimeException("Device type not found")));
-
-        if (deviceDTO.company() != null && deviceDTO.company().getId() != null) {
-            Company company = companyRepository.findById(deviceDTO.company().getId())
-                    .orElseThrow(() -> new RuntimeException("Company not found"));
-            device.setCompany(company);
-        }
-
-        return device;
+                device.getCompany());
     }
 }
