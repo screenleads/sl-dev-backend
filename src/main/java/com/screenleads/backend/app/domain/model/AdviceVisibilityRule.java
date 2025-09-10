@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -28,6 +29,10 @@ public class AdviceVisibilityRule {
 
     @Enumerated(EnumType.STRING)
     private DayOfWeek day;
+
+    // NUEVO: rango de fechas opcional (inclusive). Si es null, no limita por fecha.
+    private LocalDate startDate; // nullable
+    private LocalDate endDate; // nullable
 
     @OneToMany(mappedBy = "rule", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TimeRange> timeRanges;

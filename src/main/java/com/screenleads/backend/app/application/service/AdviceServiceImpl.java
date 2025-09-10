@@ -1,8 +1,10 @@
 package com.screenleads.backend.app.application.service;
 
 import java.time.DayOfWeek;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -69,21 +71,37 @@ public class AdviceServiceImpl implements AdviceService {
 
     @Override
     @Transactional
-    public List<AdviceDTO> getVisibleAdvicesNow() {
+    public List<AdviceDTO> getVisibleAdvicesNow(ZoneId zoneId) {
         enableCompanyFilterIfNeeded();
 
-        LocalDateTime now = LocalDateTime.now();
-        DayOfWeek today = now.getDayOfWeek();
-        LocalTime time = now.toLocalTime();
+        ZoneId zone = (zoneId != null) ? zoneId : ZoneId.systemDefault();
+        ZonedDateTime nowZ = ZonedDateTime.now(zone);
+        DayOfWeek today = nowZ.getDayOfWeek();
+        LocalTime time = nowZ.toLocalTime();
+        LocalDate date = nowZ.toLocalDate();
 
         return adviceRepository.findAll().stream()
-                .filter(advice -> advice.getVisibilityRules() != null &&
-                        advice.getVisibilityRules().stream()
-                                .anyMatch(rule -> rule.getDay() == today &&
-                                        rule.getTimeRanges() != null &&
-                                        rule.getTimeRanges().stream()
-                                                .anyMatch(range -> !time.isBefore(range.getFromTime()) &&
-                                                        !time.isAfter(range.getToTime()))))
+                .filter(advice -> advice.getVisibilityRules() != null && !advice.getVisibilityRules().isEmpty())
+                .filter(advice -> advice.getVisibilityRules().stream().anyMatch(rule -> {
+                    // día de semana
+                    boolean dayOk = rule.getDay() == today;
+
+                    // rango de fechas opcional (inclusive)
+                    boolean dateOk = true;
+                    if (rule.getStartDate() != null) {
+                        dateOk = !date.isBefore(rule.getStartDate());
+                    }
+                    if (dateOk && rule.getEndDate() != null) {
+                        dateOk = !date.isAfter(rule.getEndDate());
+                    }
+
+                    // rango horario dentro de ese día
+                    boolean timeOk = rule.getTimeRanges() != null && rule.getTimeRanges().stream()
+                            .anyMatch(range -> !time.isBefore(range.getFromTime()) &&
+                                    !time.isAfter(range.getToTime()));
+
+                    return dayOk && dateOk && timeOk;
+                }))
                 .map(this::convertToDTO)
                 .sorted(Comparator.comparing(AdviceDTO::id))
                 .collect(Collectors.toList());
@@ -118,6 +136,9 @@ public class AdviceServiceImpl implements AdviceService {
             for (AdviceVisibilityRule ruleIn : dto.visibilityRules()) {
                 AdviceVisibilityRule rule = new AdviceVisibilityRule();
                 rule.setDay(ruleIn.getDay());
+                // NUEVO: fechas opcionales
+                rule.setStartDate(ruleIn.getStartDate());
+                rule.setEndDate(ruleIn.getEndDate());
                 rule.setAdvice(advice);
 
                 List<TimeRange> ranges = new ArrayList<>();
@@ -160,6 +181,9 @@ public class AdviceServiceImpl implements AdviceService {
             for (AdviceVisibilityRule ruleDto : dto.visibilityRules()) {
                 AdviceVisibilityRule rule = new AdviceVisibilityRule();
                 rule.setDay(ruleDto.getDay());
+                // NUEVO: fechas opcionales
+                rule.setStartDate(ruleDto.getStartDate());
+                rule.setEndDate(ruleDto.getEndDate());
                 rule.setAdvice(advice);
 
                 List<TimeRange> ranges = new ArrayList<>();
@@ -216,14 +240,6 @@ public class AdviceServiceImpl implements AdviceService {
                 companyDto);
     }
 
-    /**
-     * Media:
-     * - {id} -> existente
-     * - {src} -> crear (si no existe por src) y relacionar
-     * - null -> null
-     * Si tu entidad Media es multi-tenant, aquí puedes setear la company del Media
-     * = company del Advice.
-     */
     private Media resolveMediaFromDto(MediaUpsertDTO incoming, Company ownerCompany) {
         if (incoming == null)
             return null;
@@ -241,8 +257,6 @@ public class AdviceServiceImpl implements AdviceService {
 
             Media m = new Media();
             m.setSrc(src);
-            // Si Media tuviera company:
-            // if (ownerCompany != null) m.setCompany(ownerCompany);
             return mediaRepository.save(m);
         }
 
@@ -258,13 +272,6 @@ public class AdviceServiceImpl implements AdviceService {
         return entityManager.getReference(Promotion.class, id);
     }
 
-    /**
-     * Company:
-     * - Si eres ADMIN: usa dto.company.id si llega (>0); si no, mantiene/usa la
-     * actual.
-     * - Si NO eres ADMIN: fuerza la compañía del usuario actual SIEMPRE.
-     * - En creación, si al final queda null -> intenta la del usuario actual.
-     */
     private Company resolveCompanyForWrite(CompanyRefDTO incoming, Company current) {
         boolean isAdmin = isCurrentUserAdmin();
         Long userCompanyId = currentCompanyId();
@@ -275,19 +282,15 @@ public class AdviceServiceImpl implements AdviceService {
                 c.setId(userCompanyId);
                 return c;
             }
-            // si por alguna razón no hay company en el usuario, devuelve la actual (puede
-            // ser null)
             return current;
         }
 
-        // Admin
         Long desiredId = (incoming != null) ? incoming.id() : null;
         if (desiredId != null && desiredId > 0) {
             Company c = new Company();
             c.setId(desiredId);
             return c;
         }
-        // si no especificó, conserva la actual o usa la del usuario si hay
         if (current != null)
             return current;
         if (userCompanyId != null) {
@@ -297,8 +300,6 @@ public class AdviceServiceImpl implements AdviceService {
         }
         return null;
     }
-
-    // ============================= MT Helpers =============================
 
     /** Activa el filtro "companyFilter" si NO es admin. */
     private void enableCompanyFilterIfNeeded() {
@@ -347,7 +348,7 @@ public class AdviceServiceImpl implements AdviceService {
         if (principal instanceof com.screenleads.backend.app.domain.model.User u) {
             return (u.getCompany() != null) ? u.getCompany().getId() : null;
         }
-        if (principal instanceof UserDetails ud) {
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails ud) {
             return userRepository.findByUsername(ud.getUsername())
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
