@@ -1,18 +1,10 @@
 package com.screenleads.backend.app.domain.model;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Builder(toBuilder = true)
@@ -21,12 +13,28 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Promotion {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String legal_url;
     private String url;
     private String description;
-    @Column(columnDefinition = "TEXT") // Para permitir HTML largo
+
+    @Column(columnDefinition = "TEXT") // permite HTML largo
     private String templateHtml;
+
+    // === Reglas de lead ===
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private LeadLimitType leadLimitType = LeadLimitType.NO_LIMIT; // NO_LIMIT | ONE_PER_24H | ONE_PER_PERSON
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private LeadIdentifierType leadIdentifierType = LeadIdentifierType.EMAIL; // EMAIL | PHONE
+
+    // Relación con leads (carga LAZY)
+    @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PromotionLead> leads = new ArrayList<>();
 }
