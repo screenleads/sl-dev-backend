@@ -1,9 +1,7 @@
 package com.screenleads.backend.app.web.controller;
 
 import com.screenleads.backend.app.application.service.PromotionService;
-import com.screenleads.backend.app.web.dto.LeadSummaryDTO;
-import com.screenleads.backend.app.web.dto.PromotionDTO;
-import com.screenleads.backend.app.web.dto.PromotionLeadDTO;
+import com.screenleads.backend.app.web.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +19,7 @@ public class PromotionsController {
     @Autowired
     private PromotionService promotionService;
 
-    // ===== CRUD existente =====
+    // ===== CRUD =====
     @GetMapping
     public List<PromotionDTO> getAllPromotions() {
         return promotionService.getAllPromotions();
@@ -58,13 +56,20 @@ public class PromotionsController {
         return promotionService.listLeads(id);
     }
 
+    // ===== Lead de prueba =====
+    @PostMapping("/{id}/leads/test")
+    public PromotionLeadDTO createTestLead(
+            @PathVariable Long id,
+            @RequestBody(required = false) PromotionLeadDTO overrides) {
+        return promotionService.createTestLead(id, overrides);
+    }
+
     // ===== Export CSV (Streaming) =====
     @GetMapping(value = "/{id}/leads/export.csv", produces = "text/csv")
     public ResponseEntity<StreamingResponseBody> exportLeadsCsv(
             @PathVariable Long id,
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to) {
-        // Por defecto: últimos 30 días
         ZonedDateTime toZdt = parseZdtOrDefault(to, ZonedDateTime.now(ZoneId.of("Europe/Madrid")));
         ZonedDateTime fromZdt = parseZdtOrDefault(from, toZdt.minusDays(30));
 
@@ -96,8 +101,6 @@ public class PromotionsController {
         if (s == null || s.isBlank())
             return defaultValue;
         try {
-            // Acepta "2025-09-01" (asume 00:00 Europe/Madrid) o ISO completo
-            // "2025-09-01T10:30:00+02:00"
             if (s.length() == 10) {
                 LocalDate d = LocalDate.parse(s);
                 return d.atStartOfDay(ZoneId.of("Europe/Madrid"));
