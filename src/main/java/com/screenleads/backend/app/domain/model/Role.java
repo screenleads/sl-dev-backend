@@ -127,4 +127,25 @@ public class Role {
     private boolean appVersionUpdate = false;
     @Builder.Default
     private boolean appVersionDelete = false;
+
+    // ======= PERMISOS PARA Role (la propia entidad) =======
+    @Builder.Default
+    private boolean roleRead = false;
+    @Builder.Default
+    private boolean roleCreate = false;
+    @Builder.Default
+    private boolean roleUpdate = false;
+    @Builder.Default
+    private boolean roleDelete = false;
+
+    // (si creaste PromotionLead como entidad)
+    // ======= PERMISOS PARA PromotionLead =======
+    @Builder.Default
+    private boolean promotionLeadRead = false;
+    @Builder.Default
+    private boolean promotionLeadCreate = false;
+    @Builder.Default
+    private boolean promotionLeadUpdate = false;
+    @Builder.Default
+    private boolean promotionLeadDelete = false;
 }

@@ -29,7 +29,7 @@ public class DataInitializer implements CommandLineRunner {
     private final DeviceTypeRepository deviceTypeRepository;
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder; // BCrypt u otro
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -65,12 +65,11 @@ public class DataInitializer implements CommandLineRunner {
 
         // ===== Usuario administrador inicial =====
         createDefaultAdminUser(
-                "admin", // username
-                "admin@screenleads.com", // email
-                "admin123", // contraseña temporal
-                "Admin", // nombre
-                "Root" // apellidos
-        );
+                "admin",
+                "admin@screenleads.com",
+                "admin123",
+                "Admin",
+                "Root");
     }
 
     // ============================================================
@@ -80,7 +79,7 @@ public class DataInitializer implements CommandLineRunner {
     private void initRoleAdmin() {
         Role r = upsertRoleSkeleton("ROLE_ADMIN", "Acceso total", 1);
 
-        // Admin: TODO TRUE (lectura/escritura sobre todo)
+        // Admin: TODO TRUE
         r.setUserRead(true);
         r.setUserCreate(true);
         r.setUserUpdate(true);
@@ -118,19 +117,30 @@ public class DataInitializer implements CommandLineRunner {
         r.setAppVersionUpdate(true);
         r.setAppVersionDelete(true);
 
+        // === NUEVOS: permisos para la entidad Role ===
+        r.setRoleRead(true);
+        r.setRoleCreate(true);
+        r.setRoleUpdate(true);
+        r.setRoleDelete(true);
+        // === NUEVOS: permisos para PromotionLead ===
+        r.setPromotionLeadRead(true);
+        r.setPromotionLeadCreate(true);
+        r.setPromotionLeadUpdate(true);
+        r.setPromotionLeadDelete(true);
+
         roleRepository.save(r);
     }
 
     private void initRoleCompanyAdmin() {
         Role r = upsertRoleSkeleton("ROLE_COMPANY_ADMIN", "Administrador de empresa", 2);
 
-        // Gestión de usuarios (según tu política)
+        // Usuarios (según política)
         r.setUserRead(true);
         r.setUserCreate(true);
         r.setUserUpdate(true);
         r.setUserDelete(true);
 
-        // Gestión de su empresa
+        // Su empresa
         r.setCompanyRead(true);
         r.setCompanyCreate(false);
         r.setCompanyUpdate(true);
@@ -153,7 +163,7 @@ public class DataInitializer implements CommandLineRunner {
         r.setAdviceUpdate(true);
         r.setAdviceDelete(true);
 
-        // Tipologías/Versiones: solo lectura
+        // Catálogos/Versiones: solo lectura
         r.setDeviceTypeRead(true);
         r.setDeviceTypeCreate(false);
         r.setDeviceTypeUpdate(false);
@@ -167,13 +177,25 @@ public class DataInitializer implements CommandLineRunner {
         r.setAppVersionUpdate(false);
         r.setAppVersionDelete(false);
 
+        // === NUEVO: Roles (solo lectura para poder listar roles asignables)
+        r.setRoleRead(true);
+        r.setRoleCreate(false);
+        r.setRoleUpdate(false);
+        r.setRoleDelete(false);
+
+        // === NUEVO: PromotionLead (leer y crear, para “lead de prueba”)
+        r.setPromotionLeadRead(true);
+        r.setPromotionLeadCreate(true);
+        r.setPromotionLeadUpdate(false);
+        r.setPromotionLeadDelete(false);
+
         roleRepository.save(r);
     }
 
     private void initRoleCompanyManager() {
         Role r = upsertRoleSkeleton("ROLE_COMPANY_MANAGER", "Gestor de empresa", 3);
 
-        // No puede crear usuarios; edición limitada
+        // Usuarios: sin create/delete
         r.setUserRead(true);
         r.setUserCreate(false);
         r.setUserUpdate(true);
@@ -184,7 +206,7 @@ public class DataInitializer implements CommandLineRunner {
         r.setCompanyUpdate(false);
         r.setCompanyDelete(false);
 
-        // CRUD parcial (sin delete)
+        // CRUD parcial
         r.setDeviceRead(true);
         r.setDeviceCreate(true);
         r.setDeviceUpdate(true);
@@ -202,7 +224,7 @@ public class DataInitializer implements CommandLineRunner {
         r.setAdviceUpdate(true);
         r.setAdviceDelete(false);
 
-        // Tipologías/Versiones: solo lectura
+        // Catálogos/Versiones: solo lectura
         r.setDeviceTypeRead(true);
         r.setDeviceTypeCreate(false);
         r.setDeviceTypeUpdate(false);
@@ -215,6 +237,18 @@ public class DataInitializer implements CommandLineRunner {
         r.setAppVersionCreate(false);
         r.setAppVersionUpdate(false);
         r.setAppVersionDelete(false);
+
+        // === NUEVO: Roles (solo lectura)
+        r.setRoleRead(true);
+        r.setRoleCreate(false);
+        r.setRoleUpdate(false);
+        r.setRoleDelete(false);
+
+        // === NUEVO: PromotionLead (leer y crear para pruebas)
+        r.setPromotionLeadRead(true);
+        r.setPromotionLeadCreate(true);
+        r.setPromotionLeadUpdate(false);
+        r.setPromotionLeadDelete(false);
 
         roleRepository.save(r);
     }
@@ -260,13 +294,24 @@ public class DataInitializer implements CommandLineRunner {
         r.setAppVersionUpdate(false);
         r.setAppVersionDelete(false);
 
+        // === NUEVO: Roles (solo lectura)
+        r.setRoleRead(true);
+        r.setRoleCreate(false);
+        r.setRoleUpdate(false);
+        r.setRoleDelete(false);
+
+        // === NUEVO: PromotionLead (solo lectura)
+        r.setPromotionLeadRead(true);
+        r.setPromotionLeadCreate(false);
+        r.setPromotionLeadUpdate(false);
+        r.setPromotionLeadDelete(false);
+
         roleRepository.save(r);
     }
 
     /**
-     * Crea o actualiza el esqueleto del rol: si existe, actualiza descripción y
-     * nivel;
-     * si no, lo crea con esos valores. Devuelve la instancia a completar con flags.
+     * Crea o actualiza el esqueleto del rol (si existe, actualiza descripción y
+     * nivel).
      */
     private Role upsertRoleSkeleton(String roleName, String desc, int level) {
         return roleRepository.findByRole(roleName)
@@ -318,7 +363,6 @@ public class DataInitializer implements CommandLineRunner {
 
     private void createDefaultAdminUser(String username, String email, String rawPassword, String name,
             String lastName) {
-        // Si ya existe por username, no hacemos nada
         if (userRepository.existsByUsername(username)) {
             System.out.println("ℹ️  Usuario admin ya existe: " + username);
             return;
@@ -337,7 +381,6 @@ public class DataInitializer implements CommandLineRunner {
                 .lastName(lastName)
                 .company(company)
                 .roles(Set.of(adminRole))
-                // sin .enabled(true) porque tu entidad no tiene ese campo
                 .build();
 
         userRepository.save(user);
