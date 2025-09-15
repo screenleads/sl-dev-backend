@@ -22,10 +22,18 @@ public class WsCommandController {
     public ResponseEntity<String> sendCommand(
             @PathVariable String roomId,
             @RequestBody ChatMessage message) {
-        // Log opcional
-        System.out.println("[WsCommandController] command room=" + roomId + " type=" + message.getType() + " msg="
-                + message.getMessage());
-        service.notifyFrontend(message, roomId); // -> /topic/{roomId}
+
+        if (message.getId() == null || message.getId().isBlank()) {
+            message.setId(java.util.UUID.randomUUID().toString());
+        }
+        if (message.getTimestamp() == null) {
+            message.setTimestamp(java.time.Instant.now());
+        }
+
+        System.out.printf("[WsCommandController] POST command room=%s id=%s type=%s msg=%s%n",
+                roomId, message.getId(), message.getType(), message.getMessage());
+
+        service.notifyFrontend(message, roomId);
         return ResponseEntity.accepted().body("202");
     }
 
