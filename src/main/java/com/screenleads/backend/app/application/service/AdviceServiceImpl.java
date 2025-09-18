@@ -1,16 +1,8 @@
 package com.screenleads.backend.app.application.service;
 
-import java.time.DayOfWeek;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import jakarta.persistence.EntityManager;
@@ -18,30 +10,19 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import com.screenleads.backend.app.domain.model.Advice;
-import com.screenleads.backend.app.domain.model.AdviceVisibilityRule;
-import com.screenleads.backend.app.domain.model.Company;
-import com.screenleads.backend.app.domain.model.Media;
-import com.screenleads.backend.app.domain.model.Promotion;
-import com.screenleads.backend.app.domain.model.TimeRange;
+import com.screenleads.backend.app.domain.model.*;
 import com.screenleads.backend.app.domain.repositories.AdviceRepository;
 import com.screenleads.backend.app.domain.repositories.MediaRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
-import com.screenleads.backend.app.web.dto.AdviceDTO;
-import com.screenleads.backend.app.web.dto.CompanyRefDTO;
-import com.screenleads.backend.app.web.dto.MediaUpsertDTO;
-import com.screenleads.backend.app.web.dto.PromotionRefDTO;
+import com.screenleads.backend.app.web.dto.*;
 
 @Service
 public class AdviceServiceImpl implements AdviceService {
-    private static final Logger log = LoggerFactory.getLogger(AdviceServiceImpl.class);
 
     private final AdviceRepository adviceRepository;
     private final MediaRepository mediaRepository;
@@ -66,7 +47,7 @@ public class AdviceServiceImpl implements AdviceService {
         enableCompanyFilterIfNeeded();
         return adviceRepository.findAll().stream()
                 .map(this::convertToDTO)
-                .sorted(Comparator.comparing(AdviceDTO::getId))
+                .sorted(Comparator.comparing(AdviceDTO::getId, Comparator.nullsLast(Long::compareTo)))
                 .collect(Collectors.toList());
     }
 
@@ -77,29 +58,36 @@ public class AdviceServiceImpl implements AdviceService {
 
         ZoneId zone = (zoneId != null) ? zoneId : ZoneId.systemDefault();
         ZonedDateTime nowZ = ZonedDateTime.now(zone);
-        DayOfWeek today = nowZ.getDayOfWeek();
-        LocalTime time = nowZ.toLocalTime();
         LocalDate date = nowZ.toLocalDate();
+        DayOfWeek weekday = nowZ.getDayOfWeek();
+        LocalTime time = nowZ.toLocalTime();
 
-        // [from, to) => !time.isBefore(from) && time.isBefore(to)
         return adviceRepository.findAll().stream()
-                .filter(advice -> advice.getVisibilityRules() != null && !advice.getVisibilityRules().isEmpty())
-                .filter(advice -> advice.getVisibilityRules().stream().anyMatch(rule -> {
-                    boolean dayOk = rule.getDay() == today;
-
-                    boolean dateOk = true;
-                    if (rule.getStartDate() != null) dateOk = !date.isBefore(rule.getStartDate());
-                    if (dateOk && rule.getEndDate() != null) dateOk = !date.isAfter(rule.getEndDate());
-
-                    boolean timeOk = rule.getTimeRanges() != null && rule.getTimeRanges().stream()
-                            .anyMatch(range -> !time.isBefore(range.getFromTime())
-                                    && time.isBefore(range.getToTime()));
-
-                    return dayOk && dateOk && timeOk;
-                }))
+                .filter(a -> a.getSchedules() != null && !a.getSchedules().isEmpty())
+                .filter(a -> isVisibleNow(a, date, weekday, time))
                 .map(this::convertToDTO)
-                .sorted(Comparator.comparing(AdviceDTO::getId))
+                .sorted(Comparator.comparing(AdviceDTO::getId, Comparator.nullsLast(Long::compareTo)))
                 .collect(Collectors.toList());
+    }
+
+    private boolean isVisibleNow(Advice a, LocalDate date, DayOfWeek weekday, LocalTime time) {
+        for (AdviceSchedule s : a.getSchedules()) {
+            boolean dateOk = (s.getStartDate() == null || !date.isBefore(s.getStartDate()))
+                          && (s.getEndDate() == null   || !date.isAfter(s.getEndDate()));
+            if (!dateOk) continue;
+
+            // Si el día no tiene horas, no es visible ese día
+            if (s.getWindows() == null || s.getWindows().isEmpty()) continue;
+
+            boolean any = s.getWindows().stream().anyMatch(w ->
+                    w.getWeekday() == weekday
+                 && w.getFromTime() != null && w.getToTime() != null
+                 && !time.isBefore(w.getFromTime())   // >= from
+                 && time.isBefore(w.getToTime())       // < to (fin exclusivo)
+            );
+            if (any) return true;
+        }
+        return false;
     }
 
     @Override
@@ -118,46 +106,22 @@ public class AdviceServiceImpl implements AdviceService {
 
         Advice advice = new Advice();
         advice.setDescription(dto.getDescription());
-        advice.setCustomInterval(dto.getCustomInterval());
-
-        // DTO -> Entity: Number -> Duration  (usa MINUTOS si así lo manejas)
-        Number intervalNum = dto.getInterval();
-        advice.setInterval(intervalNum == null ? null
-                : Duration.ofSeconds(intervalNum.longValue()));
-                // Cambia a ofMinutes(...) si tu DTO viene en minutos
+        advice.setCustomInterval(Boolean.TRUE.equals(dto.getCustomInterval()));
+        advice.setInterval(numberToDuration(dto.getInterval()));
 
         advice.setCompany(resolveCompanyForWrite(dto.getCompany(), null));
-        advice.setMedia(resolveMediaFromDto(dto.getMedia(), advice.getCompany()));
+        advice.setMedia(resolveMediaFromDto(dto.getMedia()));
         advice.setPromotion(resolvePromotionFromDto(dto.getPromotion()));
 
-        // Reglas
-        advice.setVisibilityRules(new ArrayList<>());
-        if (dto.getVisibilityRules() != null) {
-            for (AdviceVisibilityRule ruleIn : dto.getVisibilityRules()) {
-                AdviceVisibilityRule rule = new AdviceVisibilityRule();
-                rule.setDay(ruleIn.getDay());
-                rule.setStartDate(ruleIn.getStartDate());
-                rule.setEndDate(ruleIn.getEndDate());
-                rule.setAdvice(advice);
-
-                List<TimeRange> ranges = new ArrayList<>();
-                if (ruleIn.getTimeRanges() != null) {
-                    for (TimeRange rangeIn : ruleIn.getTimeRanges()) {
-                        TimeRange tr = new TimeRange();
-                        tr.setFromTime(rangeIn.getFromTime());
-                        tr.setToTime(rangeIn.getToTime());
-                        tr.setRule(rule);
-                        ranges.add(tr);
-                    }
-                }
-                validateAndNormalizeTimeRanges(ranges);
-                rule.setTimeRanges(ranges);
-                advice.getVisibilityRules().add(rule);
+        // schedules
+        advice.setSchedules(new ArrayList<>());
+        if (dto.getSchedules() != null) {
+            for (AdviceScheduleDTO sDto : dto.getSchedules()) {
+                advice.getSchedules().add(mapScheduleDTO(sDto, advice));
             }
         }
 
         validateAdvice(advice);
-
         Advice saved = adviceRepository.save(advice);
         return convertToDTO(saved);
     }
@@ -171,46 +135,21 @@ public class AdviceServiceImpl implements AdviceService {
                 .orElseThrow(() -> new NoSuchElementException("Advice not found: " + id));
 
         advice.setDescription(dto.getDescription());
-        advice.setCustomInterval(dto.getCustomInterval());
-
-        // DTO -> Entity: Number -> Duration
-        Number intervalNum = dto.getInterval();
-        advice.setInterval(intervalNum == null ? null
-                : Duration.ofSeconds(intervalNum.longValue()));
-                // Cambia a ofMinutes(...) si tu DTO viene en minutos
+        advice.setCustomInterval(Boolean.TRUE.equals(dto.getCustomInterval()));
+        advice.setInterval(numberToDuration(dto.getInterval()));
 
         advice.setCompany(resolveCompanyForWrite(dto.getCompany(), advice.getCompany()));
-        advice.setMedia(resolveMediaFromDto(dto.getMedia(), advice.getCompany()));
+        advice.setMedia(resolveMediaFromDto(dto.getMedia()));
         advice.setPromotion(resolvePromotionFromDto(dto.getPromotion()));
 
-        // Reemplazo completo de reglas
-        advice.getVisibilityRules().clear();
-        if (dto.getVisibilityRules() != null) {
-            for (AdviceVisibilityRule ruleDto : dto.getVisibilityRules()) {
-                AdviceVisibilityRule rule = new AdviceVisibilityRule();
-                rule.setDay(ruleDto.getDay());
-                rule.setStartDate(ruleDto.getStartDate());
-                rule.setEndDate(ruleDto.getEndDate());
-                rule.setAdvice(advice);
-
-                List<TimeRange> ranges = new ArrayList<>();
-                if (ruleDto.getTimeRanges() != null) {
-                    for (TimeRange rangeDto : ruleDto.getTimeRanges()) {
-                        TimeRange tr = new TimeRange();
-                        tr.setFromTime(rangeDto.getFromTime());
-                        tr.setToTime(rangeDto.getToTime());
-                        tr.setRule(rule);
-                        ranges.add(tr);
-                    }
-                }
-                validateAndNormalizeTimeRanges(ranges);
-                rule.setTimeRanges(ranges);
-                advice.getVisibilityRules().add(rule);
+        advice.getSchedules().clear();
+        if (dto.getSchedules() != null) {
+            for (AdviceScheduleDTO sDto : dto.getSchedules()) {
+                advice.getSchedules().add(mapScheduleDTO(sDto, advice));
             }
         }
 
         validateAdvice(advice);
-
         Advice saved = adviceRepository.save(advice);
         return convertToDTO(saved);
     }
@@ -225,47 +164,66 @@ public class AdviceServiceImpl implements AdviceService {
     // ============================= VALIDACIONES =============================
 
     private void validateAdvice(Advice advice) {
-        if (advice.getVisibilityRules() == null) return;
-
-        for (AdviceVisibilityRule r : advice.getVisibilityRules()) {
-            if (r.getDay() == null) {
-                throw new IllegalArgumentException("Rule day is required");
+        if (advice.getSchedules() == null) return;
+        for (AdviceSchedule s : advice.getSchedules()) {
+            if (s.getStartDate() != null && s.getEndDate() != null &&
+                s.getStartDate().isAfter(s.getEndDate())) {
+                throw new IllegalArgumentException("Schedule startDate must be <= endDate");
             }
-            if (r.getStartDate() != null && r.getEndDate() != null &&
-                r.getStartDate().isAfter(r.getEndDate())) {
-                throw new IllegalArgumentException("Rule startDate must be <= endDate");
-            }
-            if (r.getTimeRanges() == null || r.getTimeRanges().isEmpty()) {
-                throw new IllegalArgumentException("Rule must contain at least one time range");
-            }
-            validateAndNormalizeTimeRanges(r.getTimeRanges());
+            if (s.getWindows() != null) validateAndNormalizeWindows(s.getWindows());
         }
     }
 
-    /** from<to, ordenado y sin solapes (fin exclusivo). */
-    private void validateAndNormalizeTimeRanges(List<TimeRange> ranges) {
-        for (TimeRange tr : ranges) {
-            if (tr.getFromTime() == null || tr.getToTime() == null) {
-                throw new IllegalArgumentException("TimeRange from/to must be set");
-            }
-            if (!tr.getFromTime().isBefore(tr.getToTime())) {
-                throw new IllegalArgumentException("TimeRange 'from' must be strictly before 'to'");
-            }
+    /** from<to, orden por día+hora, no solapes dentro del mismo día. */
+    private void validateAndNormalizeWindows(List<AdviceTimeWindow> windows) {
+        for (AdviceTimeWindow w : windows) {
+            if (w.getWeekday() == null) throw new IllegalArgumentException("Window weekday is required");
+            if (w.getFromTime() == null || w.getToTime() == null)
+                throw new IllegalArgumentException("Window from/to must be set");
+            if (!w.getFromTime().isBefore(w.getToTime()))
+                throw new IllegalArgumentException("Window 'from' must be strictly before 'to'");
         }
-        ranges.sort(Comparator.comparing(TimeRange::getFromTime).thenComparing(TimeRange::getToTime));
-        for (int i = 1; i < ranges.size(); i++) {
-            TimeRange prev = ranges.get(i - 1);
-            TimeRange cur  = ranges.get(i);
-            if (cur.getFromTime().isBefore(prev.getToTime())) {
+        windows.sort(Comparator
+                .comparing(AdviceTimeWindow::getWeekday)
+                .thenComparing(AdviceTimeWindow::getFromTime)
+                .thenComparing(AdviceTimeWindow::getToTime));
+
+        for (int i = 1; i < windows.size(); i++) {
+            AdviceTimeWindow prev = windows.get(i - 1);
+            AdviceTimeWindow cur  = windows.get(i);
+            if (cur.getWeekday() == prev.getWeekday()
+             && cur.getFromTime().isBefore(prev.getToTime())) {
                 throw new IllegalArgumentException(
-                    "Overlapping time ranges: [" + prev.getFromTime() + "-" + prev.getToTime() +
-                    "] with [" + cur.getFromTime() + "-" + cur.getToTime() + "]"
-                );
+                        "Overlapping windows on " + prev.getWeekday()
+                        + ": [" + prev.getFromTime() + "-" + prev.getToTime() + "] with ["
+                        + cur.getFromTime() + "-" + cur.getToTime() + "]");
             }
         }
     }
 
-    // ============================= MAPPERS/HELPERS =============================
+    // ============================= MAPEOS =============================
+
+    private AdviceSchedule mapScheduleDTO(AdviceScheduleDTO sDto, Advice owner) {
+        AdviceSchedule s = new AdviceSchedule();
+        s.setAdvice(owner);
+        s.setStartDate(parseDate(sDto.getStartDate()));
+        s.setEndDate(parseDate(sDto.getEndDate()));
+
+        List<AdviceTimeWindow> windows = new ArrayList<>();
+        if (sDto.getWindows() != null) {
+            for (AdviceTimeWindowDTO wDto : sDto.getWindows()) {
+                AdviceTimeWindow w = new AdviceTimeWindow();
+                w.setSchedule(s);
+                w.setWeekday(parseWeekday(wDto.getWeekday()));
+                w.setFromTime(parseTime(wDto.getFromTime()));
+                w.setToTime(parseTime(wDto.getToTime()));
+                windows.add(w);
+            }
+        }
+        validateAndNormalizeWindows(windows);
+        s.setWindows(windows);
+        return s;
+    }
 
     private AdviceDTO convertToDTO(Advice advice) {
         MediaUpsertDTO mediaDto = (advice.getMedia() != null)
@@ -280,36 +238,85 @@ public class AdviceServiceImpl implements AdviceService {
                 ? new CompanyRefDTO(advice.getCompany().getId(), advice.getCompany().getName())
                 : null;
 
-        // Entity -> DTO: Duration -> Number (segundos)
-        Duration d = advice.getInterval();
-        Number intervalValue = (d == null) ? null : Long.valueOf(d.getSeconds());
-        // Si tu DTO trabaja en minutos: Long.valueOf(d.toMinutes())
+        Number intervalValue = (advice.getInterval() == null) ? null : advice.getInterval().getSeconds();
 
-        return new AdviceDTO(
-                advice.getId(),
-                advice.getDescription(),
-                advice.getCustomInterval(),
-                intervalValue,
-                mediaDto,
-                promoDto,
-                advice.getVisibilityRules(),
-                companyDto
-        );
+        List<AdviceScheduleDTO> schedules = new ArrayList<>();
+        if (advice.getSchedules() != null) {
+            for (AdviceSchedule s : advice.getSchedules()) {
+                List<AdviceTimeWindowDTO> wins = new ArrayList<>();
+                if (s.getWindows() != null) {
+                    for (AdviceTimeWindow w : s.getWindows()) {
+                        wins.add(AdviceTimeWindowDTO.builder()
+                                .id(w.getId())
+                                .weekday(w.getWeekday() != null ? w.getWeekday().name() : null)
+                                .fromTime(formatTime(w.getFromTime()))
+                                .toTime(formatTime(w.getToTime()))
+                                .build());
+                    }
+                }
+                schedules.add(AdviceScheduleDTO.builder()
+                        .id(s.getId())
+                        .startDate(formatDate(s.getStartDate()))
+                        .endDate(formatDate(s.getEndDate()))
+                        .windows(wins)
+                        .build());
+            }
+        }
+
+        return AdviceDTO.builder()
+                .id(advice.getId())
+                .description(advice.getDescription())
+                .customInterval(advice.getCustomInterval())
+                .interval(intervalValue)
+                .media(mediaDto)
+                .promotion(promoDto)
+                .company(companyDto)
+                .schedules(schedules)
+                .build();
     }
 
-    private Media resolveMediaFromDto(MediaUpsertDTO incoming, Company ownerCompany) {
+    // ============================= HELPERS =============================
+
+    private Duration numberToDuration(Number n) {
+        if (n == null) return null;
+        long s = n.longValue();
+        return (s > 0) ? Duration.ofSeconds(s) : null;
+    }
+
+    private LocalDate parseDate(String s) {
+        if (s == null || s.isBlank()) return null;
+        return LocalDate.parse(s.trim());
+    }
+    private String formatDate(LocalDate d) {
+        return (d == null) ? null : d.toString();
+    }
+
+    private LocalTime parseTime(String s) {
+        if (s == null || s.isBlank()) return null;
+        String t = s.trim();
+        if (t.matches("^\\d{2}:\\d{2}$")) t = t + ":00";
+        return LocalTime.parse(t, DateTimeFormatter.ISO_LOCAL_TIME);
+    }
+    private String formatTime(LocalTime t) {
+        return (t == null) ? null : t.toString(); // HH:mm:ss
+    }
+
+    private DayOfWeek parseWeekday(String s) {
+        if (s == null || s.isBlank()) return null;
+        return DayOfWeek.valueOf(s.trim().toUpperCase());
+    }
+
+    private Media resolveMediaFromDto(MediaUpsertDTO incoming) {
         if (incoming == null) return null;
 
         if (incoming.id() != null && incoming.id() > 0) {
             return mediaRepository.findById(incoming.id())
                     .orElseThrow(() -> new IllegalArgumentException("Media no encontrada (id=" + incoming.id() + ")"));
         }
-
         String src = incoming.src() != null ? incoming.src().trim() : null;
         if (src != null && !src.isEmpty()) {
             Media existing = mediaRepository.findBySrc(src).orElse(null);
             if (existing != null) return existing;
-
             Media m = new Media();
             m.setSrc(src);
             return mediaRepository.save(m);
@@ -319,7 +326,7 @@ public class AdviceServiceImpl implements AdviceService {
 
     private Promotion resolvePromotionFromDto(PromotionRefDTO incoming) {
         if (incoming == null) return null;
-        Long id = incoming.id(); // sin pattern matching
+        Long id = incoming.id();
         if (id == null || id <= 0) return null;
         return entityManager.getReference(Promotion.class, id);
     }
@@ -337,7 +344,7 @@ public class AdviceServiceImpl implements AdviceService {
             return current;
         }
 
-        Long desiredId = (incoming == null) ? null : incoming.id();
+        Long desiredId = (incoming != null) ? incoming.id() : null;
         if (desiredId != null && desiredId > 0) {
             Company c = new Company();
             c.setId(desiredId);

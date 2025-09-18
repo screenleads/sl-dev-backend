@@ -13,17 +13,9 @@ import lombok.*;
 
 @Entity
 @Builder(toBuilder = true)
-@Table(
-  name = "advice",
-  indexes = {
-    @Index(name="idx_advice_company", columnList="company_id"),
-    @Index(name="idx_advice_media", columnList="media"),
-    @Index(name="idx_advice_promotion", columnList="promotion")
-  }
-)
+@Table(uniqueConstraints = {})
 @Setter @Getter
 @NoArgsConstructor @AllArgsConstructor
-@ToString(onlyExplicitlyIncluded = true)
 @Filter(name = "companyFilter", condition = "company_id = :companyId")
 public class Advice {
 
@@ -31,51 +23,30 @@ public class Advice {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ToString.Include
     private String description;
-
-    // Si prefieres minutos: cambia a Integer minutos y documenta la unidad
-    @Column(name = "custom_interval", nullable = true)
     private Boolean customInterval;
 
-    // Almacena en segundos (recomendado) si usas Integer; si usas Duration, mapea con AttributeConverter.
-    @Column(name = "interval_seconds", nullable = true)
-    private Integer intervalSeconds;
+    @Column(name = "interval_seconds")
+    private Duration interval; // segundos (Duration)
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "company_id", referencedColumnName = "id")
     @JsonIgnore
     private Company company;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "media", referencedColumnName = "id")
     private Media media;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "promotion", referencedColumnName = "id")
     private Promotion promotion;
 
-    @OneToMany(mappedBy = "advice", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @OrderBy("day ASC, startDate NULLS FIRST, endDate NULLS FIRST, id ASC")
-    private List<AdviceVisibilityRule> visibilityRules;
+    /** Múltiples rangos de fechas, cada uno con ventanas por día. */
+    @OneToMany(mappedBy = "advice", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AdviceSchedule> schedules;
 
     @JsonIgnore
-    @ManyToMany(mappedBy = "advices", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "advices")
     private Set<Device> devices;
-
-    /** Helpers */
-    public void setVisibilityRules(List<AdviceVisibilityRule> rules) {
-        this.visibilityRules = rules;
-        if (rules != null) {
-            rules.forEach(r -> r.setAdvice(this));
-        }
-    }
-
-    /** Si quieres exponer Duration en dominio: */
-    public Duration getInterval() {
-        return intervalSeconds == null ? null : Duration.ofSeconds(intervalSeconds);
-    }
-    public void setInterval(Duration d) {
-        this.intervalSeconds = (d == null) ? null : Math.toIntExact(d.getSeconds());
-    }
 }
