@@ -3,7 +3,6 @@ package com.screenleads.backend.app.web.controller;
 import com.screenleads.backend.app.application.service.FirebaseStorageService;
 import com.screenleads.backend.app.application.service.MediaService;
 import com.screenleads.backend.app.web.dto.MediaDTO;
-import jakarta.servlet.annotation.MultipartConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -11,29 +10,27 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
+import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.*;
 
-@Controller
+@RestController // <-- antes era @Controller
 @Slf4j
 public class MediaController {
 
-    @Autowired
-    private FirebaseStorageService firebaseService;
-
-    @Autowired
-    private MediaService mediaService;
+    @Autowired private FirebaseStorageService firebaseService;
+    @Autowired private MediaService mediaService;
 
     public MediaController(MediaService mediaService) {
         this.mediaService = mediaService;
     }
+
+    // ---------------- LIST/CRUD ----------------
 
     @CrossOrigin
     @GetMapping("/medias")
@@ -41,61 +38,89 @@ public class MediaController {
         return ResponseEntity.ok(mediaService.getAllMedias());
     }
 
+    // ---------------- UPLOAD ----------------
+
     @CrossOrigin
-    @PostMapping("/medias/upload")
-    public ResponseEntity<Map<String, String>> upload(@RequestParam("file") MultipartFile file) throws Exception {
-        log.info("🚀 Iniciando proceso de subida...");
+    @PostMapping(
+        value = "/medias/upload",
+        consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<Map<String, Object>> upload(@RequestPart("file") MultipartFile file) {
+        try {
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Archivo vacío"));
+            }
 
-        // 1. Subir archivo a 'raw/'
-        String originalFileName = file.getOriginalFilename();
-        String fileName = UUID.randomUUID() + "-" + originalFileName;
-        String rawPath = "raw/" + fileName;
+            final String original = Optional.ofNullable(file.getOriginalFilename()).orElse("upload.bin");
+            final String safeName = original.replaceAll("[^A-Za-z0-9._-]", "_");
+            final String fileName  = UUID.randomUUID() + "-" + safeName;
+            final String rawPath   = "raw/" + fileName;
 
-        File tempFile = File.createTempFile("upload-", originalFileName);
-        file.transferTo(tempFile);
+            // /tmp es el disco efímero de Heroku
+            Path tmpDir = Paths.get(Optional.ofNullable(System.getProperty("java.io.tmpdir")).orElse("/tmp"));
+            Files.createDirectories(tmpDir);
+            Path tmp = Files.createTempFile(tmpDir, "upload_", "_" + safeName);
 
-        firebaseService.upload(tempFile, rawPath);
-        log.info("📤 Archivo subido a Firebase en {}", rawPath);
+            log.info("📥 Recibido multipart: name={}, size={} bytes, contentType={}",
+                    safeName, file.getSize(), file.getContentType());
 
-        // 2. Responder sincrónicamente con el nombre del archivo para posterior
-        // consulta
-        return ResponseEntity.accepted().body(Map.of("filename", fileName));
+            // copiar a tmp
+            try (InputStream in = file.getInputStream()) {
+                Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            // subir a Firebase (raw/)
+            firebaseService.upload(tmp.toFile(), rawPath);
+            log.info("📤 Subido a Firebase RAW: {}", rawPath);
+
+            // opcional: borrar temporal
+            try { Files.deleteIfExists(tmp); } catch (Exception ignore) {}
+
+            // 200 OK con filename (el front hace polling a /medias/status/{filename})
+            return ResponseEntity.ok(Map.of("filename", fileName));
+
+        } catch (MaxUploadSizeExceededException tooBig) {
+            return ResponseEntity.status(413).body(Map.of("error", "Archivo demasiado grande"));
+        } catch (Exception ex) {
+            log.error("❌ Error subiendo archivo", ex);
+            return ResponseEntity.status(500).body(Map.of(
+                "error", "Fallo subiendo archivo",
+                "detail", ex.getMessage()
+            ));
+        }
     }
 
     @CrossOrigin
-    @GetMapping("/medias/status/{filename}")
+    @GetMapping(value = "/medias/status/{filename}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> checkCompressionStatus(@PathVariable String filename) {
-        log.info("📡 Comprobando estado de compresión para: {}", filename);
+        log.info("📡 Comprobando estado de compresión: {}", filename);
 
         final String IMG_DEST = "media/images";
         final String VID_DEST = "media/videos";
-        final int[] IMAGE_THUMBS = { 320, 640 };
-        final int[] VIDEO_THUMBS = { 320, 640 };
+        final int[] IMAGE_THUMBS = {320, 640};
+        final int[] VIDEO_THUMBS = {320, 640};
 
         String base = stripExtension(filename);
         MediaKind kind = detectKind(filename);
-        log.debug("🔍 Tipo detectado: {} | Base name: {}", kind, base);
 
-        // 1) Compatibilidad retro
+        // 1) compatibilidad legacy
         String legacyPath = "media/compressed-" + filename;
-        log.debug("🔍 Revisando ruta legacy: {}", legacyPath);
         if (firebaseService.exists(legacyPath)) {
-            String url = firebaseService.getPublicUrl(legacyPath);
-            log.info("✅ Archivo comprimido disponible (legacy): {}", url);
             return ResponseEntity.ok(Map.of(
-                    "status", "ready",
-                    "type", "legacy",
-                    "url", url,
-                    "thumbnails", List.of()));
+                "status", "ready",
+                "type", "legacy",
+                "url", firebaseService.getPublicUrl(legacyPath),
+                "thumbnails", List.of()
+            ));
         }
 
-        // 2) Nuevas rutas
+        // 2) rutas nuevas
         List<String> mainCandidates = new ArrayList<>();
         List<String> thumbCandidates = new ArrayList<>();
 
         if (kind == MediaKind.VIDEO) {
-            String main = VID_DEST + "/compressed-" + base + ".mp4";
-            mainCandidates.add(main);
+            mainCandidates.add(VID_DEST + "/compressed-" + base + ".mp4");
             for (int s : VIDEO_THUMBS) {
                 thumbCandidates.add(VID_DEST + "/thumbnails/" + s + "/thumb-" + s + "-" + base + ".jpg");
             }
@@ -107,79 +132,62 @@ public class MediaController {
                 thumbCandidates.add(IMG_DEST + "/thumbnails/" + s + "/thumb-" + s + "-" + base + ".png");
             }
         } else {
-            log.warn("⚠️ Tipo de archivo desconocido, probando rutas genéricas");
             mainCandidates.add(VID_DEST + "/compressed-" + base + ".mp4");
             mainCandidates.add(IMG_DEST + "/compressed-" + base + ".jpg");
             mainCandidates.add(IMG_DEST + "/compressed-" + base + ".png");
-            int[] sizes = { 320, 640 };
-            for (int s : sizes) {
+            for (int s : new int[]{320, 640}) {
                 thumbCandidates.add(VID_DEST + "/thumbnails/" + s + "/thumb-" + s + "-" + base + ".jpg");
                 thumbCandidates.add(IMG_DEST + "/thumbnails/" + s + "/thumb-" + s + "-" + base + ".jpg");
                 thumbCandidates.add(IMG_DEST + "/thumbnails/" + s + "/thumb-" + s + "-" + base + ".png");
             }
         }
 
-        // 3) Buscar el main
         String foundMain = null;
         for (String cand : mainCandidates) {
-            log.debug("🔍 Revisando main candidate: {}", cand);
-            if (firebaseService.exists(cand)) {
-                foundMain = cand;
-                break;
-            }
+            if (firebaseService.exists(cand)) { foundMain = cand; break; }
         }
 
         if (foundMain != null) {
-            log.info("✅ Archivo principal encontrado: {}", foundMain);
             List<String> thumbs = new ArrayList<>();
             for (String t : thumbCandidates) {
-                if (firebaseService.exists(t)) {
-                    log.debug("🖼️ Thumbnail encontrado: {}", t);
-                    thumbs.add(firebaseService.getPublicUrl(t));
-                }
+                if (firebaseService.exists(t)) thumbs.add(firebaseService.getPublicUrl(t));
             }
-
             String type = foundMain.startsWith(VID_DEST) ? "video"
-                    : foundMain.startsWith(IMG_DEST) ? "image"
-                            : "unknown";
+                        : foundMain.startsWith(IMG_DEST) ? "image" : "unknown";
 
-            String publicUrl = firebaseService.getPublicUrl(foundMain);
-            log.info("📤 URL pública: {}", publicUrl);
             return ResponseEntity.ok(Map.of(
-                    "status", "ready",
-                    "type", type,
-                    "url", publicUrl,
-                    "thumbnails", thumbs));
-        } else {
-            log.info("🕓 Archivo aún no está comprimido");
-            return ResponseEntity.status(202).body(Map.of("status", "processing"));
+                "status", "ready",
+                "type", type,
+                "url", firebaseService.getPublicUrl(foundMain),
+                "thumbnails", thumbs
+            ));
         }
+        return ResponseEntity.status(202).body(Map.of("status", "processing"));
     }
 
-    private enum MediaKind {
-        VIDEO, IMAGE, UNKNOWN
-    }
+    private enum MediaKind { VIDEO, IMAGE, UNKNOWN }
 
     private MediaKind detectKind(String filename) {
         String f = filename.toLowerCase();
-        if (f.endsWith(".mp4") || f.endsWith(".mov") || f.endsWith(".webm"))
-            return MediaKind.VIDEO;
-        if (f.endsWith(".jpg") || f.endsWith(".jpeg") || f.endsWith(".png") || f.endsWith(".webp")
-                || f.endsWith(".avif") || f.endsWith(".heic") || f.endsWith(".heif") || f.endsWith(".gif"))
-            return MediaKind.IMAGE;
+        if (f.endsWith(".mp4") || f.endsWith(".mov") || f.endsWith(".webm")) return MediaKind.VIDEO;
+        if (f.endsWith(".jpg") || f.endsWith(".jpeg") || f.endsWith(".png")
+         || f.endsWith(".webp") || f.endsWith(".avif") || f.endsWith(".heic")
+         || f.endsWith(".heif") || f.endsWith(".gif")) return MediaKind.IMAGE;
         return MediaKind.UNKNOWN;
     }
-
     private String stripExtension(String filename) {
         int i = filename.lastIndexOf('.');
         return (i > 0) ? filename.substring(0, i) : filename;
     }
 
+    // ---------------- CRUD restantes (sin tocar rutas) ----------------
+
     @CrossOrigin
     @GetMapping("/medias/{id}")
     public ResponseEntity<MediaDTO> getMediaById(@PathVariable Long id) {
-        Optional<MediaDTO> device = mediaService.getMediaById(id);
-        return device.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return mediaService.getMediaById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @CrossOrigin
@@ -191,10 +199,7 @@ public class MediaController {
     @CrossOrigin
     @PutMapping("/medias/{id}")
     public ResponseEntity<MediaDTO> updateMedia(@PathVariable Long id, @RequestBody MediaDTO deviceDTO) {
-
-        MediaDTO updatedDevice = mediaService.updateMedia(id, deviceDTO);
-        return ResponseEntity.ok(updatedDevice);
-
+        return ResponseEntity.ok(mediaService.updateMedia(id, deviceDTO));
     }
 
     @CrossOrigin
@@ -207,23 +212,13 @@ public class MediaController {
     @CrossOrigin
     @GetMapping("/medias/render/{id}")
     public ResponseEntity<Resource> getImage(@PathVariable Long id) throws Exception {
-
         Optional<MediaDTO> mediaaux = mediaService.getMediaById(id);
         Path filePath = Paths.get("src/main/resources/static/medias/").resolve(mediaaux.get().src()).normalize();
-        log.info("📂 Cargando archivo desde: {}", filePath.toString());
-
         Resource resource = new UrlResource(filePath.toUri());
-
-        if (!resource.exists()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        String contentType = "application/octet-stream";
-
+        if (!resource.exists()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                .body(resource);
-
+            .contentType(MediaType.parseMediaType("application/octet-stream"))
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+            .body(resource);
     }
 }
