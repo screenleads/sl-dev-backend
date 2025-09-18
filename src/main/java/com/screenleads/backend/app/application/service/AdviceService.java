@@ -9,7 +9,8 @@ import com.screenleads.backend.app.web.dto.AdviceDTO;
 public interface AdviceService {
     List<AdviceDTO> getAllAdvices();
 
-    List<AdviceDTO> getVisibleAdvicesNow(ZoneId zoneId); // <-- usa zona del cliente
+    /** Devuelve los advices visibles "ahora" en la zoneId indicada (si null, systemDefault). */
+    List<AdviceDTO> getVisibleAdvicesNow(ZoneId zoneId);
 
     Optional<AdviceDTO> getAdviceById(Long id);
 

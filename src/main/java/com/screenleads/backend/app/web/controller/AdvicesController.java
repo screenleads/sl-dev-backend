@@ -77,14 +77,16 @@ public class AdvicesController {
         if (tz != null && !tz.isBlank()) {
             try {
                 return ZoneId.of(tz.trim());
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                logger.warn("X-Timezone inválida '{}': {}", tz, e.getMessage());
             }
         }
         if (offsetMinutesStr != null && !offsetMinutesStr.isBlank()) {
             try {
                 int minutes = Integer.parseInt(offsetMinutesStr.trim());
                 return ZoneOffset.ofTotalSeconds(minutes * 60);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                logger.warn("X-Timezone-Offset inválido '{}': {}", offsetMinutesStr, e.getMessage());
             }
         }
         return ZoneId.systemDefault();

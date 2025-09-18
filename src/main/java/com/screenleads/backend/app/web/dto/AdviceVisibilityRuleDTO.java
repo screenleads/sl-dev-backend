@@ -1,9 +1,15 @@
 package com.screenleads.backend.app.web.dto;
 
+
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 
-import com.screenleads.backend.app.domain.model.TimeRange;
-
-public record AdviceVisibilityRuleDTO(Long id, DayOfWeek day, List<TimeRange> timeRanges) {
-}
+public record AdviceVisibilityRuleDTO(
+  Long id,
+  DayOfWeek day,
+  LocalDate startDate,
+  LocalDate endDate,
+  Integer priority,
+  List<TimeRangeDTO> ranges
+) {}

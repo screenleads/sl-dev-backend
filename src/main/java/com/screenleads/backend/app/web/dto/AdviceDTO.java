@@ -2,24 +2,24 @@ package com.screenleads.backend.app.web.dto;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.screenleads.backend.app.domain.model.AdviceVisibilityRule;
-import com.screenleads.backend.app.domain.model.Media;
-import com.screenleads.backend.app.domain.model.Promotion;
-import com.screenleads.backend.app.web.json.MediaIdOrNullDeserializer;
-import com.screenleads.backend.app.web.json.PromotionIdOrNullDeserializer;
-import java.util.List;
-import com.screenleads.backend.app.domain.model.AdviceVisibilityRule;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public record AdviceDTO(
-                Long id,
-                String description,
-                Boolean customInterval,
-                Number interval,
-                MediaUpsertDTO media, // acepta {id} o {src}
-                PromotionRefDTO promotion, // referencia por id
-                List<AdviceVisibilityRule> visibilityRules,
-                CompanyRefDTO company // NUEVO: compañía (id)
-) {
+/** DTO compatible con getters, setters y builder */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AdviceDTO {
+    private Long id;
+    private String description;
+    private Boolean customInterval;
+    private Number interval; // usa Number/Integer según tu entidad Advice
+    private MediaUpsertDTO media;
+    private PromotionRefDTO promotion;
+    private List<AdviceVisibilityRule> visibilityRules; // tal como ya usas en el servicio
+    private CompanyRefDTO company;
 }
