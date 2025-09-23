@@ -119,6 +119,8 @@
       ]
     },
     {
+      "title_prefix": "Snapshot AI",
+      "branch_env_fallback": "develop",
       "output": "docs/ai-snapshots-urls.md",
       "snapshots": [
         { "output": "docs/ai-entities.md", "title": "Entidades JPA — snapshot incrustado", "header": "Clases de dominio (model/entity).", "globs": ["src/main/java/**/domain/model/*.java"] },
