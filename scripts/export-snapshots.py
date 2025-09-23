@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import os, sys, json, glob
+from pathlib import Path
+from datetime import datetime
+
+try:
+    # py>=3.9
+    from zoneinfo import ZoneInfo
+except Exception:
+    ZoneInfo = None
 
 LANG_BY_EXT = {
     ".java": "java",
@@ -11,7 +20,7 @@ LANG_BY_EXT = {
     ".json": "json",
     ".sql": "sql",
     ".md": "markdown",
-    ".sh": "bash"
+    ".sh": "bash",
 }
 
 def code_lang(path: str) -> str:
@@ -49,6 +58,40 @@ def write_snapshot(output, title, header, files, branch):
                 out.write(fh.read())
             out.write("\n```\n\n")
 
+def _ts_madrid() -> str:
+    now = datetime.utcnow()
+    if ZoneInfo:
+        try:
+            now = datetime.now(ZoneInfo("Europe/Madrid"))
+        except Exception:
+            pass
+    return now.strftime("%Y-%m-%d %H:%M")
+
+def write_urls_index(snapshot_dir: Path, out_md: Path, repo: str, branch: str):
+    """
+    Genera docs/ai-snapshots-urls.md con una lista de TODOS los .md dentro de docs/ai-snapshots/
+    (excluyendo el propio índice). Incluye enlaces blob y raw.
+    """
+    md_files = sorted(snapshot_dir.rglob("*.md"))
+    md_files = [p for p in md_files if p.name != out_md.name]  # excluir el propio índice si estuviera dentro
+    lines = []
+    lines.append("# Snapshot AI — docs/ai-snapshots-urls.md\n")
+    lines.append(f"_Última generación: {_ts_madrid()}_\n")
+    lines.append(f"Repositorio: `{repo}` — Rama: `{branch}`\n")
+    lines.append(f"Total de snapshots: **{len(md_files)}**\n")
+    lines.append("---\n")
+    if not md_files:
+        lines.append("> (No se encontraron snapshots en `docs/ai-snapshots/`)\n")
+    else:
+        for p in md_files:
+            rel = p.as_posix()
+            label = p.relative_to(snapshot_dir).as_posix()
+            blob = f"https://github.com/{repo}/blob/{branch}/{rel}"
+            raw  = f"https://raw.githubusercontent.com/{repo}/{branch}/{rel}"
+            lines.append(f"- [{label}]({blob}) — [raw]({raw})")
+    out_md.write_text("\n".join(lines), encoding="utf-8")
+    print(f"Wrote {out_md} with {len(md_files)} entries.")
+
 def main():
     cfg_path = "docs/ai-snapshots.json"
     if len(sys.argv) > 1:
@@ -61,6 +104,8 @@ def main():
         cfg = json.load(f)
 
     branch = os.environ.get("GITHUB_REF_NAME", cfg.get("branch_env_fallback", "develop"))
+    repo = os.environ.get("GITHUB_REPOSITORY", "screenleads/sl-dev-backend")  # owner/repo
+
     total_files = 0
     for snap in cfg.get("snapshots", []):
         output = snap["output"]
@@ -73,7 +118,12 @@ def main():
         total_files += len(files)
         print(f"Wrote {output} with {len(files)} file(s).")
 
-    print(f"Done. Total files included: {total_files}")
+    # === NUEVO: generar índice de URLs de snapshots ===
+    snapshot_dir = Path("docs") / "ai-snapshots"
+    out_md = Path("docs") / "ai-snapshots-urls.md"
+    write_urls_index(snapshot_dir, out_md, repo, branch)
+
+    print(f"Done. Total files included across snapshots: {total_files}")
 
 if __name__ == "__main__":
     main()
