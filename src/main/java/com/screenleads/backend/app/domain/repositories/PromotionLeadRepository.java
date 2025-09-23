@@ -17,4 +17,5 @@ public interface PromotionLeadRepository extends JpaRepository<PromotionLead, Lo
 
     List<PromotionLead> findByPromotion_IdAndCreatedAtBetweenOrderByCreatedAtAsc(
             Long promotionId, ZonedDateTime from, ZonedDateTime to);
+            List<PromotionLead> findByPromotionId(Long promotionId);
 }

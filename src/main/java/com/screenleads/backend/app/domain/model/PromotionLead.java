@@ -1,7 +1,8 @@
 package com.screenleads.backend.app.domain.model;
 
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
+import java.time.LocalDate;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,6 +28,26 @@ public class PromotionLead extends Auditable {
   @JoinColumn(name = "promotion_id", nullable = false,
     foreignKey = @ForeignKey(name = "fk_promotionlead_promotion"))
   private Promotion promotion;
+
+   // Datos personales que el servicio usa (log muestra getters)
+    @Column(name = "first_name", length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", length = 100)
+    private String lastName;
+
+    @Column(name = "email", length = 320)
+    private String email;
+
+    @Column(name = "phone", length = 50)
+    private String phone;
+
+    private LocalDate birthDate;
+
+    // Tiempos de consentimientos; el servicio los lee con getters
+    private Instant acceptedPrivacyAt;
+    private Instant acceptedTermsAt;
+
 
   @Enumerated(EnumType.STRING)
   @Column(name = "identifier_type", nullable = false, length = 20)

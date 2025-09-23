@@ -1,8 +1,8 @@
 package com.screenleads.backend.app.domain.model;
 
-
 public enum LeadLimitType {
-PER_TIME,
-PER_PROMOTION,
-NONE
+    NO_LIMIT,
+    ONE_PER_PERSON,
+    ONE_PER_24H,
+    CUSTOM_TIME
 }

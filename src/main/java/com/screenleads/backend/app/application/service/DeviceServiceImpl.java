@@ -70,10 +70,13 @@ public class DeviceServiceImpl implements DeviceService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device type not found"));
 
         Device device = deviceRepository.findOptionalByUuid(dto.uuid()).orElseGet(Device::new);
+        Integer width  = device.getWidth()  != null ? device.getWidth().intValue()  : null;
+        Integer height = device.getHeight() != null ? device.getHeight().intValue() : null;
+
         device.setUuid(dto.uuid());
         device.setDescriptionName(dto.descriptionName());
-        device.setWidth(dto.width());
-        device.setHeight(dto.height());
+        device.setWidth(width);
+        device.setHeight(height);
         device.setType(type);
 
         if (dto.company() != null && dto.company().getId() != null) {
@@ -101,8 +104,10 @@ public class DeviceServiceImpl implements DeviceService {
 
         device.setUuid(deviceDTO.uuid());
         device.setDescriptionName(deviceDTO.descriptionName());
-        device.setWidth(deviceDTO.width());
-        device.setHeight(deviceDTO.height());
+        Integer width  = device.getWidth()  != null ? device.getWidth().intValue()  : null;
+        Integer height = device.getHeight() != null ? device.getHeight().intValue() : null;
+        device.setWidth(width);
+        device.setHeight(height);
         device.setType(type);
 
         if (deviceDTO.company() != null && deviceDTO.company().getId() != null) {
