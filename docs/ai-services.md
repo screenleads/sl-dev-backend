@@ -791,6 +791,348 @@ public class CompaniesServiceImpl implements CompaniesService {
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/application/service/CouponService.java
+package com.screenleads.backend.app.application.service;
+
+import com.screenleads.backend.app.domain.model.PromotionLead;
+
+public interface CouponService {
+
+    // Emite un cupón (crea un lead histórico) para un customer dado
+    PromotionLead issueCoupon(Long promotionId, Long customerId);
+
+    // Validación por código (verifica fechas/estado y devuelve el lead)
+    PromotionLead validate(String couponCode);
+
+    // Canje (marca REDEEMED si es válido), devuelve lead actualizado
+    PromotionLead redeem(String couponCode);
+
+    // Caducar manualmente (o programáticamente)
+    PromotionLead expire(String couponCode);
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/application/service/CouponServiceImpl.java
+package com.screenleads.backend.app.application.service;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.screenleads.backend.app.application.service.util.CouponCodeGenerator;
+import com.screenleads.backend.app.domain.model.*;
+import com.screenleads.backend.app.domain.repositories.CustomerRepository;
+import com.screenleads.backend.app.domain.repositories.PromotionLeadRepository;
+import com.screenleads.backend.app.domain.repositories.PromotionRepository;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class CouponServiceImpl implements CouponService {
+
+    private final PromotionRepository promotionRepository;
+    private final PromotionLeadRepository promotionLeadRepository;
+    private final CustomerRepository customerRepository;
+
+    @Override
+    public PromotionLead issueCoupon(Long promotionId, Long customerId) {
+        Promotion promotion = promotionRepository.findById(promotionId)
+            .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + promotionId));
+
+        Customer customer = customerRepository.findById(customerId)
+            .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + customerId));
+
+        // Chequeo de ventana temporal de la promo
+        Instant now = Instant.now();
+        if (promotion.getStartAt() != null && now.isBefore(promotion.getStartAt())) {
+            throw new IllegalStateException("Promotion not started yet");
+        }
+        if (promotion.getEndAt() != null && now.isAfter(promotion.getEndAt())) {
+            throw new IllegalStateException("Promotion already ended");
+        }
+
+        // Enforce límites
+        LeadLimitType limit = promotion.getLeadLimitType();
+        if (limit == LeadLimitType.ONE_PER_PERSON) {
+            long count = promotionLeadRepository.countByPromotionAndCustomer(promotionId, customerId);
+            if (count > 0) {
+                throw new IllegalStateException("Limit reached: ONE_PER_PERSON");
+            }
+        } else if (limit == LeadLimitType.ONE_PER_24H) {
+            Instant since = now.minus(24, ChronoUnit.HOURS);
+            long count = promotionLeadRepository.countByPromotionAndCustomerSince(promotionId, customerId, since);
+            if (count > 0) {
+                throw new IllegalStateException("Limit reached: ONE_PER_24H");
+            }
+        }
+
+        // Generar código único
+        String code;
+        do {
+            code = CouponCodeGenerator.generate(12);
+        } while (promotionLeadRepository.findByCouponCode(code).isPresent());
+
+        // Crear lead (histórico)
+        PromotionLead lead = PromotionLead.builder()
+                .promotion(promotion)
+                .customer(customer)
+                .identifierType(promotion.getLeadIdentifierType())
+                .identifier(customer.getIdentifier())
+                .couponCode(code)
+                .couponStatus(CouponStatus.VALID) // lo dejamos ya VALID si la promo está activa
+                // opcional: establecer expiresAt = endAt de la promo
+                .expiresAt(promotion.getEndAt())
+                .build();
+
+        return promotionLeadRepository.save(lead);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PromotionLead validate(String couponCode) {
+        PromotionLead lead = promotionLeadRepository.findByCouponCode(couponCode)
+            .orElseThrow(() -> new IllegalArgumentException("Coupon not found"));
+
+        Instant now = Instant.now();
+        Promotion p = lead.getPromotion();
+
+        if (lead.getCouponStatus() == CouponStatus.CANCELLED) {
+            throw new IllegalStateException("Coupon cancelled");
+        }
+        if (lead.getCouponStatus() == CouponStatus.REDEEMED) {
+            throw new IllegalStateException("Coupon already redeemed");
+        }
+        if (lead.getCouponStatus() == CouponStatus.EXPIRED) {
+            throw new IllegalStateException("Coupon expired");
+        }
+        if (lead.getExpiresAt() != null && now.isAfter(lead.getExpiresAt())) {
+            throw new IllegalStateException("Coupon expired");
+        }
+        if (p.getStartAt() != null && now.isBefore(p.getStartAt())) {
+            throw new IllegalStateException("Promotion not started yet");
+        }
+        if (p.getEndAt() != null && now.isAfter(p.getEndAt())) {
+            throw new IllegalStateException("Promotion already ended");
+        }
+        return lead; // válido
+    }
+
+    @Override
+    public PromotionLead redeem(String couponCode) {
+        PromotionLead lead = promotionLeadRepository.findByCouponCode(couponCode)
+            .orElseThrow(() -> new IllegalArgumentException("Coupon not found"));
+
+        // Validaciones reutilizando validate() (pero con escritura)
+        Promotion p = lead.getPromotion();
+        Instant now = Instant.now();
+
+        if (lead.getCouponStatus() == CouponStatus.REDEEMED) {
+            throw new IllegalStateException("Coupon already redeemed");
+        }
+        if (lead.getCouponStatus() == CouponStatus.CANCELLED) {
+            throw new IllegalStateException("Coupon cancelled");
+        }
+        if (lead.getCouponStatus() == CouponStatus.EXPIRED) {
+            throw new IllegalStateException("Coupon expired");
+        }
+        if (lead.getExpiresAt() != null && now.isAfter(lead.getExpiresAt())) {
+            lead.setCouponStatus(CouponStatus.EXPIRED);
+            promotionLeadRepository.save(lead);
+            throw new IllegalStateException("Coupon expired");
+        }
+        if (p.getStartAt() != null && now.isBefore(p.getStartAt())) {
+            throw new IllegalStateException("Promotion not started yet");
+        }
+        if (p.getEndAt() != null && now.isAfter(p.getEndAt())) {
+            lead.setCouponStatus(CouponStatus.EXPIRED);
+            promotionLeadRepository.save(lead);
+            throw new IllegalStateException("Promotion already ended");
+        }
+
+        lead.setCouponStatus(CouponStatus.REDEEMED);
+        lead.setRedeemedAt(now);
+        return promotionLeadRepository.save(lead);
+    }
+
+    @Override
+    public PromotionLead expire(String couponCode) {
+        PromotionLead lead = promotionLeadRepository.findByCouponCode(couponCode)
+            .orElseThrow(() -> new IllegalArgumentException("Coupon not found"));
+
+        if (lead.getCouponStatus() == CouponStatus.REDEEMED) {
+            throw new IllegalStateException("Cannot expire a redeemed coupon");
+        }
+
+        lead.setCouponStatus(CouponStatus.EXPIRED);
+        if (lead.getExpiresAt() == null) {
+            lead.setExpiresAt(Instant.now());
+        }
+        return promotionLeadRepository.save(lead);
+    }
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/application/service/CustomerService.java
+package com.screenleads.backend.app.application.service;
+
+import java.util.List;
+
+import com.screenleads.backend.app.domain.model.Customer;
+import com.screenleads.backend.app.domain.model.LeadIdentifierType;
+
+public interface CustomerService {
+
+    Customer create(Long companyId,
+                    LeadIdentifierType identifierType,
+                    String identifier,
+                    String firstName,
+                    String lastName);
+
+    Customer update(Long id,
+                    LeadIdentifierType identifierType,
+                    String identifier,
+                    String firstName,
+                    String lastName);
+
+    Customer get(Long id);
+
+    List<Customer> list(Long companyId, String search);
+
+    void delete(Long id);
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/application/service/CustomerServiceImpl.java
+package com.screenleads.backend.app.application.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.screenleads.backend.app.application.service.util.IdentifierNormalizer;
+import com.screenleads.backend.app.domain.model.Company;
+import com.screenleads.backend.app.domain.model.Customer;
+import com.screenleads.backend.app.domain.model.LeadIdentifierType;
+import com.screenleads.backend.app.domain.repositories.CompanyRepository;
+import com.screenleads.backend.app.domain.repositories.CustomerRepository;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class CustomerServiceImpl implements CustomerService {
+
+    private final CompanyRepository companyRepository;
+    private final CustomerRepository customerRepository;
+
+    @Override
+    public Customer create(Long companyId,
+                           LeadIdentifierType identifierType,
+                           String identifier,
+                           String firstName,
+                           String lastName) {
+
+        Company company = companyRepository.findById(companyId)
+            .orElseThrow(() -> new IllegalArgumentException("Company not found: " + companyId));
+
+        String normalized = IdentifierNormalizer.normalize(identifierType, identifier);
+
+        // Enforce unicidad (company, type, identifier)
+        customerRepository.findByCompanyIdAndIdentifierTypeAndIdentifier(companyId, identifierType, normalized)
+            .ifPresent(c -> { throw new IllegalStateException("Customer already exists for this identifier"); });
+
+        Customer c = Customer.builder()
+                .company(company)
+                .identifierType(identifierType)
+                .identifier(normalized)
+                .firstName(firstName)
+                .lastName(lastName)
+                .build();
+
+        return customerRepository.save(c);
+    }
+
+    @Override
+    public Customer update(Long id,
+                           LeadIdentifierType identifierType,
+                           String identifier,
+                           String firstName,
+                           String lastName) {
+
+        Customer existing = customerRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + id));
+
+        String normalized = IdentifierNormalizer.normalize(identifierType, identifier);
+
+        // Si cambia la clave única, comprobar colisión
+        boolean keyChanged = existing.getIdentifierType() != identifierType
+                || !existing.getIdentifier().equals(normalized);
+
+        if (keyChanged) {
+            customerRepository.findByCompanyIdAndIdentifierTypeAndIdentifier(
+                    existing.getCompany().getId(), identifierType, normalized)
+                .ifPresent(other -> {
+                    if (!other.getId().equals(existing.getId())) {
+                        throw new IllegalStateException("Another customer already uses this identifier");
+                    }
+                });
+        }
+
+        existing.setIdentifierType(identifierType);
+        existing.setIdentifier(normalized);
+        existing.setFirstName(firstName);
+        existing.setLastName(lastName);
+
+        return customerRepository.save(existing);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Customer get(Long id) {
+        return customerRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Customer> list(Long companyId, String search) {
+        if (companyId == null) {
+            // Por simplicidad devolvemos todo; si prefieres obligar companyId, lanza excepción
+            return customerRepository.findAll();
+        }
+        if (search == null || search.isBlank()) {
+            return customerRepository.findByCompanyId(companyId);
+        }
+        return customerRepository.findByCompanyIdAndIdentifierContainingIgnoreCase(companyId, search.trim());
+    }
+
+    @Override
+    public void delete(Long id) {
+        Customer existing = customerRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + id));
+
+        // Si quieres proteger borrado cuando tiene leads, compruébalo aquí:
+        // if (existing.getLeads() != null && !existing.getLeads().isEmpty()) { ... }
+
+        customerRepository.delete(existing);
+    }
+}
+
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/application/service/DeviceService.java
 package com.screenleads.backend.app.application.service;
 
@@ -896,10 +1238,13 @@ public class DeviceServiceImpl implements DeviceService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device type not found"));
 
         Device device = deviceRepository.findOptionalByUuid(dto.uuid()).orElseGet(Device::new);
+        Integer width  = device.getWidth()  != null ? device.getWidth().intValue()  : null;
+        Integer height = device.getHeight() != null ? device.getHeight().intValue() : null;
+
         device.setUuid(dto.uuid());
         device.setDescriptionName(dto.descriptionName());
-        device.setWidth(dto.width());
-        device.setHeight(dto.height());
+        device.setWidth(width);
+        device.setHeight(height);
         device.setType(type);
 
         if (dto.company() != null && dto.company().getId() != null) {
@@ -927,8 +1272,10 @@ public class DeviceServiceImpl implements DeviceService {
 
         device.setUuid(deviceDTO.uuid());
         device.setDescriptionName(deviceDTO.descriptionName());
-        device.setWidth(deviceDTO.width());
-        device.setHeight(deviceDTO.height());
+        Integer width  = device.getWidth()  != null ? device.getWidth().intValue()  : null;
+        Integer height = device.getHeight() != null ? device.getHeight().intValue() : null;
+        device.setWidth(width);
+        device.setHeight(height);
         device.setType(type);
 
         if (deviceDTO.company() != null && deviceDTO.company().getId() != null) {
@@ -1761,273 +2108,172 @@ public interface PromotionService {
 // src/main/java/com/screenleads/backend/app/application/service/PromotionServiceImpl.java
 package com.screenleads.backend.app.application.service;
 
-import com.screenleads.backend.app.domain.model.*;
-import com.screenleads.backend.app.domain.repositories.PromotionLeadRepository;
-import com.screenleads.backend.app.domain.repositories.PromotionRepository;
-import com.screenleads.backend.app.web.dto.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.screenleads.backend.app.application.service.util.IdentifierNormalizer;
+import com.screenleads.backend.app.domain.model.LeadIdentifierType;
+import com.screenleads.backend.app.domain.model.LeadLimitType;
+import com.screenleads.backend.app.domain.model.Promotion;
+import com.screenleads.backend.app.domain.model.PromotionLead;
+import com.screenleads.backend.app.domain.repositories.PromotionLeadRepository;
+import com.screenleads.backend.app.domain.repositories.PromotionRepository;
+
+import lombok.RequiredArgsConstructor;
+
 @Service
-public class PromotionServiceImpl implements PromotionService {
+@RequiredArgsConstructor
+@Transactional
+public class PromotionServiceImpl {
 
-    @Autowired
-    private PromotionRepository promotionRepository;
-    @Autowired
-    private PromotionLeadRepository promotionLeadRepository;
+    private final PromotionRepository promotionRepository;
+    private final PromotionLeadRepository promotionLeadRepository;
 
-    // ===== CRUD =====
+    // =========================================================================
+    //                               PROMOTIONS
+    // =========================================================================
 
-    @Override
-    public List<PromotionDTO> getAllPromotions() {
-        return promotionRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
+    public Promotion createPromotion(Promotion dto) {
+        // Si usas DTOs separados, mapéalos antes.
+        Promotion p = Promotion.builder()
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .legalUrl(dto.getLegalUrl())           // camelCase correcto
+                .url(dto.getUrl())
+                .templateHtml(dto.getTemplateHtml())
+                .leadIdentifierType(dto.getLeadIdentifierType())
+                .leadLimitType(defaultLimit(dto.getLeadLimitType()))
+                .company(dto.getCompany())
+                .build();
+        return promotionRepository.save(p);
     }
 
-    @Override
-    public PromotionDTO getPromotionById(Long id) {
-        return promotionRepository.findById(id).map(this::toDto)
-                .orElseThrow(() -> new RuntimeException("Promotion not found"));
+    public Promotion updatePromotion(Long id, Promotion dto) {
+        Promotion p = promotionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + id));
+
+        p.setName(dto.getName());
+        p.setDescription(dto.getDescription());
+        p.setLegalUrl(dto.getLegalUrl());
+        p.setUrl(dto.getUrl());
+        p.setTemplateHtml(dto.getTemplateHtml());
+
+        if (dto.getLeadIdentifierType() != null) {
+            p.setLeadIdentifierType(dto.getLeadIdentifierType());
+        }
+        if (dto.getLeadLimitType() != null) {
+            p.setLeadLimitType(defaultLimit(dto.getLeadLimitType()));
+        }
+        // Entidad gestionada: se sincroniza al commit
+        return p;
     }
 
-    @Override
-    public PromotionDTO savePromotion(PromotionDTO dto) {
-        Promotion entity = toEntity(dto);
-        return toDto(promotionRepository.save(entity));
-    }
+    // =========================================================================
+    //                                  LEADS
+    // =========================================================================
 
-    @Override
-    public PromotionDTO updatePromotion(Long id, PromotionDTO dto) {
-        Promotion entity = toEntity(dto);
-        entity.setId(id);
-        return toDto(promotionRepository.save(entity));
-    }
-
-    @Override
-    public void deletePromotion(Long id) {
-        promotionRepository.deleteById(id);
-    }
-
-    // ===== Leads =====
-
-    @Override
-    public PromotionLeadDTO registerLead(Long promotionId, PromotionLeadDTO dto) {
+    public PromotionLead addLead(Long promotionId, PromotionLead payload) {
         Promotion promo = promotionRepository.findById(promotionId)
-                .orElseThrow(() -> new RuntimeException("Promotion not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + promotionId));
 
-        String identifier = normalizeIdentifier(promo.getLeadIdentifierType(), dto);
+        // Resolver tipos con fallback a la promoción (y defaults)
+        LeadIdentifierType resolvedIdType = resolveIdentifierType(payload.getIdentifierType(), promo.getLeadIdentifierType());
+        LeadLimitType resolvedLimitType   = resolveLimitType(payload.getLimitType(), promo.getLeadLimitType());
 
-        if (promo.getLeadIdentifierType() == LeadIdentifierType.EMAIL &&
-                (dto.email() == null || dto.email().isBlank())) {
-            throw new IllegalArgumentException("Email es obligatorio para esta promoción");
+        // Normalizar el identifier según tipo
+        String rawIdentifier = payload.getIdentifier();
+        if (rawIdentifier == null || rawIdentifier.isBlank()) {
+            throw new IllegalArgumentException("identifier is required");
         }
-        if (promo.getLeadIdentifierType() == LeadIdentifierType.PHONE &&
-                (dto.phone() == null || dto.phone().isBlank())) {
-            throw new IllegalArgumentException("Teléfono es obligatorio para esta promoción");
-        }
+        String normalizedIdentifier = IdentifierNormalizer.normalize(resolvedIdType, rawIdentifier);
 
-        switch (promo.getLeadLimitType()) {
-            case ONE_PER_PERSON -> promotionLeadRepository
-                    .findTopByPromotion_IdAndIdentifierOrderByCreatedAtDesc(promotionId, identifier)
-                    .ifPresent(l -> {
-                        throw new IllegalStateException("Ya existe un registro para esta persona en esta promoción");
-                    });
-            case ONE_PER_24H -> {
-                ZonedDateTime cutoff = ZonedDateTime.now().minusHours(24);
-                long recent = promotionLeadRepository
-                        .countByPromotion_IdAndIdentifierAndCreatedAtAfter(promotionId, identifier, cutoff);
-                if (recent > 0)
-                    throw new IllegalStateException("Solo se permite un registro cada 24 horas para esta promoción");
-            }
-            case NO_LIMIT -> {
-                /* sin restricciones */ }
+        // Pre-chequeo de unicidad para mensaje de error amistoso
+        if (promotionLeadRepository.existsByPromotionIdAndIdentifier(promotionId, normalizedIdentifier)) {
+            throw new IllegalStateException("Lead already exists for this promotion and identifier");
         }
 
         PromotionLead lead = PromotionLead.builder()
                 .promotion(promo)
-                .identifier(identifier)
-                .firstName(dto.firstName())
-                .lastName(dto.lastName())
-                .email(dto.email() != null ? dto.email().trim() : null)
-                .phone(normalizePhone(dto.phone()))
-                .birthDate(dto.birthDate())
-                .acceptedPrivacyAt(dto.acceptedPrivacyAt())
-                .acceptedTermsAt(dto.acceptedTermsAt())
-                .createdAt(dto.createdAt() != null ? dto.createdAt() : ZonedDateTime.now())
+                // Datos personales (opcional según tu modelo/uso)
+                .firstName(payload.getFirstName())
+                .lastName(payload.getLastName())
+                .email(payload.getEmail())
+                .phone(payload.getPhone())
+                .birthDate(payload.getBirthDate())
+                .acceptedPrivacyAt(payload.getAcceptedPrivacyAt())
+                .acceptedTermsAt(payload.getAcceptedTermsAt())
+                // Identificador + límites resueltos/normalizados
+                .identifierType(resolvedIdType)
+                .identifier(normalizedIdentifier)
+                .limitType(resolvedLimitType)
                 .build();
 
-        PromotionLead saved = promotionLeadRepository.save(lead);
-        return toDto(saved);
-    }
-
-    @Override
-    public List<PromotionLeadDTO> listLeads(Long promotionId) {
-        return promotionLeadRepository.findByPromotion_IdOrderByCreatedAtDesc(promotionId)
-                .stream().map(this::toDto).collect(Collectors.toList());
-    }
-
-    // ===== Informes / Export =====
-
-    @Override
-    public String exportLeadsCsv(Long promotionId, ZonedDateTime from, ZonedDateTime to) {
-        ensurePromoExists(promotionId);
-        List<PromotionLead> leads = promotionLeadRepository
-                .findByPromotion_IdAndCreatedAtBetweenOrderByCreatedAtAsc(promotionId, from, to);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(
-                "id,promotionId,firstName,lastName,email,phone,birthDate,acceptedPrivacyAt,acceptedTermsAt,createdAt,identifier\n");
-        for (PromotionLead l : leads) {
-            sb.append(csv(l.getId())).append(',')
-                    .append(csv(l.getPromotion().getId())).append(',')
-                    .append(csv(l.getFirstName())).append(',')
-                    .append(csv(l.getLastName())).append(',')
-                    .append(csv(l.getEmail())).append(',')
-                    .append(csv(l.getPhone())).append(',')
-                    .append(csv(l.getBirthDate())).append(',')
-                    .append(csv(l.getAcceptedPrivacyAt())).append(',')
-                    .append(csv(l.getAcceptedTermsAt())).append(',')
-                    .append(csv(l.getCreatedAt())).append(',')
-                    .append(csv(l.getIdentifier())).append('\n');
-        }
-        return sb.toString();
-    }
-
-    @Override
-    public LeadSummaryDTO getLeadSummary(Long promotionId, ZonedDateTime from, ZonedDateTime to) {
-        ensurePromoExists(promotionId);
-        List<PromotionLead> leads = promotionLeadRepository
-                .findByPromotion_IdAndCreatedAtBetweenOrderByCreatedAtAsc(promotionId, from, to);
-
-        long total = leads.size();
-        long uniques = leads.stream().map(PromotionLead::getIdentifier).distinct().count();
-
-        Map<LocalDate, Long> byDay = leads.stream()
-                .collect(Collectors.groupingBy(
-                        l -> l.getCreatedAt().withZoneSameInstant(ZoneId.systemDefault()).toLocalDate(),
-                        TreeMap::new,
-                        Collectors.counting()));
-
-        return new LeadSummaryDTO(promotionId, total, uniques, byDay);
-    }
-
-    // ===== Lead de prueba =====
-
-    @Override
-    public PromotionLeadDTO createTestLead(Long promotionId, PromotionLeadDTO overrides) {
-        Promotion promo = promotionRepository.findById(promotionId)
-                .orElseThrow(() -> new RuntimeException("Promotion not found"));
-
-        long ts = System.currentTimeMillis();
-        String first = "Test";
-        String last = "Lead" + (ts % 100000);
-
-        PromotionLeadDTO base = new PromotionLeadDTO(
-                null,
-                promotionId,
-                first,
-                last,
-                "test" + ts + "@example.com",
-                "600" + String.valueOf(ts).substring(Math.max(0, String.valueOf(ts).length() - 6)), // 600xxxxxx
-                null,
-                ZonedDateTime.now(),
-                ZonedDateTime.now(),
-                ZonedDateTime.now());
-
-        PromotionLeadDTO dto = new PromotionLeadDTO(
-                null,
-                promotionId,
-                overrides != null && overrides.firstName() != null ? overrides.firstName() : base.firstName(),
-                overrides != null && overrides.lastName() != null ? overrides.lastName() : base.lastName(),
-                overrides != null && overrides.email() != null ? overrides.email() : base.email(),
-                overrides != null && overrides.phone() != null ? overrides.phone() : base.phone(),
-                overrides != null ? overrides.birthDate() : base.birthDate(),
-                base.acceptedPrivacyAt(),
-                base.acceptedTermsAt(),
-                base.createdAt());
-
-        return registerLead(promotionId, dto);
-    }
-
-    // ===== Utilidades =====
-
-    private void ensurePromoExists(Long promotionId) {
-        if (!promotionRepository.existsById(promotionId)) {
-            throw new RuntimeException("Promotion not found");
+        try {
+            return promotionLeadRepository.save(lead);
+        } catch (DataIntegrityViolationException dive) {
+            // Por si otro proceso ganó la carrera y saltó la unique constraint DB
+            throw new IllegalStateException("Lead already exists for this promotion and identifier", dive);
         }
     }
 
-    private String csv(Object value) {
-        if (value == null)
-            return "";
-        String s = String.valueOf(value);
-        boolean needsQuotes = s.contains(",") || s.contains("\"") || s.contains("\n") || s.contains("\r");
-        if (needsQuotes)
-            s = "\"" + s.replace("\"", "\"\"") + "\"";
-        return s;
+    @Transactional(readOnly = true)
+    public TreeMap<ZonedDateTime, Long> leadsPerDay(Long promotionId, ZoneId zoneId) {
+        ZoneId zone = Objects.requireNonNullElse(zoneId, ZoneId.systemDefault());
+        List<PromotionLead> leads = promotionLeadRepository.findByPromotionId(promotionId);
+
+        return leads.stream().collect(Collectors.groupingBy(
+                l -> l.getCreatedAt()                 // Instant (Auditable)
+                        .atZone(zone)
+                        .toLocalDate()
+                        .atStartOfDay(zone),
+                TreeMap::new,
+                Collectors.counting()
+        ));
     }
 
-    private PromotionDTO toDto(Promotion e) {
-        return new PromotionDTO(
-                e.getId(),
-                e.getLegal_url(),
-                e.getUrl(),
-                e.getDescription(),
-                e.getTemplateHtml(),
-                e.getLeadLimitType(),
-                e.getLeadIdentifierType());
+    // =========================================================================
+    //                               HELPERS
+    // =========================================================================
+
+    @Transactional(readOnly = true)
+    public LeadIdentifierType getIdentifierType(Long promotionId) {
+        return promotionRepository.findById(promotionId)
+                .map(Promotion::getLeadIdentifierType)
+                .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + promotionId));
     }
 
-    private Promotion toEntity(PromotionDTO d) {
-        return Promotion.builder()
-                .id(d.id())
-                .legal_url(d.legal_url())
-                .url(d.url())
-                .description(d.description())
-                .templateHtml(d.templateHtml())
-                .leadLimitType(d.leadLimitType() != null ? d.leadLimitType() : LeadLimitType.NO_LIMIT)
-                .leadIdentifierType(d.leadIdentifierType() != null ? d.leadIdentifierType() : LeadIdentifierType.EMAIL)
-                .build();
+    @Transactional(readOnly = true)
+    public LeadLimitType getLimitType(Long promotionId) {
+        return promotionRepository.findById(promotionId)
+                .map(Promotion::getLeadLimitType)
+                .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + promotionId));
     }
 
-    private PromotionLeadDTO toDto(PromotionLead e) {
-        return new PromotionLeadDTO(
-                e.getId(),
-                e.getPromotion().getId(),
-                e.getFirstName(),
-                e.getLastName(),
-                e.getEmail(),
-                e.getPhone(),
-                e.getBirthDate(),
-                e.getAcceptedPrivacyAt(),
-                e.getAcceptedTermsAt(),
-                e.getCreatedAt());
+    private static LeadLimitType defaultLimit(LeadLimitType value) {
+        return value != null ? value : LeadLimitType.NO_LIMIT;
     }
 
-    private String normalizeIdentifier(LeadIdentifierType type, PromotionLeadDTO dto) {
-        return switch (type) {
-            case EMAIL -> {
-                if (dto.email() == null)
-                    throw new IllegalArgumentException("Email requerido");
-                yield dto.email().trim().toLowerCase();
-            }
-            case PHONE -> {
-                if (dto.phone() == null)
-                    throw new IllegalArgumentException("Teléfono requerido");
-                yield normalizePhone(dto.phone());
-            }
-        };
+    private static LeadIdentifierType resolveIdentifierType(LeadIdentifierType fromPayload,
+                                                            LeadIdentifierType fromPromotion) {
+        if (fromPayload != null) return fromPayload;
+        if (fromPromotion != null) return fromPromotion;
+        // Por defecto, si no viene ni en payload ni en promo:
+        return LeadIdentifierType.OTHER;
     }
 
-    private String normalizePhone(String phone) {
-        if (phone == null)
-            return null;
-        return phone.replaceAll("[\\s-]", "");
+    private static LeadLimitType resolveLimitType(LeadLimitType fromPayload,
+                                                  LeadLimitType fromPromotion) {
+        if (fromPayload != null) return fromPayload;
+        if (fromPromotion != null) return fromPromotion;
+        return LeadLimitType.NO_LIMIT;
     }
 }
 
@@ -2490,5 +2736,62 @@ public class WebSocketServiceImpl implements WebSocketService {
     }
 
 }
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/application/service/util/CouponCodeGenerator.java
+package com.screenleads.backend.app.application.service.util;
+
+import java.security.SecureRandom;
+
+public final class CouponCodeGenerator {
+    private static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sin 0/O/I/1 para evitar confusión
+    private static final SecureRandom RAND = new SecureRandom();
+
+    private CouponCodeGenerator() {}
+
+    public static String generate(int length) {
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(ALPHABET.charAt(RAND.nextInt(ALPHABET.length())));
+        }
+        return sb.toString();
+    }
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/application/service/util/IdentifierNormalizer.java
+package com.screenleads.backend.app.application.service.util;
+
+import com.screenleads.backend.app.domain.model.LeadIdentifierType;
+
+public final class IdentifierNormalizer {
+
+    private IdentifierNormalizer() {}
+
+    public static String normalize(LeadIdentifierType type, String raw) {
+        if (raw == null) return null;
+        String s = raw.trim();
+        switch (type) {
+            case EMAIL:
+                return s.toLowerCase();
+            case PHONE:
+                // Normalización simple: quitar espacios/guiones, convertir 00xx a +xx
+                String p = s.replaceAll("[^+\\d]", "");
+                if (p.startsWith("00")) {
+                    p = "+" + p.substring(2);
+                }
+                return p;
+            case DOCUMENT:
+                return s.replaceAll("\\s+", "").toUpperCase();
+            case OTHER:
+            default:
+                return s;
+        }
+    }
+}
+
 ```
 

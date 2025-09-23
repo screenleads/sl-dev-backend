@@ -324,6 +324,9 @@ private Long id;
 private String name;
 
 
+@Column(name="observations", length=1000)
+private String observations;
+
 @Column(name = "primary_color", length = 7)
 private String primaryColor; // ej: #FFFFFF
 
@@ -352,6 +355,79 @@ private List<Advice> advices;
 @JsonIgnore
 private List<User> users;
 }
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/domain/model/CouponStatus.java
+package com.screenleads.backend.app.domain.model;
+
+public enum CouponStatus {
+    NEW,        // generado pero aún no validado
+    VALID,      // validado / listo para canjear
+    REDEEMED,   // ya canjeado
+    EXPIRED,    // caducado por fecha o manualmente
+    CANCELLED   // invalidado manualmente / antifraude
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/domain/model/Customer.java
+package com.screenleads.backend.app.domain.model;
+
+import java.util.Set;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "customer",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_customer_company_identifier",
+            columnNames = {"company_id", "identifier_type", "identifier"}
+        )
+    },
+    indexes = {
+        @Index(name = "ix_customer_company", columnList = "company_id"),
+        @Index(name = "ix_customer_identifier", columnList = "identifier")
+    }
+)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Customer extends Auditable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // Cliente pertenece a una empresa (la misma de la promoción)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "company_id",
+        nullable = false,
+        foreignKey = @ForeignKey(name = "fk_customer_company"))
+    private Company company;
+
+    @Column(name = "first_name", length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", length = 100)
+    private String lastName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "identifier_type", nullable = false, length = 20)
+    private LeadIdentifierType identifierType;
+
+    @Column(name = "identifier", nullable = false, length = 255)
+    private String identifier; // normalizado (email lowercase, phone E.164, etc.)
+
+    @OneToMany(mappedBy = "customer")
+    private Set<PromotionLead> leads;
+}
+
 ```
 
 ```java
@@ -397,6 +473,10 @@ private Integer width;
 
 @Column(nullable = false)
 private Integer height;
+
+
+@Column(name="description_name", length=255)
+private String descriptionName;
 
 
 @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -493,11 +573,11 @@ OTHER
 // src/main/java/com/screenleads/backend/app/domain/model/LeadLimitType.java
 package com.screenleads.backend.app.domain.model;
 
-
 public enum LeadLimitType {
-PER_TIME,
-PER_PROMOTION,
-NONE
+    NO_LIMIT,
+    ONE_PER_PERSON,
+    ONE_PER_24H,
+    CUSTOM_TIME
 }
 ```
 
@@ -573,6 +653,9 @@ public class MediaType {
 @GeneratedValue(strategy = GenerationType.IDENTITY)
 private Long id;
 
+@Builder.Default
+@Column(name="enabled", nullable=false)
+private Boolean enabled = Boolean.TRUE;
 
 @Column(nullable = false, length = 50)
 private String type; // e.g., IMAGE, VIDEO
@@ -587,17 +670,18 @@ private String extension; // e.g., jpg, mp4
 // src/main/java/com/screenleads/backend/app/domain/model/Promotion.java
 package com.screenleads.backend.app.domain.model;
 
-
+import java.time.Instant;
 import java.util.Set;
+
 import jakarta.persistence.*;
 import lombok.*;
 
-
 @Entity
-@Table(name = "promotion",
-indexes = {
-@Index(name = "ix_promotion_company", columnList = "company_id")
-}
+@Table(
+    name = "promotion",
+    indexes = {
+        @Index(name = "ix_promotion_company", columnList = "company_id")
+    }
 )
 @Getter
 @Setter
@@ -605,85 +689,167 @@ indexes = {
 @AllArgsConstructor
 @Builder
 public class Promotion extends Auditable {
-@Id
-@GeneratedValue(strategy = GenerationType.IDENTITY)
-private Long id;
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-@Column(nullable = false, length = 120)
-private String name;
+    @Column(nullable = false, length = 120)
+    private String name;
 
+    @Column(length = 255)
+    private String description;
 
-@Column(length = 255)
-private String description;
+    // URL legal (camelCase en el modelo, snake_case en DB)
+    @Column(name = "legal_url", length = 2048)
+    private String legalUrl;
 
+    @Column(length = 2048)
+    private String url;
 
-@Column(name = "legal_url", length = 2048)
-private String legalUrl;
+    @Lob
+    @Column(name = "template_html")
+    private String templateHtml;
 
+    // === NUEVO: cupón externo para enlazar con el negocio final
+    @Column(name = "external_coupon_code", length = 120)
+    private String externalCouponCode;
 
-@Column(length = 2048)
-private String url;
+    // === NUEVO: ventana temporal de la promoción
+    @Column(name = "start_at")
+    private Instant startAt;
 
+    @Column(name = "end_at")
+    private Instant endAt;
 
-@Lob
-@Column(name = "template_html")
-private String templateHtml;
+    // Reglas de identificación y límites
+    @Enumerated(EnumType.STRING)
+    @Column(name = "lead_identifier_type", length = 30, nullable = false)
+    @Builder.Default
+    private LeadIdentifierType leadIdentifierType = LeadIdentifierType.EMAIL;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "lead_limit_type", length = 30, nullable = false)
+    @Builder.Default
+    private LeadLimitType leadLimitType = LeadLimitType.NO_LIMIT;
 
-@ManyToOne(fetch = FetchType.LAZY, optional = false)
-@JoinColumn(name = "company_id", nullable = false,
-foreignKey = @ForeignKey(name = "fk_promotion_company"))
-private Company company;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+        name = "company_id",
+        nullable = false,
+        foreignKey = @ForeignKey(name = "fk_promotion_company")
+    )
+    private Company company;
 
-
-@OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, orphanRemoval = true)
-private Set<PromotionLead> leads;
+    @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PromotionLead> leads;
 }
+
 ```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/PromotionLead.java
 package com.screenleads.backend.app.domain.model;
 
+import java.time.Instant;
+import java.time.LocalDate;
 
-import java.time.ZonedDateTime;
 import jakarta.persistence.*;
 import lombok.*;
 
-
 @Entity
-@Table(name = "promotion_lead",
-  uniqueConstraints = @UniqueConstraint(
-    name = "uk_promotionlead_promotion_identifier",
-    columnNames = {"promotion_id", "identifier"}
-  ),
-  indexes = {
-    @Index(name = "ix_promotionlead_promotion", columnList = "promotion_id"),
-    @Index(name = "ix_promotionlead_created_at", columnList = "created_at")
-  }
+@Table(
+    name = "promotion_lead",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_promotionlead_promotion_identifier",
+            columnNames = {"promotion_id", "identifier"}
+        ),
+        @UniqueConstraint(
+            name = "uk_promotionlead_coupon_code",
+            columnNames = {"coupon_code"}
+        )
+    },
+    indexes = {
+        @Index(name = "ix_promotionlead_promotion", columnList = "promotion_id"),
+        @Index(name = "ix_promotionlead_created_at", columnList = "created_at"),
+        @Index(name = "ix_promotionlead_coupon_status", columnList = "coupon_status")
+    }
 )
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder(toBuilder = true)
+@EqualsAndHashCode(callSuper = true)
 public class PromotionLead extends Auditable {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
 
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "promotion_id", nullable = false,
-    foreignKey = @ForeignKey(name = "fk_promotionlead_promotion"))
-  private Promotion promotion;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "identifier_type", nullable = false, length = 20)
-  private LeadIdentifierType identifierType;
+    // === Relaciones ===
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+        name = "promotion_id",
+        nullable = false,
+        foreignKey = @ForeignKey(name = "fk_promotionlead_promotion")
+    )
+    private Promotion promotion;
 
-  @Column(nullable = false, length = 255)
-  private String identifier;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+        name = "customer_id",
+        foreignKey = @ForeignKey(name = "fk_promotionlead_customer")
+    )
+    private Customer customer;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "limit_type", length = 20)
-  private LeadLimitType limitType;
+    // === Datos personales (opcionales) ===
+    @Column(name = "first_name", length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", length = 100)
+    private String lastName;
+
+    @Column(name = "email", length = 320)
+    private String email;
+
+    @Column(name = "phone", length = 50)
+    private String phone;
+
+    private LocalDate birthDate;
+
+    // Consentimientos
+    private Instant acceptedPrivacyAt;
+    private Instant acceptedTermsAt;
+
+    // === Identificación del lead dentro de la promo ===
+    @Enumerated(EnumType.STRING)
+    @Column(name = "identifier_type", nullable = false, length = 20)
+    private LeadIdentifierType identifierType;
+
+    @Column(nullable = false, length = 255)
+    private String identifier;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "limit_type", length = 20)
+    private LeadLimitType limitType;
+
+    // === Cupón interno generado por el sistema ===
+    @Column(name = "coupon_code", length = 64, nullable = false)
+    private String couponCode;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "coupon_status", length = 20, nullable = false)
+    @Builder.Default
+    private CouponStatus couponStatus = CouponStatus.VALID;
+
+    // Cuándo caduca este cupón concreto (si aplica) y cuándo fue canjeado
+    @Column(name = "expires_at")
+    private Instant expiresAt;
+
+    @Column(name = "redeemed_at")
+    private Instant redeemedAt;
 }
 
 ```
@@ -692,137 +858,109 @@ public class PromotionLead extends Auditable {
 // src/main/java/com/screenleads/backend/app/domain/model/Role.java
 package com.screenleads.backend.app.domain.model;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "role",
-uniqueConstraints = @UniqueConstraint(name = "uk_role_name", columnNames = "role"))
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+  uniqueConstraints = @UniqueConstraint(name = "uk_role_name", columnNames = "role")
+)
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Role {
-@Id
-@GeneratedValue(strategy = GenerationType.IDENTITY)
-private Long id;
 
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-@Column(name = "role", nullable = false, length = 50)
-private String role; // e.g., ROLE_ADMIN, ROLE_USER
-//  @Builder.Default
-//     private boolean userRead = false;
-//     @Builder.Default
-//     private boolean userCreate = false;
-//     @Builder.Default
-//     private boolean userUpdate = false;
-//     @Builder.Default
-//     private boolean userDelete = false;
+  @Column(name="role", nullable=false, length=50)
+  private String role;
 
-//     // Company
-//     @Builder.Default
-//     private boolean companyRead = false;
-//     @Builder.Default
-//     private boolean companyCreate = false;
-//     @Builder.Default
-//     private boolean companyUpdate = false;
-//     @Builder.Default
-//     private boolean companyDelete = false;
+  @Column(name="description", length=255)
+  private String description;
 
-//     // Device
-//     @Builder.Default
-//     private boolean deviceRead = false;
-//     @Builder.Default
-//     private boolean deviceCreate = false;
-//     @Builder.Default
-//     private boolean deviceUpdate = false;
-//     @Builder.Default
-//     private boolean deviceDelete = false;
+  @Builder.Default
+  @Column(name="level", nullable=false)
+  private Integer level = 99;
 
-//     // DeviceType
-//     @Builder.Default
-//     private boolean deviceTypeRead = false;
-//     @Builder.Default
-//     private boolean deviceTypeCreate = false;
-//     @Builder.Default
-//     private boolean deviceTypeUpdate = false;
-//     @Builder.Default
-//     private boolean deviceTypeDelete = false;
+  // ==== FLAGS CRUD (booleans) ====
+  @Builder.Default @Column(nullable=false) private boolean userRead=false;
+  @Builder.Default @Column(nullable=false) private boolean userCreate=false;
+  @Builder.Default @Column(nullable=false) private boolean userUpdate=false;
+  @Builder.Default @Column(nullable=false) private boolean userDelete=false;
 
-//     // Media
-//     @Builder.Default
-//     private boolean mediaRead = false;
-//     @Builder.Default
-//     private boolean mediaCreate = false;
-//     @Builder.Default
-//     private boolean mediaUpdate = false;
-//     @Builder.Default
-//     private boolean mediaDelete = false;
+  @Builder.Default @Column(nullable=false) private boolean companyRead=false;
+  @Builder.Default @Column(nullable=false) private boolean companyCreate=false;
+  @Builder.Default @Column(nullable=false) private boolean companyUpdate=false;
+  @Builder.Default @Column(nullable=false) private boolean companyDelete=false;
 
-//     // MediaType
-//     @Builder.Default
-//     private boolean mediaTypeRead = false;
-//     @Builder.Default
-//     private boolean mediaTypeCreate = false;
-//     @Builder.Default
-//     private boolean mediaTypeUpdate = false;
-//     @Builder.Default
-//     private boolean mediaTypeDelete = false;
+  @Builder.Default @Column(nullable=false) private boolean deviceRead=false;
+  @Builder.Default @Column(nullable=false) private boolean deviceCreate=false;
+  @Builder.Default @Column(nullable=false) private boolean deviceUpdate=false;
+  @Builder.Default @Column(nullable=false) private boolean deviceDelete=false;
 
-//     // Promotion
-//     @Builder.Default
-//     private boolean promotionRead = false;
-//     @Builder.Default
-//     private boolean promotionCreate = false;
-//     @Builder.Default
-//     private boolean promotionUpdate = false;
-//     @Builder.Default
-//     private boolean promotionDelete = false;
+  @Builder.Default @Column(nullable=false) private boolean deviceTypeRead=false;
+  @Builder.Default @Column(nullable=false) private boolean deviceTypeCreate=false;
+  @Builder.Default @Column(nullable=false) private boolean deviceTypeUpdate=false;
+  @Builder.Default @Column(nullable=false) private boolean deviceTypeDelete=false;
 
-//     // Advice
-//     @Builder.Default
-//     private boolean adviceRead = false;
-//     @Builder.Default
-//     private boolean adviceCreate = false;
-//     @Builder.Default
-//     private boolean adviceUpdate = false;
-//     @Builder.Default
-//     private boolean adviceDelete = false;
+  @Builder.Default @Column(nullable=false) private boolean mediaRead=false;
+  @Builder.Default @Column(nullable=false) private boolean mediaCreate=false;
+  @Builder.Default @Column(nullable=false) private boolean mediaUpdate=false;
+  @Builder.Default @Column(nullable=false) private boolean mediaDelete=false;
 
-//     // AppVersion
-//     @Builder.Default
-//     private boolean appVersionRead = false;
-//     @Builder.Default
-//     private boolean appVersionCreate = false;
-//     @Builder.Default
-//     private boolean appVersionUpdate = false;
-//     @Builder.Default
-//     private boolean appVersionDelete = false;
+  @Builder.Default @Column(nullable=false) private boolean mediaTypeRead=false;
+  @Builder.Default @Column(nullable=false) private boolean mediaTypeCreate=false;
+  @Builder.Default @Column(nullable=false) private boolean mediaTypeUpdate=false;
+  @Builder.Default @Column(nullable=false) private boolean mediaTypeDelete=false;
 
-//     // ======= PERMISOS PARA Role (la propia entidad) =======
-//     @Builder.Default
-//     private boolean roleRead = false;
-//     @Builder.Default
-//     private boolean roleCreate = false;
-//     @Builder.Default
-//     private boolean roleUpdate = false;
-//     @Builder.Default
-//     private boolean roleDelete = false;
+  @Builder.Default @Column(nullable=false) private boolean promotionRead=false;
+  @Builder.Default @Column(nullable=false) private boolean promotionCreate=false;
+  @Builder.Default @Column(nullable=false) private boolean promotionUpdate=false;
+  @Builder.Default @Column(nullable=false) private boolean promotionDelete=false;
 
-//     // (si creaste PromotionLead como entidad)
-//     // ======= PERMISOS PARA PromotionLead =======
-//     @Builder.Default
-//     private boolean promotionLeadRead = false;
-//     @Builder.Default
-//     private boolean promotionLeadCreate = false;
-//     @Builder.Default
-//     private boolean promotionLeadUpdate = false;
-//     @Builder.Default
-//     private boolean promotionLeadDelete = false;
+  @Builder.Default @Column(nullable=false) private boolean adviceRead=false;
+  @Builder.Default @Column(nullable=false) private boolean adviceCreate=false;
+  @Builder.Default @Column(nullable=false) private boolean adviceUpdate=false;
+  @Builder.Default @Column(nullable=false) private boolean adviceDelete=false;
+
+  @Builder.Default @Column(nullable=false) private boolean appVersionRead=false;
+  @Builder.Default @Column(nullable=false) private boolean appVersionCreate=false;
+  @Builder.Default @Column(nullable=false) private boolean appVersionUpdate=false;
+  @Builder.Default @Column(nullable=false) private boolean appVersionDelete=false;
+
+  @Builder.Default @Column(nullable=false) private boolean roleRead=false;
+  @Builder.Default @Column(nullable=false) private boolean roleCreate=false;
+  @Builder.Default @Column(nullable=false) private boolean roleUpdate=false;
+  @Builder.Default @Column(nullable=false) private boolean roleDelete=false;
+
+  @Builder.Default @Column(nullable=false) private boolean promotionLeadRead=false;
+  @Builder.Default @Column(nullable=false) private boolean promotionLeadCreate=false;
+  @Builder.Default @Column(nullable=false) private boolean promotionLeadUpdate=false;
+  @Builder.Default @Column(nullable=false) private boolean promotionLeadDelete=false;
+
+  public Set<String> toAuthorities() {
+    Set<String> auth = new HashSet<>();
+    if (role != null && !role.isBlank()) {
+      auth.add(role.startsWith("ROLE_") ? role : "ROLE_" + role);
+    }
+    java.util.function.BiConsumer<Boolean,String> add = (b,n) -> { if (b) auth.add(n); };
+    add.accept(userRead,"USER_READ"); add.accept(userCreate,"USER_CREATE"); add.accept(userUpdate,"USER_UPDATE"); add.accept(userDelete,"USER_DELETE");
+    add.accept(companyRead,"COMPANY_READ"); add.accept(companyCreate,"COMPANY_CREATE"); add.accept(companyUpdate,"COMPANY_UPDATE"); add.accept(companyDelete,"COMPANY_DELETE");
+    add.accept(deviceRead,"DEVICE_READ"); add.accept(deviceCreate,"DEVICE_CREATE"); add.accept(deviceUpdate,"DEVICE_UPDATE"); add.accept(deviceDelete,"DEVICE_DELETE");
+    add.accept(deviceTypeRead,"DEVICETYPE_READ"); add.accept(deviceTypeCreate,"DEVICETYPE_CREATE"); add.accept(deviceTypeUpdate,"DEVICETYPE_UPDATE"); add.accept(deviceTypeDelete,"DEVICETYPE_DELETE");
+    add.accept(mediaRead,"MEDIA_READ"); add.accept(mediaCreate,"MEDIA_CREATE"); add.accept(mediaUpdate,"MEDIA_UPDATE"); add.accept(mediaDelete,"MEDIA_DELETE");
+    add.accept(mediaTypeRead,"MEDIATYPE_READ"); add.accept(mediaTypeCreate,"MEDIATYPE_CREATE"); add.accept(mediaTypeUpdate,"MEDIATYPE_UPDATE"); add.accept(mediaTypeDelete,"MEDIATYPE_DELETE");
+    add.accept(promotionRead,"PROMOTION_READ"); add.accept(promotionCreate,"PROMOTION_CREATE"); add.accept(promotionUpdate,"PROMOTION_UPDATE"); add.accept(promotionDelete,"PROMOTION_DELETE");
+    add.accept(adviceRead,"ADVICE_READ"); add.accept(adviceCreate,"ADVICE_CREATE"); add.accept(adviceUpdate,"ADVICE_UPDATE"); add.accept(adviceDelete,"ADVICE_DELETE");
+    add.accept(appVersionRead,"APPVERSION_READ"); add.accept(appVersionCreate,"APPVERSION_CREATE"); add.accept(appVersionUpdate,"APPVERSION_UPDATE"); add.accept(appVersionDelete,"APPVERSION_DELETE");
+    add.accept(roleRead,"ROLE_READ"); add.accept(roleCreate,"ROLE_CREATE"); add.accept(roleUpdate,"ROLE_UPDATE"); add.accept(roleDelete,"ROLE_DELETE");
+    add.accept(promotionLeadRead,"PROMOTIONLEAD_READ"); add.accept(promotionLeadCreate,"PROMOTIONLEAD_CREATE"); add.accept(promotionLeadUpdate,"PROMOTIONLEAD_UPDATE"); add.accept(promotionLeadDelete,"PROMOTIONLEAD_DELETE");
+    return auth;
+  }
 }
+
 ```
 
 ```java
