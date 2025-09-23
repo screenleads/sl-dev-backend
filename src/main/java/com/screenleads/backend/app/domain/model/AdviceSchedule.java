@@ -1,33 +1,46 @@
 package com.screenleads.backend.app.domain.model;
 
+
 import java.time.LocalDate;
 import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.*;
 import lombok.*;
 
+
 @Entity
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Table(name = "advice_schedule",
+indexes = {
+@Index(name = "ix_adviceschedule_dates", columnList = "start_date,end_date"),
+@Index(name = "ix_adviceschedule_advice", columnList = "advice_id")
+}
+)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class AdviceSchedule {
+public class AdviceSchedule extends Auditable {
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    /** Rango de fechas (inclusive). Si son null → sin límite por ese lado. */
-    private LocalDate startDate; // nullable
-    private LocalDate endDate;   // nullable
+@Column(name = "start_date")
+private LocalDate startDate; // nullable → sin límite inferior
 
-    @ManyToOne
-    @JoinColumn(name = "advice_id")
-    @JsonIgnore
-    private Advice advice;
 
-    /** Ventanas por día (múltiples por día). */
-    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AdviceTimeWindow> windows;
+@Column(name = "end_date")
+private LocalDate endDate; // nullable → sin límite superior
+
+
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "advice_id",
+foreignKey = @ForeignKey(name = "fk_adviceschedule_advice"))
+@JsonIgnore
+private Advice advice;
+
+
+@OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
+private List<AdviceTimeWindow> windows;
 }

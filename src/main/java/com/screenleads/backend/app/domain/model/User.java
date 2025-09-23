@@ -1,86 +1,86 @@
 package com.screenleads.backend.app.domain.model;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.ParamDef;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 
 @Entity
-@Builder(toBuilder = true)
-@Table(name = "app_users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "username" }),
-        @UniqueConstraint(columnNames = { "email" })
-})
-@Setter
+@Table(name = "app_user",
+indexes = {
+@Index(name = "ix_user_username", columnList = "username", unique = true),
+@Index(name = "ix_user_email", columnList = "email", unique = true)
+}
+)
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Filter(name = "companyFilter", condition = "company_id = :companyId")
-public class User implements UserDetails {
+@Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+public class User extends Auditable implements UserDetails {
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    private String username;
-    @JsonIgnore
-    private String password;
-    private String email;
-    private String name;
-    private String lastName;
+@Column(nullable = false, unique = true, length = 60)
+private String username;
 
-    @ManyToOne
-    @JoinColumn(name = "company_id")
-    @JsonIgnoreProperties({ "users", "devices", "advices" })
-    private Company company;
 
-    @OneToOne
-    private Media profileImage;
+@JsonIgnore
+@Column(nullable = false, length = 100)
+private String password;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @Builder.Default
-    private Set<Role> roles = new HashSet<>();
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream()
-                .map(role -> new SimpleGrantedAuthority(role.getRole()))
-                .collect(Collectors.toSet());
-    }
+@Email
+@Column(nullable = false, unique = true, length = 320)
+private String email;
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
 
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+@Column(length = 100)
+private String name;
 
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
 
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
+@Column(name = "last_name", length = 100)
+private String lastName;
+
+
+@ManyToMany(fetch = FetchType.EAGER)
+@JoinTable(name = "user_role",
+joinColumns = @JoinColumn(name = "user_id"),
+inverseJoinColumns = @JoinColumn(name = "role_id"))
+private Set<Role> roles = new HashSet<>();
+
+
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "company_id",
+foreignKey = @ForeignKey(name = "fk_user_company"))
+private Company company;
+
+
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "profile_image_id",
+foreignKey = @ForeignKey(name = "fk_user_profile_image"))
+private Media profileImage;
+
+
+// === UserDetails ===
+@Override
+public Collection<? extends GrantedAuthority> getAuthorities() {
+return roles.stream().map(r -> new SimpleGrantedAuthority(r.getRole())).toList();
+}
+@Override public boolean isAccountNonExpired() { return true; }
+@Override public boolean isAccountNonLocked() { return true; }
+@Override public boolean isCredentialsNonExpired() { return true; }
+@Override public boolean isEnabled() { return true; }
 }

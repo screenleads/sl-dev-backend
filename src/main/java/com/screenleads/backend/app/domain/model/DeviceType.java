@@ -1,25 +1,30 @@
 package com.screenleads.backend.app.domain.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import jakarta.persistence.*;
+import lombok.*;
+
 
 @Entity
-@Builder(toBuilder = true)
-@Setter
+@Table(name = "device_type",
+uniqueConstraints = @UniqueConstraint(name = "uk_devicetype_type", columnNames = "type")
+)
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class DeviceType {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String type;
-    private Boolean enabled;
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
+
+
+@Column(nullable = false, length = 50)
+private String type;
+
+
+@Column(nullable = false)
+@Builder.Default
+private Boolean enabled = Boolean.TRUE;
 }

@@ -1,40 +1,55 @@
 package com.screenleads.backend.app.domain.model;
 
+
+import java.util.Set;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
-@Builder(toBuilder = true)
-@Setter
+@Table(name = "promotion",
+indexes = {
+@Index(name = "ix_promotion_company", columnList = "company_id")
+}
+)
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Promotion {
+@Builder
+public class Promotion extends Auditable {
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    private String legal_url;
-    private String url;
-    private String description;
+@Column(nullable = false, length = 120)
+private String name;
 
-    @Column(columnDefinition = "TEXT") // permite HTML largo
-    private String templateHtml;
 
-    // === Reglas de lead ===
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private LeadLimitType leadLimitType = LeadLimitType.NO_LIMIT; // NO_LIMIT | ONE_PER_24H | ONE_PER_PERSON
+@Column(length = 255)
+private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private LeadIdentifierType leadIdentifierType = LeadIdentifierType.EMAIL; // EMAIL | PHONE
 
-    // Relación con leads (carga LAZY)
-    @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PromotionLead> leads = new ArrayList<>();
+@Column(name = "legal_url", length = 2048)
+private String legalUrl;
+
+
+@Column(length = 2048)
+private String url;
+
+
+@Lob
+@Column(name = "template_html")
+private String templateHtml;
+
+
+@ManyToOne(fetch = FetchType.LAZY, optional = false)
+@JoinColumn(name = "company_id", nullable = false,
+foreignKey = @ForeignKey(name = "fk_promotion_company"))
+private Company company;
+
+
+@OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, orphanRemoval = true)
+private Set<PromotionLead> leads;
 }

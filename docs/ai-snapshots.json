@@ -1,0 +1,81 @@
+{
+  "title_prefix": "Snapshot AI",
+  "branch_env_fallback": "develop",
+  "snapshots": [
+    {
+      "output": "docs/ai-entities.md",
+      "title": "Entidades JPA — snapshot incrustado",
+      "header": "Clases de dominio (model/entity).",
+      "globs": [
+        "src/main/java/**/domain/model/*.java"
+      ],
+      "excludes": []
+    },
+    {
+      "output": "docs/ai-repositories.md",
+      "title": "Repositorios — snapshot incrustado",
+      "header": "Interfaces de Spring Data JPA.",
+      "globs": [
+        "src/main/java/**/domain/repositories/*.java"
+      ]
+    },
+    {
+      "output": "docs/ai-services.md",
+      "title": "Servicios — snapshot incrustado",
+      "header": "Capa de servicios.",
+      "globs": [
+        "src/main/java/**/service/**/*.java",
+        "src/main/java/**/services/**/*.java"
+      ]
+    },
+    {
+      "output": "docs/ai-controllers.md",
+      "title": "Controladores — snapshot incrustado",
+      "header": "REST controllers.",
+      "globs": [
+        "src/main/java/**/controller/**/*.java",
+      ]
+    },
+    {
+      "output": "docs/ai-security.md",
+      "title": "Seguridad — snapshot incrustado",
+      "header": "Config y clases de seguridad (Spring Security 6).",
+      "globs": [
+        "src/main/java/**/security/**/*.java",
+      ]
+    },
+    {
+      "output": "docs/ai-config.md",
+      "title": "Configuración & Recursos — snapshot incrustado",
+      "header": "application.yml/properties y clases @Configuration.",
+      "globs": [
+        "src/main/resources/application*.properties"
+      ]
+    },
+    {
+      "output": "docs/ai-dto.md",
+      "title": "DTOs — snapshot incrustado",
+      "header": "Objetos de transferencia de datos.",
+      "globs": [
+        "src/main/java/**/dto/**/*.java"
+      ]
+    },
+    {
+      "output": "docs/ai-mappers.md",
+      "title": "Mappers — snapshot incrustado",
+      "header": "MapStruct u otros mapeadores.",
+      "globs": [
+        "src/main/java/**/mapper/**/*.java",
+        "src/main/java/**/mappers/**/*.java"
+      ]
+    },
+    {
+      "output": "docs/ai-init.md",
+      "title": "Inicializadores & Seeds — snapshot incrustado",
+      "header": "DataInitializer, loaders, etc.",
+      "globs": [
+        "src/main/java/**/init/**/*.java"
+      ]
+    }
+  ]
+}

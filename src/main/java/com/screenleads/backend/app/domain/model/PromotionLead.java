@@ -1,50 +1,41 @@
 package com.screenleads.backend.app.domain.model;
 
+
+import java.time.ZonedDateTime;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
-import java.time.ZonedDateTime;
 
 @Entity
-@Table(name = "promotion_lead", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_promotion_identifier", columnNames = { "promotion_id", "identifier" })
-}, indexes = {
-        @Index(name = "idx_promotion_created_at", columnList = "promotion_id, createdAt")
-})
-@Setter
-@Getter
-@Builder(toBuilder = true)
-@NoArgsConstructor
-@AllArgsConstructor
-public class PromotionLead {
+@Table(name = "promotion_lead",
+  uniqueConstraints = @UniqueConstraint(
+    name = "uk_promotionlead_promotion_identifier",
+    columnNames = {"promotion_id", "identifier"}
+  ),
+  indexes = {
+    @Index(name = "ix_promotionlead_promotion", columnList = "promotion_id"),
+    @Index(name = "ix_promotionlead_created_at", columnList = "created_at")
+  }
+)
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class PromotionLead extends Auditable {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "promotion_id", nullable = false,
+    foreignKey = @ForeignKey(name = "fk_promotionlead_promotion"))
+  private Promotion promotion;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "promotion_id")
-    private Promotion promotion;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "identifier_type", nullable = false, length = 20)
+  private LeadIdentifierType identifierType;
 
-    // Identificador normalizado (email en lower-case o teléfono normalizado)
-    @Column(nullable = false, length = 255)
-    private String identifier;
+  @Column(nullable = false, length = 255)
+  private String identifier;
 
-    private String firstName;
-    private String lastName;
-
-    @Column(length = 320)
-    private String email;
-
-    @Column(length = 32)
-    private String phone;
-
-    private LocalDate birthDate;
-
-    private ZonedDateTime acceptedPrivacyAt;
-    private ZonedDateTime acceptedTermsAt;
-
-    @Column(nullable = false)
-    private ZonedDateTime createdAt;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "limit_type", length = 20)
+  private LeadLimitType limitType;
 }
