@@ -7,15 +7,16 @@
       "title": "Entidades JPA — snapshot incrustado",
       "header": "Clases de dominio (model/entity).",
       "globs": [
+        "src/main/java/com/screenleads/backend/app/domain/model/*.java",
         "src/main/java/**/domain/model/*.java"
-      ],
-      "excludes": []
+      ]
     },
     {
       "output": "docs/ai-repositories.md",
       "title": "Repositorios — snapshot incrustado",
       "header": "Interfaces de Spring Data JPA.",
       "globs": [
+        "src/main/java/com/screenleads/backend/app/domain/repositories/*.java",
         "src/main/java/**/domain/repositories/*.java"
       ]
     },
@@ -24,6 +25,8 @@
       "title": "Servicios — snapshot incrustado",
       "header": "Capa de servicios.",
       "globs": [
+        "src/main/java/com/screenleads/backend/app/service/**/*.java",
+        "src/main/java/com/screenleads/backend/app/services/**/*.java",
         "src/main/java/**/service/**/*.java",
         "src/main/java/**/services/**/*.java"
       ]
@@ -33,7 +36,12 @@
       "title": "Controladores — snapshot incrustado",
       "header": "REST controllers.",
       "globs": [
+        "src/main/java/com/screenleads/backend/app/controller/**/*.java",
+        "src/main/java/com/screenleads/backend/app/controllers/**/*.java",
+        "src/main/java/com/screenleads/backend/app/rest/**/*.java",
         "src/main/java/**/controller/**/*.java",
+        "src/main/java/**/controllers/**/*.java",
+        "src/main/java/**/rest/**/*.java"
       ]
     },
     {
@@ -41,7 +49,10 @@
       "title": "Seguridad — snapshot incrustado",
       "header": "Config y clases de seguridad (Spring Security 6).",
       "globs": [
+        "src/main/java/com/screenleads/backend/app/security/**/*.java",
+        "src/main/java/com/screenleads/backend/app/config/security/**/*.java",
         "src/main/java/**/security/**/*.java",
+        "src/main/java/**/config/security/**/*.java"
       ]
     },
     {
@@ -49,7 +60,11 @@
       "title": "Configuración & Recursos — snapshot incrustado",
       "header": "application.yml/properties y clases @Configuration.",
       "globs": [
-        "src/main/resources/application*.properties"
+        "src/main/resources/application*.yml",
+        "src/main/resources/application*.yaml",
+        "src/main/resources/application*.properties",
+        "src/main/java/com/screenleads/backend/app/config/**/*.java",
+        "src/main/java/**/config/**/*.java"
       ]
     },
     {
@@ -57,6 +72,7 @@
       "title": "DTOs — snapshot incrustado",
       "header": "Objetos de transferencia de datos.",
       "globs": [
+        "src/main/java/com/screenleads/backend/app/dto/**/*.java",
         "src/main/java/**/dto/**/*.java"
       ]
     },
@@ -65,8 +81,23 @@
       "title": "Mappers — snapshot incrustado",
       "header": "MapStruct u otros mapeadores.",
       "globs": [
+        "src/main/java/com/screenleads/backend/app/mapper/**/*.java",
+        "src/main/java/com/screenleads/backend/app/mappers/**/*.java",
         "src/main/java/**/mapper/**/*.java",
         "src/main/java/**/mappers/**/*.java"
+      ]
+    },
+    {
+      "output": "docs/ai-exceptions.md",
+      "title": "Excepciones — snapshot incrustado",
+      "header": "Clases de excepciones y handlers.",
+      "globs": [
+        "src/main/java/com/screenleads/backend/app/exception/**/*.java",
+        "src/main/java/com/screenleads/backend/app/exceptions/**/*.java",
+        "src/main/java/com/screenleads/backend/app/advice/**/*.java",
+        "src/main/java/**/exception/**/*.java",
+        "src/main/java/**/exceptions/**/*.java",
+        "src/main/java/**/advice/**/*.java"
       ]
     },
     {
@@ -74,7 +105,17 @@
       "title": "Inicializadores & Seeds — snapshot incrustado",
       "header": "DataInitializer, loaders, etc.",
       "globs": [
+        "src/main/java/com/screenleads/backend/app/init/**/*.java",
         "src/main/java/**/init/**/*.java"
+      ]
+    },
+    {
+      "output": "docs/ai-util.md",
+      "title": "Utils & Helpers — snapshot incrustado",
+      "header": "Clases utilitarias.",
+      "globs": [
+        "src/main/java/com/screenleads/backend/app/util/**/*.java",
+        "src/main/java/**/util/**/*.java"
       ]
     }
   ]
