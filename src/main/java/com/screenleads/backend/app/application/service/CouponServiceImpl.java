@@ -43,7 +43,7 @@ public class CouponServiceImpl implements CouponService {
         // Enforce límites
         LeadLimitType limit = promotion.getLeadLimitType();
         if (limit == LeadLimitType.ONE_PER_PERSON) {
-            long count = promotionLeadRepository.countByPromotionAndCustomer(promotionId, customerId);
+            long count = promotionLeadRepository.countByPromotionIdAndCustomerId(promotionId, customerId);
             if (count > 0) {
                 throw new IllegalStateException("Limit reached: ONE_PER_PERSON");
             }
