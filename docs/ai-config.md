@@ -50,9 +50,12 @@ public class FirebaseConfiguration {
 // src/main/java/com/screenleads/backend/app/infraestructure/config/OpenApiConfig.java
 package com.screenleads.backend.app.infraestructure.config;
 
-
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -64,7 +67,13 @@ public class OpenApiConfig {
   public OpenAPI baseOpenAPI() {
     return new OpenAPI().info(new Info()
         .title("ScreenLeads API")
-        .version("v1"));
+        .version("v1")).components(new Components().addSecuritySchemes("bearerAuth",
+            new SecurityScheme()
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT")))
+        .addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
+
   }
 
   // Grupo "public" (el que consulta tu Swagger UI)
@@ -72,10 +81,8 @@ public class OpenApiConfig {
   public GroupedOpenApi publicGroup() {
     return GroupedOpenApi.builder()
         .group("public")
-        // Limita el escaneo SOLO a tus controllers
-        .packagesToScan("com.screenleads.backend.app.web.controller")
-        // y a estos paths
-        .pathsToMatch("/api/**", "/public/**", "/auth/**")
+        .packagesToScan("com.screenleads.backend.app.web") // más amplio
+        .pathsToMatch("/**") // sin limitar
         .build();
   }
 }
@@ -265,7 +272,7 @@ spring.datasource.password=52866617jJ@
 spring.datasource.driver-class-name=org.postgresql.Driver
 
 # JPA configurations
-spring.jpa.hibernate.ddl-auto=update
+spring.jpa.hibernate.ddl-auto=create
 spring.jpa.show-sql=true
 
 spring.servlet.multipart.max-file-size=200MB
@@ -286,9 +293,7 @@ spring.web.resources.add-mappings=false
 
 springdoc.api-docs.enabled=true
 springdoc.swagger-ui.enabled=true
-springdoc.swagger-ui.url=/v3/api-docs/public
 springdoc.swagger-ui.path=/swagger-ui
-springdoc.model-and-view-allowed=false
-springdoc.remove-broken-reference-definitions=true
+# springdoc.swagger-ui.url=/v3/api-docs/public
 ```
 

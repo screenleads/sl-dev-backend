@@ -243,18 +243,26 @@ public class EntityInfo {
 
 ```java
 // src/main/java/com/screenleads/backend/app/web/dto/JwtResponse.java
+// src/main/java/com/screenleads/backend/app/web/dto/JwtResponse.java
 package com.screenleads.backend.app.web.dto;
 
-import com.screenleads.backend.app.domain.model.User;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class JwtResponse {
-    private String token;
-    private User user;
+    @Builder.Default
+    private String tokenType = "Bearer";
+    private String accessToken;
+    private String refreshToken;
+    private UserDto user;
 }
+
 ```
 
 ```java
@@ -276,15 +284,24 @@ public record LeadSummaryDTO(
 
 ```java
 // src/main/java/com/screenleads/backend/app/web/dto/LoginRequest.java
+// src/main/java/com/screenleads/backend/app/web/dto/LoginRequest.java
 package com.screenleads.backend.app.web.dto;
 
-import lombok.Data;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class LoginRequest {
+    @NotBlank
     private String username;
+    @NotBlank
     private String password;
 }
+
 ```
 
 ```java
@@ -317,17 +334,24 @@ public record MediaUpsertDTO(Long id, String src) {
 
 ```java
 // src/main/java/com/screenleads/backend/app/web/dto/PasswordChangeRequest.java
+// src/main/java/com/screenleads/backend/app/web/dto/PasswordChangeRequest.java
 package com.screenleads.backend.app.web.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class PasswordChangeRequest {
+    @NotBlank
     private String currentPassword;
+    @NotBlank
     private String newPassword;
 }
+
 ```
 
 ```java
@@ -381,19 +405,30 @@ public record PromotionRefDTO(Long id) {
 
 ```java
 // src/main/java/com/screenleads/backend/app/web/dto/RegisterRequest.java
+// src/main/java/com/screenleads/backend/app/web/dto/RegisterRequest.java
 package com.screenleads.backend.app.web.dto;
 
-import lombok.Data;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class RegisterRequest {
+    @NotBlank
+    private String username;
+    @Email
+    private String email;
+    @NotBlank
+    private String password;
     private String name;
     private String lastName;
-    private String username;
-    private String email;
-    private String password;
-    Long companyId;
+    private Long companyId; // opcional: si lo usas al registrar
 }
+
 ```
 
 ```java
@@ -438,24 +473,27 @@ public record TimeRangeDTO(
 // src/main/java/com/screenleads/backend/app/web/dto/UserDto.java
 package com.screenleads.backend.app.web.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
 
 import java.util.List;
 
 @Data
-@NoArgsConstructor // ← necesario para deserializar POST/PUT
+@NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDto {
     private Long id;
-    private String email;
     private String username;
-    private String password;
+    private String email;
     private String name;
     private String lastName;
-    private Long companyId; // sólo id de la empresa
-    private List<String> roles; // nombres de rol, p.e. ["ROLE_ADMIN","ROLE_COMPANY_VIEWER"]
+    private Long companyId;
+    private List<String> roles;
+
+    // solo para crear/actualizar; no lo rellenes al responder
+    private String password;
 }
 
 ```

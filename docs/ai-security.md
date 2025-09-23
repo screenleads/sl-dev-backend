@@ -17,15 +17,9 @@ import com.screenleads.backend.app.domain.model.User;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.RoleRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
-import com.screenleads.backend.app.web.dto.JwtResponse;
-import com.screenleads.backend.app.web.dto.LoginRequest;
-import com.screenleads.backend.app.web.dto.PasswordChangeRequest;
-import com.screenleads.backend.app.web.dto.RegisterRequest;
-import com.screenleads.backend.app.web.dto.UserDto;
+import com.screenleads.backend.app.web.dto.*;
 import com.screenleads.backend.app.web.mapper.UserMapper;
-
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
@@ -34,7 +28,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.sql.SQLException;
 import java.util.Set;
 
 @Service
@@ -74,25 +67,59 @@ public class AuthenticationService {
 
         userRepository.save(user);
 
-        return new JwtResponse(jwtService.generateToken(user), user);
+        String token = jwtService.generateToken(user);
+        return JwtResponse.builder()
+                .accessToken(token)
+                .user(UserMapper.toDto(user)) // <<< DTO, no entidad
+                .build();
     }
 
     public JwtResponse login(LoginRequest request) throws AuthenticationException {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        return new JwtResponse(jwtService.generateToken(user), user);
+
+        String token = jwtService.generateToken(user);
+        return JwtResponse.builder()
+                .accessToken(token)
+                .user(UserMapper.toDto(user)) // <<< DTO, no entidad
+                .build();
     }
 
     public UserDto getCurrentUser() {
-        var user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return UserMapper.toDto(user);
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getPrincipal() == null) {
+            throw new UsernameNotFoundException("No authenticated user");
+        }
+        if (auth.getPrincipal() instanceof User u) {
+            return UserMapper.toDto(u);
+        }
+        String username = auth.getName();
+        User u = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        return UserMapper.toDto(u);
     }
 
     public JwtResponse refreshToken() {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return new JwtResponse(jwtService.generateToken(user), user);
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getPrincipal() == null) {
+            throw new UsernameNotFoundException("No authenticated user");
+        }
+        User user;
+        if (auth.getPrincipal() instanceof User u) {
+            user = u;
+        } else {
+            String username = auth.getName();
+            user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        }
+        String token = jwtService.generateToken(user);
+        return JwtResponse.builder()
+                .accessToken(token)
+                .user(UserMapper.toDto(user))
+                .build();
     }
 
     public void changePassword(PasswordChangeRequest request) {
@@ -223,12 +250,14 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.GET, "/ws/status").permitAll()
                                                 .requestMatchers(HttpMethod.OPTIONS, "/ws/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/ws/command/**").authenticated()
-                                                .requestMatchers(com.screenleads.backend.app.infraestructure.config.SwaggerWhitelist.ENDPOINTS).permitAll()
+
+                                                .requestMatchers(
+                                                                com.screenleads.backend.app.infraestructure.config.SwaggerWhitelist.ENDPOINTS)
+                                                .permitAll()
                                                 // Auth: solo login/refresh públicos
                                                 .requestMatchers("/auth/login", "/auth/refresh").permitAll()
                                                 // /auth/me requiere autenticación
                                                 .requestMatchers("/auth/me").authenticated()
-
                                                 // Swagger / OpenAPI / Health
                                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**",
                                                                 "/swagger-ui.html")

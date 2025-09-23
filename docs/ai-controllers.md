@@ -345,7 +345,7 @@ public class CouponController {
 
 ```java
 // src/main/java/com/screenleads/backend/app/web/controller/CustomerController.java
-package com.screenleads.backend.app.application.controller;
+package com.screenleads.backend.app.web.controller;
 
 import java.net.URI;
 import java.util.List;
@@ -373,8 +373,7 @@ public class CustomerController {
 
     // ===== Listar por company (opcional) + búsqueda parcial en identifier =====
     @GetMapping
-    @Operation(summary = "Listar clientes",
-               description = "Filtra por companyId y búsqueda parcial en identifier")
+    @Operation(summary = "Listar clientes", description = "Filtra por companyId y búsqueda parcial en identifier")
     public ResponseEntity<List<CustomerResponse>> list(
             @RequestParam(required = false) Long companyId,
             @RequestParam(required = false) String search) {
@@ -393,16 +392,14 @@ public class CustomerController {
 
     // ===== Crear =====
     @PostMapping
-    @Operation(summary = "Crear cliente",
-               description = "Crea un cliente normalizando el identificador y aplicando unicidad por empresa")
+    @Operation(summary = "Crear cliente", description = "Crea un cliente normalizando el identificador y aplicando unicidad por empresa")
     public ResponseEntity<CustomerResponse> create(@RequestBody CreateRequest req) {
         Customer c = customerService.create(
                 req.getCompanyId(),
                 req.getIdentifierType(),
                 req.getIdentifier(),
                 req.getFirstName(),
-                req.getLastName()
-        );
+                req.getLastName());
         return ResponseEntity
                 .created(URI.create("/api/customers/" + c.getId()))
                 .body(CustomerResponse.from(c));
@@ -417,8 +414,7 @@ public class CustomerController {
                 req.getIdentifierType(),
                 req.getIdentifier(),
                 req.getFirstName(),
-                req.getLastName()
-        );
+                req.getLastName());
         return ResponseEntity.ok(CustomerResponse.from(c));
     }
 
@@ -1406,15 +1402,13 @@ public class WsCommandController {
 
 ```java
 // src/main/java/com/screenleads/backend/app/web/controller/auth/AuthController.java
+// src/main/java/com/screenleads/backend/app/web/controller/auth/AuthController.java
 package com.screenleads.backend.app.web.controller.auth;
 
 import com.screenleads.backend.app.application.security.AuthenticationService;
-import com.screenleads.backend.app.web.dto.JwtResponse;
-import com.screenleads.backend.app.web.dto.LoginRequest;
-import com.screenleads.backend.app.web.dto.PasswordChangeRequest;
-import com.screenleads.backend.app.web.dto.RegisterRequest;
-import com.screenleads.backend.app.web.dto.UserDto;
-
+import com.screenleads.backend.app.web.dto.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -1424,23 +1418,27 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "Auth", description = "Autenticación y cuentas de usuario")
 public class AuthController {
 
     private final AuthenticationService authenticationService;
 
     @PostMapping("/login")
+    @Operation(summary = "Login", description = "Devuelve access/refresh token y datos básicos del usuario", security = {})
     public ResponseEntity<JwtResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authenticationService.login(request));
     }
 
     @PreAuthorize("@authSecurityChecker.allowRegister()")
     @PostMapping("/register")
+    @Operation(summary = "Registro de usuario", security = {})
     public ResponseEntity<JwtResponse> register(@RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authenticationService.register(request));
     }
 
     @PreAuthorize("@authSecurityChecker.isAuthenticated()")
     @PostMapping("/change-password")
+    @Operation(summary = "Cambiar contraseña")
     public ResponseEntity<Void> changePassword(@RequestBody PasswordChangeRequest request) {
         authenticationService.changePassword(request);
         return ResponseEntity.ok().build();
@@ -1448,16 +1446,34 @@ public class AuthController {
 
     @GetMapping("/me")
     @PreAuthorize("@authSecurityChecker.isAuthenticated()")
+    @Operation(summary = "Usuario actual (requiere token)")
     public ResponseEntity<UserDto> getCurrentUser() {
         return ResponseEntity.ok(authenticationService.getCurrentUser());
     }
 
+    // ====== VARIANTE A: refresh PÚBLICO (coincide con tu SecurityConfig permitAll)
+    // ======
+    // Quita @PreAuthorize y marca security = {} para que en Swagger no pida token.
+    // **Usa esta variante si /auth/refresh no requiere estar autenticado**
+    /*
+     * @PostMapping("/refresh")
+     * 
+     * @Operation(summary = "Refresh token", description =
+     * "Devuelve un nuevo access token", security = {})
+     * public ResponseEntity<JwtResponse> refreshToken() {
+     * return ResponseEntity.ok(authenticationService.refreshToken());
+     * }
+     */
+
+    // ====== VARIANTE B: refresh PROTEGIDO (si decides exigir autenticación) ======
+    // **Usa esta variante si /auth/refresh debe requerir token**
     @PreAuthorize("@authSecurityChecker.isAuthenticated()")
     @PostMapping("/refresh")
-    public ResponseEntity<JwtResponse> refreshToken() {
+    @Operation(summary = "Refresh token (requiere token)")
+    public ResponseEntity<JwtResponse> refreshTokenProtected() {
         return ResponseEntity.ok(authenticationService.refreshToken());
     }
-
 }
+
 ```
 
