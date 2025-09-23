@@ -17,6 +17,8 @@ public interface PromotionLeadRepository extends JpaRepository<PromotionLead, Lo
     long countByPromotionAndCustomer(Long promotionId, Long customerId);
     long countByPromotionAndCustomerSince(Long promotionId, Long customerId, Instant since);
 
+boolean existsByPromotionIdAndIdentifier(Long promotionId,String identifier);
+    
     List<PromotionLead> findByPromotion_IdOrderByCreatedAtDesc(Long promotionId);
 
     List<PromotionLead> findByPromotion_IdAndCreatedAtBetweenOrderByCreatedAtAsc(
