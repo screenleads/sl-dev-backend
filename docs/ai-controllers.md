@@ -8,6 +8,7 @@
 
 ```java
 // src/main/java/com/screenleads/backend/app/web/controller/AdvicesController.java
+// src/main/java/com/screenleads/backend/app/web/controller/AdvicesController.java
 package com.screenleads.backend.app.web.controller;
 
 import java.time.ZoneId;
@@ -23,12 +24,16 @@ import org.springframework.web.bind.annotation.*;
 import com.screenleads.backend.app.application.service.AdviceService;
 import com.screenleads.backend.app.web.dto.AdviceDTO;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/advices")
+@Tag(name = "Advices", description = "Gestión y consulta de anuncios (advices)")
 public class AdvicesController {
 
     private static final Logger logger = LoggerFactory.getLogger(AdvicesController.class);
-
     private final AdviceService adviceService;
 
     public AdvicesController(AdviceService adviceService) {
@@ -36,6 +41,7 @@ public class AdvicesController {
     }
 
     @GetMapping
+    @Operation(summary = "Listar todos los advices")
     public ResponseEntity<List<AdviceDTO>> getAllAdvices() {
         return ResponseEntity.ok(adviceService.getAllAdvices());
     }
@@ -47,28 +53,38 @@ public class AdvicesController {
      * - X-Timezone-Offset: minutos al ESTE de UTC (p.ej. "120")
      */
     @GetMapping("/visibles")
+    @Operation(
+        summary = "Advices visibles ahora",
+        description = "Filtra por la zona horaria indicada por cabeceras X-Timezone o X-Timezone-Offset"
+    )
     public ResponseEntity<List<AdviceDTO>> getVisibleAdvicesNow(
-            @RequestHeader(value = "X-Timezone", required = false) String tz,
-            @RequestHeader(value = "X-Timezone-Offset", required = false) String offsetMinutesStr) {
+            @RequestHeader(value = "X-Timezone", required = false)
+            @Parameter(description = "Zona horaria IANA, p.ej. Europe/Madrid")
+            String tz,
+            @RequestHeader(value = "X-Timezone-Offset", required = false)
+            @Parameter(description = "Minutos al ESTE de UTC, p.ej. 120")
+            String offsetMinutesStr) {
 
         ZoneId zone = resolveZoneId(tz, offsetMinutesStr);
         logger.debug("Resolviendo visibles con zona: {}", zone);
-
         return ResponseEntity.ok(adviceService.getVisibleAdvicesNow(zone));
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Obtener un advice por id")
     public ResponseEntity<AdviceDTO> getAdviceById(@PathVariable Long id) {
         Optional<AdviceDTO> advice = adviceService.getAdviceById(id);
         return advice.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
+    @Operation(summary = "Crear un advice")
     public ResponseEntity<AdviceDTO> createAdvice(@RequestBody AdviceDTO adviceDTO) {
         return ResponseEntity.ok(adviceService.saveAdvice(adviceDTO));
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Actualizar un advice")
     public ResponseEntity<AdviceDTO> updateAdvice(@PathVariable Long id, @RequestBody AdviceDTO adviceDTO) {
         logger.info("adviceDTO object: {}", adviceDTO);
         AdviceDTO updatedAdvice = adviceService.updateAdvice(id, adviceDTO);
@@ -76,13 +92,13 @@ public class AdvicesController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar un advice")
     public ResponseEntity<Void> deleteAdvice(@PathVariable Long id) {
         adviceService.deleteAdvice(id);
         return ResponseEntity.noContent().build();
     }
 
     // ----------------- helpers -----------------
-
     private ZoneId resolveZoneId(String tz, String offsetMinutesStr) {
         if (tz != null && !tz.isBlank()) {
             try {
@@ -107,63 +123,69 @@ public class AdvicesController {
 
 ```java
 // src/main/java/com/screenleads/backend/app/web/controller/AppVersionController.java
+// src/main/java/com/screenleads/backend/app/web/controller/AppVersionController.java
 package com.screenleads.backend.app.web.controller;
 
 import java.util.List;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.AppVersionService;
 import com.screenleads.backend.app.web.dto.AppVersionDTO;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/app-versions")
 @RequiredArgsConstructor
+@Tag(name = "App Versions", description = "Gestión de versiones de la app por plataforma")
 public class AppVersionController {
 
     private final AppVersionService service;
 
     @PostMapping
+    @Operation(summary = "Crear versión")
     public AppVersionDTO save(@RequestBody AppVersionDTO dto) {
         return service.save(dto);
     }
 
     @GetMapping
+    @Operation(summary = "Listar versiones")
     public List<AppVersionDTO> findAll() {
         return service.findAll();
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Obtener versión por id")
     public AppVersionDTO findById(@PathVariable Long id) {
         return service.findById(id);
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar versión por id")
     public void deleteById(@PathVariable Long id) {
         service.deleteById(id);
     }
 
     @GetMapping("/latest/{platform}")
+    @Operation(summary = "Última versión por plataforma")
     public AppVersionDTO getLatestVersion(@PathVariable String platform) {
         return service.getLatestVersion(platform);
     }
 }
+
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/web/controller/CompanyController.java
 // src/main/java/com/screenleads/backend/app/web/controller/CompanyController.java
 package com.screenleads.backend.app.web.controller;
 
 import com.screenleads.backend.app.application.service.CompaniesService;
 import com.screenleads.backend.app.web.dto.CompanyDTO;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -171,9 +193,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 import java.util.Optional;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @CrossOrigin
 @RestController
 @RequestMapping("/companies")
+@Tag(name = "Companies", description = "CRUD de compañías")
 public class CompanyController {
 
     private final CompaniesService companiesService;
@@ -183,11 +209,13 @@ public class CompanyController {
     }
 
     @GetMapping
+    @Operation(summary = "Listar compañías")
     public ResponseEntity<List<CompanyDTO>> getAllCompanies() {
         return ResponseEntity.ok(companiesService.getAllCompanies());
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Obtener compañía por id")
     public ResponseEntity<CompanyDTO> getCompanyById(@PathVariable Long id) {
         Optional<CompanyDTO> company = companiesService.getCompanyById(id);
         return company.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
@@ -195,21 +223,22 @@ public class CompanyController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @Operation(summary = "Crear compañía", description = "Solo ROLE_ADMIN")
     public ResponseEntity<CompanyDTO> createCompany(@RequestBody CompanyDTO companyDTO) {
         return ResponseEntity.ok(companiesService.saveCompany(companyDTO));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @Operation(summary = "Actualizar compañía", description = "Solo ROLE_ADMIN")
     public ResponseEntity<CompanyDTO> updateCompany(@PathVariable Long id, @RequestBody CompanyDTO companyDTO) {
-
         CompanyDTO updatedCompany = companiesService.updateCompany(id, companyDTO);
         return ResponseEntity.ok(updatedCompany);
-
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @Operation(summary = "Eliminar compañía", description = "Solo ROLE_ADMIN")
     public ResponseEntity<Void> deleteCompany(@PathVariable Long id) {
         companiesService.deleteCompany(id);
         return ResponseEntity.noContent().build();
@@ -457,6 +486,7 @@ public class CustomerController {
 
 ```java
 // src/main/java/com/screenleads/backend/app/web/controller/DeviceTypesController.java
+// src/main/java/com/screenleads/backend/app/web/controller/DeviceTypesController.java
 package com.screenleads.backend.app.web.controller;
 
 import java.util.List;
@@ -464,20 +494,18 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.DeviceTypeService;
 import com.screenleads.backend.app.web.dto.DeviceTypeDTO;
 
-@Controller
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@RestController // <-- era @Controller; @RestController no cambia las rutas existentes
+@Tag(name = "Device Types", description = "CRUD de tipos de dispositivo")
 public class DeviceTypesController {
+
     @Autowired
     private DeviceTypeService deviceTypeService;
 
@@ -487,12 +515,14 @@ public class DeviceTypesController {
 
     @CrossOrigin
     @GetMapping("/devices/types")
+    @Operation(summary = "Listar tipos de dispositivo")
     public ResponseEntity<List<DeviceTypeDTO>> getAllDeviceTypes() {
         return ResponseEntity.ok(deviceTypeService.getAllDeviceTypes());
     }
 
     @CrossOrigin
     @GetMapping("/devices/types/{id}")
+    @Operation(summary = "Obtener tipo de dispositivo por id")
     public ResponseEntity<DeviceTypeDTO> getDeviceTypeById(@PathVariable Long id) {
         Optional<DeviceTypeDTO> device = deviceTypeService.getDeviceTypeById(id);
         return device.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
@@ -500,29 +530,32 @@ public class DeviceTypesController {
 
     @CrossOrigin
     @PostMapping("/devices/types")
+    @Operation(summary = "Crear tipo de dispositivo")
     public ResponseEntity<DeviceTypeDTO> createDeviceType(@RequestBody DeviceTypeDTO deviceDTO) {
         return ResponseEntity.ok(deviceTypeService.saveDeviceType(deviceDTO));
     }
 
     @CrossOrigin
     @PutMapping("/devices/types/{id}")
+    @Operation(summary = "Actualizar tipo de dispositivo")
     public ResponseEntity<DeviceTypeDTO> updateDeviceType(@PathVariable Long id, @RequestBody DeviceTypeDTO deviceDTO) {
-
         DeviceTypeDTO updatedDevice = deviceTypeService.updateDeviceType(id, deviceDTO);
         return ResponseEntity.ok(updatedDevice);
-
     }
 
     @CrossOrigin
     @DeleteMapping("/devices/types/{id}")
+    @Operation(summary = "Eliminar tipo de dispositivo")
     public ResponseEntity<String> deleteDeviceType(@PathVariable Long id) {
         deviceTypeService.deleteDeviceType(id);
         return ResponseEntity.ok("Media Type (" + id + ") deleted succesfully");
     }
 }
+
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/web/controller/DevicesController.java
 // src/main/java/com/screenleads/backend/app/web/controller/DevicesController.java
 package com.screenleads.backend.app.web.controller;
 
@@ -537,9 +570,13 @@ import com.screenleads.backend.app.application.service.DeviceService;
 import com.screenleads.backend.app.web.dto.AdviceDTO;
 import com.screenleads.backend.app.web.dto.DeviceDTO;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/devices")
 @CrossOrigin
+@Tag(name = "Devices", description = "CRUD de dispositivos y gestión de advices por dispositivo")
 public class DevicesController {
 
     private final DeviceService deviceService;
@@ -553,29 +590,34 @@ public class DevicesController {
     // -------------------------------------------------------------------------
 
     @GetMapping
+    @Operation(summary = "Listar dispositivos")
     public ResponseEntity<List<DeviceDTO>> getAllDevices() {
         return ResponseEntity.ok(deviceService.getAllDevices());
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Obtener dispositivo por id")
     public ResponseEntity<DeviceDTO> getDeviceById(@PathVariable Long id) {
         Optional<DeviceDTO> device = deviceService.getDeviceById(id);
         return device.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
+    @Operation(summary = "Crear dispositivo")
     public ResponseEntity<DeviceDTO> createDevice(@RequestBody DeviceDTO deviceDTO) {
         DeviceDTO saved = deviceService.saveDevice(deviceDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Actualizar dispositivo")
     public ResponseEntity<DeviceDTO> updateDevice(@PathVariable Long id, @RequestBody DeviceDTO deviceDTO) {
         DeviceDTO updatedDevice = deviceService.updateDevice(id, deviceDTO);
         return ResponseEntity.ok(updatedDevice);
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar dispositivo")
     public ResponseEntity<Void> deleteDevice(@PathVariable Long id) {
         deviceService.deleteDevice(id);
         return ResponseEntity.noContent().build();
@@ -586,6 +628,7 @@ public class DevicesController {
     // -------------------------------------------------------------------------
 
     @GetMapping("/uuid/{uuid}")
+    @Operation(summary = "Obtener dispositivo por UUID")
     public ResponseEntity<DeviceDTO> getDeviceByUuid(@PathVariable String uuid) {
         return deviceService.getDeviceByUuid(uuid)
                 .map(ResponseEntity::ok)
@@ -593,6 +636,7 @@ public class DevicesController {
     }
 
     @RequestMapping(value = "/uuid/{uuid}", method = RequestMethod.HEAD)
+    @Operation(summary = "Comprobar existencia de dispositivo por UUID", description = "Devuelve 200 si existe, 404 si no")
     public ResponseEntity<Void> headDeviceByUuid(@PathVariable String uuid) {
         return deviceService.getDeviceByUuid(uuid).isPresent()
                 ? ResponseEntity.ok().build()
@@ -604,17 +648,20 @@ public class DevicesController {
     // -------------------------------------------------------------------------
 
     @GetMapping("/{deviceId}/advices")
+    @Operation(summary = "Listar advices asignados a un dispositivo")
     public ResponseEntity<List<AdviceDTO>> getAdvicesForDevice(@PathVariable Long deviceId) {
         return ResponseEntity.ok(deviceService.getAdvicesForDevice(deviceId));
     }
 
     @PostMapping("/{deviceId}/advices/{adviceId}")
+    @Operation(summary = "Asignar un advice a un dispositivo")
     public ResponseEntity<Void> assignAdviceToDevice(@PathVariable Long deviceId, @PathVariable Long adviceId) {
         deviceService.assignAdviceToDevice(deviceId, adviceId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{deviceId}/advices/{adviceId}")
+    @Operation(summary = "Quitar un advice de un dispositivo")
     public ResponseEntity<Void> removeAdviceFromDevice(@PathVariable Long deviceId, @PathVariable Long adviceId) {
         deviceService.removeAdviceFromDevice(deviceId, adviceId);
         return ResponseEntity.noContent().build();
@@ -623,18 +670,9 @@ public class DevicesController {
     // -------------------------------------------------------------------------
     // (Opcional) Endpoint placeholder para /code/{uuid} si realmente lo necesitas
     // -------------------------------------------------------------------------
-
     /**
-     * TODO: Implementar generación/lectura de código de conexión para el
-     * dispositivo.
-     * La firma original no coincidía con el path variable y devolvía la lista
-     * completa.
-     * De momento respondemos 501 Not Implemented para evitar confusión.
+     * TODO: Implementar generación/lectura de código de conexión para el dispositivo.
      */
-    @GetMapping("/code/{uuid}")
-    public ResponseEntity<Void> createConnectionCodeForDevice(@PathVariable String uuid) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-    }
 }
 
 ```
