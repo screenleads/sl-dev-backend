@@ -5,8 +5,7 @@ from pathlib import Path
 from datetime import datetime
 
 try:
-    # py>=3.9
-    from zoneinfo import ZoneInfo
+    from zoneinfo import ZoneInfo  # py>=3.9
 except Exception:
     ZoneInfo = None
 
@@ -24,8 +23,7 @@ LANG_BY_EXT = {
 }
 
 def code_lang(path: str) -> str:
-    ext = os.path.splitext(path)[1].lower()
-    return LANG_BY_EXT.get(ext, "")
+    return LANG_BY_EXT.get(Path(path).suffix.lower(), "")
 
 def match_files(globs_list, excludes=None):
     files = set()
@@ -67,29 +65,36 @@ def _ts_madrid() -> str:
             pass
     return now.strftime("%Y-%m-%d %H:%M")
 
-def write_urls_index(snapshot_dir: Path, out_md: Path, repo: str, branch: str):
+def write_urls_index(md_files, out_md: Path, repo: str, branch: str, base_dir: Path):
     """
-    Genera docs/ai-snapshots-urls.md con una lista de TODOS los .md dentro de docs/ai-snapshots/
-    (excluyendo el propio índice). Incluye enlaces blob y raw.
+    Genera docs/ai-snapshots-urls.md con enlaces a TODOS los .md debajo de docs/
+    (o los definidos por globs), excluyendo el propio índice.
     """
-    md_files = sorted(snapshot_dir.rglob("*.md"))
-    md_files = [p for p in md_files if p.name != out_md.name]  # excluir el propio índice si estuviera dentro
+    md_files = [Path(f) for f in md_files]
+    md_files = [p for p in md_files if p.resolve() != out_md.resolve()]
+    md_files.sort(key=lambda p: p.as_posix())
+
     lines = []
     lines.append("# Snapshot AI — docs/ai-snapshots-urls.md\n")
     lines.append(f"_Última generación: {_ts_madrid()}_\n")
     lines.append(f"Repositorio: `{repo}` — Rama: `{branch}`\n")
-    lines.append(f"Total de snapshots: **{len(md_files)}**\n")
+    lines.append(f"Total de archivos: **{len(md_files)}**\n")
     lines.append("---\n")
+
     if not md_files:
-        lines.append("> (No se encontraron snapshots en `docs/ai-snapshots/`)\n")
+        lines.append("> (No se encontraron archivos Markdown en `docs/`)\n")
     else:
         for p in md_files:
-            rel = p.as_posix()
-            label = p.relative_to(snapshot_dir).as_posix()
+            try:
+                label = p.relative_to(base_dir).as_posix()
+            except ValueError:
+                label = p.as_posix()
+            rel = p.as_posix().replace("\\", "/")
             blob = f"https://github.com/{repo}/blob/{branch}/{rel}"
             raw  = f"https://raw.githubusercontent.com/{repo}/{branch}/{rel}"
             lines.append(f"- [{label}]({blob}) — [raw]({raw})")
-    out_md.write_text("\n".join(lines), encoding="utf-8")
+
+    out_md.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"Wrote {out_md} with {len(md_files)} entries.")
 
 def main():
@@ -118,10 +123,15 @@ def main():
         total_files += len(files)
         print(f"Wrote {output} with {len(files)} file(s).")
 
-    # === NUEVO: generar índice de URLs de snapshots ===
-    snapshot_dir = Path("docs") / "ai-snapshots"
-    out_md = Path("docs") / "ai-snapshots-urls.md"
-    write_urls_index(snapshot_dir, out_md, repo, branch)
+    # === Índice de URLs en docs/ ===
+    urls_cfg = cfg.get("urls_index", {})
+    base_dir = Path(urls_cfg.get("base_dir", "docs"))
+    globs_list = urls_cfg.get("globs", [str(base_dir / "*.md"), str(base_dir / "**/*.md")])
+    excludes = urls_cfg.get("excludes", [str(base_dir / "ai-snapshots-urls.md")])
+
+    md_files = match_files(globs_list, excludes)
+    out_md = base_dir / "ai-snapshots-urls.md"
+    write_urls_index(md_files, out_md, repo, branch, base_dir)
 
     print(f"Done. Total files included across snapshots: {total_files}")
 
