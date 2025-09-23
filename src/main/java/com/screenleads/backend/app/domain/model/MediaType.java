@@ -19,6 +19,9 @@ public class MediaType {
 @GeneratedValue(strategy = GenerationType.IDENTITY)
 private Long id;
 
+@Builder.Default
+@Column(name="enabled", nullable=false)
+private Boolean enabled = Boolean.TRUE;
 
 @Column(nullable = false, length = 50)
 private String type; // e.g., IMAGE, VIDEO

@@ -28,6 +28,9 @@ private Long id;
 private String name;
 
 
+@Column(name="observations", length=1000)
+private String observations;
+
 @Column(name = "primary_color", length = 7)
 private String primaryColor; // ej: #FFFFFF
 

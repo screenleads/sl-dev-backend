@@ -41,6 +41,10 @@ private Integer width;
 private Integer height;
 
 
+@Column(name="description_name", length=255)
+private String descriptionName;
+
+
 @ManyToOne(fetch = FetchType.LAZY, optional = false)
 @JoinColumn(name = "company_id", nullable = false,
 foreignKey = @ForeignKey(name = "fk_device_company"))
