@@ -1,5 +1,6 @@
 package com.screenleads.backend.app.domain.model;
 
+import java.time.Instant;
 import java.util.Set;
 
 import jakarta.persistence.*;
@@ -29,7 +30,7 @@ public class Promotion extends Auditable {
     @Column(length = 255)
     private String description;
 
-    // ✅ camelCase en el modelo; columna en snake_case
+    // URL legal (camelCase en el modelo, snake_case en DB)
     @Column(name = "legal_url", length = 2048)
     private String legalUrl;
 
@@ -40,7 +41,18 @@ public class Promotion extends Auditable {
     @Column(name = "template_html")
     private String templateHtml;
 
-    // ✅ NUEVO: tipos de identificación y límite de leads
+    // === NUEVO: cupón externo para enlazar con el negocio final
+    @Column(name = "external_coupon_code", length = 120)
+    private String externalCouponCode;
+
+    // === NUEVO: ventana temporal de la promoción
+    @Column(name = "start_at")
+    private Instant startAt;
+
+    @Column(name = "end_at")
+    private Instant endAt;
+
+    // Reglas de identificación y límites
     @Enumerated(EnumType.STRING)
     @Column(name = "lead_identifier_type", length = 30, nullable = false)
     @Builder.Default
