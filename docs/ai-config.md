@@ -47,6 +47,70 @@ public class FirebaseConfiguration {
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/infraestructure/config/OpenApiConfig.java
+package com.screenleads.backend.app.infraestructure.config;
+
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.info.Contact;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.servers.Server;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springdoc.core.models.GroupedOpenApi;
+
+
+@Configuration
+@OpenAPIDefinition(
+info = @Info(
+title = "ScreenLeads API",
+version = "v1",
+description = "API del backend de ScreenLeads",
+contact = @Contact(name = "ScreenLeads")
+),
+servers = {
+@Server(url = "/", description = "Default")
+},
+security = {
+@SecurityRequirement(name = "bearerAuth")
+}
+)
+@SecurityScheme(
+name = "bearerAuth",
+type = SecuritySchemeType.HTTP,
+scheme = "bearer",
+bearerFormat = "JWT"
+)
+public class OpenApiConfig {
+
+
+@Bean
+public GroupedOpenApi publicApi() {
+return GroupedOpenApi.builder()
+.group("public")
+.packagesToScan("com.screenleads.backend.app")
+.build();
+}
+}
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/infraestructure/config/SwaggerWhitelist.java
+package com.screenleads.backend.app.infraestructure.config;
+
+public final class SwaggerWhitelist {
+private SwaggerWhitelist() {}
+public static final String[] ENDPOINTS = {
+"/v3/api-docs/**",
+"/swagger-ui.html",
+"/swagger-ui/**"
+};
+}
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/infraestructure/config/WebSocketConfiguration.java
 package com.screenleads.backend.app.infraestructure.config;
 
