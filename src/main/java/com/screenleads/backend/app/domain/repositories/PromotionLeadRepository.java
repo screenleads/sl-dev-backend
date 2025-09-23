@@ -19,7 +19,12 @@ public interface PromotionLeadRepository extends JpaRepository<PromotionLead, Lo
     Optional<PromotionLead> findByCouponCode(String couponCode);
     boolean existsByCouponCode(String couponCode);
 
+    // Ambos órdenes por conveniencia
     Optional<PromotionLead> findByIdentifierAndPromotionId(String identifier, Long promotionId);
+    Optional<PromotionLead> findByPromotionIdAndIdentifier(Long promotionId, String identifier);
+
+    // *** Método que faltaba y causa el fallo de compilación ***
+    boolean existsByPromotionIdAndIdentifier(Long promotionId, String identifier);
 
     Optional<PromotionLead> findTopByPromotionIdAndCustomerIdOrderByCreatedAtDesc(
             Long promotionId, Long customerId);
@@ -33,7 +38,7 @@ public interface PromotionLeadRepository extends JpaRepository<PromotionLead, Lo
     Optional<PromotionLead> findByPromotionIdAndCustomerIdAndCouponStatus(
             Long promotionId, Long customerId, CouponStatus couponStatus);
 
-    // Rango temporal (útil para ventanas deslizantes)
+    // Conteo en rango temporal (útil para ventanas deslizantes)
     @Query("""
         select count(pl) from PromotionLead pl
         where pl.promotion.id = :promotionId
@@ -45,7 +50,7 @@ public interface PromotionLeadRepository extends JpaRepository<PromotionLead, Lo
                                                      @Param("from") Instant from,
                                                      @Param("to") Instant to);
 
-    // ---- MÉTODO QUE TE FALTA (Since = createdAt >= :since) ----
+    // Conteo desde un instante (Since = createdAt >= :since)
     @Query("""
         select count(pl) from PromotionLead pl
         where pl.promotion.id = :promotionId
