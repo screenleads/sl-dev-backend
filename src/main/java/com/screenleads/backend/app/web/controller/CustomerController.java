@@ -1,4 +1,4 @@
-package com.screenleads.backend.app.application.controller;
+package com.screenleads.backend.app.web.controller;
 
 import java.net.URI;
 import java.util.List;
@@ -26,8 +26,7 @@ public class CustomerController {
 
     // ===== Listar por company (opcional) + búsqueda parcial en identifier =====
     @GetMapping
-    @Operation(summary = "Listar clientes",
-               description = "Filtra por companyId y búsqueda parcial en identifier")
+    @Operation(summary = "Listar clientes", description = "Filtra por companyId y búsqueda parcial en identifier")
     public ResponseEntity<List<CustomerResponse>> list(
             @RequestParam(required = false) Long companyId,
             @RequestParam(required = false) String search) {
@@ -46,16 +45,14 @@ public class CustomerController {
 
     // ===== Crear =====
     @PostMapping
-    @Operation(summary = "Crear cliente",
-               description = "Crea un cliente normalizando el identificador y aplicando unicidad por empresa")
+    @Operation(summary = "Crear cliente", description = "Crea un cliente normalizando el identificador y aplicando unicidad por empresa")
     public ResponseEntity<CustomerResponse> create(@RequestBody CreateRequest req) {
         Customer c = customerService.create(
                 req.getCompanyId(),
                 req.getIdentifierType(),
                 req.getIdentifier(),
                 req.getFirstName(),
-                req.getLastName()
-        );
+                req.getLastName());
         return ResponseEntity
                 .created(URI.create("/api/customers/" + c.getId()))
                 .body(CustomerResponse.from(c));
@@ -70,8 +67,7 @@ public class CustomerController {
                 req.getIdentifierType(),
                 req.getIdentifier(),
                 req.getFirstName(),
-                req.getLastName()
-        );
+                req.getLastName());
         return ResponseEntity.ok(CustomerResponse.from(c));
     }
 

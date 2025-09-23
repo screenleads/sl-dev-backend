@@ -1,21 +1,24 @@
 package com.screenleads.backend.app.web.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
 
 import java.util.List;
 
 @Data
-@NoArgsConstructor // ← necesario para deserializar POST/PUT
+@NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDto {
     private Long id;
-    private String email;
     private String username;
-    private String password;
+    private String email;
     private String name;
     private String lastName;
-    private Long companyId; // sólo id de la empresa
-    private List<String> roles; // nombres de rol, p.e. ["ROLE_ADMIN","ROLE_COMPANY_VIEWER"]
+    private Long companyId;
+    private List<String> roles;
+
+    // solo para crear/actualizar; no lo rellenes al responder
+    private String password;
 }
