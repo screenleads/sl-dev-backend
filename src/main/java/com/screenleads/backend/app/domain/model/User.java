@@ -77,7 +77,7 @@ private Media profileImage;
 // === UserDetails ===
 @Override
 public Collection<? extends GrantedAuthority> getAuthorities() {
-return roles.stream().map(r -> new SimpleGrantedAuthority(r.getRole())).toList();
+    return roles.stream().map(r -> new SimpleGrantedAuthority(r.getRole())).toList();
 }
 @Override public boolean isAccountNonExpired() { return true; }
 @Override public boolean isAccountNonLocked() { return true; }

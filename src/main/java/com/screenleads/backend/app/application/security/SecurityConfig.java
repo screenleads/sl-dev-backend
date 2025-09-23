@@ -57,7 +57,7 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.GET, "/ws/status").permitAll()
                                                 .requestMatchers(HttpMethod.OPTIONS, "/ws/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/ws/command/**").authenticated()
-
+                                                .requestMatchers(com.screenleads.backend.app.infraestructure.config.SwaggerWhitelist.ENDPOINTS).permitAll()
                                                 // Auth: solo login/refresh públicos
                                                 .requestMatchers("/auth/login", "/auth/refresh").permitAll()
                                                 // /auth/me requiere autenticación

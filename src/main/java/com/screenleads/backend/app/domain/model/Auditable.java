@@ -1,7 +1,7 @@
 package com.screenleads.backend.app.domain.model;
 
-import java.time.Instant;
 
+import java.time.Instant;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import jakarta.persistence.Column;
