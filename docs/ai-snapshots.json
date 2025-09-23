@@ -119,9 +119,7 @@
       ]
     },
     {
-      "title_prefix": "Snapshot AI",
-      "branch_env_fallback": "develop",
-      "urls_output": "docs/ai-snapshots-urls.md",
+      "output": "docs/ai-snapshots-urls.md",
       "snapshots": [
         { "output": "docs/ai-entities.md", "title": "Entidades JPA — snapshot incrustado", "header": "Clases de dominio (model/entity).", "globs": ["src/main/java/**/domain/model/*.java"] },
         { "output": "docs/ai-repositories.md", "title": "Repositorios — snapshot incrustado", "header": "Interfaces de Spring Data JPA.", "globs": ["src/main/java/**/domain/repositories/*.java"] },
