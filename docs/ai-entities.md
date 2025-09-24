@@ -557,6 +557,50 @@ return dbData == null ? null : Duration.ofSeconds(dbData);
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/domain/model/EntityPermission.java
+// src/main/java/com/screenleads/backend/app/domain/model/EntityPermission.java
+package com.screenleads.backend.app.domain.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "entity_permission", uniqueConstraints = @UniqueConstraint(name = "uk_entity_permission_resource", columnNames = "resource"))
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class EntityPermission {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    /**
+     * Nombre de recurso: "user", "company", "device", "media", "promotion",
+     * "advice", ...
+     */
+    @Column(nullable = false, length = 80)
+    private String resource;
+
+    /** Nivel mínimo requerido por acción */
+    @Column(name = "create_level", nullable = false)
+    private Integer createLevel;
+
+    @Column(name = "read_level", nullable = false)
+    private Integer readLevel;
+
+    @Column(name = "update_level", nullable = false)
+    private Integer updateLevel;
+
+    @Column(name = "delete_level", nullable = false)
+    private Integer deleteLevel;
+}
+
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/domain/model/LeadIdentifierType.java
 package com.screenleads.backend.app.domain.model;
 
@@ -856,121 +900,47 @@ public class PromotionLead extends Auditable {
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/Role.java
+// src/main/java/com/screenleads/backend/app/domain/model/Role.java
 package com.screenleads.backend.app.domain.model;
 
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @Entity
-@Table(name = "role",
-  uniqueConstraints = @UniqueConstraint(name = "uk_role_name", columnNames = "role")
-)
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Table(name = "role", indexes = @Index(name = "ix_role_role", columnList = "role", unique = true))
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Role {
 
-  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name="role", nullable=false, length=50)
+  /** Nombre técnico, p.ej. "ROLE_ADMIN" */
+  @Column(nullable = false, unique = true, length = 60)
   private String role;
 
-  @Column(name="description", length=255)
+  /** Descripción legible */
+  @Column(length = 255)
   private String description;
 
-  @Builder.Default
-  @Column(name="level", nullable=false)
-  private Integer level = 99;
-
-  // ==== FLAGS CRUD (booleans) ====
-  @Builder.Default @Column(nullable=false) private boolean userRead=false;
-  @Builder.Default @Column(nullable=false) private boolean userCreate=false;
-  @Builder.Default @Column(nullable=false) private boolean userUpdate=false;
-  @Builder.Default @Column(nullable=false) private boolean userDelete=false;
-
-  @Builder.Default @Column(nullable=false) private boolean companyRead=false;
-  @Builder.Default @Column(nullable=false) private boolean companyCreate=false;
-  @Builder.Default @Column(nullable=false) private boolean companyUpdate=false;
-  @Builder.Default @Column(nullable=false) private boolean companyDelete=false;
-
-  @Builder.Default @Column(nullable=false) private boolean deviceRead=false;
-  @Builder.Default @Column(nullable=false) private boolean deviceCreate=false;
-  @Builder.Default @Column(nullable=false) private boolean deviceUpdate=false;
-  @Builder.Default @Column(nullable=false) private boolean deviceDelete=false;
-
-  @Builder.Default @Column(nullable=false) private boolean deviceTypeRead=false;
-  @Builder.Default @Column(nullable=false) private boolean deviceTypeCreate=false;
-  @Builder.Default @Column(nullable=false) private boolean deviceTypeUpdate=false;
-  @Builder.Default @Column(nullable=false) private boolean deviceTypeDelete=false;
-
-  @Builder.Default @Column(nullable=false) private boolean mediaRead=false;
-  @Builder.Default @Column(nullable=false) private boolean mediaCreate=false;
-  @Builder.Default @Column(nullable=false) private boolean mediaUpdate=false;
-  @Builder.Default @Column(nullable=false) private boolean mediaDelete=false;
-
-  @Builder.Default @Column(nullable=false) private boolean mediaTypeRead=false;
-  @Builder.Default @Column(nullable=false) private boolean mediaTypeCreate=false;
-  @Builder.Default @Column(nullable=false) private boolean mediaTypeUpdate=false;
-  @Builder.Default @Column(nullable=false) private boolean mediaTypeDelete=false;
-
-  @Builder.Default @Column(nullable=false) private boolean promotionRead=false;
-  @Builder.Default @Column(nullable=false) private boolean promotionCreate=false;
-  @Builder.Default @Column(nullable=false) private boolean promotionUpdate=false;
-  @Builder.Default @Column(nullable=false) private boolean promotionDelete=false;
-
-  @Builder.Default @Column(nullable=false) private boolean adviceRead=false;
-  @Builder.Default @Column(nullable=false) private boolean adviceCreate=false;
-  @Builder.Default @Column(nullable=false) private boolean adviceUpdate=false;
-  @Builder.Default @Column(nullable=false) private boolean adviceDelete=false;
-
-  @Builder.Default @Column(nullable=false) private boolean appVersionRead=false;
-  @Builder.Default @Column(nullable=false) private boolean appVersionCreate=false;
-  @Builder.Default @Column(nullable=false) private boolean appVersionUpdate=false;
-  @Builder.Default @Column(nullable=false) private boolean appVersionDelete=false;
-
-  @Builder.Default @Column(nullable=false) private boolean roleRead=false;
-  @Builder.Default @Column(nullable=false) private boolean roleCreate=false;
-  @Builder.Default @Column(nullable=false) private boolean roleUpdate=false;
-  @Builder.Default @Column(nullable=false) private boolean roleDelete=false;
-
-  @Builder.Default @Column(nullable=false) private boolean promotionLeadRead=false;
-  @Builder.Default @Column(nullable=false) private boolean promotionLeadCreate=false;
-  @Builder.Default @Column(nullable=false) private boolean promotionLeadUpdate=false;
-  @Builder.Default @Column(nullable=false) private boolean promotionLeadDelete=false;
-
-  public Set<String> toAuthorities() {
-    Set<String> auth = new HashSet<>();
-    if (role != null && !role.isBlank()) {
-      auth.add(role.startsWith("ROLE_") ? role : "ROLE_" + role);
-    }
-    java.util.function.BiConsumer<Boolean,String> add = (b,n) -> { if (b) auth.add(n); };
-    add.accept(userRead,"USER_READ"); add.accept(userCreate,"USER_CREATE"); add.accept(userUpdate,"USER_UPDATE"); add.accept(userDelete,"USER_DELETE");
-    add.accept(companyRead,"COMPANY_READ"); add.accept(companyCreate,"COMPANY_CREATE"); add.accept(companyUpdate,"COMPANY_UPDATE"); add.accept(companyDelete,"COMPANY_DELETE");
-    add.accept(deviceRead,"DEVICE_READ"); add.accept(deviceCreate,"DEVICE_CREATE"); add.accept(deviceUpdate,"DEVICE_UPDATE"); add.accept(deviceDelete,"DEVICE_DELETE");
-    add.accept(deviceTypeRead,"DEVICETYPE_READ"); add.accept(deviceTypeCreate,"DEVICETYPE_CREATE"); add.accept(deviceTypeUpdate,"DEVICETYPE_UPDATE"); add.accept(deviceTypeDelete,"DEVICETYPE_DELETE");
-    add.accept(mediaRead,"MEDIA_READ"); add.accept(mediaCreate,"MEDIA_CREATE"); add.accept(mediaUpdate,"MEDIA_UPDATE"); add.accept(mediaDelete,"MEDIA_DELETE");
-    add.accept(mediaTypeRead,"MEDIATYPE_READ"); add.accept(mediaTypeCreate,"MEDIATYPE_CREATE"); add.accept(mediaTypeUpdate,"MEDIATYPE_UPDATE"); add.accept(mediaTypeDelete,"MEDIATYPE_DELETE");
-    add.accept(promotionRead,"PROMOTION_READ"); add.accept(promotionCreate,"PROMOTION_CREATE"); add.accept(promotionUpdate,"PROMOTION_UPDATE"); add.accept(promotionDelete,"PROMOTION_DELETE");
-    add.accept(adviceRead,"ADVICE_READ"); add.accept(adviceCreate,"ADVICE_CREATE"); add.accept(adviceUpdate,"ADVICE_UPDATE"); add.accept(adviceDelete,"ADVICE_DELETE");
-    add.accept(appVersionRead,"APPVERSION_READ"); add.accept(appVersionCreate,"APPVERSION_CREATE"); add.accept(appVersionUpdate,"APPVERSION_UPDATE"); add.accept(appVersionDelete,"APPVERSION_DELETE");
-    add.accept(roleRead,"ROLE_READ"); add.accept(roleCreate,"ROLE_CREATE"); add.accept(roleUpdate,"ROLE_UPDATE"); add.accept(roleDelete,"ROLE_DELETE");
-    add.accept(promotionLeadRead,"PROMOTIONLEAD_READ"); add.accept(promotionLeadCreate,"PROMOTIONLEAD_CREATE"); add.accept(promotionLeadUpdate,"PROMOTIONLEAD_UPDATE"); add.accept(promotionLeadDelete,"PROMOTIONLEAD_DELETE");
-    return auth;
-  }
+  /** Nivel de poder: 1 = máximo privilegio, 2 = menos, ... */
+  @Column(nullable = false)
+  private Integer level;
 }
 
 ```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/User.java
+// src/main/java/com/screenleads/backend/app/domain/model/User.java
 package com.screenleads.backend.app.domain.model;
 
-
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -980,77 +950,82 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-
 @Entity
-@Table(name = "app_user",
-indexes = {
-@Index(name = "ix_user_username", columnList = "username", unique = true),
-@Index(name = "ix_user_email", columnList = "email", unique = true)
-}
-)
+@Table(name = "app_user", indexes = {
+        @Index(name = "ix_user_username", columnList = "username", unique = true),
+        @Index(name = "ix_user_email", columnList = "email", unique = true)
+})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class User extends Auditable implements UserDetails {
-@Id
-@GeneratedValue(strategy = GenerationType.IDENTITY)
-private Long id;
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-@Column(nullable = false, unique = true, length = 60)
-private String username;
+    @Column(nullable = false, unique = true, length = 60)
+    private String username;
 
+    @JsonIgnore
+    @Column(nullable = false, length = 100)
+    private String password;
 
-@JsonIgnore
-@Column(nullable = false, length = 100)
-private String password;
+    @Email
+    @Column(nullable = false, unique = true, length = 320)
+    private String email;
 
+    @Column(length = 100)
+    private String name;
 
-@Email
-@Column(nullable = false, unique = true, length = 320)
-private String email;
+    @Column(name = "last_name", length = 100)
+    private String lastName;
 
+    /** 🔁 Cambiamos de ManyToMany a ManyToOne */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", foreignKey = @ForeignKey(name = "fk_user_role"))
+    private Role role;
 
-@Column(length = 100)
-private String name;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", foreignKey = @ForeignKey(name = "fk_user_company"))
+    private Company company;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "profile_image_id", foreignKey = @ForeignKey(name = "fk_user_profile_image"))
+    private Media profileImage;
 
-@Column(name = "last_name", length = 100)
-private String lastName;
+    // === UserDetails ===
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Un único rol → una única authority
+        String authority = (role != null && role.getRole() != null) ? role.getRole() : "ROLE_USER";
+        return List.of(new SimpleGrantedAuthority(authority));
+    }
 
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
-@ManyToMany(fetch = FetchType.EAGER)
-@JoinTable(name = "user_role",
-joinColumns = @JoinColumn(name = "user_id"),
-inverseJoinColumns = @JoinColumn(name = "role_id"))
-private Set<Role> roles = new HashSet<>();
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
 
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
 
-@ManyToOne(fetch = FetchType.LAZY)
-@JoinColumn(name = "company_id",
-foreignKey = @ForeignKey(name = "fk_user_company"))
-private Company company;
-
-
-@ManyToOne(fetch = FetchType.LAZY)
-@JoinColumn(name = "profile_image_id",
-foreignKey = @ForeignKey(name = "fk_user_profile_image"))
-private Media profileImage;
-
-
-// === UserDetails ===
-@Override
-public Collection<? extends GrantedAuthority> getAuthorities() {
-    return roles.stream().map(r -> new SimpleGrantedAuthority(r.getRole())).toList();
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }
-@Override public boolean isAccountNonExpired() { return true; }
-@Override public boolean isAccountNonLocked() { return true; }
-@Override public boolean isCredentialsNonExpired() { return true; }
-@Override public boolean isEnabled() { return true; }
-}
+
 ```
 
 ```java

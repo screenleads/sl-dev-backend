@@ -1727,8 +1727,7 @@ import java.util.*;
 /**
  * Lista metadata de entidades con filtro:
  * - Deben tener repositorio (CRUD) registrado.
- * - El usuario actual debe tener permiso de edición (create/update/delete)
- * sobre la entidad.
+ * - El usuario actual debe tener permiso de LECTURA (read) sobre la entidad.
  */
 @Service
 public class MetadataService {
@@ -1736,7 +1735,7 @@ public class MetadataService {
     private static final Logger log = LoggerFactory.getLogger(MetadataService.class);
 
     private final Repositories repositories;
-    private final PermissionService perm; // <- tu servicio de permisos
+    private final PermissionService perm; // bean "perm"
 
     // Ajusta los paquetes base si lo necesitas
     private static final List<String> BASE_PACKAGES = Arrays.asList("com.screenleads", "com.sl");
@@ -1748,11 +1747,7 @@ public class MetadataService {
 
     public List<EntityInfo> getAllEntities(boolean withCount) {
         List<EntityInfo> list = new ArrayList<>();
-
-        // 1) Intentar obtener domainTypes desde los repositorios
         Set<Class<?>> domainTypes = getRepositoryDomainTypes();
-
-        // 2) Fallback: escanear @Entity en el classpath si no se encontró nada
         if (domainTypes.isEmpty()) {
             domainTypes.addAll(scanEntitiesOnClasspath());
             log.info("Metadata fallback: encontradas {} entidades via escaneo @Entity", domainTypes.size());
@@ -1766,34 +1761,33 @@ public class MetadataService {
                 if (!startsWithAny(fqn, BASE_PACKAGES))
                     continue;
 
-                // Debe existir un repositorio CRUD para ser editable en la app
-                if (repositories.getRepositoryFor(domainType).isEmpty()) {
+                var repoOpt = repositories.getRepositoryFor(domainType);
+                if (repoOpt.isEmpty()) {
                     log.debug("Entidad {} ignorada (sin repositorio asociado)", fqn);
                     continue;
                 }
 
                 final String entityName = domainType.getSimpleName();
-                final String permKey = normalizeEntityKey(entityName);
+                final String permKey = normalizeEntityKey(entityName); // <-- ahora devuelve lowerCamelCase
 
-                // ---- FILTRO DE PERMISOS (tu PermissionService) ----
-                // Editable si el usuario puede create/update/delete la entidad
-                boolean canEdit = perm.can(permKey, "create")
-                        || perm.can(permKey, "update")
-                        || perm.can(permKey, "delete");
-                if (!canEdit) {
-                    log.debug("Entidad {} ignorada (usuario sin permiso de edición)", entityName);
+                // ---- FILTRO DE PERMISOS ----
+                boolean isAdmin = false;
+                try {
+                    isAdmin = (perm.effectiveLevel() == 1);
+                } catch (Exception ignore) {
+                }
+                boolean canRead = isAdmin || perm.can(permKey, "read"); // <-- bypass para admin
+                if (!canRead) {
+                    log.debug("Entidad {} ignorada (usuario sin permiso de lectura)", entityName);
                     continue;
                 }
-                // ---------------------------------------------------
+                // ----------------------------
 
                 final String tableName = Optional.ofNullable(domainType.getAnnotation(Table.class))
-                        .map(Table::name)
-                        .filter(s -> !s.isBlank())
-                        .orElse(null);
+                        .map(Table::name).filter(s -> !s.isBlank()).orElse(null);
 
                 final String idType = resolveIdType(domainType);
 
-                // Atributos básicos (fields no estáticos ni transient; incluye heredados)
                 Map<String, String> attributes = new LinkedHashMap<>();
                 for (Field f : getAllFields(domainType)) {
                     if (Modifier.isStatic(f.getModifiers()))
@@ -1805,20 +1799,18 @@ public class MetadataService {
 
                 Long rowCount = null;
                 if (withCount) {
-                    // Marcador seguro para no tocar la BD (si quieres contar de verdad, descomenta
-                    // abajo)
                     rowCount = -1L;
-
-                    // repositories.getRepositoryFor(domainType).ifPresent(repo -> {
-                    // if (repo instanceof org.springframework.data.repository.CrudRepository<?, ?>
-                    // cr) {
-                    // try { rowCount = cr.count(); } catch (Exception e) { rowCount = -1L; }
-                    // }
-                    // });
+                    try {
+                        Object repo = repoOpt.get();
+                        if (repo instanceof org.springframework.data.repository.CrudRepository<?, ?> cr) {
+                            rowCount = cr.count();
+                        }
+                    } catch (Exception e) {
+                        log.warn("No se pudo contar registros de {}", entityName, e);
+                    }
                 }
 
                 list.add(new EntityInfo(entityName, fqn, tableName, idType, attributes, rowCount));
-
             } catch (Exception ex) {
                 log.warn("No se pudo construir metadata de {}", domainType, ex);
             }
@@ -1828,31 +1820,23 @@ public class MetadataService {
         return list;
     }
 
-    // ----------------- Helpers -----------------
-
-    /**
-     * Normaliza el nombre simple de la entidad a la clave que usa tu
-     * PermissionService (lowercase).
-     */
+    /** Pasa de PascalCase a lowerCamelCase y elimina sufijo 'Entity' si existe. */
     private String normalizeEntityKey(String simpleName) {
-        // Casos típicos: User -> "user", DeviceType -> "devicetype", AppVersion ->
-        // "appversion"
-        // Si manejas sufijos como "Entity" en tus clases, elimínalos:
         String s = simpleName;
         if (s.endsWith("Entity")) {
             s = s.substring(0, s.length() - "Entity".length());
         }
-        return s.replaceAll("[^A-Za-z0-9]", "").toLowerCase(Locale.ROOT);
+        if (s.isEmpty())
+            return s;
+        // De "DeviceType" -> "deviceType", "AppVersion" -> "appVersion", "Role" ->
+        // "role"
+        return s.substring(0, 1).toLowerCase(Locale.ROOT) + s.substring(1);
     }
 
-    /**
-     * Intenta obtener los domain types de los repos (compatible con múltiples
-     * versiones de Spring Data).
-     */
     private Set<Class<?>> getRepositoryDomainTypes() {
         Set<Class<?>> types = new LinkedHashSet<>();
 
-        // A) Intento directo: Repositories implementa Iterable<Class<?>>
+        // A) Repositories iterable (si la versión lo soporta)
         try {
             for (Class<?> c : repositories) {
                 types.add(c);
@@ -1861,31 +1845,25 @@ public class MetadataService {
             log.debug("Repositories no es iterable directamente en esta versión: {}", t.toString());
         }
 
-        // B) Intento por reflexión: método getDomainTypes() (existe en versiones
-        // nuevas)
+        // B) getDomainTypes() por reflexión (Spring Data más nuevo)
         try {
             Method m = repositories.getClass().getMethod("getDomainTypes");
             Object obj = m.invoke(repositories);
             if (obj instanceof Iterable<?>) {
                 for (Object o : (Iterable<?>) obj) {
-                    if (o instanceof Class<?>) {
-                        types.add((Class<?>) o);
+                    if (o instanceof Class<?> clazz) {
+                        types.add(clazz);
                     }
                 }
             }
         } catch (NoSuchMethodException ignore) {
-            // método no existe en esta versión → OK
         } catch (Exception ex) {
-            log.debug("Error invocando getDomainTypes() por reflexión: {}", ex.toString());
+            log.debug("Error invocando getDomainTypes(): {}", ex.toString());
         }
 
         return types;
     }
 
-    /**
-     * Escanea el classpath en busca de clases anotadas con @Entity dentro de
-     * BASE_PACKAGES.
-     */
     private Set<Class<?>> scanEntitiesOnClasspath() {
         Set<Class<?>> result = new LinkedHashSet<>();
         ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
@@ -1948,119 +1926,86 @@ public class MetadataService {
 // src/main/java/com/screenleads/backend/app/application/service/PermissionService.java
 package com.screenleads.backend.app.application.service;
 
-import com.screenleads.backend.app.domain.model.Role;
+public interface PermissionService {
+    boolean can(String resource, String action); // action: "create","read","update","delete"
+
+    int effectiveLevel(); // nivel del rol del usuario actual
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/application/service/PermissionServiceImpl.java
+package com.screenleads.backend.app.application.service;
+
+import com.screenleads.backend.app.domain.model.EntityPermission;
 import com.screenleads.backend.app.domain.model.User;
+import com.screenleads.backend.app.domain.repositories.EntityPermissionRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component("perm")
-public class PermissionService {
+@Service("perm") // 👈 clave: SpEL podrá resolver @perm
+@RequiredArgsConstructor
+@Slf4j
+public class PermissionServiceImpl implements PermissionService {
 
-    private final UserRepository userRepo;
+    private final EntityPermissionRepository permissionRepository;
+    private final UserRepository userRepository;
 
-    public PermissionService(UserRepository userRepo) {
-        this.userRepo = userRepo;
-    }
+    @Override
+    public boolean can(String resource, String action) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated())
+                return false;
 
-    public boolean can(String entity, String action) {
-        User u = currentUser();
-        if (u == null)
-            return false;
-        for (Role r : u.getRoles()) {
-            if (switch (entity.toLowerCase()) {
-                case "user" -> switch (action.toLowerCase()) {
-                    case "read" -> r.isUserRead();
-                    case "create" -> r.isUserCreate();
-                    case "update" -> r.isUserUpdate();
-                    case "delete" -> r.isUserDelete();
-                    default -> false;
-                };
-                case "company" -> switch (action.toLowerCase()) {
-                    case "read" -> r.isCompanyRead();
-                    case "create" -> r.isCompanyCreate();
-                    case "update" -> r.isCompanyUpdate();
-                    case "delete" -> r.isCompanyDelete();
-                    default -> false;
-                };
-                case "device" -> switch (action.toLowerCase()) {
-                    case "read" -> r.isDeviceRead();
-                    case "create" -> r.isDeviceCreate();
-                    case "update" -> r.isDeviceUpdate();
-                    case "delete" -> r.isDeviceDelete();
-                    default -> false;
-                };
-                case "devicetype" -> switch (action.toLowerCase()) {
-                    case "read" -> r.isDeviceTypeRead();
-                    case "create" -> r.isDeviceTypeCreate();
-                    case "update" -> r.isDeviceTypeUpdate();
-                    case "delete" -> r.isDeviceTypeDelete();
-                    default -> false;
-                };
-                case "media" -> switch (action.toLowerCase()) {
-                    case "read" -> r.isMediaRead();
-                    case "create" -> r.isMediaCreate();
-                    case "update" -> r.isMediaUpdate();
-                    case "delete" -> r.isMediaDelete();
-                    default -> false;
-                };
-                case "mediatype" -> switch (action.toLowerCase()) {
-                    case "read" -> r.isMediaTypeRead();
-                    case "create" -> r.isMediaTypeCreate();
-                    case "update" -> r.isMediaTypeUpdate();
-                    case "delete" -> r.isMediaTypeDelete();
-                    default -> false;
-                };
-                case "promotion" -> switch (action.toLowerCase()) {
-                    case "read" -> r.isPromotionRead();
-                    case "create" -> r.isPromotionCreate();
-                    case "update" -> r.isPromotionUpdate();
-                    case "delete" -> r.isPromotionDelete();
-                    default -> false;
-                };
-                case "advice" -> switch (action.toLowerCase()) {
-                    case "read" -> r.isAdviceRead();
-                    case "create" -> r.isAdviceCreate();
-                    case "update" -> r.isAdviceUpdate();
-                    case "delete" -> r.isAdviceDelete();
-                    default -> false;
-                };
-                case "appversion" -> switch (action.toLowerCase()) {
-                    case "read" -> r.isAppVersionRead();
-                    case "create" -> r.isAppVersionCreate();
-                    case "update" -> r.isAppVersionUpdate();
-                    case "delete" -> r.isAppVersionDelete();
-                    default -> false;
-                };
-                default -> false;
-            })
-                return true;
+            User u = userRepository.findByUsername(auth.getName()).orElse(null);
+            if (u == null || u.getRole() == null || u.getRole().getLevel() == null)
+                return false;
+
+            int myLevel = u.getRole().getLevel(); // 👈 rol único
+
+            EntityPermission p = permissionRepository.findByResource(resource).orElse(null);
+            if (p == null)
+                return false;
+
+            Integer required = switch (action) {
+                case "read" -> p.getReadLevel();
+                case "create" -> p.getCreateLevel();
+                case "update" -> p.getUpdateLevel();
+                case "delete" -> p.getDeleteLevel();
+                default -> null;
+            };
+            if (required == null)
+                return false;
+
+            // Niveles: 1 (más alto) permite todo ≤ requerido
+            return myLevel <= required;
+        } catch (Exception e) {
+            log.warn("perm.can({}, {}) falló", resource, action, e);
+            return false; // nunca romper la evaluación SpEL
         }
-        return false;
     }
 
-    public Integer effectiveLevel() {
-        User u = currentUser();
-        if (u == null || u.getRoles().isEmpty())
+    @Override
+    public int effectiveLevel() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated())
+                return Integer.MAX_VALUE;
+            return userRepository.findByUsername(auth.getName())
+                    .map(u -> (u.getRole() != null && u.getRole().getLevel() != null)
+                            ? u.getRole().getLevel()
+                            : Integer.MAX_VALUE)
+                    .orElse(Integer.MAX_VALUE);
+        } catch (Exception e) {
+            log.warn("effectiveLevel() falló", e);
             return Integer.MAX_VALUE;
-        return u.getRoles().stream().map(Role::getLevel).min(Integer::compareTo).orElse(Integer.MAX_VALUE);
-    }
-
-    private User currentUser() {
-        Authentication a = SecurityContextHolder.getContext().getAuthentication();
-        if (a == null || !a.isAuthenticated())
-            return null;
-        Object p = a.getPrincipal();
-        if (p instanceof User u)
-            return u;
-        if (p instanceof org.springframework.security.core.userdetails.User ud) {
-            return userRepo.findByUsername(ud.getUsername()).orElse(null);
         }
-        if (p instanceof String username) {
-            return userRepo.findByUsername(username).orElse(null);
-        }
-        return null;
     }
 }
 
@@ -2487,8 +2432,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -2542,7 +2487,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void delete(Long id) {
-        enableCompanyFilterIfNeeded(); // protege que no borre fuera de su compañía
+        if (!perm.can("user", "delete")) {
+            throw new IllegalArgumentException("No autorizado a borrar usuarios");
+        }
+        enableCompanyFilterIfNeeded(); // protege que no borre fuera de su compañía si no es admin
         repo.deleteById(id);
     }
 
@@ -2554,7 +2502,7 @@ public class UserServiceImpl implements UserService {
         if (dto.getUsername() == null || dto.getUsername().isBlank())
             throw new IllegalArgumentException("username requerido");
 
-        // Permisos para crear y jerarquía de nivel 1 o 2
+        // Permisos para crear y jerarquía de nivel
         assertCanCreateUser();
 
         repo.findByUsername(dto.getUsername()).ifPresent(u -> {
@@ -2567,7 +2515,7 @@ public class UserServiceImpl implements UserService {
         u.setName(dto.getName());
         u.setLastName(dto.getLastName());
 
-        // Generación/establecimiento de password
+        // Password
         String rawPassword = (dto.getPassword() != null && !dto.getPassword().isBlank())
                 ? dto.getPassword()
                 : generateTempPassword(12);
@@ -2579,7 +2527,6 @@ public class UserServiceImpl implements UserService {
                     .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + dto.getCompanyId()));
             u.setCompany(c);
         } else {
-            // Si no viene companyId y el usuario no es admin, forzar su compañía
             Long currentCompanyId = currentCompanyId();
             if (currentCompanyId != null && !isCurrentUserAdmin()) {
                 Company c = companyRepo.findById(currentCompanyId)
@@ -2588,22 +2535,16 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        // Roles
-        Set<Role> roles = new HashSet<>();
-        if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
-            for (String rn : dto.getRoles()) {
-                Role r = roleRepo.findByRole(rn)
-                        .orElseThrow(() -> new IllegalArgumentException("role inválido: " + rn));
-                roles.add(r);
-            }
-        }
-        if (roles.isEmpty())
-            throw new IllegalArgumentException("Se requiere al menos un rol");
+        // Rol ÚNICO desde el DTO
+        Role role = resolveRoleFromDto(dto);
+        if (role == null)
+            throw new IllegalArgumentException("Se requiere un rol");
 
-        // Verificación de jerarquía: no puedes asignar un nivel superior al tuyo
-        assertAssignableRoles(roles);
+        // Verificación de jerarquía (nivel)
+        assertAssignableRole(role);
 
-        u.setRoles(roles);
+        // Asignar como set (si la entidad User mantiene colección)
+        u.setRole(role);
 
         User saved = repo.save(u);
         return UserMapper.toDto(saved);
@@ -2612,7 +2553,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto update(Long id, UserDto dto) {
-        enableCompanyFilterIfNeeded(); // asegura que solo se actualicen usuarios de su compañía (no admin)
+        enableCompanyFilterIfNeeded();
 
         return repo.findById(id).map(existing -> {
             if (dto.getUsername() != null)
@@ -2624,15 +2565,11 @@ public class UserServiceImpl implements UserService {
             if (dto.getLastName() != null)
                 existing.setLastName(dto.getLastName());
 
-            // Permitir cambio de password
             if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
                 existing.setPassword(passwordEncoder.encode(dto.getPassword()));
             }
 
-            // Cambiar compañía (si se permite)
             if (dto.getCompanyId() != null) {
-                // Si el actual no es admin, no permitir cambiar a otra compañía distinta de la
-                // suya
                 if (!isCurrentUserAdmin()) {
                     Long currentCompanyId = currentCompanyId();
                     if (currentCompanyId == null || !currentCompanyId.equals(dto.getCompanyId())) {
@@ -2644,21 +2581,16 @@ public class UserServiceImpl implements UserService {
                 existing.setCompany(c);
             }
 
-            // Roles (si vienen, aplicar mismas reglas de permiso y jerarquía)
-            if (dto.getRoles() != null) {
+            // Si llega un rol (único) en el DTO, cambiarlo con mismas reglas
+            if (dto.getRole() != null || dto.getRole().getId() != null) {
                 if (!perm.can("user", "update")) {
                     throw new IllegalArgumentException("No autorizado a actualizar usuarios");
                 }
-                Set<Role> roles = new HashSet<>();
-                for (String rn : dto.getRoles()) {
-                    Role r = roleRepo.findByRole(rn)
-                            .orElseThrow(() -> new IllegalArgumentException("role inválido: " + rn));
-                    roles.add(r);
-                }
-                if (roles.isEmpty())
-                    throw new IllegalArgumentException("Se requiere al menos un rol");
-                assertAssignableRoles(roles);
-                existing.setRoles(roles);
+                Role newRole = resolveRoleFromDto(dto);
+                if (newRole == null)
+                    throw new IllegalArgumentException("Rol inválido");
+                assertAssignableRole(newRole);
+                existing.setRole(newRole);
             }
 
             User saved = repo.save(existing);
@@ -2668,11 +2600,6 @@ public class UserServiceImpl implements UserService {
 
     // ---------------------------- HELPERS ----------------------------
 
-    /**
-     * Activa el filtro "companyFilter" en la misma Session/Tx usada por el
-     * repositorio
-     * cuando el usuario actual NO es admin.
-     */
     private void enableCompanyFilterIfNeeded() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated())
@@ -2716,25 +2643,19 @@ public class UserServiceImpl implements UserService {
     private Long resolveCompanyId(Authentication auth) {
         Object principal = auth.getPrincipal();
 
-        // 1) Entidad de dominio como principal
         if (principal instanceof User u) {
             return (u.getCompany() != null) ? u.getCompany().getId() : null;
         }
-
-        // 2) UserDetails estándar
         if (principal instanceof UserDetails ud) {
             return repo.findByUsername(ud.getUsername())
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
-
-        // 3) Principal como String (username), p.ej. JWT con "sub"
         if (principal instanceof String username) {
             return repo.findByUsername(username)
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
-
         return null;
     }
 
@@ -2746,7 +2667,7 @@ public class UserServiceImpl implements UserService {
         return sb.toString();
     }
 
-    // ======== NUEVOS HELPERS DE PERMISOS/NIVELES ========
+    // ======== PERMISOS / NIVELES ========
 
     private int currentEffectiveLevel() {
         return perm.effectiveLevel();
@@ -2756,18 +2677,35 @@ public class UserServiceImpl implements UserService {
         if (!perm.can("user", "create"))
             throw new IllegalArgumentException("No autorizado a crear usuarios");
         int L = currentEffectiveLevel();
-        if (L > 2) // solo niveles 1 o 2 pueden crear
+        if (L > 2) // sólo niveles 1 o 2 pueden crear
             throw new IllegalArgumentException("Solo roles de nivel 1 o 2 pueden crear usuarios");
     }
 
-    private void assertAssignableRoles(Set<Role> targetRoles) {
+    private void assertAssignableRole(Role targetRole) {
         int myLevel = currentEffectiveLevel();
-        int newUserLevel = targetRoles.stream().map(Role::getLevel).min(Integer::compareTo)
+        Integer roleLevel = Optional.ofNullable(targetRole.getLevel())
                 .orElse(Integer.MAX_VALUE);
-        if (newUserLevel < myLevel) {
+        if (roleLevel < myLevel) {
             // ej.: soy nivel 2, intento asignar nivel 1 → prohibido
             throw new IllegalArgumentException("No puedes asignar un rol superior al tuyo");
         }
+    }
+
+    /**
+     * Resuelve un rol único desde el DTO:
+     * - Si llega roleId → busca por id.
+     * - Si llega role (nombre/código) → busca por nombre.
+     */
+    private Role resolveRoleFromDto(UserDto dto) {
+        if (dto.getRole() != null) {
+            return roleRepo.findById(dto.getRole().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("roleId inválido: " + dto.getRole().getId()));
+        }
+        if (dto.getRole() != null && dto.getRole().getId() != null) {
+            return roleRepo.findByRole(dto.getRole().getRole())
+                    .orElseThrow(() -> new IllegalArgumentException("role inválido: " + dto.getRole()));
+        }
+        return null;
     }
 }
 

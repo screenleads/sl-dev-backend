@@ -437,20 +437,10 @@ public class RegisterRequest {
 package com.screenleads.backend.app.web.dto;
 
 public record RoleDTO(
-                Long id,
-                String role,
-                String description,
-                Integer level,
-
-                boolean userRead, boolean userCreate, boolean userUpdate, boolean userDelete,
-                boolean companyRead, boolean companyCreate, boolean companyUpdate, boolean companyDelete,
-                boolean deviceRead, boolean deviceCreate, boolean deviceUpdate, boolean deviceDelete,
-                boolean deviceTypeRead, boolean deviceTypeCreate, boolean deviceTypeUpdate, boolean deviceTypeDelete,
-                boolean mediaRead, boolean mediaCreate, boolean mediaUpdate, boolean mediaDelete,
-                boolean mediaTypeRead, boolean mediaTypeCreate, boolean mediaTypeUpdate, boolean mediaTypeDelete,
-                boolean promotionRead, boolean promotionCreate, boolean promotionUpdate, boolean promotionDelete,
-                boolean adviceRead, boolean adviceCreate, boolean adviceUpdate, boolean adviceDelete,
-                boolean appVersionRead, boolean appVersionCreate, boolean appVersionUpdate, boolean appVersionDelete) {
+        Long id,
+        String role,
+        String description,
+        Integer level) {
 }
 
 ```
@@ -474,6 +464,8 @@ public record TimeRangeDTO(
 package com.screenleads.backend.app.web.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.screenleads.backend.app.domain.model.Role;
+
 import lombok.*;
 
 import java.util.List;
@@ -490,7 +482,7 @@ public class UserDto {
     private String name;
     private String lastName;
     private Long companyId;
-    private List<String> roles;
+    private Role role;
 
     // solo para crear/actualizar; no lo rellenes al responder
     private String password;
