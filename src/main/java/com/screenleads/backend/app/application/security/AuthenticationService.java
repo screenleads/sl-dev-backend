@@ -48,11 +48,11 @@ public class AuthenticationService {
         if (userRepository.count() == 0) {
             Role adminRole = roleRepository.findByRole("ROLE_ADMIN")
                     .orElseThrow(() -> new RuntimeException("Role ROLE_ADMIN not found"));
-            user.setRoles(Set.of(adminRole));
+            user.setRole(adminRole);
         } else {
             Role defaultRole = roleRepository.findByRole("ROLE_COMPANY_VIEWER")
                     .orElseThrow(() -> new RuntimeException("Default role not found"));
-            user.setRoles(Set.of(defaultRole));
+            user.setRole(defaultRole);
         }
 
         userRepository.save(user);

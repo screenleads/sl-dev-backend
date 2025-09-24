@@ -1,5 +1,6 @@
 package com.screenleads.backend.app.init;
 
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.boot.CommandLineRunner;
@@ -10,11 +11,13 @@ import org.springframework.transaction.annotation.Transactional;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.DeviceType;
 import com.screenleads.backend.app.domain.model.MediaType;
+import com.screenleads.backend.app.domain.model.EntityPermission;
 import com.screenleads.backend.app.domain.model.Role;
 import com.screenleads.backend.app.domain.model.User;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.DeviceTypeRepository;
 import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
+import com.screenleads.backend.app.domain.repositories.EntityPermissionRepository;
 import com.screenleads.backend.app.domain.repositories.RoleRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
 
@@ -31,17 +34,20 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // NUEVO
+    private final EntityPermissionRepository permissionRepository;
+
     @Override
     @Transactional
     public void run(String... args) {
         // ============ Entidades base ============
         createDefaultCompany("ScreenLeads", "Compañía por defecto para demo");
 
-        // ===== ROLES (crea o actualiza con flags y nivel) =====
-        initRoleAdmin();
-        initRoleCompanyAdmin();
-        initRoleCompanyManager();
-        initRoleCompanyViewer();
+        // ===== ROLES (crea o actualiza con nivel) =====
+        Role admin = upsertRole("ROLE_ADMIN", "Acceso total", 1);
+        Role companyAdm = upsertRole("ROLE_COMPANY_ADMIN", "Administrador de empresa", 2);
+        Role companyMgr = upsertRole("ROLE_COMPANY_MANAGER", "Gestor de empresa", 3);
+        Role companyVwr = upsertRole("ROLE_COMPANY_VIEWER", "Visualizador de empresa", 4);
 
         // ===== Tipos de media =====
         createMediaTypes("video/mp4", "mp4");
@@ -69,262 +75,31 @@ public class DataInitializer implements CommandLineRunner {
                 "admin@screenleads.com",
                 "admin123",
                 "Admin",
-                "Root");
+                "Root",
+                admin);
+
+        // ===== NUEVO: Permisos por entidad (niveles) =====
+        seedEntityPermissionsByEntity();
     }
 
     // ============================================================
-    // ===================== ROLES & PERMISOS =====================
+    // ===================== ROLES (nivel) ========================
     // ============================================================
 
-    private void initRoleAdmin() {
-        Role r = upsertRoleSkeleton("ROLE_ADMIN", "Acceso total", 1);
-
-        // Admin: TODO TRUE
-        r.setUserRead(true);
-        r.setUserCreate(true);
-        r.setUserUpdate(true);
-        r.setUserDelete(true);
-        r.setCompanyRead(true);
-        r.setCompanyCreate(true);
-        r.setCompanyUpdate(true);
-        r.setCompanyDelete(true);
-        r.setDeviceRead(true);
-        r.setDeviceCreate(true);
-        r.setDeviceUpdate(true);
-        r.setDeviceDelete(true);
-        r.setDeviceTypeRead(true);
-        r.setDeviceTypeCreate(true);
-        r.setDeviceTypeUpdate(true);
-        r.setDeviceTypeDelete(true);
-        r.setMediaRead(true);
-        r.setMediaCreate(true);
-        r.setMediaUpdate(true);
-        r.setMediaDelete(true);
-        r.setMediaTypeRead(true);
-        r.setMediaTypeCreate(true);
-        r.setMediaTypeUpdate(true);
-        r.setMediaTypeDelete(true);
-        r.setPromotionRead(true);
-        r.setPromotionCreate(true);
-        r.setPromotionUpdate(true);
-        r.setPromotionDelete(true);
-        r.setAdviceRead(true);
-        r.setAdviceCreate(true);
-        r.setAdviceUpdate(true);
-        r.setAdviceDelete(true);
-        r.setAppVersionRead(true);
-        r.setAppVersionCreate(true);
-        r.setAppVersionUpdate(true);
-        r.setAppVersionDelete(true);
-
-        // === NUEVOS: permisos para la entidad Role ===
-        r.setRoleRead(true);
-        r.setRoleCreate(true);
-        r.setRoleUpdate(true);
-        r.setRoleDelete(true);
-        // === NUEVOS: permisos para PromotionLead ===
-        r.setPromotionLeadRead(true);
-        r.setPromotionLeadCreate(true);
-        r.setPromotionLeadUpdate(true);
-        r.setPromotionLeadDelete(true);
-
-        roleRepository.save(r);
-    }
-
-    private void initRoleCompanyAdmin() {
-        Role r = upsertRoleSkeleton("ROLE_COMPANY_ADMIN", "Administrador de empresa", 2);
-
-        // Usuarios (según política)
-        r.setUserRead(true);
-        r.setUserCreate(true);
-        r.setUserUpdate(true);
-        r.setUserDelete(true);
-
-        // Su empresa
-        r.setCompanyRead(true);
-        r.setCompanyCreate(false);
-        r.setCompanyUpdate(true);
-        r.setCompanyDelete(false);
-
-        r.setDeviceRead(true);
-        r.setDeviceCreate(true);
-        r.setDeviceUpdate(true);
-        r.setDeviceDelete(true);
-        r.setMediaRead(true);
-        r.setMediaCreate(true);
-        r.setMediaUpdate(true);
-        r.setMediaDelete(true);
-        r.setPromotionRead(true);
-        r.setPromotionCreate(true);
-        r.setPromotionUpdate(true);
-        r.setPromotionDelete(true);
-        r.setAdviceRead(true);
-        r.setAdviceCreate(true);
-        r.setAdviceUpdate(true);
-        r.setAdviceDelete(true);
-
-        // Catálogos/Versiones: solo lectura
-        r.setDeviceTypeRead(true);
-        r.setDeviceTypeCreate(false);
-        r.setDeviceTypeUpdate(false);
-        r.setDeviceTypeDelete(false);
-        r.setMediaTypeRead(true);
-        r.setMediaTypeCreate(false);
-        r.setMediaTypeUpdate(false);
-        r.setMediaTypeDelete(false);
-        r.setAppVersionRead(true);
-        r.setAppVersionCreate(false);
-        r.setAppVersionUpdate(false);
-        r.setAppVersionDelete(false);
-
-        // === NUEVO: Roles (solo lectura para poder listar roles asignables)
-        r.setRoleRead(true);
-        r.setRoleCreate(false);
-        r.setRoleUpdate(false);
-        r.setRoleDelete(false);
-
-        // === NUEVO: PromotionLead (leer y crear, para “lead de prueba”)
-        r.setPromotionLeadRead(true);
-        r.setPromotionLeadCreate(true);
-        r.setPromotionLeadUpdate(false);
-        r.setPromotionLeadDelete(false);
-
-        roleRepository.save(r);
-    }
-
-    private void initRoleCompanyManager() {
-        Role r = upsertRoleSkeleton("ROLE_COMPANY_MANAGER", "Gestor de empresa", 3);
-
-        // Usuarios: sin create/delete
-        r.setUserRead(true);
-        r.setUserCreate(false);
-        r.setUserUpdate(true);
-        r.setUserDelete(false);
-
-        r.setCompanyRead(true);
-        r.setCompanyCreate(false);
-        r.setCompanyUpdate(false);
-        r.setCompanyDelete(false);
-
-        // CRUD parcial
-        r.setDeviceRead(true);
-        r.setDeviceCreate(true);
-        r.setDeviceUpdate(true);
-        r.setDeviceDelete(false);
-        r.setMediaRead(true);
-        r.setMediaCreate(true);
-        r.setMediaUpdate(true);
-        r.setMediaDelete(false);
-        r.setPromotionRead(true);
-        r.setPromotionCreate(true);
-        r.setPromotionUpdate(true);
-        r.setPromotionDelete(false);
-        r.setAdviceRead(true);
-        r.setAdviceCreate(true);
-        r.setAdviceUpdate(true);
-        r.setAdviceDelete(false);
-
-        // Catálogos/Versiones: solo lectura
-        r.setDeviceTypeRead(true);
-        r.setDeviceTypeCreate(false);
-        r.setDeviceTypeUpdate(false);
-        r.setDeviceTypeDelete(false);
-        r.setMediaTypeRead(true);
-        r.setMediaTypeCreate(false);
-        r.setMediaTypeUpdate(false);
-        r.setMediaTypeDelete(false);
-        r.setAppVersionRead(true);
-        r.setAppVersionCreate(false);
-        r.setAppVersionUpdate(false);
-        r.setAppVersionDelete(false);
-
-        // === NUEVO: Roles (solo lectura)
-        r.setRoleRead(true);
-        r.setRoleCreate(false);
-        r.setRoleUpdate(false);
-        r.setRoleDelete(false);
-
-        // === NUEVO: PromotionLead (leer y crear para pruebas)
-        r.setPromotionLeadRead(true);
-        r.setPromotionLeadCreate(true);
-        r.setPromotionLeadUpdate(false);
-        r.setPromotionLeadDelete(false);
-
-        roleRepository.save(r);
-    }
-
-    private void initRoleCompanyViewer() {
-        Role r = upsertRoleSkeleton("ROLE_COMPANY_VIEWER", "Visualizador de empresa", 4);
-
-        // Solo lectura
-        r.setUserRead(true);
-        r.setUserCreate(false);
-        r.setUserUpdate(false);
-        r.setUserDelete(false);
-        r.setCompanyRead(true);
-        r.setCompanyCreate(false);
-        r.setCompanyUpdate(false);
-        r.setCompanyDelete(false);
-        r.setDeviceRead(true);
-        r.setDeviceCreate(false);
-        r.setDeviceUpdate(false);
-        r.setDeviceDelete(false);
-        r.setDeviceTypeRead(true);
-        r.setDeviceTypeCreate(false);
-        r.setDeviceTypeUpdate(false);
-        r.setDeviceTypeDelete(false);
-        r.setMediaRead(true);
-        r.setMediaCreate(false);
-        r.setMediaUpdate(false);
-        r.setMediaDelete(false);
-        r.setMediaTypeRead(true);
-        r.setMediaTypeCreate(false);
-        r.setMediaTypeUpdate(false);
-        r.setMediaTypeDelete(false);
-        r.setPromotionRead(true);
-        r.setPromotionCreate(false);
-        r.setPromotionUpdate(false);
-        r.setPromotionDelete(false);
-        r.setAdviceRead(true);
-        r.setAdviceCreate(false);
-        r.setAdviceUpdate(false);
-        r.setAdviceDelete(false);
-        r.setAppVersionRead(true);
-        r.setAppVersionCreate(false);
-        r.setAppVersionUpdate(false);
-        r.setAppVersionDelete(false);
-
-        // === NUEVO: Roles (solo lectura)
-        r.setRoleRead(true);
-        r.setRoleCreate(false);
-        r.setRoleUpdate(false);
-        r.setRoleDelete(false);
-
-        // === NUEVO: PromotionLead (solo lectura)
-        r.setPromotionLeadRead(true);
-        r.setPromotionLeadCreate(false);
-        r.setPromotionLeadUpdate(false);
-        r.setPromotionLeadDelete(false);
-
-        roleRepository.save(r);
-    }
-
-    /**
-     * Crea o actualiza el esqueleto del rol (si existe, actualiza descripción y
-     * nivel).
-     */
-    private Role upsertRoleSkeleton(String roleName, String desc, int level) {
-        return roleRepository.findByRole(roleName)
-                .map(existing -> {
-                    existing.setDescription(desc);
-                    existing.setLevel(level);
-                    return existing;
-                })
-                .orElseGet(() -> Role.builder()
-                        .role(roleName)
-                        .description(desc)
-                        .level(level)
-                        .build());
+    private Role upsertRole(String roleName, String desc, int level) {
+        Optional<Role> opt = roleRepository.findByRole(roleName);
+        if (opt.isPresent()) {
+            Role r = opt.get();
+            r.setDescription(desc);
+            r.setLevel(level);
+            return roleRepository.save(r);
+        }
+        Role r = Role.builder()
+                .role(roleName)
+                .description(desc)
+                .level(level)
+                .build();
+        return roleRepository.save(r);
     }
 
     // ============================================================
@@ -361,8 +136,12 @@ public class DataInitializer implements CommandLineRunner {
     // ======================= ADMIN USER =========================
     // ============================================================
 
-    private void createDefaultAdminUser(String username, String email, String rawPassword, String name,
-            String lastName) {
+    private void createDefaultAdminUser(String username,
+            String email,
+            String rawPassword,
+            String name,
+            String lastName,
+            Role adminRole) {
         if (userRepository.existsByUsername(username)) {
             System.out.println("ℹ️  Usuario admin ya existe: " + username);
             return;
@@ -370,8 +149,6 @@ public class DataInitializer implements CommandLineRunner {
 
         Company company = companyRepository.findByName("ScreenLeads")
                 .orElseThrow(() -> new IllegalStateException("Company 'ScreenLeads' no encontrada."));
-        Role adminRole = roleRepository.findByRole("ROLE_ADMIN")
-                .orElseThrow(() -> new IllegalStateException("Role 'ROLE_ADMIN' no encontrado."));
 
         User user = User.builder()
                 .username(username)
@@ -380,11 +157,75 @@ public class DataInitializer implements CommandLineRunner {
                 .name(name)
                 .lastName(lastName)
                 .company(company)
-                .roles(Set.of(adminRole))
+                // Si tu entidad User tiene UN solo rol:
+                .role(adminRole)
+                // Si aún usa Set<Role>, usa:
+                // .roles(Set.of(adminRole))
                 .build();
 
         userRepository.save(user);
         System.out.println(
                 "✅ Usuario admin creado: " + username + " / " + email + " (cambia la contraseña tras el primer login)");
+    }
+
+    // ============================================================
+    // ============== NUEVO: PERMISOS POR ENTIDAD =================
+    // ============================================================
+
+    private void seedEntityPermissionsByEntity() {
+
+        upsertEntityPermission("company", 1, 1, 1, 1);
+        upsertEntityPermission("deviceType", 1, 1, 1, 1);
+        upsertEntityPermission("mediaType", 1, 1, 1, 1);
+        upsertEntityPermission("role", 1, 1, 1, 1);
+        upsertEntityPermission("EntityPermission", 1, 1, 1, 1);
+        upsertEntityPermission("appVersion", 1, 1, 1, 1);
+
+        upsertEntityPermission("promotionLead", 2, 2, 2, 2);
+        upsertEntityPermission("customer", 2, 2, 2, 2);
+
+        upsertEntityPermission("user", 3, 2, 2, 2);
+
+        upsertEntityPermission("advice", 4, 3, 3, 3);
+        upsertEntityPermission("promotion", 4, 3, 3, 3);
+        upsertEntityPermission("coupon", 4, 3, 3, 3);
+        upsertEntityPermission("media", 4, 3, 3, 3);
+
+        upsertEntityPermission("device", 4, 4, 3, 3);
+
+    }
+
+    private void upsertEntityPermission(String resource, Integer read, Integer create, Integer update, Integer delete) {
+        Optional<EntityPermission> opt = permissionRepository.findByResource(resource);
+        if (opt.isEmpty()) {
+            permissionRepository.save(EntityPermission.builder()
+                    .resource(resource)
+                    .readLevel(read)
+                    .createLevel(create)
+                    .updateLevel(update)
+                    .deleteLevel(delete)
+                    .build());
+            return;
+        }
+        EntityPermission p = opt.get();
+        boolean changed = false;
+        if (!read.equals(p.getReadLevel())) {
+            p.setReadLevel(read);
+            changed = true;
+        }
+        if (!create.equals(p.getCreateLevel())) {
+            p.setCreateLevel(create);
+            changed = true;
+        }
+        if (!update.equals(p.getUpdateLevel())) {
+            p.setUpdateLevel(update);
+            changed = true;
+        }
+        if (!delete.equals(p.getDeleteLevel())) {
+            p.setDeleteLevel(delete);
+            changed = true;
+        }
+        if (changed)
+            permissionRepository.save(p);
     }
 }

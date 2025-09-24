@@ -1,6 +1,8 @@
 package com.screenleads.backend.app.web.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.screenleads.backend.app.domain.model.Role;
+
 import lombok.*;
 
 import java.util.List;
@@ -17,7 +19,7 @@ public class UserDto {
     private String name;
     private String lastName;
     private Long companyId;
-    private List<String> roles;
+    private Role role;
 
     // solo para crear/actualizar; no lo rellenes al responder
     private String password;

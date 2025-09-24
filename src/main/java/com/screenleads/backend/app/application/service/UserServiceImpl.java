@@ -20,8 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -75,7 +75,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void delete(Long id) {
-        enableCompanyFilterIfNeeded(); // protege que no borre fuera de su compañía
+        if (!perm.can("user", "delete")) {
+            throw new IllegalArgumentException("No autorizado a borrar usuarios");
+        }
+        enableCompanyFilterIfNeeded(); // protege que no borre fuera de su compañía si no es admin
         repo.deleteById(id);
     }
 
@@ -87,7 +90,7 @@ public class UserServiceImpl implements UserService {
         if (dto.getUsername() == null || dto.getUsername().isBlank())
             throw new IllegalArgumentException("username requerido");
 
-        // Permisos para crear y jerarquía de nivel 1 o 2
+        // Permisos para crear y jerarquía de nivel
         assertCanCreateUser();
 
         repo.findByUsername(dto.getUsername()).ifPresent(u -> {
@@ -100,7 +103,7 @@ public class UserServiceImpl implements UserService {
         u.setName(dto.getName());
         u.setLastName(dto.getLastName());
 
-        // Generación/establecimiento de password
+        // Password
         String rawPassword = (dto.getPassword() != null && !dto.getPassword().isBlank())
                 ? dto.getPassword()
                 : generateTempPassword(12);
@@ -112,7 +115,6 @@ public class UserServiceImpl implements UserService {
                     .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + dto.getCompanyId()));
             u.setCompany(c);
         } else {
-            // Si no viene companyId y el usuario no es admin, forzar su compañía
             Long currentCompanyId = currentCompanyId();
             if (currentCompanyId != null && !isCurrentUserAdmin()) {
                 Company c = companyRepo.findById(currentCompanyId)
@@ -121,22 +123,16 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        // Roles
-        Set<Role> roles = new HashSet<>();
-        if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
-            for (String rn : dto.getRoles()) {
-                Role r = roleRepo.findByRole(rn)
-                        .orElseThrow(() -> new IllegalArgumentException("role inválido: " + rn));
-                roles.add(r);
-            }
-        }
-        if (roles.isEmpty())
-            throw new IllegalArgumentException("Se requiere al menos un rol");
+        // Rol ÚNICO desde el DTO
+        Role role = resolveRoleFromDto(dto);
+        if (role == null)
+            throw new IllegalArgumentException("Se requiere un rol");
 
-        // Verificación de jerarquía: no puedes asignar un nivel superior al tuyo
-        assertAssignableRoles(roles);
+        // Verificación de jerarquía (nivel)
+        assertAssignableRole(role);
 
-        u.setRoles(roles);
+        // Asignar como set (si la entidad User mantiene colección)
+        u.setRole(role);
 
         User saved = repo.save(u);
         return UserMapper.toDto(saved);
@@ -145,7 +141,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto update(Long id, UserDto dto) {
-        enableCompanyFilterIfNeeded(); // asegura que solo se actualicen usuarios de su compañía (no admin)
+        enableCompanyFilterIfNeeded();
 
         return repo.findById(id).map(existing -> {
             if (dto.getUsername() != null)
@@ -157,15 +153,11 @@ public class UserServiceImpl implements UserService {
             if (dto.getLastName() != null)
                 existing.setLastName(dto.getLastName());
 
-            // Permitir cambio de password
             if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
                 existing.setPassword(passwordEncoder.encode(dto.getPassword()));
             }
 
-            // Cambiar compañía (si se permite)
             if (dto.getCompanyId() != null) {
-                // Si el actual no es admin, no permitir cambiar a otra compañía distinta de la
-                // suya
                 if (!isCurrentUserAdmin()) {
                     Long currentCompanyId = currentCompanyId();
                     if (currentCompanyId == null || !currentCompanyId.equals(dto.getCompanyId())) {
@@ -177,21 +169,16 @@ public class UserServiceImpl implements UserService {
                 existing.setCompany(c);
             }
 
-            // Roles (si vienen, aplicar mismas reglas de permiso y jerarquía)
-            if (dto.getRoles() != null) {
+            // Si llega un rol (único) en el DTO, cambiarlo con mismas reglas
+            if (dto.getRole() != null || dto.getRole().getId() != null) {
                 if (!perm.can("user", "update")) {
                     throw new IllegalArgumentException("No autorizado a actualizar usuarios");
                 }
-                Set<Role> roles = new HashSet<>();
-                for (String rn : dto.getRoles()) {
-                    Role r = roleRepo.findByRole(rn)
-                            .orElseThrow(() -> new IllegalArgumentException("role inválido: " + rn));
-                    roles.add(r);
-                }
-                if (roles.isEmpty())
-                    throw new IllegalArgumentException("Se requiere al menos un rol");
-                assertAssignableRoles(roles);
-                existing.setRoles(roles);
+                Role newRole = resolveRoleFromDto(dto);
+                if (newRole == null)
+                    throw new IllegalArgumentException("Rol inválido");
+                assertAssignableRole(newRole);
+                existing.setRole(newRole);
             }
 
             User saved = repo.save(existing);
@@ -201,11 +188,6 @@ public class UserServiceImpl implements UserService {
 
     // ---------------------------- HELPERS ----------------------------
 
-    /**
-     * Activa el filtro "companyFilter" en la misma Session/Tx usada por el
-     * repositorio
-     * cuando el usuario actual NO es admin.
-     */
     private void enableCompanyFilterIfNeeded() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated())
@@ -249,25 +231,19 @@ public class UserServiceImpl implements UserService {
     private Long resolveCompanyId(Authentication auth) {
         Object principal = auth.getPrincipal();
 
-        // 1) Entidad de dominio como principal
         if (principal instanceof User u) {
             return (u.getCompany() != null) ? u.getCompany().getId() : null;
         }
-
-        // 2) UserDetails estándar
         if (principal instanceof UserDetails ud) {
             return repo.findByUsername(ud.getUsername())
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
-
-        // 3) Principal como String (username), p.ej. JWT con "sub"
         if (principal instanceof String username) {
             return repo.findByUsername(username)
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
-
         return null;
     }
 
@@ -279,7 +255,7 @@ public class UserServiceImpl implements UserService {
         return sb.toString();
     }
 
-    // ======== NUEVOS HELPERS DE PERMISOS/NIVELES ========
+    // ======== PERMISOS / NIVELES ========
 
     private int currentEffectiveLevel() {
         return perm.effectiveLevel();
@@ -289,17 +265,34 @@ public class UserServiceImpl implements UserService {
         if (!perm.can("user", "create"))
             throw new IllegalArgumentException("No autorizado a crear usuarios");
         int L = currentEffectiveLevel();
-        if (L > 2) // solo niveles 1 o 2 pueden crear
+        if (L > 2) // sólo niveles 1 o 2 pueden crear
             throw new IllegalArgumentException("Solo roles de nivel 1 o 2 pueden crear usuarios");
     }
 
-    private void assertAssignableRoles(Set<Role> targetRoles) {
+    private void assertAssignableRole(Role targetRole) {
         int myLevel = currentEffectiveLevel();
-        int newUserLevel = targetRoles.stream().map(Role::getLevel).min(Integer::compareTo)
+        Integer roleLevel = Optional.ofNullable(targetRole.getLevel())
                 .orElse(Integer.MAX_VALUE);
-        if (newUserLevel < myLevel) {
+        if (roleLevel < myLevel) {
             // ej.: soy nivel 2, intento asignar nivel 1 → prohibido
             throw new IllegalArgumentException("No puedes asignar un rol superior al tuyo");
         }
+    }
+
+    /**
+     * Resuelve un rol único desde el DTO:
+     * - Si llega roleId → busca por id.
+     * - Si llega role (nombre/código) → busca por nombre.
+     */
+    private Role resolveRoleFromDto(UserDto dto) {
+        if (dto.getRole() != null) {
+            return roleRepo.findById(dto.getRole().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("roleId inválido: " + dto.getRole().getId()));
+        }
+        if (dto.getRole() != null && dto.getRole().getId() != null) {
+            return roleRepo.findByRole(dto.getRole().getRole())
+                    .orElseThrow(() -> new IllegalArgumentException("role inválido: " + dto.getRole()));
+        }
+        return null;
     }
 }

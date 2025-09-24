@@ -17,9 +17,7 @@ public class UserMapper {
                 .name(u.getName())
                 .lastName(u.getLastName())
                 .companyId(u.getCompany() != null ? u.getCompany().getId() : null)
-                .roles(u.getRoles() != null
-                        ? u.getRoles().stream().map(Role::getRole).collect(Collectors.toList())
-                        : null)
+                .role(u.getRole())
                 .build();
     }
 }

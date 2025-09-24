@@ -22,8 +22,7 @@ import java.util.*;
 /**
  * Lista metadata de entidades con filtro:
  * - Deben tener repositorio (CRUD) registrado.
- * - El usuario actual debe tener permiso de edición (create/update/delete)
- * sobre la entidad.
+ * - El usuario actual debe tener permiso de LECTURA (read) sobre la entidad.
  */
 @Service
 public class MetadataService {
@@ -31,7 +30,7 @@ public class MetadataService {
     private static final Logger log = LoggerFactory.getLogger(MetadataService.class);
 
     private final Repositories repositories;
-    private final PermissionService perm; // <- tu servicio de permisos
+    private final PermissionService perm; // bean "perm"
 
     // Ajusta los paquetes base si lo necesitas
     private static final List<String> BASE_PACKAGES = Arrays.asList("com.screenleads", "com.sl");
@@ -43,11 +42,7 @@ public class MetadataService {
 
     public List<EntityInfo> getAllEntities(boolean withCount) {
         List<EntityInfo> list = new ArrayList<>();
-
-        // 1) Intentar obtener domainTypes desde los repositorios
         Set<Class<?>> domainTypes = getRepositoryDomainTypes();
-
-        // 2) Fallback: escanear @Entity en el classpath si no se encontró nada
         if (domainTypes.isEmpty()) {
             domainTypes.addAll(scanEntitiesOnClasspath());
             log.info("Metadata fallback: encontradas {} entidades via escaneo @Entity", domainTypes.size());
@@ -61,34 +56,33 @@ public class MetadataService {
                 if (!startsWithAny(fqn, BASE_PACKAGES))
                     continue;
 
-                // Debe existir un repositorio CRUD para ser editable en la app
-                if (repositories.getRepositoryFor(domainType).isEmpty()) {
+                var repoOpt = repositories.getRepositoryFor(domainType);
+                if (repoOpt.isEmpty()) {
                     log.debug("Entidad {} ignorada (sin repositorio asociado)", fqn);
                     continue;
                 }
 
                 final String entityName = domainType.getSimpleName();
-                final String permKey = normalizeEntityKey(entityName);
+                final String permKey = normalizeEntityKey(entityName); // <-- ahora devuelve lowerCamelCase
 
-                // ---- FILTRO DE PERMISOS (tu PermissionService) ----
-                // Editable si el usuario puede create/update/delete la entidad
-                boolean canEdit = perm.can(permKey, "create")
-                        || perm.can(permKey, "update")
-                        || perm.can(permKey, "delete");
-                if (!canEdit) {
-                    log.debug("Entidad {} ignorada (usuario sin permiso de edición)", entityName);
+                // ---- FILTRO DE PERMISOS ----
+                boolean isAdmin = false;
+                try {
+                    isAdmin = (perm.effectiveLevel() == 1);
+                } catch (Exception ignore) {
+                }
+                boolean canRead = isAdmin || perm.can(permKey, "read"); // <-- bypass para admin
+                if (!canRead) {
+                    log.debug("Entidad {} ignorada (usuario sin permiso de lectura)", entityName);
                     continue;
                 }
-                // ---------------------------------------------------
+                // ----------------------------
 
                 final String tableName = Optional.ofNullable(domainType.getAnnotation(Table.class))
-                        .map(Table::name)
-                        .filter(s -> !s.isBlank())
-                        .orElse(null);
+                        .map(Table::name).filter(s -> !s.isBlank()).orElse(null);
 
                 final String idType = resolveIdType(domainType);
 
-                // Atributos básicos (fields no estáticos ni transient; incluye heredados)
                 Map<String, String> attributes = new LinkedHashMap<>();
                 for (Field f : getAllFields(domainType)) {
                     if (Modifier.isStatic(f.getModifiers()))
@@ -100,20 +94,18 @@ public class MetadataService {
 
                 Long rowCount = null;
                 if (withCount) {
-                    // Marcador seguro para no tocar la BD (si quieres contar de verdad, descomenta
-                    // abajo)
                     rowCount = -1L;
-
-                    // repositories.getRepositoryFor(domainType).ifPresent(repo -> {
-                    // if (repo instanceof org.springframework.data.repository.CrudRepository<?, ?>
-                    // cr) {
-                    // try { rowCount = cr.count(); } catch (Exception e) { rowCount = -1L; }
-                    // }
-                    // });
+                    try {
+                        Object repo = repoOpt.get();
+                        if (repo instanceof org.springframework.data.repository.CrudRepository<?, ?> cr) {
+                            rowCount = cr.count();
+                        }
+                    } catch (Exception e) {
+                        log.warn("No se pudo contar registros de {}", entityName, e);
+                    }
                 }
 
                 list.add(new EntityInfo(entityName, fqn, tableName, idType, attributes, rowCount));
-
             } catch (Exception ex) {
                 log.warn("No se pudo construir metadata de {}", domainType, ex);
             }
@@ -123,31 +115,23 @@ public class MetadataService {
         return list;
     }
 
-    // ----------------- Helpers -----------------
-
-    /**
-     * Normaliza el nombre simple de la entidad a la clave que usa tu
-     * PermissionService (lowercase).
-     */
+    /** Pasa de PascalCase a lowerCamelCase y elimina sufijo 'Entity' si existe. */
     private String normalizeEntityKey(String simpleName) {
-        // Casos típicos: User -> "user", DeviceType -> "devicetype", AppVersion ->
-        // "appversion"
-        // Si manejas sufijos como "Entity" en tus clases, elimínalos:
         String s = simpleName;
         if (s.endsWith("Entity")) {
             s = s.substring(0, s.length() - "Entity".length());
         }
-        return s.replaceAll("[^A-Za-z0-9]", "").toLowerCase(Locale.ROOT);
+        if (s.isEmpty())
+            return s;
+        // De "DeviceType" -> "deviceType", "AppVersion" -> "appVersion", "Role" ->
+        // "role"
+        return s.substring(0, 1).toLowerCase(Locale.ROOT) + s.substring(1);
     }
 
-    /**
-     * Intenta obtener los domain types de los repos (compatible con múltiples
-     * versiones de Spring Data).
-     */
     private Set<Class<?>> getRepositoryDomainTypes() {
         Set<Class<?>> types = new LinkedHashSet<>();
 
-        // A) Intento directo: Repositories implementa Iterable<Class<?>>
+        // A) Repositories iterable (si la versión lo soporta)
         try {
             for (Class<?> c : repositories) {
                 types.add(c);
@@ -156,31 +140,25 @@ public class MetadataService {
             log.debug("Repositories no es iterable directamente en esta versión: {}", t.toString());
         }
 
-        // B) Intento por reflexión: método getDomainTypes() (existe en versiones
-        // nuevas)
+        // B) getDomainTypes() por reflexión (Spring Data más nuevo)
         try {
             Method m = repositories.getClass().getMethod("getDomainTypes");
             Object obj = m.invoke(repositories);
             if (obj instanceof Iterable<?>) {
                 for (Object o : (Iterable<?>) obj) {
-                    if (o instanceof Class<?>) {
-                        types.add((Class<?>) o);
+                    if (o instanceof Class<?> clazz) {
+                        types.add(clazz);
                     }
                 }
             }
         } catch (NoSuchMethodException ignore) {
-            // método no existe en esta versión → OK
         } catch (Exception ex) {
-            log.debug("Error invocando getDomainTypes() por reflexión: {}", ex.toString());
+            log.debug("Error invocando getDomainTypes(): {}", ex.toString());
         }
 
         return types;
     }
 
-    /**
-     * Escanea el classpath en busca de clases anotadas con @Entity dentro de
-     * BASE_PACKAGES.
-     */
     private Set<Class<?>> scanEntitiesOnClasspath() {
         Set<Class<?>> result = new LinkedHashSet<>();
         ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
