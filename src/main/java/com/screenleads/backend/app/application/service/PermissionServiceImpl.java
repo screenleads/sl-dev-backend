@@ -1,8 +1,8 @@
 package com.screenleads.backend.app.application.service;
 
-import com.screenleads.backend.app.domain.model.EntityPermission;
+import com.screenleads.backend.app.domain.model.AppEntity;
 import com.screenleads.backend.app.domain.model.User;
-import com.screenleads.backend.app.domain.repositories.EntityPermissionRepository;
+import com.screenleads.backend.app.domain.repositories.AppEntityRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class PermissionServiceImpl implements PermissionService {
 
-    private final EntityPermissionRepository permissionRepository;
+    private final AppEntityRepository permissionRepository;
     private final UserRepository userRepository;
 
     @Override
@@ -31,7 +31,7 @@ public class PermissionServiceImpl implements PermissionService {
 
             int myLevel = u.getRole().getLevel(); // 👈 rol único
 
-            EntityPermission p = permissionRepository.findByResource(resource).orElse(null);
+            AppEntity p = permissionRepository.findByResource(resource).orElse(null);
             if (p == null)
                 return false;
 
