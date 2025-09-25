@@ -69,6 +69,25 @@ public interface AdviceTimeWindowRepository extends JpaRepository<AdviceTimeWind
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/domain/repositories/AppEntityRepository.java
+package com.screenleads.backend.app.domain.repositories;
+
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.screenleads.backend.app.domain.model.AppEntity;
+
+public interface AppEntityRepository extends JpaRepository<AppEntity, Long> {
+    Optional<AppEntity> findByResource(String resource);
+    Optional<AppEntity> findByEndpointBase(String endpointBase);
+    boolean existsByResource(String resource);
+    boolean existsByEndpointBase(String endpointBase);
+}
+
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/domain/repositories/AppVersionRepository.java
 package com.screenleads.backend.app.domain.repositories;
 
@@ -157,21 +176,6 @@ public interface DeviceTypeRepository extends JpaRepository<DeviceType, Long> {
     Optional<DeviceType> findByType(String type);
     boolean existsByType(String type);
 }
-```
-
-```java
-// src/main/java/com/screenleads/backend/app/domain/repositories/EntityPermissionRepository.java
-// src/main/java/com/screenleads/backend/app/domain/repositories/EntityPermissionRepository.java
-package com.screenleads.backend.app.domain.repositories;
-
-import java.util.Optional;
-import org.springframework.data.jpa.repository.JpaRepository;
-import com.screenleads.backend.app.domain.model.EntityPermission;
-
-public interface EntityPermissionRepository extends JpaRepository<EntityPermission, Long> {
-    Optional<EntityPermission> findByResource(String resource);
-}
-
 ```
 
 ```java

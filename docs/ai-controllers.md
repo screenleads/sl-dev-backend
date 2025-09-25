@@ -122,6 +122,71 @@ public class AdvicesController {
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/web/controller/AppEntityController.java
+package com.screenleads.backend.app.web.controller;
+
+
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import com.screenleads.backend.app.application.service.AppEntityService;
+import com.screenleads.backend.app.web.dto.AppEntityDTO;
+
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/entities")
+@RequiredArgsConstructor
+@Validated
+public class AppEntityController {
+
+    private final AppEntityService service;
+
+    // ---- LISTAR ----
+    @GetMapping
+    public ResponseEntity<List<AppEntityDTO>> list(
+            @RequestParam(name = "withCount", defaultValue = "false") boolean withCount) {
+        return ResponseEntity.ok(service.findAll(withCount));
+    }
+
+    // ---- OBTENER POR ID ----
+    @GetMapping("/{id}")
+    public ResponseEntity<AppEntityDTO> getById(
+            @PathVariable Long id,
+            @RequestParam(name = "withCount", defaultValue = "false") boolean withCount) {
+        return ResponseEntity.ok(service.findById(id, withCount));
+    }
+
+    // ---- OBTENER POR RESOURCE ----
+    @GetMapping("/by-resource/{resource}")
+    public ResponseEntity<AppEntityDTO> getByResource(
+            @PathVariable String resource,
+            @RequestParam(name = "withCount", defaultValue = "false") boolean withCount) {
+        return ResponseEntity.ok(service.findByResource(resource, withCount));
+    }
+
+    // ---- UPSERT (CREAR/ACTUALIZAR) ----
+    @PutMapping
+    public ResponseEntity<AppEntityDTO> upsert(@RequestBody AppEntityDTO dto) {
+        AppEntityDTO saved = service.upsert(dto);
+        return new ResponseEntity<>(saved, HttpStatus.OK);
+    }
+
+    // ---- BORRAR ----
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        service.deleteById(id);
+    }
+}
+
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/web/controller/AppVersionController.java
 // src/main/java/com/screenleads/backend/app/web/controller/AppVersionController.java
 package com.screenleads.backend.app.web.controller;
@@ -267,14 +332,14 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/coupons")
+@RequestMapping("/coupons")
 @RequiredArgsConstructor
 @Tag(name = "Coupons", description = "Validación y canje de cupones de promociones")
 public class CouponController {
 
     private final CouponService couponService;
 
-    // === GET /api/coupons/{code} -> validar ===
+    // === GET /coupons/{code} -> validar ===
     @GetMapping("/{code}")
     @Operation(summary = "Validar cupón por código",
                description = "Devuelve el estado y si es válido en este momento")
@@ -288,7 +353,7 @@ public class CouponController {
         }
     }
 
-    // === POST /api/coupons/{code}/redeem -> canjear ===
+    // === POST /coupons/{code}/redeem -> canjear ===
     @PostMapping("/{code}/redeem")
     @Operation(summary = "Canjear cupón por código",
                description = "Marca el cupón como REDEEMED si es válido")
@@ -297,7 +362,7 @@ public class CouponController {
         return ResponseEntity.ok(CouponValidationResponse.from(lead, true, "REDEEMED"));
     }
 
-    // === POST /api/coupons/{code}/expire -> caducar manualmente ===
+    // === POST /coupons/{code}/expire -> caducar manualmente ===
     @PostMapping("/{code}/expire")
     @Operation(summary = "Caducar cupón por código",
                description = "Marca el cupón como EXPIRED si aún no se ha canjeado")
@@ -306,7 +371,7 @@ public class CouponController {
         return ResponseEntity.ok(CouponValidationResponse.from(lead, false, "EXPIRED"));
     }
 
-    // === POST /api/coupons/issue?promotionId=&customerId= -> emitir ===
+    // === POST /coupons/issue?promotionId=&customerId= -> emitir ===
     @PostMapping("/issue")
     @Operation(summary = "Emitir cupón (crear lead histórico)",
                description = "Genera un nuevo cupón interno para un cliente y una promoción, respetando límites")
@@ -364,7 +429,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @RestController
-@RequestMapping("/api/customers")
+@RequestMapping("/customers")
 @Tag(name = "Customers", description = "CRUD de clientes que participan en promociones")
 @RequiredArgsConstructor
 public class CustomerController {
@@ -401,7 +466,7 @@ public class CustomerController {
                 req.getFirstName(),
                 req.getLastName());
         return ResponseEntity
-                .created(URI.create("/api/customers/" + c.getId()))
+                .created(URI.create("/customers/" + c.getId()))
                 .body(CustomerResponse.from(c));
     }
 
