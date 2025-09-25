@@ -17,7 +17,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @RestController
-@RequestMapping("/api/customers")
+@RequestMapping("/customers")
 @Tag(name = "Customers", description = "CRUD de clientes que participan en promociones")
 @RequiredArgsConstructor
 public class CustomerController {
@@ -54,7 +54,7 @@ public class CustomerController {
                 req.getFirstName(),
                 req.getLastName());
         return ResponseEntity
-                .created(URI.create("/api/customers/" + c.getId()))
+                .created(URI.create("/customers/" + c.getId()))
                 .body(CustomerResponse.from(c));
     }
 

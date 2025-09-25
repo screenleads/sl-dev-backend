@@ -16,14 +16,14 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/coupons")
+@RequestMapping("/coupons")
 @RequiredArgsConstructor
 @Tag(name = "Coupons", description = "Validación y canje de cupones de promociones")
 public class CouponController {
 
     private final CouponService couponService;
 
-    // === GET /api/coupons/{code} -> validar ===
+    // === GET /coupons/{code} -> validar ===
     @GetMapping("/{code}")
     @Operation(summary = "Validar cupón por código",
                description = "Devuelve el estado y si es válido en este momento")
@@ -37,7 +37,7 @@ public class CouponController {
         }
     }
 
-    // === POST /api/coupons/{code}/redeem -> canjear ===
+    // === POST /coupons/{code}/redeem -> canjear ===
     @PostMapping("/{code}/redeem")
     @Operation(summary = "Canjear cupón por código",
                description = "Marca el cupón como REDEEMED si es válido")
@@ -46,7 +46,7 @@ public class CouponController {
         return ResponseEntity.ok(CouponValidationResponse.from(lead, true, "REDEEMED"));
     }
 
-    // === POST /api/coupons/{code}/expire -> caducar manualmente ===
+    // === POST /coupons/{code}/expire -> caducar manualmente ===
     @PostMapping("/{code}/expire")
     @Operation(summary = "Caducar cupón por código",
                description = "Marca el cupón como EXPIRED si aún no se ha canjeado")
@@ -55,7 +55,7 @@ public class CouponController {
         return ResponseEntity.ok(CouponValidationResponse.from(lead, false, "EXPIRED"));
     }
 
-    // === POST /api/coupons/issue?promotionId=&customerId= -> emitir ===
+    // === POST /coupons/issue?promotionId=&customerId= -> emitir ===
     @PostMapping("/issue")
     @Operation(summary = "Emitir cupón (crear lead histórico)",
                description = "Genera un nuevo cupón interno para un cliente y una promoción, respetando límites")
