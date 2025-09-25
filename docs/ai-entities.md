@@ -186,7 +186,6 @@ private AdviceSchedule schedule;
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/AppEntity.java
-// src/main/java/com/screenleads/backend/app/domain/model/AppEntity.java
 package com.screenleads.backend.app.domain.model;
 
 import java.util.LinkedHashMap;
@@ -197,13 +196,14 @@ import lombok.*;
 
 @Entity
 @Table(
-    name = "entity",
+    name = "app_entity",
     uniqueConstraints = {
-        @UniqueConstraint(name = "uk_entity_resource", columnNames = "resource"),
-        @UniqueConstraint(name = "uk_entity_endpoint", columnNames = "endpoint_base")
+        @UniqueConstraint(name = "uk_app_entity_resource", columnNames = "resource"),
+        @UniqueConstraint(name = "uk_app_entity_endpoint", columnNames = "endpoint_base")
     },
     indexes = {
-        @Index(name = "ix_entity_endpoint", columnList = "endpoint_base")
+        @Index(name = "ix_app_entity_endpoint", columnList = "endpoint_base"),
+        @Index(name = "ix_app_entity_sort_order", columnList = "sort_order")
     }
 )
 @Getter @Setter
@@ -219,27 +219,27 @@ public class AppEntity {
     @Column(nullable = false, length = 80)
     private String resource;
 
-    /** Nombre mostrado en la tabla (p. ej. "Company"). */
+    /** Nombre "técnico" mostrable (normalmente igual al nombre de clase simple). */
     @Column(name = "entity_name", nullable = false, length = 120)
     private String entityName;
 
-    /** Nombre FQCN de la clase JPA (si aplica). */
+    /** Nombre FQCN (opcional). */
     @Column(name = "class_name", length = 300)
     private String className;
 
-    /** Nombre de tabla física (si aplica). */
+    /** Nombre de tabla física (opcional). */
     @Column(name = "table_name", length = 120)
     private String tableName;
 
-    /** Tipo de ID (p. ej. "Long"). */
+    /** Tipo del ID: "Long", "UUID", etc. */
     @Column(name = "id_type", length = 60)
     private String idType;
 
-    /** Endpoint base REST sin /api (p. ej. "/users"). */
+    /** Endpoint base REST sin /api (p. ej., "/users"). */
     @Column(name = "endpoint_base", nullable = false, length = 120)
     private String endpointBase;
 
-    /** Niveles de permiso (si los usas). */
+    /** Niveles de permiso (si aplican en tu política). */
     @Column(name = "create_level", nullable = false)
     private Integer createLevel;
 
@@ -252,22 +252,34 @@ public class AppEntity {
     @Column(name = "delete_level", nullable = false)
     private Integer deleteLevel;
 
-    /** Conteo de filas (opcional, puede quedar null) */
+    /** Conteo de filas (opcional; null si no se pide). */
     @Column(name = "row_count")
     private Long rowCount;
 
-    /** Atributos: nombre → tipo (guardados en tabla secundaria) */
+    /** Atributos (nombre → tipo) en orden estable. */
     @ElementCollection
     @CollectionTable(
-        name = "entity_attribute",
-        joinColumns = @JoinColumn(name = "entity_id",
-            foreignKey = @ForeignKey(name = "fk_entity_attribute_entity"))
+        name = "app_entity_attribute",
+        joinColumns = @JoinColumn(name = "app_entity_id",
+            foreignKey = @ForeignKey(name = "fk_app_entity_attribute_entity"))
     )
     @MapKeyColumn(name = "attr_name", length = 120)
     @Column(name = "attr_type", length = 200)
     @OrderColumn(name = "attr_order")
     @Builder.Default
     private Map<String, String> attributes = new LinkedHashMap<>();
+
+    /** Texto mostrado en el dashboard/menú (p.ej., "Devices"). */
+    @Column(name = "display_label", nullable = false, length = 120)
+    private String displayLabel;
+
+    /** Nombre de icono (p.ej., "tv-2", "building-2", "image"). */
+    @Column(name = "icon", length = 80)
+    private String icon;
+
+    /** Orden en el menú (más bajo = antes). */
+    @Column(name = "sort_order")
+    private Integer sortOrder;
 }
 
 ```

@@ -1,6 +1,6 @@
 # Snapshot AI — docs/ai-snapshots-urls.md
 
-_Última generación: 2025-09-25 16:16_
+_Última generación: 2025-09-25 16:30_
 
 Repositorio: `screenleads/sl-dev-backend` — Rama: `develop`
 
