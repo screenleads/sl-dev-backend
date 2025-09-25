@@ -24,10 +24,6 @@ public class AppEntityServiceImpl implements AppEntityService {
 
     private final AppEntityRepository repo;
 
-    /**
-     * Opcional: si no registras JdbcTemplate, este campo quedará null
-     * y el cálculo de rowCount se omitirá sin fallar.
-     */
     @Nullable
     private JdbcTemplate jdbcTemplate;
 
@@ -36,14 +32,21 @@ public class AppEntityServiceImpl implements AppEntityService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // ------------------- Query -------------------
-
     @Override
     public List<AppEntityDTO> findAll(boolean withCount) {
         List<AppEntity> all = repo.findAll();
         if (withCount) {
             refreshRowCountsInMemory(all);
         }
+        // ordenar por sortOrder si existe, luego por displayLabel
+        all.sort((a, b) -> {
+            int sa = a.getSortOrder() == null ? Integer.MAX_VALUE : a.getSortOrder();
+            int sb = b.getSortOrder() == null ? Integer.MAX_VALUE : b.getSortOrder();
+            if (sa != sb) return Integer.compare(sa, sb);
+            String la = a.getDisplayLabel() != null ? a.getDisplayLabel() : a.getEntityName();
+            String lb = b.getDisplayLabel() != null ? b.getDisplayLabel() : b.getEntityName();
+            return la.compareToIgnoreCase(lb);
+        });
         return all.stream().map(this::toDto).toList();
     }
 
@@ -67,15 +70,12 @@ public class AppEntityServiceImpl implements AppEntityService {
         return toDto(e);
     }
 
-    // ------------------- Mutación -------------------
-
     @Override
     @Transactional
     public AppEntityDTO upsert(AppEntityDTO dto) {
         AppEntity e = repo.findByResource(dto.getResource())
                 .orElseGet(() -> AppEntity.builder().resource(dto.getResource()).build());
 
-        // campos principales
         e.setEntityName(dto.getEntityName());
         e.setClassName(dto.getClassName());
         e.setTableName(dto.getTableName());
@@ -86,13 +86,17 @@ public class AppEntityServiceImpl implements AppEntityService {
         e.setUpdateLevel(dto.getUpdateLevel());
         e.setDeleteLevel(dto.getDeleteLevel());
 
-        // atributos (reemplazo completo para mantener orden y consistencia)
         Map<String, String> attrs = dto.getAttributes() != null
                 ? new LinkedHashMap<>(dto.getAttributes())
                 : new LinkedHashMap<>();
         e.setAttributes(attrs);
 
-        // rowCount es derivado; si el DTO lo trae lo ignoramos (opcional)
+        // Dashboard metadata
+        e.setDisplayLabel(dto.getDisplayLabel() != null ? dto.getDisplayLabel()
+                : (dto.getEntityName() != null ? dto.getEntityName() : e.getDisplayLabel()));
+        e.setIcon(dto.getIcon());
+        e.setSortOrder(dto.getSortOrder());
+
         AppEntity saved = repo.save(e);
         return toDto(saved);
     }
@@ -103,7 +107,7 @@ public class AppEntityServiceImpl implements AppEntityService {
         repo.deleteById(id);
     }
 
-    // ------------------- Row counts -------------------
+    // ---- helpers row count ----
 
     private void refreshRowCountsInMemory(List<AppEntity> entities) {
         for (AppEntity e : entities) {
@@ -116,28 +120,30 @@ public class AppEntityServiceImpl implements AppEntityService {
         try {
             return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + tableName, Long.class);
         } catch (Exception ex) {
-            // Tabla inexistente, error de permisos, etc.: devolvemos null sin romper
             return null;
         }
     }
 
-    // ------------------- Mapping -------------------
+    // ---- mapper ----
 
     private AppEntityDTO toDto(AppEntity e) {
         return AppEntityDTO.builder()
-                .id(e.getId())
-                .resource(e.getResource())
-                .entityName(e.getEntityName())
-                .className(e.getClassName())
-                .tableName(e.getTableName())
-                .idType(e.getIdType())
-                .endpointBase(e.getEndpointBase())
-                .createLevel(e.getCreateLevel())
-                .readLevel(e.getReadLevel())
-                .updateLevel(e.getUpdateLevel())
-                .deleteLevel(e.getDeleteLevel())
-                .rowCount(e.getRowCount())
-                .attributes(e.getAttributes() != null ? e.getAttributes() : new LinkedHashMap<>())
-                .build();
+            .id(e.getId())
+            .resource(e.getResource())
+            .entityName(e.getEntityName())
+            .className(e.getClassName())
+            .tableName(e.getTableName())
+            .idType(e.getIdType())
+            .endpointBase(e.getEndpointBase())
+            .createLevel(e.getCreateLevel())
+            .readLevel(e.getReadLevel())
+            .updateLevel(e.getUpdateLevel())
+            .deleteLevel(e.getDeleteLevel())
+            .rowCount(e.getRowCount())
+            .attributes(e.getAttributes() != null ? e.getAttributes() : new LinkedHashMap<>())
+            .displayLabel(e.getDisplayLabel() != null ? e.getDisplayLabel() : e.getEntityName())
+            .icon(e.getIcon())
+            .sortOrder(e.getSortOrder())
+            .build();
     }
 }

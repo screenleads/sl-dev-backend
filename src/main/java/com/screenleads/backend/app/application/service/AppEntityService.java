@@ -1,4 +1,6 @@
 package com.screenleads.backend.app.application.service;
+
+
 import java.util.List;
 
 import com.screenleads.backend.app.web.dto.AppEntityDTO;
