@@ -125,7 +125,6 @@ public class AdvicesController {
 // src/main/java/com/screenleads/backend/app/web/controller/AppEntityController.java
 package com.screenleads.backend.app.web.controller;
 
-
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -142,6 +141,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/entities")
 @RequiredArgsConstructor
 @Validated
+@CrossOrigin // quítalo si no lo necesitas
 public class AppEntityController {
 
     private final AppEntityService service;

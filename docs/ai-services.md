@@ -482,8 +482,8 @@ public interface AppEntityService {
 // src/main/java/com/screenleads/backend/app/application/service/AppEntityServiceImpl.java
 package com.screenleads.backend.app.application.service;
 
-
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -494,8 +494,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.screenleads.backend.app.domain.model.AppEntity;
+import com.screenleads.backend.app.domain.model.AppEntityAttribute;
 import com.screenleads.backend.app.domain.repositories.AppEntityRepository;
 import com.screenleads.backend.app.web.dto.AppEntityDTO;
+import com.screenleads.backend.app.web.dto.EntityAttributeDTO;
+import com.screenleads.backend.app.web.mapper.AppEntityMapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -514,22 +517,28 @@ public class AppEntityServiceImpl implements AppEntityService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    // ===================== QUERY =====================
+
     @Override
     public List<AppEntityDTO> findAll(boolean withCount) {
         List<AppEntity> all = repo.findAll();
+
         if (withCount) {
             refreshRowCountsInMemory(all);
         }
-        // ordenar por sortOrder si existe, luego por displayLabel
+
+        // ordenar por sortOrder si existe, luego por displayLabel/entityName
         all.sort((a, b) -> {
             int sa = a.getSortOrder() == null ? Integer.MAX_VALUE : a.getSortOrder();
             int sb = b.getSortOrder() == null ? Integer.MAX_VALUE : b.getSortOrder();
-            if (sa != sb) return Integer.compare(sa, sb);
+            if (sa != sb)
+                return Integer.compare(sa, sb);
             String la = a.getDisplayLabel() != null ? a.getDisplayLabel() : a.getEntityName();
             String lb = b.getDisplayLabel() != null ? b.getDisplayLabel() : b.getEntityName();
             return la.compareToIgnoreCase(lb);
         });
-        return all.stream().map(this::toDto).toList();
+
+        return all.stream().map(AppEntityMapper::toDto).toList();
     }
 
     @Override
@@ -539,7 +548,7 @@ public class AppEntityServiceImpl implements AppEntityService {
         if (withCount) {
             e.setRowCount(countRowsSafe(e.getTableName()));
         }
-        return toDto(e);
+        return AppEntityMapper.toDto(e);
     }
 
     @Override
@@ -549,38 +558,53 @@ public class AppEntityServiceImpl implements AppEntityService {
         if (withCount) {
             e.setRowCount(countRowsSafe(e.getTableName()));
         }
-        return toDto(e);
+        return AppEntityMapper.toDto(e);
     }
+
+    // ===================== COMMANDS =====================
 
     @Override
     @Transactional
     public AppEntityDTO upsert(AppEntityDTO dto) {
-        AppEntity e = repo.findByResource(dto.getResource())
-                .orElseGet(() -> AppEntity.builder().resource(dto.getResource()).build());
+        if (dto == null) {
+            throw new IllegalArgumentException("AppEntityDTO nulo");
+        }
+        if (dto.resource() == null || dto.resource().isBlank()) {
+            throw new IllegalArgumentException("resource obligatorio en AppEntityDTO");
+        }
 
-        e.setEntityName(dto.getEntityName());
-        e.setClassName(dto.getClassName());
-        e.setTableName(dto.getTableName());
-        e.setIdType(dto.getIdType());
-        e.setEndpointBase(dto.getEndpointBase());
-        e.setCreateLevel(dto.getCreateLevel());
-        e.setReadLevel(dto.getReadLevel());
-        e.setUpdateLevel(dto.getUpdateLevel());
-        e.setDeleteLevel(dto.getDeleteLevel());
+        AppEntity e = repo.findByResource(dto.resource())
+                .orElseGet(() -> AppEntity.builder().resource(dto.resource()).build());
 
-        Map<String, String> attrs = dto.getAttributes() != null
-                ? new LinkedHashMap<>(dto.getAttributes())
-                : new LinkedHashMap<>();
-        e.setAttributes(attrs);
+        // Metadatos principales
+        e.setEntityName(nullIfBlank(dto.entityName(), e.getEntityName()));
+        e.setClassName(nullIfBlank(dto.className(), e.getClassName()));
+        e.setTableName(nullIfBlank(dto.tableName(), e.getTableName()));
+        e.setIdType(nullIfBlank(dto.idType(), e.getIdType()));
+        e.setEndpointBase(nullIfBlank(dto.endpointBase(), e.getEndpointBase()));
+        e.setCreateLevel(dto.createLevel() != null ? dto.createLevel() : e.getCreateLevel());
+        e.setReadLevel(dto.readLevel() != null ? dto.readLevel() : e.getReadLevel());
+        e.setUpdateLevel(dto.updateLevel() != null ? dto.updateLevel() : e.getUpdateLevel());
+        e.setDeleteLevel(dto.deleteLevel() != null ? dto.deleteLevel() : e.getDeleteLevel());
 
         // Dashboard metadata
-        e.setDisplayLabel(dto.getDisplayLabel() != null ? dto.getDisplayLabel()
-                : (dto.getEntityName() != null ? dto.getEntityName() : e.getDisplayLabel()));
-        e.setIcon(dto.getIcon());
-        e.setSortOrder(dto.getSortOrder());
+        if (dto.displayLabel() != null && !dto.displayLabel().isBlank()) {
+            e.setDisplayLabel(dto.displayLabel());
+        } else if (e.getDisplayLabel() == null && e.getEntityName() != null) {
+            e.setDisplayLabel(e.getEntityName());
+        }
+        e.setIcon(dto.icon() != null ? dto.icon() : e.getIcon());
+        e.setSortOrder(dto.sortOrder() != null ? dto.sortOrder() : e.getSortOrder());
+
+        // Atributos (merge no destructivo)
+        if (dto.attributes() != null) {
+            mergeAttributes(e, dto.attributes());
+        }
+        // Si prefieres "replace exacto" (borrar los que no vienen), usa:
+        // replaceAttributes(e, dto.attributes());
 
         AppEntity saved = repo.save(e);
-        return toDto(saved);
+        return AppEntityMapper.toDto(saved);
     }
 
     @Override
@@ -589,7 +613,7 @@ public class AppEntityServiceImpl implements AppEntityService {
         repo.deleteById(id);
     }
 
-    // ---- helpers row count ----
+    // ===================== ROW COUNT =====================
 
     private void refreshRowCountsInMemory(List<AppEntity> entities) {
         for (AppEntity e : entities) {
@@ -598,35 +622,119 @@ public class AppEntityServiceImpl implements AppEntityService {
     }
 
     private Long countRowsSafe(String tableName) {
-        if (tableName == null || tableName.isBlank() || jdbcTemplate == null) return null;
+        if (tableName == null || tableName.isBlank() || jdbcTemplate == null)
+            return null;
         try {
+            // WARNING: tableName viene de tu propio catálogo; si algún día es editable por
+            // usuario,
+            // parametriza o valida para evitar SQL injection.
             return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + tableName, Long.class);
         } catch (Exception ex) {
             return null;
         }
     }
 
-    // ---- mapper ----
+    // ===================== ATTRIBUTES MERGE/REPLACE =====================
 
-    private AppEntityDTO toDto(AppEntity e) {
-        return AppEntityDTO.builder()
-            .id(e.getId())
-            .resource(e.getResource())
-            .entityName(e.getEntityName())
-            .className(e.getClassName())
-            .tableName(e.getTableName())
-            .idType(e.getIdType())
-            .endpointBase(e.getEndpointBase())
-            .createLevel(e.getCreateLevel())
-            .readLevel(e.getReadLevel())
-            .updateLevel(e.getUpdateLevel())
-            .deleteLevel(e.getDeleteLevel())
-            .rowCount(e.getRowCount())
-            .attributes(e.getAttributes() != null ? e.getAttributes() : new LinkedHashMap<>())
-            .displayLabel(e.getDisplayLabel() != null ? e.getDisplayLabel() : e.getEntityName())
-            .icon(e.getIcon())
-            .sortOrder(e.getSortOrder())
-            .build();
+    /**
+     * Merge NO destructivo: actualiza los existentes (por id o name) y crea nuevos.
+     * No borra.
+     */
+    private void mergeAttributes(AppEntity e, List<EntityAttributeDTO> incoming) {
+        if (e.getAttributes() == null) {
+            e.setAttributes(new ArrayList<>());
+        }
+
+        // Índices para localizar rápido existentes
+        Map<Long, AppEntityAttribute> byId = new HashMap<>();
+        Map<String, AppEntityAttribute> byName = new HashMap<>();
+        for (AppEntityAttribute a : e.getAttributes()) {
+            if (a.getId() != null)
+                byId.put(a.getId(), a);
+            if (a.getName() != null)
+                byName.put(a.getName(), a);
+        }
+
+        for (EntityAttributeDTO dto : incoming) {
+            AppEntityAttribute target = null;
+
+            if (dto.id() != null) {
+                target = byId.get(dto.id());
+            }
+            if (target == null && dto.name() != null) {
+                target = byName.get(dto.name());
+            }
+
+            if (target == null) {
+                // crear nuevo
+                target = new AppEntityAttribute();
+                target.setAppEntity(e);
+                applyAttrDto(target, dto);
+                e.getAttributes().add(target);
+            } else {
+                // actualizar existente (campos null no pisan)
+                applyAttrDto(target, dto);
+            }
+        }
+    }
+
+    /**
+     * Reemplazo exacto: deja exactamente los atributos recibidos (borra los demás).
+     */
+    @SuppressWarnings("unused")
+    private void replaceAttributes(AppEntity e, List<EntityAttributeDTO> incoming) {
+        if (e.getAttributes() == null) {
+            e.setAttributes(new ArrayList<>());
+        } else {
+            e.getAttributes().clear();
+        }
+        for (EntityAttributeDTO dto : incoming) {
+            AppEntityAttribute a = new AppEntityAttribute();
+            a.setAppEntity(e);
+            applyAttrDto(a, dto);
+            e.getAttributes().add(a);
+        }
+    }
+
+    /** Copia segura: sólo pisa si el DTO trae valor no nulo. */
+    private void applyAttrDto(AppEntityAttribute a, EntityAttributeDTO d) {
+        if (d == null)
+            return;
+
+        if (d.name() != null)
+            a.setName(d.name());
+        if (d.attrType() != null)
+            a.setAttrType(d.attrType());
+        if (d.dataType() != null)
+            a.setDataType(d.dataType());
+        if (d.relationTarget() != null)
+            a.setRelationTarget(d.relationTarget());
+
+        if (d.listLabel() != null)
+            a.setListLabel(d.listLabel());
+        if (d.listVisible() != null)
+            a.setListVisible(d.listVisible());
+        if (d.listOrder() != null)
+            a.setListOrder(d.listOrder());
+
+        if (d.formLabel() != null)
+            a.setFormLabel(d.formLabel());
+        if (d.formOrder() != null)
+            a.setFormOrder(d.formOrder());
+        if (d.controlType() != null)
+            a.setControlType(d.controlType());
+
+        if (d.listSearchable() != null)
+            a.setListSearchable(d.listSearchable());
+        if (d.listSortable() != null)
+            a.setListSortable(d.listSortable());
+    }
+
+    private static String nullIfBlank(String v, String fallback) {
+        if (v == null)
+            return fallback;
+        String t = v.trim();
+        return t.isEmpty() ? fallback : t;
     }
 }
 
@@ -765,27 +873,37 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.screenleads.backend.app.domain.model.Advice;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Device;
 import com.screenleads.backend.app.domain.model.Media;
-import com.screenleads.backend.app.domain.repositories.*;
+import com.screenleads.backend.app.domain.model.MediaType;
+import com.screenleads.backend.app.domain.repositories.AdviceRepository;
+import com.screenleads.backend.app.domain.repositories.CompanyRepository;
+import com.screenleads.backend.app.domain.repositories.DeviceRepository;
+import com.screenleads.backend.app.domain.repositories.MediaRepository;
+import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
 import com.screenleads.backend.app.web.dto.CompanyDTO;
+import com.screenleads.backend.app.web.dto.MediaSlimDTO;
+import com.screenleads.backend.app.web.dto.MediaTypeDTO;
 
 @Service
 public class CompaniesServiceImpl implements CompaniesService {
 
     private final MediaTypeRepository mediaTypeRepository;
-
     private final CompanyRepository companyRepository;
     private final MediaRepository mediaRepository;
     private final AdviceRepository adviceRepository;
     private final DeviceRepository deviceRepository;
 
-    public CompaniesServiceImpl(CompanyRepository companyRepository, MediaRepository mediaRepository,
-            AdviceRepository adviceRepository, DeviceRepository deviceRepository,
+    public CompaniesServiceImpl(CompanyRepository companyRepository,
+            MediaRepository mediaRepository,
+            AdviceRepository adviceRepository,
+            DeviceRepository deviceRepository,
             MediaTypeRepository mediaTypeRepository) {
         this.companyRepository = companyRepository;
         this.mediaRepository = mediaRepository;
@@ -794,7 +912,10 @@ public class CompaniesServiceImpl implements CompaniesService {
         this.mediaTypeRepository = mediaTypeRepository;
     }
 
+    // ===================== READ =====================
+
     @Override
+    @Transactional(readOnly = true)
     public List<CompanyDTO> getAllCompanies() {
         return companyRepository.findAll().stream()
                 .map(this::convertToDTO)
@@ -803,62 +924,63 @@ public class CompaniesServiceImpl implements CompaniesService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<CompanyDTO> getCompanyById(Long id) {
         return companyRepository.findById(id).map(this::convertToDTO);
     }
 
-    @Override
-    public CompanyDTO saveCompany(CompanyDTO companyDTO) {
-        Company company = convertToEntity(companyDTO);
+    // ===================== WRITE =====================
 
-        // Si ya existe por nombre, devolver el existente
+    @Override
+    @Transactional
+    public CompanyDTO saveCompany(CompanyDTO companyDTO) {
+        // Construir entidad base sin logo para evitar cascadas raras
+        Company company = convertToEntity(companyDTO);
+        company.setLogo(null);
+
+        // Idempotencia por nombre
         Optional<Company> exist = companyRepository.findByName(company.getName());
         if (exist.isPresent()) {
             return convertToDTO(exist.get());
         }
 
-        // --- Manejo del logo ---
+        // Guardar primero la company para obtener ID
+        Company savedCompany = companyRepository.save(company);
+
+        // Logo: vincular existente o crear desde src
         if (companyDTO.logo() != null) {
-            if (companyDTO.logo().getId() != null) {
-                // Buscar el Media existente por id
-                Media media = mediaRepository.findById(companyDTO.logo().getId())
+            if (companyDTO.logo().id() != null) {
+                Media media = mediaRepository.findById(companyDTO.logo().id())
                         .orElseThrow(
-                                () -> new RuntimeException("Media no encontrado con id: " + companyDTO.logo().getId()));
-                company.setLogo(media);
+                                () -> new RuntimeException("Media no encontrado con id: " + companyDTO.logo().id()));
+                if (media.getCompany() == null) {
+                    media.setCompany(savedCompany);
+                    mediaRepository.save(media);
+                }
+                savedCompany.setLogo(media);
 
-            } else if (companyDTO.logo().getSrc() != null && !companyDTO.logo().getSrc().isBlank()) {
-                // Crear un nuevo Media con el src
+            } else if (companyDTO.logo().src() != null && !companyDTO.logo().src().isBlank()) {
                 Media newLogo = new Media();
-                newLogo.setSrc(companyDTO.logo().getSrc());
-
-                // Detectar extensión
-                String srcLower = companyDTO.logo().getSrc().toLowerCase();
-                String extension = null;
-                int dotIndex = srcLower.lastIndexOf('.');
-                if (dotIndex != -1 && dotIndex < srcLower.length() - 1) {
-                    extension = srcLower.substring(dotIndex + 1);
-                }
-
-                // Asignar MediaType según extensión
-                if (extension != null) {
-                    mediaTypeRepository.findByExtension(extension).ifPresent(newLogo::setType);
-                }
+                newLogo.setSrc(companyDTO.logo().src());
+                newLogo.setCompany(savedCompany);
+                setMediaTypeFromSrc(newLogo, companyDTO.logo().src());
 
                 Media savedLogo = mediaRepository.save(newLogo);
-                company.setLogo(savedLogo);
+                savedCompany.setLogo(savedLogo);
 
             } else {
-                company.setLogo(null);
+                savedCompany.setLogo(null);
             }
         } else {
-            company.setLogo(null);
+            savedCompany.setLogo(null);
         }
 
-        Company savedCompany = companyRepository.save(company);
+        savedCompany = companyRepository.save(savedCompany);
         return convertToDTO(savedCompany);
     }
 
     @Override
+    @Transactional
     public CompanyDTO updateCompany(Long id, CompanyDTO companyDTO) {
         Company company = companyRepository.findById(id).orElseThrow();
         company.setName(companyDTO.name());
@@ -866,34 +988,31 @@ public class CompaniesServiceImpl implements CompaniesService {
         company.setPrimaryColor(companyDTO.primaryColor());
         company.setSecondaryColor(companyDTO.secondaryColor());
 
-        // Manejo seguro del logo
         if (companyDTO.logo() != null) {
-            if (companyDTO.logo().getId() != null) {
-                Media media = mediaRepository.findById(companyDTO.logo().getId()).orElseThrow();
+            if (companyDTO.logo().id() != null) {
+                Media media = mediaRepository.findById(companyDTO.logo().id())
+                        .orElseThrow(
+                                () -> new RuntimeException("Media no encontrado con id: " + companyDTO.logo().id()));
 
-                String newSrc = companyDTO.logo().getSrc();
+                String newSrc = companyDTO.logo().src();
                 if (newSrc != null && !newSrc.isBlank() && !java.util.Objects.equals(media.getSrc(), newSrc)) {
                     media.setSrc(newSrc);
-                    mediaRepository.save(media);
+                    setMediaTypeFromSrc(media, newSrc);
                 }
 
+                if (media.getCompany() == null) {
+                    media.setCompany(company);
+                }
+
+                mediaRepository.save(media);
                 company.setLogo(media);
 
-            } else if (companyDTO.logo().getSrc() != null && !companyDTO.logo().getSrc().isBlank()) {
-                // Crear nuevo Media desde cero
+            } else if (companyDTO.logo().src() != null && !companyDTO.logo().src().isBlank()) {
                 Media newLogo = new Media();
-                newLogo.setSrc(companyDTO.logo().getSrc());
-                String srcLower = companyDTO.logo().getSrc().toLowerCase();
-                String extension = null;
-                int dotIndex = srcLower.lastIndexOf('.');
-                if (dotIndex != -1 && dotIndex < srcLower.length() - 1) {
-                    extension = srcLower.substring(dotIndex + 1);
-                }
+                newLogo.setSrc(companyDTO.logo().src());
+                newLogo.setCompany(company);
+                setMediaTypeFromSrc(newLogo, companyDTO.logo().src());
 
-                // Asignar MediaType según extensión
-                if (extension != null) {
-                    mediaTypeRepository.findByExtension(extension).ifPresent(newLogo::setType);
-                }
                 Media savedLogo = mediaRepository.save(newLogo);
                 company.setLogo(savedLogo);
 
@@ -909,60 +1028,110 @@ public class CompaniesServiceImpl implements CompaniesService {
     }
 
     @Override
+    @Transactional
     public void deleteCompany(Long id) {
         companyRepository.deleteById(id);
     }
 
+    // ===================== MAPPING =====================
+
     private CompanyDTO convertToDTO(Company company) {
+        // Inicializa sólo lo necesario para evitar proxies LAZY en la serialización
+        Media logo = company.getLogo();
+        if (logo != null) {
+            Hibernate.initialize(logo);
+            MediaType type = logo.getType();
+            if (type != null)
+                Hibernate.initialize(type);
+        }
+
+        // Para no arrastrar colecciones LAZY (y evitar ByteBuddy proxies), devolvemos
+        // vacías.
+        // Si quieres devolverlas, mejor pásalas a DTOs o usa @EntityGraph y mapea.
+        List<Device> devices = List.of();
+        List<Advice> advices = List.of();
+
         return new CompanyDTO(
                 company.getId(),
                 company.getName(),
                 company.getObservations(),
-                company.getLogo(),
-                company.getDevices(),
-                company.getAdvices(),
+                toMediaSlimDTO(company.getLogo()),
+                devices,
+                advices,
                 company.getPrimaryColor(),
                 company.getSecondaryColor());
     }
 
-    private Company convertToEntity(CompanyDTO companyDTO) {
-        Company company = new Company();
-        company.setId(companyDTO.id());
-        company.setName(companyDTO.name());
-        company.setPrimaryColor(companyDTO.primaryColor());
-        company.setSecondaryColor(companyDTO.secondaryColor());
-        company.setObservations(companyDTO.observations());
+    private MediaSlimDTO toMediaSlimDTO(Media m) {
+        if (m == null)
+            return null;
+        return new MediaSlimDTO(
+                m.getId(),
+                m.getSrc(),
+                toMediaTypeDTO(m.getType()),
+                m.getCreatedAt(),
+                m.getUpdatedAt());
+    }
 
-        // Manejo seguro del logo
-        if (companyDTO.logo() != null && companyDTO.logo().getId() != null) {
-            mediaRepository.findById(companyDTO.logo().getId()).ifPresent(company::setLogo);
+    private MediaTypeDTO toMediaTypeDTO(MediaType t) {
+        if (t == null)
+            return null;
+        return new MediaTypeDTO(
+                t.getId(),
+                t.getType(),
+                t.getExtension(),
+                t.getEnabled());
+    }
+
+    private Company convertToEntity(CompanyDTO dto) {
+        Company c = new Company();
+        c.setId(dto.id());
+        c.setName(dto.name());
+        c.setObservations(dto.observations());
+        c.setPrimaryColor(dto.primaryColor());
+        c.setSecondaryColor(dto.secondaryColor());
+
+        // Logo: si viene id en el DTO slim, enlazamos; si no, se creará en save/update
+        if (dto.logo() != null && dto.logo().id() != null) {
+            mediaRepository.findById(dto.logo().id()).ifPresent(c::setLogo);
         } else {
-            company.setLogo(null);
+            c.setLogo(null);
         }
 
-        if (companyDTO.advices() != null) {
-            List<Advice> advices = companyDTO.advices().stream()
-                    .map(adviceDTO -> adviceRepository.findById(adviceDTO.getId()).orElse(null))
-                    .filter(a -> a != null)
-                    .peek(a -> a.setCompany(company))
-                    .collect(Collectors.toList());
-            company.setAdvices(advices);
-        } else {
-            company.setAdvices(List.of());
-        }
+        // No mapeamos devices/advices desde DTO para evitar inconsistencias (se
+        // gestionan por sus endpoints)
+        c.setDevices(List.of());
+        c.setAdvices(List.of());
 
-        if (companyDTO.devices() != null) {
-            List<Device> devices = companyDTO.devices().stream()
-                    .map(deviceDTO -> deviceRepository.findById(deviceDTO.getId()).orElse(null))
-                    .filter(d -> d != null)
-                    .peek(d -> d.setCompany(company))
-                    .collect(Collectors.toList());
-            company.setDevices(devices);
-        } else {
-            company.setDevices(List.of());
-        }
+        return c;
+    }
 
-        return company;
+    // ===================== HELPERS =====================
+
+    private void setMediaTypeFromSrc(Media media, String src) {
+        if (src == null)
+            return;
+        String lower = src.toLowerCase();
+        int dot = lower.lastIndexOf('.');
+        if (dot != -1 && dot < lower.length() - 1) {
+            String ext = lower.substring(dot + 1);
+            mediaTypeRepository.findByExtension(ext).ifPresent(media::setType);
+        }
+    }
+
+    private String deriveMediaName(String src, String prefix) {
+        if (src == null || src.isBlank())
+            return prefix + "-" + System.currentTimeMillis();
+        String base = src;
+        int q = base.indexOf('?');
+        if (q >= 0)
+            base = base.substring(0, q);
+        int slash = base.lastIndexOf('/');
+        if (slash >= 0 && slash < base.length() - 1)
+            base = base.substring(slash + 1);
+        if (base.isBlank())
+            base = prefix + "-" + System.currentTimeMillis();
+        return base;
     }
 }
 

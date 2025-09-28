@@ -96,39 +96,30 @@ public record AdviceVisibilityRuleDTO(
 // src/main/java/com/screenleads/backend/app/web/dto/AppEntityDTO.java
 package com.screenleads.backend.app.web.dto;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
+import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 
-import lombok.*;
-
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Jacksonized
 @Builder
-public class AppEntityDTO {
-
-    private Long id;
-
-    private String resource;
-    private String entityName;
-    private String className;
-    private String tableName;
-    private String idType;
-    private String endpointBase;
-
-    private Integer createLevel;
-    private Integer readLevel;
-    private Integer updateLevel;
-    private Integer deleteLevel;
-
-    private Long rowCount;
-
-    @Builder.Default
-    private Map<String, String> attributes = new LinkedHashMap<>();
-
-    // Dashboard metadata
-    private String displayLabel;
-    private String icon;
-    private Integer sortOrder;
+public record AppEntityDTO(
+                Long id,
+                String resource,
+                String entityName,
+                String className,
+                String tableName,
+                String idType,
+                String endpointBase,
+                Integer createLevel,
+                Integer readLevel,
+                Integer updateLevel,
+                Integer deleteLevel,
+                Boolean visibleInMenu,
+                Long rowCount,
+                String displayLabel,
+                String icon,
+                Integer sortOrder,
+                List<EntityAttributeDTO> attributes) {
 }
 
 ```
@@ -162,10 +153,9 @@ import java.util.List;
 
 import com.screenleads.backend.app.domain.model.Advice;
 import com.screenleads.backend.app.domain.model.Device;
-import com.screenleads.backend.app.domain.model.Media;
 
-public record CompanyDTO(Long id, String name, String observations, Media logo, List<Device> devices,
-        List<Advice> advices, String primaryColor, String secondaryColor) {
+public record CompanyDTO(Long id, String name, String observations, MediaSlimDTO logo, List<Device> devices,
+                List<Advice> advices, String primaryColor, String secondaryColor) {
 }
 
 ```
@@ -199,6 +189,58 @@ public record DeviceDTO(Long id, String uuid, String descriptionName, Number wid
 package com.screenleads.backend.app.web.dto;
 
 public record DeviceTypeDTO(Long id, String type, Boolean enabled) {
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/web/dto/EntityAttributeDTO.java
+package com.screenleads.backend.app.web.dto;
+
+import java.math.BigDecimal;
+import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
+
+@Jacksonized
+@Builder
+public record EntityAttributeDTO(
+        // Identidad + tipado
+        Long id,
+        String name,
+        String attrType, // e.g. "BASIC", "RELATION", "ENUM"
+        String dataType, // e.g. "String", "Long", "Boolean", "Duration", etc.
+        String relationTarget, // si RELATION: nombre entidad destino
+        String enumValuesJson, // si ENUM: JSON con valores
+
+        // List / tabla
+        Boolean listVisible,
+        Integer listOrder,
+        String listLabel,
+        Integer listWidthPx,
+        String listAlign,
+        Boolean listSearchable,
+        Boolean listSortable,
+
+        // Form
+        Boolean formVisible,
+        Integer formOrder,
+        String formLabel,
+        String controlType, // input, select, textarea, color, date, time, etc.
+        String placeholder,
+        String helpText,
+        Boolean required,
+        Boolean readOnly,
+
+        // Validaciones
+        BigDecimal minNum,
+        BigDecimal maxNum,
+        Integer minLen,
+        Integer maxLen,
+        String pattern,
+
+        // Otros
+        String defaultValue,
+        String optionsEndpoint) {
 }
 
 ```
@@ -275,6 +317,21 @@ import com.screenleads.backend.app.domain.model.MediaType;
 public record MediaDTO(Long id, String src, MediaType type) {
 }
 
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/web/dto/MediaSlimDTO.java
+package com.screenleads.backend.app.web.dto;
+
+import java.time.Instant;
+
+public record MediaSlimDTO(
+        Long id,
+        String src,
+        MediaTypeDTO type,
+        Instant createdAt,
+        Instant updatedAt) {
+}
 ```
 
 ```java

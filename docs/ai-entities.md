@@ -189,97 +189,219 @@ private AdviceSchedule schedule;
 package com.screenleads.backend.app.domain.model;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(
-    name = "app_entity",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uk_app_entity_resource", columnNames = "resource"),
-        @UniqueConstraint(name = "uk_app_entity_endpoint", columnNames = "endpoint_base")
-    },
-    indexes = {
-        @Index(name = "ix_app_entity_endpoint", columnList = "endpoint_base"),
-        @Index(name = "ix_app_entity_sort_order", columnList = "sort_order")
-    }
-)
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Table(name = "app_entity", uniqueConstraints = {
+                @UniqueConstraint(name = "uk_app_entity_resource", columnNames = "resource"),
+                @UniqueConstraint(name = "uk_app_entity_endpoint", columnNames = "endpoint_base")
+}, indexes = {
+                @Index(name = "ix_app_entity_endpoint", columnList = "endpoint_base"),
+                @Index(name = "ix_app_entity_sort_order", columnList = "sort_order")
+})
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class AppEntity {
+
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+
+        /** Clave funcional: "company", "device", "promotion_lead", ... */
+        @Column(nullable = false, length = 80)
+        private String resource;
+
+        /** Nombre "técnico" mostrable (normalmente igual al nombre de clase simple). */
+        @Column(name = "entity_name", nullable = false, length = 120)
+        private String entityName;
+
+        /** Nombre FQCN (opcional). */
+        @Column(name = "class_name", length = 300)
+        private String className;
+
+        /** Nombre de tabla física (opcional). */
+        @Column(name = "table_name", length = 120)
+        private String tableName;
+
+        /** Tipo del ID: "Long", "UUID", etc. */
+        @Column(name = "id_type", length = 60)
+        private String idType;
+
+        /** Endpoint base REST sin /api (p. ej., "/users"). */
+        @Column(name = "endpoint_base", nullable = false, length = 120)
+        private String endpointBase;
+
+        /** Niveles de permiso (si aplican en tu política). */
+        @Column(name = "create_level", nullable = false)
+        private Integer createLevel;
+
+        @Column(name = "read_level", nullable = false)
+        private Integer readLevel;
+
+        @Column(name = "update_level", nullable = false)
+        private Integer updateLevel;
+
+        @Column(name = "delete_level", nullable = false)
+        private Integer deleteLevel;
+
+        @Column(name = "visible_in_menu")
+        private Boolean visibleInMenu;
+
+        /** Conteo de filas (opcional; null si no se pide). */
+        @Column(name = "row_count")
+        private Long rowCount;
+
+        /** Texto mostrado en el dashboard/menú (p.ej., "Devices"). */
+        @Column(name = "display_label", nullable = false, length = 120)
+        private String displayLabel;
+
+        /** Nombre de icono (p.ej., "tv-2", "building-2", "image"). */
+        @Column(name = "icon", length = 80)
+        private String icon;
+
+        /** Orden en el menú (más bajo = antes). */
+        @Column(name = "sort_order")
+        private Integer sortOrder;
+
+        // AppEntity.java (solo la parte relevante)
+        @OneToMany(mappedBy = "appEntity", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+        @OrderBy("listOrder ASC NULLS LAST, id ASC")
+        @Builder.Default
+        private java.util.List<AppEntityAttribute> attributes = new java.util.ArrayList<>();
+
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/domain/model/AppEntityAttribute.java
+// AppEntityAttribute.java
+package com.screenleads.backend.app.domain.model;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "app_entity_attribute", uniqueConstraints = @UniqueConstraint(columnNames = { "app_entity_id",
+        "attr_name" }))
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AppEntityAttribute {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Clave funcional: "company", "device", "promotion_lead", ... */
-    @Column(nullable = false, length = 80)
-    private String resource;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "app_entity_id")
+    private AppEntity appEntity;
 
-    /** Nombre "técnico" mostrable (normalmente igual al nombre de clase simple). */
-    @Column(name = "entity_name", nullable = false, length = 120)
-    private String entityName;
+    @Column(name = "attr_name", nullable = false, length = 100)
+    private String name; // clave (ej: "name", "primaryColor")
 
-    /** Nombre FQCN (opcional). */
-    @Column(name = "class_name", length = 300)
-    private String className;
+    @Column(name = "attr_type", length = 80)
+    private String attrType; // compat con lo que tenías (String, Long, Boolean...)
 
-    /** Nombre de tabla física (opcional). */
-    @Column(name = "table_name", length = 120)
-    private String tableName;
+    // Metadatos extendidos
+    @Column(name = "data_type", length = 50)
+    private String dataType; // opcional si quieres diferenciarlo de attrType
 
-    /** Tipo del ID: "Long", "UUID", etc. */
-    @Column(name = "id_type", length = 60)
-    private String idType;
+    @Column(name = "relation_target", length = 80)
+    private String relationTarget; // ej: "Company", "Media"
 
-    /** Endpoint base REST sin /api (p. ej., "/users"). */
-    @Column(name = "endpoint_base", nullable = false, length = 120)
-    private String endpointBase;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "enum_values", columnDefinition = "jsonb")
+    private List<String> enumValues; // o JsonNode / List<Map<String,Object>>
 
-    /** Niveles de permiso (si aplican en tu política). */
-    @Column(name = "create_level", nullable = false)
-    private Integer createLevel;
-
-    @Column(name = "read_level", nullable = false)
-    private Integer readLevel;
-
-    @Column(name = "update_level", nullable = false)
-    private Integer updateLevel;
-
-    @Column(name = "delete_level", nullable = false)
-    private Integer deleteLevel;
-
-    /** Conteo de filas (opcional; null si no se pide). */
-    @Column(name = "row_count")
-    private Long rowCount;
-
-    /** Atributos (nombre → tipo) en orden estable. */
-    @ElementCollection
-    @CollectionTable(
-        name = "app_entity_attribute",
-        joinColumns = @JoinColumn(name = "app_entity_id",
-            foreignKey = @ForeignKey(name = "fk_app_entity_attribute_entity"))
-    )
-    @MapKeyColumn(name = "attr_name", length = 120)
-    @Column(name = "attr_type", length = 200)
-    @OrderColumn(name = "attr_order")
+    // LIST
+    @Column(name = "list_visible")
     @Builder.Default
-    private Map<String, String> attributes = new LinkedHashMap<>();
+    private Boolean listVisible = Boolean.TRUE;
 
-    /** Texto mostrado en el dashboard/menú (p.ej., "Devices"). */
-    @Column(name = "display_label", nullable = false, length = 120)
-    private String displayLabel;
+    @Column(name = "list_order")
+    private Integer listOrder;
 
-    /** Nombre de icono (p.ej., "tv-2", "building-2", "image"). */
-    @Column(name = "icon", length = 80)
-    private String icon;
+    @Column(name = "list_label", length = 150)
+    private String listLabel;
 
-    /** Orden en el menú (más bajo = antes). */
-    @Column(name = "sort_order")
-    private Integer sortOrder;
+    @Column(name = "list_width_px")
+    private Integer listWidthPx;
+
+    @Column(name = "list_align", length = 10)
+    private String listAlign;
+
+    @Column(name = "list_searchable")
+    @Builder.Default
+    private Boolean listSearchable = Boolean.TRUE;
+
+    @Column(name = "list_sortable")
+    @Builder.Default
+    private Boolean listSortable = Boolean.TRUE;
+
+    // FORM
+    @Column(name = "form_visible")
+    @Builder.Default
+    private Boolean formVisible = Boolean.TRUE;
+
+    @Column(name = "form_order")
+    private Integer formOrder;
+
+    @Column(name = "form_label", length = 150)
+    private String formLabel;
+
+    @Column(name = "control_type", length = 30)
+    private String controlType;
+
+    @Column(name = "placeholder", length = 200)
+    private String placeholder;
+
+    @Column(name = "help_text", length = 300)
+    private String helpText;
+
+    @Column(name = "required")
+    @Builder.Default
+    private Boolean required = Boolean.FALSE;
+
+    @Column(name = "read_only")
+    @Builder.Default
+    private Boolean readOnly = Boolean.FALSE;
+
+    @Column(name = "min_num", precision = 18, scale = 6)
+    private BigDecimal minNum;
+
+    @Column(name = "max_num", precision = 18, scale = 6)
+    private BigDecimal maxNum;
+
+    @Column(name = "min_len")
+    private Integer minLen;
+
+    @Column(name = "max_len")
+    private Integer maxLen;
+
+    @Column(name = "pattern", length = 200)
+    private String pattern;
+
+    @Column(name = "default_value")
+    private String defaultValue;
+
+    @Column(name = "options_endpoint", length = 200)
+    private String optionsEndpoint;
 }
 
 ```
@@ -685,48 +807,34 @@ public enum LeadLimitType {
 // src/main/java/com/screenleads/backend/app/domain/model/Media.java
 package com.screenleads.backend.app.domain.model;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
-
 @Entity
-@Table(name = "media",
-indexes = {
-@Index(name = "ix_media_company", columnList = "company_id"),
-@Index(name = "ix_media_created_at", columnList = "created_at")
-},
-uniqueConstraints = @UniqueConstraint(name = "uk_media_src", columnNames = {"src"})
-)
+@Table(name = "media", indexes = {
+        @Index(name = "ix_media_company", columnList = "company_id"),
+        @Index(name = "ix_media_created_at", columnList = "created_at")
+}, uniqueConstraints = @UniqueConstraint(name = "uk_media_src", columnNames = { "src" }))
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Media extends Auditable {
-@Id
-@GeneratedValue(strategy = GenerationType.IDENTITY)
-private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
+    @Column(nullable = false, length = 2048)
+    private String src;
 
-@Column(nullable = false, length = 255)
-private String name;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "type_id", nullable = false, foreignKey = @ForeignKey(name = "fk_media_type"))
+    private MediaType type;
 
-
-@Column(nullable = false, length = 2048)
-private String src;
-
-
-@ManyToOne(fetch = FetchType.LAZY, optional = false)
-@JoinColumn(name = "type_id", nullable = false,
-foreignKey = @ForeignKey(name = "fk_media_type"))
-private MediaType type;
-
-
-@ManyToOne(fetch = FetchType.LAZY, optional = false)
-@JoinColumn(name = "company_id", nullable = false,
-foreignKey = @ForeignKey(name = "fk_media_company"))
-private Company company;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "company_id", nullable = false, foreignKey = @ForeignKey(name = "fk_media_company"))
+    private Company company;
 }
 ```
 
