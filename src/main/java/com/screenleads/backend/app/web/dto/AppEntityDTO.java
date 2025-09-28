@@ -1,36 +1,27 @@
 package com.screenleads.backend.app.web.dto;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
+import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 
-import lombok.*;
-
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Jacksonized
 @Builder
-public class AppEntityDTO {
-
-    private Long id;
-
-    private String resource;
-    private String entityName;
-    private String className;
-    private String tableName;
-    private String idType;
-    private String endpointBase;
-
-    private Integer createLevel;
-    private Integer readLevel;
-    private Integer updateLevel;
-    private Integer deleteLevel;
-
-    private Long rowCount;
-
-    @Builder.Default
-    private Map<String, String> attributes = new LinkedHashMap<>();
-
-    // Dashboard metadata
-    private String displayLabel;
-    private String icon;
-    private Integer sortOrder;
+public record AppEntityDTO(
+                Long id,
+                String resource,
+                String entityName,
+                String className,
+                String tableName,
+                String idType,
+                String endpointBase,
+                Integer createLevel,
+                Integer readLevel,
+                Integer updateLevel,
+                Integer deleteLevel,
+                Boolean visibleInMenu,
+                Long rowCount,
+                String displayLabel,
+                String icon,
+                Integer sortOrder,
+                List<EntityAttributeDTO> attributes) {
 }
