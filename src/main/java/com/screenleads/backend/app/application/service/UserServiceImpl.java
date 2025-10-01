@@ -170,10 +170,9 @@ public class UserServiceImpl implements UserService {
             }
 
             // Si llega un rol (único) en el DTO, cambiarlo con mismas reglas
-            if (dto.getRole() != null || dto.getRole().getId() != null) {
-                if (!perm.can("user", "update")) {
+            if (dto.getRole() != null && dto.getRole().getId() != null) {
+                if (!perm.can("user", "update"))
                     throw new IllegalArgumentException("No autorizado a actualizar usuarios");
-                }
                 Role newRole = resolveRoleFromDto(dto);
                 if (newRole == null)
                     throw new IllegalArgumentException("Rol inválido");
@@ -285,14 +284,17 @@ public class UserServiceImpl implements UserService {
      * - Si llega role (nombre/código) → busca por nombre.
      */
     private Role resolveRoleFromDto(UserDto dto) {
-        if (dto.getRole() != null) {
+        if (dto.getRole() == null)
+            return null;
+        if (dto.getRole().getId() != null) {
             return roleRepo.findById(dto.getRole().getId())
                     .orElseThrow(() -> new IllegalArgumentException("roleId inválido: " + dto.getRole().getId()));
         }
-        if (dto.getRole() != null && dto.getRole().getId() != null) {
+        if (dto.getRole().getRole() != null) {
             return roleRepo.findByRole(dto.getRole().getRole())
-                    .orElseThrow(() -> new IllegalArgumentException("role inválido: " + dto.getRole()));
+                    .orElseThrow(() -> new IllegalArgumentException("role inválido: " + dto.getRole().getRole()));
         }
         return null;
     }
+
 }

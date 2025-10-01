@@ -210,8 +210,8 @@ public class CompaniesServiceImpl implements CompaniesService {
             return null;
         return new MediaTypeDTO(
                 t.getId(),
-                t.getType(),
-                t.getExtension(),
+                t.getExtension(), // <-- correcto
+                t.getType(), // <-- correcto
                 t.getEnabled());
     }
 

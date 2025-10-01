@@ -94,12 +94,13 @@ public class PromotionServiceImpl implements PromotionService {
         Promotion promo = promotionRepository.findById(promotionId)
                 .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + promotionId));
 
-        // Mapear DTO -> Entity temporalmente para leer campos como identifier sin usar getters del DTO
+        // Mapear DTO -> Entity temporalmente para leer campos como identifier sin usar
+        // getters del DTO
         PromotionLead candidate = map(dto, PromotionLead.class);
 
         // Si tienes unique (promotion_id + identifier), prevenimos duplicados
-        if (candidate.getIdentifier() != null
-                && promotionLeadRepository.existsByPromotionIdAndIdentifier(promotionId, candidate.getIdentifier())) {
+        if (candidate.getIdentifier() != null &&
+                promotionLeadRepository.existsByPromotionIdAndIdentifier(promotionId, candidate.getIdentifier())) {
             throw new IllegalArgumentException("Lead already exists for identifier: " + candidate.getIdentifier());
         }
 
@@ -124,7 +125,7 @@ public class PromotionServiceImpl implements PromotionService {
     @Transactional(readOnly = true)
     public String exportLeadsCsv(Long promotionId, ZonedDateTime from, ZonedDateTime to) {
         Instant fromI = from != null ? from.toInstant() : Instant.EPOCH;
-        Instant toI   = to   != null ? to.toInstant()   : Instant.now();
+        Instant toI = to != null ? to.toInstant() : Instant.now();
 
         List<PromotionLead> leads = promotionLeadRepository.findByPromotionId(promotionId).stream()
                 .filter(l -> {
@@ -135,21 +136,22 @@ public class PromotionServiceImpl implements PromotionService {
                 .collect(Collectors.toList());
 
         StringBuilder sb = new StringBuilder();
-        sb.append("id,promotionId,identifierType,identifier,firstName,lastName,email,phone,birthDate,acceptedPrivacyAt,acceptedTermsAt,createdAt\n");
+        sb.append(
+                "id,promotionId,identifierType,identifier,firstName,lastName,email,phone,birthDate,acceptedPrivacyAt,acceptedTermsAt,createdAt\n");
         for (PromotionLead l : leads) {
             sb.append(Optional.ofNullable(l.getId()).orElse(0L)).append(',')
-              .append(Optional.ofNullable(l.getPromotion()).map(Promotion::getId).orElse(null)).append(',')
-              .append(Optional.ofNullable(l.getIdentifierType()).map(Enum::name).orElse("")).append(',')
-              .append(csv(l.getIdentifier())).append(',')
-              .append(csv(l.getFirstName())).append(',')
-              .append(csv(l.getLastName())).append(',')
-              .append(csv(l.getEmail())).append(',')
-              .append(csv(l.getPhone())).append(',')
-              .append(Optional.ofNullable(l.getBirthDate()).orElse(null)).append(',')
-              .append(Optional.ofNullable(l.getAcceptedPrivacyAt()).orElse(null)).append(',')
-              .append(Optional.ofNullable(l.getAcceptedTermsAt()).orElse(null)).append(',')
-              .append(Optional.ofNullable(l.getCreatedAt()).orElse(null))
-              .append('\n');
+                    .append(Optional.ofNullable(l.getPromotion()).map(Promotion::getId).orElse(null)).append(',')
+                    .append(Optional.ofNullable(l.getIdentifierType()).map(Enum::name).orElse("")).append(',')
+                    .append(csv(l.getIdentifier())).append(',')
+                    .append(csv(l.getFirstName())).append(',')
+                    .append(csv(l.getLastName())).append(',')
+                    .append(csv(l.getEmail())).append(',')
+                    .append(csv(l.getPhone())).append(',')
+                    .append(Optional.ofNullable(l.getBirthDate()).orElse(null)).append(',')
+                    .append(Optional.ofNullable(l.getAcceptedPrivacyAt()).orElse(null)).append(',')
+                    .append(Optional.ofNullable(l.getAcceptedTermsAt()).orElse(null)).append(',')
+                    .append(Optional.ofNullable(l.getCreatedAt()).orElse(null))
+                    .append('\n');
         }
         return sb.toString();
     }
@@ -159,7 +161,7 @@ public class PromotionServiceImpl implements PromotionService {
     public LeadSummaryDTO getLeadSummary(Long promotionId, ZonedDateTime from, ZonedDateTime to) {
         ZoneId zone = ZoneId.systemDefault();
         Instant fromI = from != null ? from.toInstant() : Instant.EPOCH;
-        Instant toI   = to   != null ? to.toInstant()   : Instant.now();
+        Instant toI = to != null ? to.toInstant() : Instant.now();
 
         List<PromotionLead> leads = promotionLeadRepository.findByPromotionId(promotionId).stream()
                 .filter(l -> {
@@ -168,21 +170,20 @@ public class PromotionServiceImpl implements PromotionService {
                 })
                 .toList();
 
-        long total = leads.size();
-        Map<LocalDate, Long> byDay = leads.stream().collect(Collectors.groupingBy(
-                l -> l.getCreatedAt().atZone(zone).toLocalDate(),
-                TreeMap::new,
-                Collectors.counting()
-        ));
+        long totalLeads = leads.size();
+        long uniqueIdentifiers = leads.stream()
+                .map(PromotionLead::getIdentifier)
+                .filter(Objects::nonNull)
+                .distinct()
+                .count();
 
-        // Construimos el DTO sin asumir sus setters/getters exactos (usamos ObjectMapper)
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("promotionId", promotionId);
-        payload.put("from", from);
-        payload.put("to", to);
-        payload.put("total", total);
-        payload.put("daily", byDay);
-        return objectMapper.convertValue(payload, LeadSummaryDTO.class);
+        Map<LocalDate, Long> leadsByDay = leads.stream().collect(
+                java.util.stream.Collectors.groupingBy(
+                        l -> l.getCreatedAt().atZone(zone).toLocalDate(),
+                        java.util.TreeMap::new,
+                        java.util.stream.Collectors.counting()));
+
+        return new LeadSummaryDTO(promotionId, totalLeads, uniqueIdentifiers, leadsByDay);
     }
 
     @Override
@@ -216,12 +217,14 @@ public class PromotionServiceImpl implements PromotionService {
     // =========================================
 
     private <T> T map(Object source, Class<T> targetType) {
-        if (source == null) return null;
+        if (source == null)
+            return null;
         return objectMapper.convertValue(source, targetType);
     }
 
     private static void mergeNonNull(Object src, Object target) {
-        if (src == null || target == null) return;
+        if (src == null || target == null)
+            return;
         BeanUtils.copyProperties(src, target, getNullPropertyNames(src));
     }
 
@@ -233,7 +236,8 @@ public class PromotionServiceImpl implements PromotionService {
         for (PropertyDescriptor pd : pds) {
             String name = pd.getName();
             // ignorar "class"
-            if ("class".equals(name)) continue;
+            if ("class".equals(name))
+                continue;
             Object value = src.getPropertyValue(name);
             if (value == null) {
                 emptyNames.add(name);
@@ -243,7 +247,8 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     private static String csv(String s) {
-        if (s == null) return "";
+        if (s == null)
+            return "";
         String escaped = s.replace("\"", "\"\"");
         if (escaped.contains(",") || escaped.contains("\"") || escaped.contains("\n")) {
             return "\"" + escaped + "\"";

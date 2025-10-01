@@ -32,8 +32,8 @@ public class AdviceServiceImpl implements AdviceService {
     private EntityManager entityManager;
 
     public AdviceServiceImpl(AdviceRepository adviceRepository,
-                             MediaRepository mediaRepository,
-                             UserRepository userRepository) {
+            MediaRepository mediaRepository,
+            UserRepository userRepository) {
         this.adviceRepository = adviceRepository;
         this.mediaRepository = mediaRepository;
         this.userRepository = userRepository;
@@ -73,19 +73,21 @@ public class AdviceServiceImpl implements AdviceService {
     private boolean isVisibleNow(Advice a, LocalDate date, DayOfWeek weekday, LocalTime time) {
         for (AdviceSchedule s : a.getSchedules()) {
             boolean dateOk = (s.getStartDate() == null || !date.isBefore(s.getStartDate()))
-                          && (s.getEndDate() == null   || !date.isAfter(s.getEndDate()));
-            if (!dateOk) continue;
+                    && (s.getEndDate() == null || !date.isAfter(s.getEndDate()));
+            if (!dateOk)
+                continue;
 
             // Si el día no tiene horas, no es visible ese día
-            if (s.getWindows() == null || s.getWindows().isEmpty()) continue;
+            if (s.getWindows() == null || s.getWindows().isEmpty())
+                continue;
 
-            boolean any = s.getWindows().stream().anyMatch(w ->
-                    w.getWeekday() == weekday
-                 && w.getFromTime() != null && w.getToTime() != null
-                 && !time.isBefore(w.getFromTime())   // >= from
-                 && time.isBefore(w.getToTime())       // < to (fin exclusivo)
+            boolean any = s.getWindows().stream().anyMatch(w -> w.getWeekday() == weekday
+                    && w.getFromTime() != null && w.getToTime() != null
+                    && !time.isBefore(w.getFromTime()) // >= from
+                    && time.isBefore(w.getToTime()) // < to (fin exclusivo)
             );
-            if (any) return true;
+            if (any)
+                return true;
         }
         return false;
     }
@@ -164,20 +166,23 @@ public class AdviceServiceImpl implements AdviceService {
     // ============================= VALIDACIONES =============================
 
     private void validateAdvice(Advice advice) {
-        if (advice.getSchedules() == null) return;
+        if (advice.getSchedules() == null)
+            return;
         for (AdviceSchedule s : advice.getSchedules()) {
             if (s.getStartDate() != null && s.getEndDate() != null &&
-                s.getStartDate().isAfter(s.getEndDate())) {
+                    s.getStartDate().isAfter(s.getEndDate())) {
                 throw new IllegalArgumentException("Schedule startDate must be <= endDate");
             }
-            if (s.getWindows() != null) validateAndNormalizeWindows(s.getWindows());
+            if (s.getWindows() != null)
+                validateAndNormalizeWindows(s.getWindows());
         }
     }
 
     /** from<to, orden por día+hora, no solapes dentro del mismo día. */
     private void validateAndNormalizeWindows(List<AdviceTimeWindow> windows) {
         for (AdviceTimeWindow w : windows) {
-            if (w.getWeekday() == null) throw new IllegalArgumentException("Window weekday is required");
+            if (w.getWeekday() == null)
+                throw new IllegalArgumentException("Window weekday is required");
             if (w.getFromTime() == null || w.getToTime() == null)
                 throw new IllegalArgumentException("Window from/to must be set");
             if (!w.getFromTime().isBefore(w.getToTime()))
@@ -190,13 +195,13 @@ public class AdviceServiceImpl implements AdviceService {
 
         for (int i = 1; i < windows.size(); i++) {
             AdviceTimeWindow prev = windows.get(i - 1);
-            AdviceTimeWindow cur  = windows.get(i);
+            AdviceTimeWindow cur = windows.get(i);
             if (cur.getWeekday() == prev.getWeekday()
-             && cur.getFromTime().isBefore(prev.getToTime())) {
+                    && cur.getFromTime().isBefore(prev.getToTime())) {
                 throw new IllegalArgumentException(
                         "Overlapping windows on " + prev.getWeekday()
-                        + ": [" + prev.getFromTime() + "-" + prev.getToTime() + "] with ["
-                        + cur.getFromTime() + "-" + cur.getToTime() + "]");
+                                + ": [" + prev.getFromTime() + "-" + prev.getToTime() + "] with ["
+                                + cur.getFromTime() + "-" + cur.getToTime() + "]");
             }
         }
     }
@@ -278,56 +283,62 @@ public class AdviceServiceImpl implements AdviceService {
     // ============================= HELPERS =============================
 
     private Duration numberToDuration(Number n) {
-        if (n == null) return null;
+        if (n == null)
+            return null;
         long s = n.longValue();
         return (s > 0) ? Duration.ofSeconds(s) : null;
     }
 
     private LocalDate parseDate(String s) {
-        if (s == null || s.isBlank()) return null;
+        if (s == null || s.isBlank())
+            return null;
         return LocalDate.parse(s.trim());
     }
+
     private String formatDate(LocalDate d) {
         return (d == null) ? null : d.toString();
     }
 
     private LocalTime parseTime(String s) {
-        if (s == null || s.isBlank()) return null;
+        if (s == null || s.isBlank())
+            return null;
         String t = s.trim();
-        if (t.matches("^\\d{2}:\\d{2}$")) t = t + ":00";
+        if (t.matches("^\\d{2}:\\d{2}$"))
+            t = t + ":00";
         return LocalTime.parse(t, DateTimeFormatter.ISO_LOCAL_TIME);
     }
+
     private String formatTime(LocalTime t) {
         return (t == null) ? null : t.toString(); // HH:mm:ss
     }
 
     private DayOfWeek parseWeekday(String s) {
-        if (s == null || s.isBlank()) return null;
+        if (s == null || s.isBlank())
+            return null;
         return DayOfWeek.valueOf(s.trim().toUpperCase());
     }
 
     private Media resolveMediaFromDto(MediaUpsertDTO incoming) {
-        if (incoming == null) return null;
-
+        if (incoming == null)
+            return null;
         if (incoming.id() != null && incoming.id() > 0) {
             return mediaRepository.findById(incoming.id())
                     .orElseThrow(() -> new IllegalArgumentException("Media no encontrada (id=" + incoming.id() + ")"));
         }
-        String src = incoming.src() != null ? incoming.src().trim() : null;
-        if (src != null && !src.isEmpty()) {
-            Media existing = mediaRepository.findBySrc(src).orElse(null);
-            if (existing != null) return existing;
-            Media m = new Media();
-            m.setSrc(src);
-            return mediaRepository.save(m);
+        if (incoming.src() != null && !incoming.src().isBlank()) {
+            return mediaRepository.findBySrc(incoming.src().trim())
+                    .orElseThrow(
+                            () -> new IllegalArgumentException("Media no encontrada por src (debe crearse antes)"));
         }
         return null;
     }
 
     private Promotion resolvePromotionFromDto(PromotionRefDTO incoming) {
-        if (incoming == null) return null;
+        if (incoming == null)
+            return null;
         Long id = incoming.id();
-        if (id == null || id <= 0) return null;
+        if (id == null || id <= 0)
+            return null;
         return entityManager.getReference(Promotion.class, id);
     }
 
@@ -350,7 +361,8 @@ public class AdviceServiceImpl implements AdviceService {
             c.setId(desiredId);
             return c;
         }
-        if (current != null) return current;
+        if (current != null)
+            return current;
         if (userCompanyId != null) {
             Company c = new Company();
             c.setId(userCompanyId);
@@ -362,15 +374,18 @@ public class AdviceServiceImpl implements AdviceService {
     /** Activa el filtro "companyFilter" si NO es admin. */
     private void enableCompanyFilterIfNeeded() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) return;
+        if (auth == null || !auth.isAuthenticated())
+            return;
 
         boolean isAdmin = auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(a -> "ROLE_ADMIN".equals(a) || "ADMIN".equals(a));
-        if (isAdmin) return;
+        if (isAdmin)
+            return;
 
         Long companyId = resolveCompanyId(auth);
-        if (companyId == null) return;
+        if (companyId == null)
+            return;
 
         Session session = entityManager.unwrap(Session.class);
         var filter = session.getEnabledFilter("companyFilter");
@@ -383,7 +398,8 @@ public class AdviceServiceImpl implements AdviceService {
 
     private boolean isCurrentUserAdmin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) return false;
+        if (auth == null || !auth.isAuthenticated())
+            return false;
         return auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(a -> "ROLE_ADMIN".equals(a) || "ADMIN".equals(a));
@@ -391,7 +407,8 @@ public class AdviceServiceImpl implements AdviceService {
 
     private Long currentCompanyId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) return null;
+        if (auth == null || !auth.isAuthenticated())
+            return null;
         return resolveCompanyId(auth);
     }
 

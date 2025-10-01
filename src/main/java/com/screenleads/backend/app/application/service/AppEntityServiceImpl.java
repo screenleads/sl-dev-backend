@@ -2,6 +2,7 @@ package com.screenleads.backend.app.application.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -104,7 +105,7 @@ public class AppEntityServiceImpl implements AppEntityService {
         e.setReadLevel(dto.readLevel() != null ? dto.readLevel() : e.getReadLevel());
         e.setUpdateLevel(dto.updateLevel() != null ? dto.updateLevel() : e.getUpdateLevel());
         e.setDeleteLevel(dto.deleteLevel() != null ? dto.deleteLevel() : e.getDeleteLevel());
-
+        e.setVisibleInMenu(dto.visibleInMenu() != null ? dto.visibleInMenu() : e.getVisibleInMenu());
         // Dashboard metadata
         if (dto.displayLabel() != null && !dto.displayLabel().isBlank()) {
             e.setDisplayLabel(dto.displayLabel());
@@ -118,8 +119,6 @@ public class AppEntityServiceImpl implements AppEntityService {
         if (dto.attributes() != null) {
             mergeAttributes(e, dto.attributes());
         }
-        // Si prefieres "replace exacto" (borrar los que no vienen), usa:
-        // replaceAttributes(e, dto.attributes());
 
         AppEntity saved = repo.save(e);
         return AppEntityMapper.toDto(saved);
@@ -129,6 +128,139 @@ public class AppEntityServiceImpl implements AppEntityService {
     @Transactional
     public void deleteById(Long id) {
         repo.deleteById(id);
+    }
+
+    // ===================== REORDER (drag & drop) =====================
+
+    @Override
+    @Transactional
+    public void reorderEntities(List<Long> orderedIds) {
+        if (orderedIds == null || orderedIds.isEmpty()) {
+            throw new IllegalArgumentException("Debe enviarse una lista de IDs para reordenar.");
+        }
+
+        // Validar duplicados en la lista
+        var seen = new HashSet<Long>();
+        for (Long id : orderedIds) {
+            if (id == null) {
+                throw new IllegalArgumentException("La lista de IDs no puede contener nulos.");
+            }
+            if (!seen.add(id)) {
+                throw new IllegalArgumentException("La lista de IDs contiene duplicados: " + id);
+            }
+        }
+
+        // Reordenamos SOLO las visibles en menú
+        List<AppEntity> visibles = repo.findByVisibleInMenuTrueOrderBySortOrderAsc();
+        if (visibles.isEmpty())
+            return;
+
+        Map<Long, AppEntity> byId = new HashMap<>();
+        for (AppEntity e : visibles) {
+            byId.put(e.getId(), e);
+        }
+
+        // Validar que todos los IDs pertenezcan al conjunto visible
+        for (Long id : orderedIds) {
+            if (!byId.containsKey(id)) {
+                throw new IllegalArgumentException("El ID " + id + " no pertenece a entidades visibles en menú.");
+            }
+        }
+
+        int order = 1;
+        // Asignar primero los recibidos en el nuevo orden
+        for (Long id : orderedIds) {
+            AppEntity e = byId.remove(id);
+            if (e != null)
+                e.setSortOrder(order++);
+        }
+
+        // Mantener el resto con su orden relativo, colocándolos a continuación
+        for (AppEntity e : visibles) {
+            if (byId.containsKey(e.getId())) {
+                e.setSortOrder(order++);
+            }
+        }
+
+        repo.saveAll(visibles);
+    }
+
+    @Override
+    @Transactional
+    public void reorderAttributes(Long entityId, List<Long> orderedAttributeIds) {
+        if (entityId == null)
+            throw new IllegalArgumentException("entityId requerido");
+        if (orderedAttributeIds == null || orderedAttributeIds.isEmpty()) {
+            throw new IllegalArgumentException("Debe enviarse una lista de IDs de atributos para reordenar.");
+        }
+
+        var seen = new HashSet<Long>();
+        for (Long id : orderedAttributeIds) {
+            if (id == null) {
+                throw new IllegalArgumentException("La lista de IDs de atributos no puede contener nulos.");
+            }
+            if (!seen.add(id)) {
+                throw new IllegalArgumentException("La lista de IDs de atributos contiene duplicados: " + id);
+            }
+        }
+
+        AppEntity entity = repo.findWithAttributesById(entityId)
+                .orElseThrow(() -> new IllegalArgumentException("AppEntity no encontrada: id=" + entityId));
+
+        if (entity.getAttributes() == null || entity.getAttributes().isEmpty())
+            return;
+
+        Map<Long, AppEntityAttribute> byId = new HashMap<>();
+        for (AppEntityAttribute a : entity.getAttributes()) {
+            if (a.getId() != null)
+                byId.put(a.getId(), a);
+        }
+
+        // Validar pertenencia
+        for (Long id : orderedAttributeIds) {
+            if (!byId.containsKey(id)) {
+                throw new IllegalArgumentException("El atributo " + id + " no pertenece a la entidad " + entityId);
+            }
+        }
+
+        int order = 0;
+
+        // Reordena los indicados primero
+        for (Long id : orderedAttributeIds) {
+            AppEntityAttribute a = byId.remove(id);
+            if (a != null) {
+                int newOrder = ++order;
+                Integer oldListOrder = a.getListOrder();
+                a.setListOrder(newOrder);
+
+                // Solo sincroniza formOrder si no estaba personalizado
+                if (a.getFormOrder() == null || (oldListOrder != null && a.getFormOrder().equals(oldListOrder))) {
+                    a.setFormOrder(newOrder);
+                }
+            }
+        }
+
+        // Añade el resto manteniendo su orden relativo original
+        List<AppEntityAttribute> remaining = entity.getAttributes().stream()
+                .filter(a -> byId.containsKey(a.getId()))
+                .sorted((x, y) -> {
+                    Integer lx = x.getListOrder() == null ? Integer.MAX_VALUE : x.getListOrder();
+                    Integer ly = y.getListOrder() == null ? Integer.MAX_VALUE : y.getListOrder();
+                    return Integer.compare(lx, ly);
+                })
+                .toList();
+
+        for (AppEntityAttribute a : remaining) {
+            int newOrder = ++order;
+            Integer oldListOrder = a.getListOrder();
+            a.setListOrder(newOrder);
+            if (a.getFormOrder() == null || (oldListOrder != null && a.getFormOrder().equals(oldListOrder))) {
+                a.setFormOrder(newOrder);
+            }
+        }
+
+        // Guardar. (Cascade en AppEntity -> AppEntityAttribute)
+        repo.save(entity);
     }
 
     // ===================== ROW COUNT =====================
@@ -143,9 +275,6 @@ public class AppEntityServiceImpl implements AppEntityService {
         if (tableName == null || tableName.isBlank() || jdbcTemplate == null)
             return null;
         try {
-            // WARNING: tableName viene de tu propio catálogo; si algún día es editable por
-            // usuario,
-            // parametriza o valida para evitar SQL injection.
             return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + tableName, Long.class);
         } catch (Exception ex) {
             return null;
@@ -216,36 +345,7 @@ public class AppEntityServiceImpl implements AppEntityService {
 
     /** Copia segura: sólo pisa si el DTO trae valor no nulo. */
     private void applyAttrDto(AppEntityAttribute a, EntityAttributeDTO d) {
-        if (d == null)
-            return;
-
-        if (d.name() != null)
-            a.setName(d.name());
-        if (d.attrType() != null)
-            a.setAttrType(d.attrType());
-        if (d.dataType() != null)
-            a.setDataType(d.dataType());
-        if (d.relationTarget() != null)
-            a.setRelationTarget(d.relationTarget());
-
-        if (d.listLabel() != null)
-            a.setListLabel(d.listLabel());
-        if (d.listVisible() != null)
-            a.setListVisible(d.listVisible());
-        if (d.listOrder() != null)
-            a.setListOrder(d.listOrder());
-
-        if (d.formLabel() != null)
-            a.setFormLabel(d.formLabel());
-        if (d.formOrder() != null)
-            a.setFormOrder(d.formOrder());
-        if (d.controlType() != null)
-            a.setControlType(d.controlType());
-
-        if (d.listSearchable() != null)
-            a.setListSearchable(d.listSearchable());
-        if (d.listSortable() != null)
-            a.setListSortable(d.listSortable());
+        AppEntityMapper.applyAttrDto(a, d);
     }
 
     private static String nullIfBlank(String v, String fallback) {
