@@ -88,69 +88,116 @@ public class DataInitializer implements CommandLineRunner {
 
                 createDefaultAdminUser("admin", "admin@screenleads.com", "admin123", "Admin", "Root", admin);
 
-                // 1) Esqueleto de AppEntity (sin atributos)
+                // 1) Esqueleto de AppEntity (sin atributos), con sortOrder único
                 seedAppEntitiesSkeleton();
 
-                // 2) Bootstrap de atributos desde el metamodelo JPA
+                // 2) Bootstrap de atributos desde el metamodelo JPA (nuevas entidades al final)
                 bootstrapEntityAttributesFromMetamodel();
+        }
+
+        // ========= helpers sortOrder =========
+        /** Máximo sortOrder actual (ignora nulls). */
+        private int computeMaxSortOrder() {
+                return appEntityRepository.findAll().stream()
+                                .map(AppEntity::getSortOrder)
+                                .filter(Objects::nonNull)
+                                .max(Integer::compareTo)
+                                .orElse(0);
+        }
+
+        /**
+         * Asegura un sortOrder único para menú. Si desired es null -> siguiente libre.
+         * Excluye la propia entidad por resource (si existe).
+         */
+        private int ensureUniqueSortOrder(Integer desired, String selfResource) {
+                List<AppEntity> all = appEntityRepository.findAll();
+                Set<Integer> used = new HashSet<>();
+                int max = 0;
+                for (AppEntity e : all) {
+                        if (Objects.equals(e.getResource(), selfResource))
+                                continue;
+                        if (Boolean.TRUE.equals(e.getVisibleInMenu()) && e.getSortOrder() != null) {
+                                used.add(e.getSortOrder());
+                                max = Math.max(max, e.getSortOrder());
+                        }
+                }
+                int n = (desired != null) ? desired : (max + 1);
+                while (used.contains(n))
+                        n++;
+                return n;
         }
 
         // ========= SEED ENTIDADES (sólo esqueleto) =========
         private void seedAppEntitiesSkeleton() {
+                // Para evitar choques, pasamos sortOrder deseado (o null) y dentro se normaliza
                 upsertAppEntity("company", "Company",
                                 "com.screenleads.backend.app.domain.model.Company", "company", "Long",
                                 "/companies", 1, 1, 1, 1, true, null,
-                                "Companies", "building-2", 10);
+                                "Companies", "building-2", 1);
 
                 upsertAppEntity("device", "Device",
                                 "com.screenleads.backend.app.domain.model.Device", "device", "Long",
                                 "/devices", 4, 4, 3, 3, true, null,
-                                "Devices", "tv-2", 20);
+                                "Devices", "tv-2", 2);
 
                 upsertAppEntity("device_type", "DeviceType",
                                 "com.screenleads.backend.app.domain.model.DeviceType", "device_type", "Long",
                                 "/devices/types", 1, 1, 1, 1, true, null,
-                                "Device Types", "devices_other", 30);
+                                "Device Types", "devices_other", 3);
 
                 upsertAppEntity("media", "Media",
                                 "com.screenleads.backend.app.domain.model.Media", "media", "Long",
                                 "/medias", 3, 4, 3, 3, true, null,
-                                "Media", "image", 40);
+                                "Media", "image", 4);
 
                 upsertAppEntity("media_type", "MediaType",
                                 "com.screenleads.backend.app.domain.model.MediaType", "media_type", "Long",
                                 "/medias/types", 1, 1, 1, 1, true, null,
-                                "Media Types", "perm_media", 50);
+                                "Media Types", "perm_media", 5);
 
                 upsertAppEntity("advice", "Advice",
                                 "com.screenleads.backend.app.domain.model.Advice", "advice", "Long",
                                 "/advices", 3, 4, 3, 3, true, null,
-                                "Advices", "image_inset", 60);
+                                "Advices", "image_inset", 6);
 
                 upsertAppEntity("promotion", "Promotion",
                                 "com.screenleads.backend.app.domain.model.Promotion", "promotion", "Long",
                                 "/promotions", 3, 4, 3, 3, true, null,
-                                "Promotions", "campaign", 70);
+                                "Promotions", "campaign", 7);
 
                 upsertAppEntity("customer", "Customer",
                                 "com.screenleads.backend.app.domain.model.Customer", "customer", "Long",
                                 "/customers", 2, 2, 2, 2, true, null,
-                                "Customers", "man_4", 80);
+                                "Customers", "man_4", 8);
 
                 upsertAppEntity("user", "User",
                                 "com.screenleads.backend.app.domain.model.User", "app_user", "Long",
                                 "/users", 2, 3, 2, 2, true, null,
-                                "Users", "account_circle", 90);
+                                "Users", "account_circle", 9);
 
                 upsertAppEntity("role", "Role",
                                 "com.screenleads.backend.app.domain.model.Role", "role", "Long",
                                 "/roles", 1, 1, 1, 1, true, null,
-                                "Roles", "shield", 100);
+                                "Roles", "shield", 10);
 
                 upsertAppEntity("app_version", "AppVersion",
                                 "com.screenleads.backend.app.domain.model.AppVersion", "app_version", "Long",
                                 "/app-versions", 1, 1, 1, 1, true, null,
-                                "App Versions", "download-cloud", 110);
+                                "App Versions", "download-cloud", 11);
+
+                // AppEntity (metamodelo) visible en el menú -> sortOrder único (pasa null o
+                // repetido, se corrige)
+                upsertAppEntity("app_entity", "AppEntity",
+                                "com.screenleads.backend.app.domain.model.AppEntity", "app_entity", "Long",
+                                "/entities", 1, 4, 3, 3, true, null,
+                                "App Entities", "apps", null); // null => siguiente libre
+
+                // AppEntityAttribute (metamodelo) visible en el menú -> sortOrder único
+                upsertAppEntity("app_entity_attribute", "AppEntityAttribute",
+                                "com.screenleads.backend.app.domain.model.AppEntityAttribute", "app_entity_attribute",
+                                "Long",
+                                "/app-entity-attributes", 1, 4, 3, 3, true, null,
+                                "App Entity Attributes", "list", null); // null => siguiente libre
         }
 
         private void upsertAppEntity(
@@ -200,13 +247,12 @@ public class DataInitializer implements CommandLineRunner {
                         e.setUpdateLevel(updateLevel);
                         changed = true;
                 }
-                if (!Objects.equals(visibleInMenu, e.getVisibleInMenu())) {
-                        e.setVisibleInMenu(visibleInMenu);
-                        changed = true;
-                }
-
                 if (!Objects.equals(deleteLevel, e.getDeleteLevel())) {
                         e.setDeleteLevel(deleteLevel);
+                        changed = true;
+                }
+                if (!Objects.equals(visibleInMenu, e.getVisibleInMenu())) {
+                        e.setVisibleInMenu(visibleInMenu);
                         changed = true;
                 }
 
@@ -222,8 +268,19 @@ public class DataInitializer implements CommandLineRunner {
                         e.setIcon(icon);
                         changed = true;
                 }
-                if (!Objects.equals(sortOrder, e.getSortOrder())) {
-                        e.setSortOrder(sortOrder);
+
+                // sortOrder seguro: si es visible en menú, garantizamos unicidad; si viene null
+                // -> siguiente libre.
+                Integer safeSortOrder;
+                if (Boolean.TRUE.equals(visibleInMenu)) {
+                        safeSortOrder = ensureUniqueSortOrder(sortOrder, resource);
+                } else {
+                        // Para no chocar si más tarde se hace visible, colocamos al final si viene
+                        // null.
+                        safeSortOrder = (sortOrder != null) ? sortOrder : computeMaxSortOrder() + 1;
+                }
+                if (!Objects.equals(safeSortOrder, e.getSortOrder())) {
+                        e.setSortOrder(safeSortOrder);
                         changed = true;
                 }
 
@@ -240,10 +297,11 @@ public class DataInitializer implements CommandLineRunner {
                 Map<String, AppEntity> byEntityName = appEntityRepository.findAll().stream()
                                 .collect(Collectors.toMap(AppEntity::getEntityName, x -> x, (a, b) -> a));
 
-                int defaultListOrder = 0;
+                // Comenzamos a asignar sortOrder para nuevas entidades DESPUÉS del máximo
+                // actual
+                int nextSortOrder = computeMaxSortOrder();
 
                 for (ManagedType<?> mt : mm.getManagedTypes()) {
-
                         // ---- sin pattern matching (Java 8/11) ----
                         if (!(mt instanceof jakarta.persistence.metamodel.EntityType)) {
                                 continue;
@@ -264,7 +322,7 @@ public class DataInitializer implements CommandLineRunner {
                                                 .idType(resolveIdType(et))
                                                 .endpointBase("/" + ensurePlural(toKebab(resource)))
                                                 .displayLabel(ensurePlural(entityName))
-                                                .sortOrder((defaultListOrder += 10))
+                                                .sortOrder(++nextSortOrder) // colocar al final para evitar choques
                                                 .visibleInMenu(false)
                                                 .createLevel(2).readLevel(4).updateLevel(3).deleteLevel(3)
                                                 .build();
@@ -299,7 +357,7 @@ public class DataInitializer implements CommandLineRunner {
                                         fillTypeInfoFromMetamodel(attr, a);
 
                                         attr.setListVisible(defaultListVisible(name, a));
-                                        attr.setListOrder(order += 10);
+                                        attr.setListOrder(order += 1);
                                         attr.setListLabel(humanize(name));
                                         attr.setListSearchable(Boolean.TRUE);
                                         attr.setListSortable(Boolean.TRUE);
@@ -316,7 +374,7 @@ public class DataInitializer implements CommandLineRunner {
                                                 fillTypeInfoFromMetamodel(attr, a);
                                         }
                                         if (attr.getListOrder() == null)
-                                                attr.setListOrder(order += 10);
+                                                attr.setListOrder(order += 1);
                                         if (attr.getListLabel() == null)
                                                 attr.setListLabel(humanize(name));
                                         if (attr.getFormOrder() == null)
@@ -506,7 +564,6 @@ public class DataInitializer implements CommandLineRunner {
                 if (!mediaTypeRepository.existsByType(type)) {
                         mediaTypeRepository.save(MediaType.builder().type(type).extension(extension).build());
                 }
-                ;
         }
 
         private void createDeviceTypes(String type) {

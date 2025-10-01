@@ -93,33 +93,94 @@ public record AdviceVisibilityRuleDTO(
 ```
 
 ```java
-// src/main/java/com/screenleads/backend/app/web/dto/AppEntityDTO.java
+// src/main/java/com/screenleads/backend/app/web/dto/AppEntityAttributeDTO.java
+// src/main/java/com/screenleads/backend/app/web/dto/EntityAttributeDTO.java
 package com.screenleads.backend.app.web.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 import lombok.Builder;
 import lombok.extern.jackson.Jacksonized;
 
 @Jacksonized
 @Builder
+public record AppEntityAttributeDTO(
+        // Identidad + tipado
+        Long id,
+        String name,
+        String attrType, // e.g. "BASIC", "RELATION", "ENUM"
+        String dataType, // e.g. "String", "Long", "Boolean", "Duration", etc.
+        String relationTarget, // si RELATION: entidad destino
+
+        // *** NUEVO: lista nativa para enums ***
+        List<String> enumValues,
+
+        // (OPCIONAL) compatibilidad si tu front ya envía JSON crudo
+        String enumValuesJson,
+
+        // List / tabla
+        Boolean listVisible,
+        Integer listOrder,
+        String listLabel,
+        Integer listWidthPx,
+        String listAlign,
+        Boolean listSearchable,
+        Boolean listSortable,
+
+        // Form
+        Boolean formVisible,
+        Integer formOrder,
+        String formLabel,
+        String controlType, // input, select, textarea, color, date, time, etc.
+        String placeholder,
+        String helpText,
+        Boolean required,
+        Boolean readOnly,
+
+        // Validaciones
+        BigDecimal minNum,
+        BigDecimal maxNum,
+        Integer minLen,
+        Integer maxLen,
+        String pattern,
+
+        // Otros
+        String defaultValue,
+        String optionsEndpoint) {
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/web/dto/AppEntityDTO.java
+package com.screenleads.backend.app.web.dto;
+
+import java.util.List;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.jackson.Jacksonized;
+
+@Jacksonized
+@Builder(toBuilder = true)
 public record AppEntityDTO(
-                Long id,
-                String resource,
-                String entityName,
-                String className,
-                String tableName,
-                String idType,
-                String endpointBase,
-                Integer createLevel,
-                Integer readLevel,
-                Integer updateLevel,
-                Integer deleteLevel,
-                Boolean visibleInMenu,
-                Long rowCount,
-                String displayLabel,
-                String icon,
-                Integer sortOrder,
-                List<EntityAttributeDTO> attributes) {
+        Long id,
+        String resource,
+        String entityName,
+        String className,
+        String tableName,
+        String idType,
+        String endpointBase,
+        Integer createLevel,
+        Integer readLevel,
+        Integer updateLevel,
+        Integer deleteLevel,
+        Boolean visibleInMenu,
+        Long rowCount,
+        String displayLabel,
+        String icon,
+        Integer sortOrder,
+        List<EntityAttributeDTO> attributes) {
 }
 
 ```
@@ -446,6 +507,17 @@ public class RegisterRequest {
     private String name;
     private String lastName;
     private Long companyId; // opcional: si lo usas al registrar
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/web/dto/ReorderRequest.java
+package com.screenleads.backend.app.web.dto;
+
+import java.util.List;
+
+public record ReorderRequest(List<Long> ids) {
 }
 
 ```

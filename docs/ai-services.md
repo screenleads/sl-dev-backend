@@ -69,8 +69,8 @@ public class AdviceServiceImpl implements AdviceService {
     private EntityManager entityManager;
 
     public AdviceServiceImpl(AdviceRepository adviceRepository,
-                             MediaRepository mediaRepository,
-                             UserRepository userRepository) {
+            MediaRepository mediaRepository,
+            UserRepository userRepository) {
         this.adviceRepository = adviceRepository;
         this.mediaRepository = mediaRepository;
         this.userRepository = userRepository;
@@ -110,19 +110,21 @@ public class AdviceServiceImpl implements AdviceService {
     private boolean isVisibleNow(Advice a, LocalDate date, DayOfWeek weekday, LocalTime time) {
         for (AdviceSchedule s : a.getSchedules()) {
             boolean dateOk = (s.getStartDate() == null || !date.isBefore(s.getStartDate()))
-                          && (s.getEndDate() == null   || !date.isAfter(s.getEndDate()));
-            if (!dateOk) continue;
+                    && (s.getEndDate() == null || !date.isAfter(s.getEndDate()));
+            if (!dateOk)
+                continue;
 
             // Si el día no tiene horas, no es visible ese día
-            if (s.getWindows() == null || s.getWindows().isEmpty()) continue;
+            if (s.getWindows() == null || s.getWindows().isEmpty())
+                continue;
 
-            boolean any = s.getWindows().stream().anyMatch(w ->
-                    w.getWeekday() == weekday
-                 && w.getFromTime() != null && w.getToTime() != null
-                 && !time.isBefore(w.getFromTime())   // >= from
-                 && time.isBefore(w.getToTime())       // < to (fin exclusivo)
+            boolean any = s.getWindows().stream().anyMatch(w -> w.getWeekday() == weekday
+                    && w.getFromTime() != null && w.getToTime() != null
+                    && !time.isBefore(w.getFromTime()) // >= from
+                    && time.isBefore(w.getToTime()) // < to (fin exclusivo)
             );
-            if (any) return true;
+            if (any)
+                return true;
         }
         return false;
     }
@@ -201,20 +203,23 @@ public class AdviceServiceImpl implements AdviceService {
     // ============================= VALIDACIONES =============================
 
     private void validateAdvice(Advice advice) {
-        if (advice.getSchedules() == null) return;
+        if (advice.getSchedules() == null)
+            return;
         for (AdviceSchedule s : advice.getSchedules()) {
             if (s.getStartDate() != null && s.getEndDate() != null &&
-                s.getStartDate().isAfter(s.getEndDate())) {
+                    s.getStartDate().isAfter(s.getEndDate())) {
                 throw new IllegalArgumentException("Schedule startDate must be <= endDate");
             }
-            if (s.getWindows() != null) validateAndNormalizeWindows(s.getWindows());
+            if (s.getWindows() != null)
+                validateAndNormalizeWindows(s.getWindows());
         }
     }
 
     /** from<to, orden por día+hora, no solapes dentro del mismo día. */
     private void validateAndNormalizeWindows(List<AdviceTimeWindow> windows) {
         for (AdviceTimeWindow w : windows) {
-            if (w.getWeekday() == null) throw new IllegalArgumentException("Window weekday is required");
+            if (w.getWeekday() == null)
+                throw new IllegalArgumentException("Window weekday is required");
             if (w.getFromTime() == null || w.getToTime() == null)
                 throw new IllegalArgumentException("Window from/to must be set");
             if (!w.getFromTime().isBefore(w.getToTime()))
@@ -227,13 +232,13 @@ public class AdviceServiceImpl implements AdviceService {
 
         for (int i = 1; i < windows.size(); i++) {
             AdviceTimeWindow prev = windows.get(i - 1);
-            AdviceTimeWindow cur  = windows.get(i);
+            AdviceTimeWindow cur = windows.get(i);
             if (cur.getWeekday() == prev.getWeekday()
-             && cur.getFromTime().isBefore(prev.getToTime())) {
+                    && cur.getFromTime().isBefore(prev.getToTime())) {
                 throw new IllegalArgumentException(
                         "Overlapping windows on " + prev.getWeekday()
-                        + ": [" + prev.getFromTime() + "-" + prev.getToTime() + "] with ["
-                        + cur.getFromTime() + "-" + cur.getToTime() + "]");
+                                + ": [" + prev.getFromTime() + "-" + prev.getToTime() + "] with ["
+                                + cur.getFromTime() + "-" + cur.getToTime() + "]");
             }
         }
     }
@@ -315,56 +320,62 @@ public class AdviceServiceImpl implements AdviceService {
     // ============================= HELPERS =============================
 
     private Duration numberToDuration(Number n) {
-        if (n == null) return null;
+        if (n == null)
+            return null;
         long s = n.longValue();
         return (s > 0) ? Duration.ofSeconds(s) : null;
     }
 
     private LocalDate parseDate(String s) {
-        if (s == null || s.isBlank()) return null;
+        if (s == null || s.isBlank())
+            return null;
         return LocalDate.parse(s.trim());
     }
+
     private String formatDate(LocalDate d) {
         return (d == null) ? null : d.toString();
     }
 
     private LocalTime parseTime(String s) {
-        if (s == null || s.isBlank()) return null;
+        if (s == null || s.isBlank())
+            return null;
         String t = s.trim();
-        if (t.matches("^\\d{2}:\\d{2}$")) t = t + ":00";
+        if (t.matches("^\\d{2}:\\d{2}$"))
+            t = t + ":00";
         return LocalTime.parse(t, DateTimeFormatter.ISO_LOCAL_TIME);
     }
+
     private String formatTime(LocalTime t) {
         return (t == null) ? null : t.toString(); // HH:mm:ss
     }
 
     private DayOfWeek parseWeekday(String s) {
-        if (s == null || s.isBlank()) return null;
+        if (s == null || s.isBlank())
+            return null;
         return DayOfWeek.valueOf(s.trim().toUpperCase());
     }
 
     private Media resolveMediaFromDto(MediaUpsertDTO incoming) {
-        if (incoming == null) return null;
-
+        if (incoming == null)
+            return null;
         if (incoming.id() != null && incoming.id() > 0) {
             return mediaRepository.findById(incoming.id())
                     .orElseThrow(() -> new IllegalArgumentException("Media no encontrada (id=" + incoming.id() + ")"));
         }
-        String src = incoming.src() != null ? incoming.src().trim() : null;
-        if (src != null && !src.isEmpty()) {
-            Media existing = mediaRepository.findBySrc(src).orElse(null);
-            if (existing != null) return existing;
-            Media m = new Media();
-            m.setSrc(src);
-            return mediaRepository.save(m);
+        if (incoming.src() != null && !incoming.src().isBlank()) {
+            return mediaRepository.findBySrc(incoming.src().trim())
+                    .orElseThrow(
+                            () -> new IllegalArgumentException("Media no encontrada por src (debe crearse antes)"));
         }
         return null;
     }
 
     private Promotion resolvePromotionFromDto(PromotionRefDTO incoming) {
-        if (incoming == null) return null;
+        if (incoming == null)
+            return null;
         Long id = incoming.id();
-        if (id == null || id <= 0) return null;
+        if (id == null || id <= 0)
+            return null;
         return entityManager.getReference(Promotion.class, id);
     }
 
@@ -387,7 +398,8 @@ public class AdviceServiceImpl implements AdviceService {
             c.setId(desiredId);
             return c;
         }
-        if (current != null) return current;
+        if (current != null)
+            return current;
         if (userCompanyId != null) {
             Company c = new Company();
             c.setId(userCompanyId);
@@ -399,15 +411,18 @@ public class AdviceServiceImpl implements AdviceService {
     /** Activa el filtro "companyFilter" si NO es admin. */
     private void enableCompanyFilterIfNeeded() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) return;
+        if (auth == null || !auth.isAuthenticated())
+            return;
 
         boolean isAdmin = auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(a -> "ROLE_ADMIN".equals(a) || "ADMIN".equals(a));
-        if (isAdmin) return;
+        if (isAdmin)
+            return;
 
         Long companyId = resolveCompanyId(auth);
-        if (companyId == null) return;
+        if (companyId == null)
+            return;
 
         Session session = entityManager.unwrap(Session.class);
         var filter = session.getEnabledFilter("companyFilter");
@@ -420,7 +435,8 @@ public class AdviceServiceImpl implements AdviceService {
 
     private boolean isCurrentUserAdmin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) return false;
+        if (auth == null || !auth.isAuthenticated())
+            return false;
         return auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(a -> "ROLE_ADMIN".equals(a) || "ADMIN".equals(a));
@@ -428,7 +444,8 @@ public class AdviceServiceImpl implements AdviceService {
 
     private Long currentCompanyId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) return null;
+        if (auth == null || !auth.isAuthenticated())
+            return null;
         return resolveCompanyId(auth);
     }
 
@@ -458,22 +475,36 @@ public class AdviceServiceImpl implements AdviceService {
 // src/main/java/com/screenleads/backend/app/application/service/AppEntityService.java
 package com.screenleads.backend.app.application.service;
 
-
 import java.util.List;
 
 import com.screenleads.backend.app.web.dto.AppEntityDTO;
 
 public interface AppEntityService {
 
+    // ===== Query =====
     List<AppEntityDTO> findAll(boolean withCount);
 
     AppEntityDTO findById(Long id, boolean withCount);
 
     AppEntityDTO findByResource(String resource, boolean withCount);
 
+    // ===== Commands =====
     AppEntityDTO upsert(AppEntityDTO dto);
 
     void deleteById(Long id);
+
+    // ===== Reorder (drag & drop) =====
+    /**
+     * Reordena las entidades visibles en menú (visibleInMenu=true) con base en
+     * la lista de IDs recibida. Resequia sortOrder empezando en 1.
+     */
+    void reorderEntities(List<Long> orderedIds);
+
+    /**
+     * Reordena los atributos de una entidad por la lista de IDs recibida.
+     * Actualiza listOrder y, si procede, formOrder para mantener consistencia.
+     */
+    void reorderAttributes(Long entityId, List<Long> orderedAttributeIds);
 }
 
 ```
@@ -484,6 +515,7 @@ package com.screenleads.backend.app.application.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -586,7 +618,7 @@ public class AppEntityServiceImpl implements AppEntityService {
         e.setReadLevel(dto.readLevel() != null ? dto.readLevel() : e.getReadLevel());
         e.setUpdateLevel(dto.updateLevel() != null ? dto.updateLevel() : e.getUpdateLevel());
         e.setDeleteLevel(dto.deleteLevel() != null ? dto.deleteLevel() : e.getDeleteLevel());
-
+        e.setVisibleInMenu(dto.visibleInMenu() != null ? dto.visibleInMenu() : e.getVisibleInMenu());
         // Dashboard metadata
         if (dto.displayLabel() != null && !dto.displayLabel().isBlank()) {
             e.setDisplayLabel(dto.displayLabel());
@@ -600,8 +632,6 @@ public class AppEntityServiceImpl implements AppEntityService {
         if (dto.attributes() != null) {
             mergeAttributes(e, dto.attributes());
         }
-        // Si prefieres "replace exacto" (borrar los que no vienen), usa:
-        // replaceAttributes(e, dto.attributes());
 
         AppEntity saved = repo.save(e);
         return AppEntityMapper.toDto(saved);
@@ -611,6 +641,139 @@ public class AppEntityServiceImpl implements AppEntityService {
     @Transactional
     public void deleteById(Long id) {
         repo.deleteById(id);
+    }
+
+    // ===================== REORDER (drag & drop) =====================
+
+    @Override
+    @Transactional
+    public void reorderEntities(List<Long> orderedIds) {
+        if (orderedIds == null || orderedIds.isEmpty()) {
+            throw new IllegalArgumentException("Debe enviarse una lista de IDs para reordenar.");
+        }
+
+        // Validar duplicados en la lista
+        var seen = new HashSet<Long>();
+        for (Long id : orderedIds) {
+            if (id == null) {
+                throw new IllegalArgumentException("La lista de IDs no puede contener nulos.");
+            }
+            if (!seen.add(id)) {
+                throw new IllegalArgumentException("La lista de IDs contiene duplicados: " + id);
+            }
+        }
+
+        // Reordenamos SOLO las visibles en menú
+        List<AppEntity> visibles = repo.findByVisibleInMenuTrueOrderBySortOrderAsc();
+        if (visibles.isEmpty())
+            return;
+
+        Map<Long, AppEntity> byId = new HashMap<>();
+        for (AppEntity e : visibles) {
+            byId.put(e.getId(), e);
+        }
+
+        // Validar que todos los IDs pertenezcan al conjunto visible
+        for (Long id : orderedIds) {
+            if (!byId.containsKey(id)) {
+                throw new IllegalArgumentException("El ID " + id + " no pertenece a entidades visibles en menú.");
+            }
+        }
+
+        int order = 1;
+        // Asignar primero los recibidos en el nuevo orden
+        for (Long id : orderedIds) {
+            AppEntity e = byId.remove(id);
+            if (e != null)
+                e.setSortOrder(order++);
+        }
+
+        // Mantener el resto con su orden relativo, colocándolos a continuación
+        for (AppEntity e : visibles) {
+            if (byId.containsKey(e.getId())) {
+                e.setSortOrder(order++);
+            }
+        }
+
+        repo.saveAll(visibles);
+    }
+
+    @Override
+    @Transactional
+    public void reorderAttributes(Long entityId, List<Long> orderedAttributeIds) {
+        if (entityId == null)
+            throw new IllegalArgumentException("entityId requerido");
+        if (orderedAttributeIds == null || orderedAttributeIds.isEmpty()) {
+            throw new IllegalArgumentException("Debe enviarse una lista de IDs de atributos para reordenar.");
+        }
+
+        var seen = new HashSet<Long>();
+        for (Long id : orderedAttributeIds) {
+            if (id == null) {
+                throw new IllegalArgumentException("La lista de IDs de atributos no puede contener nulos.");
+            }
+            if (!seen.add(id)) {
+                throw new IllegalArgumentException("La lista de IDs de atributos contiene duplicados: " + id);
+            }
+        }
+
+        AppEntity entity = repo.findWithAttributesById(entityId)
+                .orElseThrow(() -> new IllegalArgumentException("AppEntity no encontrada: id=" + entityId));
+
+        if (entity.getAttributes() == null || entity.getAttributes().isEmpty())
+            return;
+
+        Map<Long, AppEntityAttribute> byId = new HashMap<>();
+        for (AppEntityAttribute a : entity.getAttributes()) {
+            if (a.getId() != null)
+                byId.put(a.getId(), a);
+        }
+
+        // Validar pertenencia
+        for (Long id : orderedAttributeIds) {
+            if (!byId.containsKey(id)) {
+                throw new IllegalArgumentException("El atributo " + id + " no pertenece a la entidad " + entityId);
+            }
+        }
+
+        int order = 0;
+
+        // Reordena los indicados primero
+        for (Long id : orderedAttributeIds) {
+            AppEntityAttribute a = byId.remove(id);
+            if (a != null) {
+                int newOrder = ++order;
+                Integer oldListOrder = a.getListOrder();
+                a.setListOrder(newOrder);
+
+                // Solo sincroniza formOrder si no estaba personalizado
+                if (a.getFormOrder() == null || (oldListOrder != null && a.getFormOrder().equals(oldListOrder))) {
+                    a.setFormOrder(newOrder);
+                }
+            }
+        }
+
+        // Añade el resto manteniendo su orden relativo original
+        List<AppEntityAttribute> remaining = entity.getAttributes().stream()
+                .filter(a -> byId.containsKey(a.getId()))
+                .sorted((x, y) -> {
+                    Integer lx = x.getListOrder() == null ? Integer.MAX_VALUE : x.getListOrder();
+                    Integer ly = y.getListOrder() == null ? Integer.MAX_VALUE : y.getListOrder();
+                    return Integer.compare(lx, ly);
+                })
+                .toList();
+
+        for (AppEntityAttribute a : remaining) {
+            int newOrder = ++order;
+            Integer oldListOrder = a.getListOrder();
+            a.setListOrder(newOrder);
+            if (a.getFormOrder() == null || (oldListOrder != null && a.getFormOrder().equals(oldListOrder))) {
+                a.setFormOrder(newOrder);
+            }
+        }
+
+        // Guardar. (Cascade en AppEntity -> AppEntityAttribute)
+        repo.save(entity);
     }
 
     // ===================== ROW COUNT =====================
@@ -625,9 +788,6 @@ public class AppEntityServiceImpl implements AppEntityService {
         if (tableName == null || tableName.isBlank() || jdbcTemplate == null)
             return null;
         try {
-            // WARNING: tableName viene de tu propio catálogo; si algún día es editable por
-            // usuario,
-            // parametriza o valida para evitar SQL injection.
             return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + tableName, Long.class);
         } catch (Exception ex) {
             return null;
@@ -698,36 +858,7 @@ public class AppEntityServiceImpl implements AppEntityService {
 
     /** Copia segura: sólo pisa si el DTO trae valor no nulo. */
     private void applyAttrDto(AppEntityAttribute a, EntityAttributeDTO d) {
-        if (d == null)
-            return;
-
-        if (d.name() != null)
-            a.setName(d.name());
-        if (d.attrType() != null)
-            a.setAttrType(d.attrType());
-        if (d.dataType() != null)
-            a.setDataType(d.dataType());
-        if (d.relationTarget() != null)
-            a.setRelationTarget(d.relationTarget());
-
-        if (d.listLabel() != null)
-            a.setListLabel(d.listLabel());
-        if (d.listVisible() != null)
-            a.setListVisible(d.listVisible());
-        if (d.listOrder() != null)
-            a.setListOrder(d.listOrder());
-
-        if (d.formLabel() != null)
-            a.setFormLabel(d.formLabel());
-        if (d.formOrder() != null)
-            a.setFormOrder(d.formOrder());
-        if (d.controlType() != null)
-            a.setControlType(d.controlType());
-
-        if (d.listSearchable() != null)
-            a.setListSearchable(d.listSearchable());
-        if (d.listSortable() != null)
-            a.setListSortable(d.listSortable());
+        AppEntityMapper.applyAttrDto(a, d);
     }
 
     private static String nullIfBlank(String v, String fallback) {
@@ -1078,8 +1209,8 @@ public class CompaniesServiceImpl implements CompaniesService {
             return null;
         return new MediaTypeDTO(
                 t.getId(),
-                t.getType(),
-                t.getExtension(),
+                t.getExtension(), // <-- correcto
+                t.getType(), // <-- correcto
                 t.getEnabled());
     }
 
@@ -1585,8 +1716,8 @@ public class DeviceServiceImpl implements DeviceService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device type not found"));
 
         Device device = deviceRepository.findOptionalByUuid(dto.uuid()).orElseGet(Device::new);
-        Integer width  = device.getWidth()  != null ? device.getWidth().intValue()  : null;
-        Integer height = device.getHeight() != null ? device.getHeight().intValue() : null;
+        Integer width = dto.width() != null ? dto.width().intValue() : null;
+        Integer height = dto.height() != null ? dto.height().intValue() : null;
 
         device.setUuid(dto.uuid());
         device.setDescriptionName(dto.descriptionName());
@@ -1619,8 +1750,8 @@ public class DeviceServiceImpl implements DeviceService {
 
         device.setUuid(deviceDTO.uuid());
         device.setDescriptionName(deviceDTO.descriptionName());
-        Integer width  = device.getWidth()  != null ? device.getWidth().intValue()  : null;
-        Integer height = device.getHeight() != null ? device.getHeight().intValue() : null;
+        Integer width = deviceDTO.width() != null ? deviceDTO.width().intValue() : null;
+        Integer height = deviceDTO.height() != null ? deviceDTO.height().intValue() : null;
         device.setWidth(width);
         device.setHeight(height);
         device.setType(type);
@@ -1931,8 +2062,12 @@ public class MediaServiceImpl implements MediaService {
         Media media = new Media();
         media.setId(mediaDTO.id());
         media.setSrc(mediaDTO.src());
-        // media.setType(mediaDTO.type());
-        media.setType(mediaTypeRepository.findById(mediaDTO.type().getId()).get());
+        if (mediaDTO.type() == null || mediaDTO.type().getId() == null) {
+            throw new IllegalArgumentException("Media type requerido");
+        }
+        media.setType(mediaTypeRepository.findById(mediaDTO.type().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Media type no encontrado")));
+        // TODO: recibir o inferir companyId; sin eso, se caerá el save si es NOT NULL
         return media;
     }
 
@@ -2273,12 +2408,13 @@ public class PromotionServiceImpl implements PromotionService {
         Promotion promo = promotionRepository.findById(promotionId)
                 .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + promotionId));
 
-        // Mapear DTO -> Entity temporalmente para leer campos como identifier sin usar getters del DTO
+        // Mapear DTO -> Entity temporalmente para leer campos como identifier sin usar
+        // getters del DTO
         PromotionLead candidate = map(dto, PromotionLead.class);
 
         // Si tienes unique (promotion_id + identifier), prevenimos duplicados
-        if (candidate.getIdentifier() != null
-                && promotionLeadRepository.existsByPromotionIdAndIdentifier(promotionId, candidate.getIdentifier())) {
+        if (candidate.getIdentifier() != null &&
+                promotionLeadRepository.existsByPromotionIdAndIdentifier(promotionId, candidate.getIdentifier())) {
             throw new IllegalArgumentException("Lead already exists for identifier: " + candidate.getIdentifier());
         }
 
@@ -2303,7 +2439,7 @@ public class PromotionServiceImpl implements PromotionService {
     @Transactional(readOnly = true)
     public String exportLeadsCsv(Long promotionId, ZonedDateTime from, ZonedDateTime to) {
         Instant fromI = from != null ? from.toInstant() : Instant.EPOCH;
-        Instant toI   = to   != null ? to.toInstant()   : Instant.now();
+        Instant toI = to != null ? to.toInstant() : Instant.now();
 
         List<PromotionLead> leads = promotionLeadRepository.findByPromotionId(promotionId).stream()
                 .filter(l -> {
@@ -2314,21 +2450,22 @@ public class PromotionServiceImpl implements PromotionService {
                 .collect(Collectors.toList());
 
         StringBuilder sb = new StringBuilder();
-        sb.append("id,promotionId,identifierType,identifier,firstName,lastName,email,phone,birthDate,acceptedPrivacyAt,acceptedTermsAt,createdAt\n");
+        sb.append(
+                "id,promotionId,identifierType,identifier,firstName,lastName,email,phone,birthDate,acceptedPrivacyAt,acceptedTermsAt,createdAt\n");
         for (PromotionLead l : leads) {
             sb.append(Optional.ofNullable(l.getId()).orElse(0L)).append(',')
-              .append(Optional.ofNullable(l.getPromotion()).map(Promotion::getId).orElse(null)).append(',')
-              .append(Optional.ofNullable(l.getIdentifierType()).map(Enum::name).orElse("")).append(',')
-              .append(csv(l.getIdentifier())).append(',')
-              .append(csv(l.getFirstName())).append(',')
-              .append(csv(l.getLastName())).append(',')
-              .append(csv(l.getEmail())).append(',')
-              .append(csv(l.getPhone())).append(',')
-              .append(Optional.ofNullable(l.getBirthDate()).orElse(null)).append(',')
-              .append(Optional.ofNullable(l.getAcceptedPrivacyAt()).orElse(null)).append(',')
-              .append(Optional.ofNullable(l.getAcceptedTermsAt()).orElse(null)).append(',')
-              .append(Optional.ofNullable(l.getCreatedAt()).orElse(null))
-              .append('\n');
+                    .append(Optional.ofNullable(l.getPromotion()).map(Promotion::getId).orElse(null)).append(',')
+                    .append(Optional.ofNullable(l.getIdentifierType()).map(Enum::name).orElse("")).append(',')
+                    .append(csv(l.getIdentifier())).append(',')
+                    .append(csv(l.getFirstName())).append(',')
+                    .append(csv(l.getLastName())).append(',')
+                    .append(csv(l.getEmail())).append(',')
+                    .append(csv(l.getPhone())).append(',')
+                    .append(Optional.ofNullable(l.getBirthDate()).orElse(null)).append(',')
+                    .append(Optional.ofNullable(l.getAcceptedPrivacyAt()).orElse(null)).append(',')
+                    .append(Optional.ofNullable(l.getAcceptedTermsAt()).orElse(null)).append(',')
+                    .append(Optional.ofNullable(l.getCreatedAt()).orElse(null))
+                    .append('\n');
         }
         return sb.toString();
     }
@@ -2338,7 +2475,7 @@ public class PromotionServiceImpl implements PromotionService {
     public LeadSummaryDTO getLeadSummary(Long promotionId, ZonedDateTime from, ZonedDateTime to) {
         ZoneId zone = ZoneId.systemDefault();
         Instant fromI = from != null ? from.toInstant() : Instant.EPOCH;
-        Instant toI   = to   != null ? to.toInstant()   : Instant.now();
+        Instant toI = to != null ? to.toInstant() : Instant.now();
 
         List<PromotionLead> leads = promotionLeadRepository.findByPromotionId(promotionId).stream()
                 .filter(l -> {
@@ -2347,21 +2484,20 @@ public class PromotionServiceImpl implements PromotionService {
                 })
                 .toList();
 
-        long total = leads.size();
-        Map<LocalDate, Long> byDay = leads.stream().collect(Collectors.groupingBy(
-                l -> l.getCreatedAt().atZone(zone).toLocalDate(),
-                TreeMap::new,
-                Collectors.counting()
-        ));
+        long totalLeads = leads.size();
+        long uniqueIdentifiers = leads.stream()
+                .map(PromotionLead::getIdentifier)
+                .filter(Objects::nonNull)
+                .distinct()
+                .count();
 
-        // Construimos el DTO sin asumir sus setters/getters exactos (usamos ObjectMapper)
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("promotionId", promotionId);
-        payload.put("from", from);
-        payload.put("to", to);
-        payload.put("total", total);
-        payload.put("daily", byDay);
-        return objectMapper.convertValue(payload, LeadSummaryDTO.class);
+        Map<LocalDate, Long> leadsByDay = leads.stream().collect(
+                java.util.stream.Collectors.groupingBy(
+                        l -> l.getCreatedAt().atZone(zone).toLocalDate(),
+                        java.util.TreeMap::new,
+                        java.util.stream.Collectors.counting()));
+
+        return new LeadSummaryDTO(promotionId, totalLeads, uniqueIdentifiers, leadsByDay);
     }
 
     @Override
@@ -2395,12 +2531,14 @@ public class PromotionServiceImpl implements PromotionService {
     // =========================================
 
     private <T> T map(Object source, Class<T> targetType) {
-        if (source == null) return null;
+        if (source == null)
+            return null;
         return objectMapper.convertValue(source, targetType);
     }
 
     private static void mergeNonNull(Object src, Object target) {
-        if (src == null || target == null) return;
+        if (src == null || target == null)
+            return;
         BeanUtils.copyProperties(src, target, getNullPropertyNames(src));
     }
 
@@ -2412,7 +2550,8 @@ public class PromotionServiceImpl implements PromotionService {
         for (PropertyDescriptor pd : pds) {
             String name = pd.getName();
             // ignorar "class"
-            if ("class".equals(name)) continue;
+            if ("class".equals(name))
+                continue;
             Object value = src.getPropertyValue(name);
             if (value == null) {
                 emptyNames.add(name);
@@ -2422,7 +2561,8 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     private static String csv(String s) {
-        if (s == null) return "";
+        if (s == null)
+            return "";
         String escaped = s.replace("\"", "\"\"");
         if (escaped.contains(",") || escaped.contains("\"") || escaped.contains("\n")) {
             return "\"" + escaped + "\"";
@@ -2708,10 +2848,9 @@ public class UserServiceImpl implements UserService {
             }
 
             // Si llega un rol (único) en el DTO, cambiarlo con mismas reglas
-            if (dto.getRole() != null || dto.getRole().getId() != null) {
-                if (!perm.can("user", "update")) {
+            if (dto.getRole() != null && dto.getRole().getId() != null) {
+                if (!perm.can("user", "update"))
                     throw new IllegalArgumentException("No autorizado a actualizar usuarios");
-                }
                 Role newRole = resolveRoleFromDto(dto);
                 if (newRole == null)
                     throw new IllegalArgumentException("Rol inválido");
@@ -2823,16 +2962,19 @@ public class UserServiceImpl implements UserService {
      * - Si llega role (nombre/código) → busca por nombre.
      */
     private Role resolveRoleFromDto(UserDto dto) {
-        if (dto.getRole() != null) {
+        if (dto.getRole() == null)
+            return null;
+        if (dto.getRole().getId() != null) {
             return roleRepo.findById(dto.getRole().getId())
                     .orElseThrow(() -> new IllegalArgumentException("roleId inválido: " + dto.getRole().getId()));
         }
-        if (dto.getRole() != null && dto.getRole().getId() != null) {
+        if (dto.getRole().getRole() != null) {
             return roleRepo.findByRole(dto.getRole().getRole())
-                    .orElseThrow(() -> new IllegalArgumentException("role inválido: " + dto.getRole()));
+                    .orElseThrow(() -> new IllegalArgumentException("role inválido: " + dto.getRole().getRole()));
         }
         return null;
     }
+
 }
 
 ```

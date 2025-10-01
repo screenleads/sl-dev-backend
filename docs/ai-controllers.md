@@ -131,9 +131,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.screenleads.backend.app.application.service.AppEntityService;
 import com.screenleads.backend.app.web.dto.AppEntityDTO;
+import com.screenleads.backend.app.web.dto.ReorderRequest;
 
 import lombok.RequiredArgsConstructor;
 
@@ -176,11 +178,34 @@ public class AppEntityController {
         return new ResponseEntity<>(saved, HttpStatus.OK);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<AppEntityDTO> update(@PathVariable Long id, @RequestBody AppEntityDTO dto) {
+        if (dto.id() != null && !dto.id().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Path id y body id no coinciden");
+        }
+        AppEntityDTO withId = dto.toBuilder().id(id).build();
+        return ResponseEntity.ok(service.upsert(withId));
+    }
+
     // ---- BORRAR ----
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         service.deleteById(id);
+    }
+
+    // ---- REORDENAR ENTIDADES (drag & drop) ----
+    @PutMapping("/reorder")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void reorderEntities(@RequestBody ReorderRequest request) {
+        service.reorderEntities(request.ids());
+    }
+
+    // ---- REORDENAR ATRIBUTOS DE UNA ENTIDAD (drag & drop) ----
+    @PutMapping("/{id}/attributes/reorder")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void reorderAttributes(@PathVariable Long id, @RequestBody ReorderRequest request) {
+        service.reorderAttributes(id, request.ids());
     }
 }
 

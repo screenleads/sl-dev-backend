@@ -69,20 +69,45 @@ public interface AdviceTimeWindowRepository extends JpaRepository<AdviceTimeWind
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/domain/repositories/AppEntityAttributeRepository.java
+// src/main/java/.../domain/repositories/AppEntityAttributeRepository.java
+package com.screenleads.backend.app.domain.repositories;
+
+import java.util.List;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.screenleads.backend.app.domain.model.AppEntityAttribute;
+
+public interface AppEntityAttributeRepository extends JpaRepository<AppEntityAttribute, Long> {
+    List<AppEntityAttribute> findByAppEntityIdOrderByListOrderAscIdAsc(Long appEntityId);
+
+    Optional<AppEntityAttribute> findByAppEntityIdAndName(Long appEntityId, String name);
+}
+
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/domain/repositories/AppEntityRepository.java
 package com.screenleads.backend.app.domain.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.screenleads.backend.app.domain.model.AppEntity;
 
 public interface AppEntityRepository extends JpaRepository<AppEntity, Long> {
+
     Optional<AppEntity> findByResource(String resource);
-    Optional<AppEntity> findByEndpointBase(String endpointBase);
-    boolean existsByResource(String resource);
-    boolean existsByEndpointBase(String endpointBase);
+
+    // Para reordenamiento de menú
+    List<AppEntity> findByVisibleInMenuTrueOrderBySortOrderAsc();
+
+    // Para cargar atributos al reordenar
+    @EntityGraph(attributePaths = "attributes")
+    Optional<AppEntity> findWithAttributesById(Long id);
 }
 
 ```
