@@ -352,7 +352,13 @@ public class DataInitializer implements CommandLineRunner {
                                         attr.setListSearchable(Boolean.TRUE);
                                         attr.setListSortable(Boolean.TRUE);
 
-                                        attr.setFormVisible(Boolean.TRUE);
+                                        // Por defecto, los campos createdAt y updatedAt no deben ser visibles en
+                                        // formularios
+                                        if (name.equalsIgnoreCase("createdAt") || name.equalsIgnoreCase("updatedAt")) {
+                                                attr.setFormVisible(Boolean.FALSE);
+                                        } else {
+                                                attr.setFormVisible(Boolean.TRUE);
+                                        }
                                         attr.setFormOrder(attr.getListOrder());
                                         attr.setFormLabel(humanize(name));
                                         attr.setControlType(pickControlType(attr));
