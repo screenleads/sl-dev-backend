@@ -29,8 +29,6 @@ private Long id;
 private String uuid;
 
 
-@Column(length = 120)
-private String name;
 
 
 @Column(nullable = false)
