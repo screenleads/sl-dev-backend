@@ -38,7 +38,7 @@ public class UserController {
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('user','create')")
     public ResponseEntity<?> create(@RequestBody UserDto dto) {
         try {
-            UserDto created = service.create(dto);
+            com.screenleads.backend.app.web.dto.UserCreationResponse created = service.create(dto);
             return ResponseEntity.status(HttpStatus.OK).body(created);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
