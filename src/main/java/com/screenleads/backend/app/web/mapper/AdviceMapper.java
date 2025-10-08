@@ -67,20 +67,21 @@ public final class AdviceMapper {
                 List<AdviceTimeWindowDTO> wins = new ArrayList<>();
                 if (s.getWindows() != null) {
                     for (AdviceTimeWindow w : s.getWindows()) {
-                        wins.add(AdviceTimeWindowDTO.builder()
-                                .id(w.getId())
-                                .weekday(w.getWeekday() != null ? w.getWeekday().name() : null)
-                                .fromTime(formatTime(w.getFromTime()))
-                                .toTime(formatTime(w.getToTime()))
-                                .build());
+                        wins.add(new AdviceTimeWindowDTO(
+                                w.getId(),
+                                w.getWeekday() != null ? w.getWeekday().name() : null,
+                                formatTime(w.getFromTime()),
+                                formatTime(w.getToTime())
+                        ));
                     }
                 }
-                schedules.add(AdviceScheduleDTO.builder()
-                        .id(s.getId())
-                        .startDate(formatDate(s.getStartDate()))
-                        .endDate(formatDate(s.getEndDate()))
-                        .windows(wins)
-                        .build());
+                schedules.add(new AdviceScheduleDTO(
+                        s.getId(),
+                        formatDate(s.getStartDate()),
+                        formatDate(s.getEndDate()),
+                        wins,
+                        null
+                ));
             }
         }
 
