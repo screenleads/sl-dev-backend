@@ -49,4 +49,11 @@ public class AppVersionController {
     public AppVersionDTO getLatestVersion(@PathVariable String platform) {
         return service.getLatestVersion(platform);
     }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Actualizar versión por id")
+    public AppVersionDTO update(@PathVariable Long id, @RequestBody AppVersionDTO dto) {
+        dto.setId(id);
+        return service.save(dto);
+    }
 }
