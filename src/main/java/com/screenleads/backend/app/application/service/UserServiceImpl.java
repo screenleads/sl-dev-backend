@@ -1,5 +1,8 @@
 package com.screenleads.backend.app.application.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Role;
 import com.screenleads.backend.app.domain.model.User;
@@ -30,6 +33,7 @@ import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserRepository repo;
     private final CompanyRepository companyRepo;
@@ -68,7 +72,8 @@ public class UserServiceImpl implements UserService {
         enableCompanyFilterIfNeeded();
         return repo.findAll().stream()
                 .peek(u -> {
-                    if (u.getProfileImage() != null) Hibernate.initialize(u.getProfileImage());
+                    if (u.getProfileImage() != null)
+                        Hibernate.initialize(u.getProfileImage());
                 })
                 .map(UserMapper::toDto)
                 .toList();
@@ -80,7 +85,8 @@ public class UserServiceImpl implements UserService {
         enableCompanyFilterIfNeeded();
         return repo.findById(id)
                 .map(u -> {
-                    if (u.getProfileImage() != null) Hibernate.initialize(u.getProfileImage());
+                    if (u.getProfileImage() != null)
+                        Hibernate.initialize(u.getProfileImage());
                     return UserMapper.toDto(u);
                 })
                 .orElse(null);
@@ -163,7 +169,17 @@ public class UserServiceImpl implements UserService {
                 var typeDto = mediaDto.type();
                 MediaType type = null;
                 String src = mediaDto.src();
-                String extension = (src != null && src.contains(".")) ? src.substring(src.lastIndexOf('.') + 1).toLowerCase() : null;
+                String extension = null;
+                if (src != null && src.contains(".")) {
+                    String extCandidate = src.substring(src.lastIndexOf('.') + 1).toLowerCase();
+                    int qIdx = extCandidate.indexOf('?');
+                    if (qIdx > 0) {
+                        extension = extCandidate.substring(0, qIdx);
+                    } else {
+                        extension = extCandidate;
+                    }
+                }
+                log.info("[MEDIA PROFILE] Extrayendo extensión de src: {} => {}", src, extension);
                 if (typeDto != null && typeDto.id() != null) {
                     type = mediaTypeRepository.findById(typeDto.id()).orElse(null);
                 } else if (typeDto != null && typeDto.type() != null) {
@@ -172,7 +188,8 @@ public class UserServiceImpl implements UserService {
                     type = mediaTypeRepository.findByExtension(extension).orElse(null);
                 }
                 if (type == null) {
-                    throw new IllegalArgumentException("No se pudo determinar el tipo de media para la imagen de perfil");
+                    throw new IllegalArgumentException(
+                            "No se pudo determinar el tipo de media para la imagen de perfil");
                 }
                 Media newMedia = Media.builder()
                         .src(mediaDto.src())
@@ -196,9 +213,8 @@ public class UserServiceImpl implements UserService {
 
         User saved = repo.save(u);
         return new com.screenleads.backend.app.web.dto.UserCreationResponse(
-            UserMapper.toDto(saved),
-            (dto.getPassword() != null && !dto.getPassword().isBlank()) ? null : rawPassword
-        );
+                UserMapper.toDto(saved),
+                (dto.getPassword() != null && !dto.getPassword().isBlank()) ? null : rawPassword);
     }
 
     @Override
@@ -262,14 +278,27 @@ public class UserServiceImpl implements UserService {
                     String detectedType = null;
                     if (extension != null) {
                         switch (extension) {
-                            case "jpg": case "jpeg": case "png": case "gif": case "bmp":
-                                detectedType = "IMG"; break;
-                            case "mp4": case "avi": case "mov": case "wmv":
-                                detectedType = "VIDEO"; break;
-                            case "mp3": case "wav": case "ogg":
-                                detectedType = "AUDIO"; break;
+                            case "jpg":
+                            case "jpeg":
+                            case "png":
+                            case "gif":
+                            case "bmp":
+                                detectedType = "IMG";
+                                break;
+                            case "mp4":
+                            case "avi":
+                            case "mov":
+                            case "wmv":
+                                detectedType = "VIDEO";
+                                break;
+                            case "mp3":
+                            case "wav":
+                            case "ogg":
+                                detectedType = "AUDIO";
+                                break;
                             default:
-                                detectedType = "FILE"; break;
+                                detectedType = "FILE";
+                                break;
                         }
                     }
                     if (typeDto != null) {
@@ -277,8 +306,9 @@ public class UserServiceImpl implements UserService {
                             type = mediaTypeRepository.findByType(typeDto.type()).orElse(null);
                         }
                         // Si type es vacío o nulo, buscar por extensión
-                        if ((type == null || typeDto.type() == null || typeDto.type().isBlank()) && typeDto.extension() != null && !typeDto.extension().isBlank()) {
-                            type = mediaTypeRepository.findByExtension(typeDto.extension()).orElse(null);
+                        if ((type == null || typeDto.type() == null || typeDto.type().isBlank())
+                                && typeDto.extension() != null && !typeDto.extension().isBlank()) {
+                            type = mediaTypeRepository.findByExtension(extension).orElse(null);
                         }
                     }
                     // Si sigue sin encontrar, buscar por extensión deducida
@@ -286,7 +316,11 @@ public class UserServiceImpl implements UserService {
                         type = mediaTypeRepository.findByExtension(extension).orElse(null);
                     }
                     if (type == null) {
-                        throw new IllegalArgumentException("No se pudo determinar el tipo de media para la imagen de perfil (extensión: " + extension + ")");
+                        log.error("[MEDIA PROFILE] No se encontró MediaType con extensión: {}. Payload src: {}",
+                                extension, src);
+                        throw new IllegalArgumentException(
+                                "No se pudo determinar el tipo de media para la imagen de perfil (extensión: "
+                                        + extension + ")");
                     }
                     // Buscar compañía
                     Company company = existing.getCompany();
@@ -299,12 +333,12 @@ public class UserServiceImpl implements UserService {
                     if (company == null) {
                         throw new IllegalArgumentException("No se puede asociar media: compañía no encontrada");
                     }
-            var newMedia = Media.builder()
-                .src(mediaDto.src())
-                .type(type)
-                .company(company)
-                .build();
-            existing.setProfileImage(mediaRepository.save(newMedia));
+                    var newMedia = Media.builder()
+                            .src(mediaDto.src())
+                            .type(type)
+                            .company(company)
+                            .build();
+                    existing.setProfileImage(mediaRepository.save(newMedia));
                 }
             }
 
