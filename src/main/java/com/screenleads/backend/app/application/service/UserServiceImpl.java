@@ -320,9 +320,10 @@ public class UserServiceImpl implements UserService {
                     if (type == null) {
                         log.error("[MEDIA PROFILE] No se encontró MediaType con extensión: {}. Payload src: {}",
                                 extension, src);
-                        throw new IllegalArgumentException(
-                                "No se pudo determinar el tipo de media para la imagen de perfil (extensión: "
-                                        + extension + ")");
+                log.error("[MEDIA PROFILE] No se encontró MediaType con extensión: {}. Payload src: {}", extension, src);
+                throw new IllegalArgumentException(
+                    "No se pudo determinar el tipo de media para la imagen de perfil (extensión: "
+                        + extension + ")");
                     }
                     // Buscar compañía
                     Company company = existing.getCompany();

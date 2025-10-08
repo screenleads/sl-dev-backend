@@ -15,6 +15,6 @@ public interface MediaTypeRepository extends JpaRepository<MediaType, Long> {
 
     boolean existsByType(String type);
 
-    @Query("SELECT m FROM MediaType m WHERE LOWER(TRIM(m.extension)) = LOWER(TRIM(:extension))")
+    @Query("SELECT m FROM media_type m WHERE LOWER(TRIM(m.extension)) = LOWER(TRIM(:extension))")
     Optional<MediaType> findByExtensionIgnoreCase(@Param("extension") String extension);
 }
