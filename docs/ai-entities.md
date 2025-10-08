@@ -526,6 +526,7 @@ import lombok.*;
 
 
 @Entity
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "company",
 indexes = {
 @Index(name = "ix_company_name", columnList = "name")
@@ -811,6 +812,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "media", indexes = {
         @Index(name = "ix_media_company", columnList = "company_id"),
         @Index(name = "ix_media_created_at", columnList = "created_at")
@@ -848,6 +850,7 @@ import lombok.*;
 
 
 @Entity
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "media_type",
 uniqueConstraints = @UniqueConstraint(name = "uk_mediatype_type", columnNames = "type")
 )

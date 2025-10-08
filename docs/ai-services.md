@@ -55,7 +55,9 @@ import org.springframework.stereotype.Service;
 import com.screenleads.backend.app.domain.model.*;
 import com.screenleads.backend.app.domain.repositories.AdviceRepository;
 import com.screenleads.backend.app.domain.repositories.MediaRepository;
+import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
+import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
 import com.screenleads.backend.app.web.dto.*;
 
 @Service
@@ -64,16 +66,22 @@ public class AdviceServiceImpl implements AdviceService {
     private final AdviceRepository adviceRepository;
     private final MediaRepository mediaRepository;
     private final UserRepository userRepository;
+    private final MediaTypeRepository mediaTypeRepository;
+    private final CompanyRepository companyRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     public AdviceServiceImpl(AdviceRepository adviceRepository,
-            MediaRepository mediaRepository,
-            UserRepository userRepository) {
+                             MediaRepository mediaRepository,
+                             UserRepository userRepository,
+                             MediaTypeRepository mediaTypeRepository,
+                             CompanyRepository companyRepository) {
         this.adviceRepository = adviceRepository;
         this.mediaRepository = mediaRepository;
         this.userRepository = userRepository;
+        this.mediaTypeRepository = mediaTypeRepository;
+        this.companyRepository = companyRepository;
     }
 
     // ======================= LECTURAS =======================
@@ -143,25 +151,73 @@ public class AdviceServiceImpl implements AdviceService {
     public AdviceDTO saveAdvice(AdviceDTO dto) {
         enableCompanyFilterIfNeeded();
 
+        System.out.println("[DEBUG] AdviceDTO recibido: " + dto);
+
         Advice advice = new Advice();
         advice.setDescription(dto.getDescription());
         advice.setCustomInterval(Boolean.TRUE.equals(dto.getCustomInterval()));
         advice.setInterval(numberToDuration(dto.getInterval()));
 
         advice.setCompany(resolveCompanyForWrite(dto.getCompany(), null));
-        advice.setMedia(resolveMediaFromDto(dto.getMedia()));
+        // Si la media no existe, crearla con los datos mínimos
+        Media media = null;
+        MediaUpsertDTO mediaDto = dto.getMedia();
+        if (mediaDto != null) {
+            if (mediaDto.id() != null && mediaDto.id() > 0) {
+                media = mediaRepository.findById(mediaDto.id()).orElse(null);
+            } else if (mediaDto.src() != null && !mediaDto.src().isBlank()) {
+                media = mediaRepository.findBySrc(mediaDto.src().trim()).orElse(null);
+                if (media == null) {
+                    // Crear nueva Media
+                    MediaType defaultType = null;
+                    Company company = advice.getCompany();
+                    // Buscar tipo por extensión
+                    String ext = null;
+                    String src = mediaDto.src().trim();
+                    int dotIdx = src.lastIndexOf('.');
+                    if (dotIdx > 0 && dotIdx < src.length() - 1) {
+                        ext = src.substring(dotIdx + 1).toLowerCase();
+                    }
+                    if (ext != null) {
+                        defaultType = mediaTypeRepository.findByExtension(ext).orElse(null);
+                    }
+                    if (defaultType == null) {
+                        // fallback: primer tipo disponible
+                        defaultType = mediaTypeRepository.findAll().stream().findFirst().orElse(null);
+                    }
+                    if (company != null && defaultType != null) {
+                        Media newMedia = new Media();
+                        newMedia.setSrc(src);
+                        newMedia.setType(defaultType);
+                        newMedia.setCompany(company);
+                        media = mediaRepository.save(newMedia);
+                    }
+                }
+            }
+        }
+        advice.setMedia(media);
         advice.setPromotion(resolvePromotionFromDto(dto.getPromotion()));
 
         // schedules
         advice.setSchedules(new ArrayList<>());
         if (dto.getSchedules() != null) {
             for (AdviceScheduleDTO sDto : dto.getSchedules()) {
-                advice.getSchedules().add(mapScheduleDTO(sDto, advice));
+                AdviceSchedule mappedSchedule = mapScheduleDTO(sDto, advice);
+                System.out.println("[DEBUG] AdviceSchedule mapeado: startDate=" + mappedSchedule.getStartDate() + ", endDate=" + mappedSchedule.getEndDate());
+                if (mappedSchedule.getWindows() != null) {
+                    for (AdviceTimeWindow win : mappedSchedule.getWindows()) {
+                        System.out.println("[DEBUG] AdviceTimeWindow mapeado: weekday=" + win.getWeekday() + ", from=" + win.getFromTime() + ", to=" + win.getToTime());
+                    }
+                }
+                advice.getSchedules().add(mappedSchedule);
             }
         }
 
         validateAdvice(advice);
         Advice saved = adviceRepository.save(advice);
+            // Log de persistencia real de ventanas
+            int totalWindows = saved.getSchedules() == null ? 0 : saved.getSchedules().stream().mapToInt(s -> s.getWindows() == null ? 0 : s.getWindows().size()).sum();
+            System.out.println("[DEBUG] Advice guardado. Total ventanas: " + totalWindows);
         return convertToDTO(saved);
     }
 
@@ -252,17 +308,32 @@ public class AdviceServiceImpl implements AdviceService {
         s.setEndDate(parseDate(sDto.getEndDate()));
 
         List<AdviceTimeWindow> windows = new ArrayList<>();
-        if (sDto.getWindows() != null) {
+        // Soportar ambos formatos: windows plano y dayWindows agrupado
+        if (sDto.getWindows() != null && !sDto.getWindows().isEmpty()) {
             for (AdviceTimeWindowDTO wDto : sDto.getWindows()) {
                 AdviceTimeWindow w = new AdviceTimeWindow();
-                w.setSchedule(s);
                 w.setWeekday(parseWeekday(wDto.getWeekday()));
                 w.setFromTime(parseTime(wDto.getFromTime()));
                 w.setToTime(parseTime(wDto.getToTime()));
                 windows.add(w);
             }
+        } else if (sDto.getDayWindows() != null && !sDto.getDayWindows().isEmpty()) {
+            for (AdviceScheduleDTO.DayWindowDTO day : sDto.getDayWindows()) {
+                if (day.getRanges() != null) {
+                    for (AdviceScheduleDTO.RangeDTO range : day.getRanges()) {
+                        AdviceTimeWindow w = new AdviceTimeWindow();
+                        w.setWeekday(parseWeekday(day.getWeekday()));
+                        w.setFromTime(parseTime(range.getFromTime()));
+                        w.setToTime(parseTime(range.getToTime()));
+                        windows.add(w);
+                    }
+                }
+            }
         }
         validateAndNormalizeWindows(windows);
+        for (AdviceTimeWindow w : windows) {
+            w.setSchedule(s);
+        }
         s.setWindows(windows);
         return s;
     }
@@ -288,20 +359,21 @@ public class AdviceServiceImpl implements AdviceService {
                 List<AdviceTimeWindowDTO> wins = new ArrayList<>();
                 if (s.getWindows() != null) {
                     for (AdviceTimeWindow w : s.getWindows()) {
-                        wins.add(AdviceTimeWindowDTO.builder()
-                                .id(w.getId())
-                                .weekday(w.getWeekday() != null ? w.getWeekday().name() : null)
-                                .fromTime(formatTime(w.getFromTime()))
-                                .toTime(formatTime(w.getToTime()))
-                                .build());
+                        wins.add(new AdviceTimeWindowDTO(
+                                w.getId(),
+                                w.getWeekday() != null ? w.getWeekday().name() : null,
+                                formatTime(w.getFromTime()),
+                                formatTime(w.getToTime())
+                        ));
                     }
                 }
-                schedules.add(AdviceScheduleDTO.builder()
-                        .id(s.getId())
-                        .startDate(formatDate(s.getStartDate()))
-                        .endDate(formatDate(s.getEndDate()))
-                        .windows(wins)
-                        .build());
+                schedules.add(new AdviceScheduleDTO(
+                        s.getId(),
+                        formatDate(s.getStartDate()),
+                        formatDate(s.getEndDate()),
+                        wins,
+                        null
+                ));
             }
         }
 
@@ -329,7 +401,17 @@ public class AdviceServiceImpl implements AdviceService {
     private LocalDate parseDate(String s) {
         if (s == null || s.isBlank())
             return null;
-        return LocalDate.parse(s.trim());
+        String value = s.trim();
+        try {
+            // Si viene en formato 'YYYY-MM-DD', parse normal
+            if (value.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
+                return LocalDate.parse(value);
+            }
+            // Si viene en formato ISO con zona (ej: 2025-09-30T22:00:00.000Z)
+            return Instant.parse(value).atZone(ZoneId.systemDefault()).toLocalDate();
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Fecha inválida: " + value, ex);
+        }
     }
 
     private String formatDate(LocalDate d) {
@@ -380,30 +462,24 @@ public class AdviceServiceImpl implements AdviceService {
     }
 
     private Company resolveCompanyForWrite(CompanyRefDTO incoming, Company current) {
-        boolean isAdmin = isCurrentUserAdmin();
-        Long userCompanyId = currentCompanyId();
-
-        if (!isAdmin) {
-            if (userCompanyId != null) {
-                Company c = new Company();
-                c.setId(userCompanyId);
-                return c;
-            }
-            return current;
-        }
-
+        // Si el DTO trae un id válido, buscar y asignar la compañía SIEMPRE
         Long desiredId = (incoming != null) ? incoming.id() : null;
         if (desiredId != null && desiredId > 0) {
-            Company c = new Company();
-            c.setId(desiredId);
-            return c;
+            return companyRepository.findById(desiredId).orElse(null);
+        }
+        // Si no, usar la lógica anterior (usuario actual, current, etc)
+        boolean isAdmin = isCurrentUserAdmin();
+        Long userCompanyId = currentCompanyId();
+        if (!isAdmin) {
+            if (userCompanyId != null) {
+                return companyRepository.findById(userCompanyId).orElse(null);
+            }
+            return current;
         }
         if (current != null)
             return current;
         if (userCompanyId != null) {
-            Company c = new Company();
-            c.setId(userCompanyId);
-            return c;
+            return companyRepository.findById(userCompanyId).orElse(null);
         }
         return null;
     }
@@ -2684,10 +2760,15 @@ import com.screenleads.backend.app.domain.model.User;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.RoleRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
+import com.screenleads.backend.app.domain.repositories.MediaRepository;
+import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
+import com.screenleads.backend.app.domain.model.MediaType;
+import com.screenleads.backend.app.domain.model.Media;
 import com.screenleads.backend.app.web.dto.UserDto;
 import com.screenleads.backend.app.web.mapper.UserMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -2700,7 +2781,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -2710,7 +2790,9 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepo;
     private final PasswordEncoder passwordEncoder;
     private final PermissionService perm;
+    private final MediaRepository mediaRepository;
     private final SecureRandom random = new SecureRandom();
+    private final MediaTypeRepository mediaTypeRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -2720,12 +2802,16 @@ public class UserServiceImpl implements UserService {
             CompanyRepository companyRepo,
             RoleRepository roleRepo,
             PasswordEncoder passwordEncoder,
-            PermissionService perm) {
+            PermissionService perm,
+            MediaRepository mediaRepository,
+            MediaTypeRepository mediaTypeRepository) {
         this.repo = repo;
         this.companyRepo = companyRepo;
         this.roleRepo = roleRepo;
         this.passwordEncoder = passwordEncoder;
         this.perm = perm;
+        this.mediaRepository = mediaRepository;
+        this.mediaTypeRepository = mediaTypeRepository;
     }
 
     // ---------- LECTURAS (activamos filtro en la misma Session/Tx) ----------
@@ -2735,6 +2821,9 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> getAll() {
         enableCompanyFilterIfNeeded();
         return repo.findAll().stream()
+                .peek(u -> {
+                    if (u.getProfileImage() != null) Hibernate.initialize(u.getProfileImage());
+                })
                 .map(UserMapper::toDto)
                 .toList();
     }
@@ -2744,7 +2833,10 @@ public class UserServiceImpl implements UserService {
     public UserDto getById(Long id) {
         enableCompanyFilterIfNeeded();
         return repo.findById(id)
-                .map(UserMapper::toDto)
+                .map(u -> {
+                    if (u.getProfileImage() != null) Hibernate.initialize(u.getProfileImage());
+                    return UserMapper.toDto(u);
+                })
                 .orElse(null);
     }
 
@@ -2835,20 +2927,110 @@ public class UserServiceImpl implements UserService {
                 existing.setPassword(passwordEncoder.encode(dto.getPassword()));
             }
 
+            // --- ACTUALIZAR COMPAÑÍA ---
+            Long finalCompanyId;
             if (dto.getCompanyId() != null) {
+                finalCompanyId = dto.getCompanyId();
+            } else if (dto.getCompany() != null && dto.getCompany().id() != null) {
+                finalCompanyId = dto.getCompany().id();
+            } else {
+                finalCompanyId = null;
+            }
+            if (finalCompanyId != null) {
                 if (!isCurrentUserAdmin()) {
                     Long currentCompanyId = currentCompanyId();
-                    if (currentCompanyId == null || !currentCompanyId.equals(dto.getCompanyId())) {
+                    if (currentCompanyId == null || !currentCompanyId.equals(finalCompanyId)) {
                         throw new IllegalArgumentException("No autorizado a cambiar de compañía");
                     }
                 }
-                Company c = companyRepo.findById(dto.getCompanyId())
-                        .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + dto.getCompanyId()));
+                Company c = companyRepo.findById(finalCompanyId)
+                        .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + finalCompanyId));
                 existing.setCompany(c);
             }
 
-            // Si llega un rol (único) en el DTO, cambiarlo con mismas reglas
-            if (dto.getRole() != null && dto.getRole().getId() != null) {
+            // --- ACTUALIZAR IMAGEN DE PERFIL ---
+            if (dto.getProfileImage() != null && dto.getProfileImage().src() != null) {
+                var mediaOpt = mediaRepository.findBySrc(dto.getProfileImage().src());
+                if (mediaOpt.isPresent()) {
+                    existing.setProfileImage(mediaOpt.get());
+                } else {
+                    // Crear Media nueva
+                    var mediaDto = dto.getProfileImage();
+                    // Buscar o crear MediaType
+                    var typeDto = mediaDto.type();
+                    MediaType type = null;
+                    String src = mediaDto.src();
+                    final String extension;
+                    if (src != null && src.contains(".")) {
+                        extension = src.substring(src.lastIndexOf('.') + 1).toLowerCase();
+                    } else {
+                        extension = null;
+                    }
+                    String detectedType = null;
+                    if (extension != null) {
+                        switch (extension) {
+                            case "jpg": case "jpeg": case "png": case "gif": case "bmp":
+                                detectedType = "IMG"; break;
+                            case "mp4": case "avi": case "mov": case "wmv":
+                                detectedType = "VIDEO"; break;
+                            case "mp3": case "wav": case "ogg":
+                                detectedType = "AUDIO"; break;
+                            default:
+                                detectedType = "FILE"; break;
+                        }
+                    }
+                    if (typeDto != null) {
+                        if (typeDto.type() != null && !typeDto.type().isBlank()) {
+                            type = mediaTypeRepository.findByType(typeDto.type()).orElse(null);
+                        }
+                        if (type == null && typeDto.extension() != null && !typeDto.extension().isBlank()) {
+                            type = mediaTypeRepository.findByExtension(typeDto.extension()).orElse(null);
+                        }
+                    }
+                    if (type == null && detectedType != null && extension != null) {
+                        type = mediaTypeRepository.findByType(detectedType)
+                                .filter(t -> t.getExtension().equalsIgnoreCase(extension))
+                                .orElse(null);
+                        if (type == null) {
+                            type = new MediaType();
+                            type.setType(detectedType);
+                            type.setExtension(extension);
+                            type.setEnabled(true);
+                            type = mediaTypeRepository.save(type);
+                        }
+                    }
+                    if (type == null) {
+                        // fallback seguro
+                        type = mediaTypeRepository.findByType("IMG").orElseGet(() -> {
+                            MediaType t = new MediaType();
+                            t.setType("IMG");
+                            t.setExtension("jpg");
+                            t.setEnabled(true);
+                            return mediaTypeRepository.save(t);
+                        });
+                    }
+                    // Buscar compañía
+                    Company company = existing.getCompany();
+                    if (company == null && dto.getCompanyId() != null) {
+                        company = companyRepo.findById(dto.getCompanyId()).orElse(null);
+                    }
+                    if (company == null && dto.getCompany() != null && dto.getCompany().id() != null) {
+                        company = companyRepo.findById(dto.getCompany().id()).orElse(null);
+                    }
+                    if (company == null) {
+                        throw new IllegalArgumentException("No se puede asociar media: compañía no encontrada");
+                    }
+            var newMedia = Media.builder()
+                .src(mediaDto.src())
+                .type(type)
+                .company(company)
+                .build();
+            existing.setProfileImage(mediaRepository.save(newMedia));
+                }
+            }
+
+            // Si llega un nombre de rol en el DTO, cambiarlo con mismas reglas
+            if (dto.getRole() != null) {
                 if (!perm.can("user", "update"))
                     throw new IllegalArgumentException("No autorizado a actualizar usuarios");
                 Role newRole = resolveRoleFromDto(dto);
@@ -2964,13 +3146,13 @@ public class UserServiceImpl implements UserService {
     private Role resolveRoleFromDto(UserDto dto) {
         if (dto.getRole() == null)
             return null;
-        if (dto.getRole().getId() != null) {
-            return roleRepo.findById(dto.getRole().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("roleId inválido: " + dto.getRole().getId()));
+        if (dto.getRole().id() != null) {
+            return roleRepo.findById(dto.getRole().id())
+                    .orElseThrow(() -> new IllegalArgumentException("roleId inválido: " + dto.getRole().id()));
         }
-        if (dto.getRole().getRole() != null) {
-            return roleRepo.findByRole(dto.getRole().getRole())
-                    .orElseThrow(() -> new IllegalArgumentException("role inválido: " + dto.getRole().getRole()));
+        if (dto.getRole().role() != null) {
+            return roleRepo.findByRole(dto.getRole().role())
+                    .orElseThrow(() -> new IllegalArgumentException("role inválido: " + dto.getRole().role()));
         }
         return null;
     }
