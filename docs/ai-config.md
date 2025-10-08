@@ -263,12 +263,12 @@ logging.level.org.springframework.security=DEBUG
 spring.application.name=app
 server.port=3000
 # PostgreSQL database configuration
-spring.datasource.url=jdbc:postgresql://localhost:5432/sl_db
-spring.datasource.username=postgres
-spring.datasource.password=52866617jJ@
-# spring.datasource.url=${JDBC_DATABASE_URL}
-# spring.datasource.username=${JDBC_DATABASE_USERNAME}
-# spring.datasource.password=${JDBC_DATABASE_PASSWORD}
+# spring.datasource.url=jdbc:postgresql://localhost:5432/sl_db
+# spring.datasource.username=postgres
+# spring.datasource.password=52866617jJ@
+spring.datasource.url=${JDBC_DATABASE_URL}
+spring.datasource.username=${JDBC_DATABASE_USERNAME}
+spring.datasource.password=${JDBC_DATABASE_PASSWORD}
 spring.datasource.driver-class-name=org.postgresql.Driver
 
 # JPA configurations

@@ -2733,6 +2733,7 @@ public class RoleServiceImpl implements RoleService {
 package com.screenleads.backend.app.application.service;
 
 import com.screenleads.backend.app.web.dto.UserDto;
+import com.screenleads.backend.app.web.dto.UserCreationResponse;
 
 import java.util.List;
 
@@ -2741,7 +2742,7 @@ public interface UserService {
 
     UserDto getById(Long id);
 
-    UserDto create(UserDto dto);
+    UserCreationResponse create(UserDto dto);
 
     UserDto update(Long id, UserDto dto);
 
@@ -2854,7 +2855,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDto create(UserDto dto) {
+    public com.screenleads.backend.app.web.dto.UserCreationResponse create(UserDto dto) {
         if (dto == null)
             throw new IllegalArgumentException("Body requerido");
         if (dto.getUsername() == null || dto.getUsername().isBlank())
@@ -2905,7 +2906,10 @@ public class UserServiceImpl implements UserService {
         u.setRole(role);
 
         User saved = repo.save(u);
-        return UserMapper.toDto(saved);
+        return new com.screenleads.backend.app.web.dto.UserCreationResponse(
+            UserMapper.toDto(saved),
+            (dto.getPassword() != null && !dto.getPassword().isBlank()) ? null : rawPassword
+        );
     }
 
     @Override

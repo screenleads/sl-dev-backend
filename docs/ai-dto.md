@@ -620,6 +620,24 @@ public record TimeRangeDTO(
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/web/dto/UserCreationResponse.java
+package com.screenleads.backend.app.web.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserCreationResponse {
+    private UserDto user;
+    private String tempPassword;
+}
+
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/web/dto/UserDto.java
 package com.screenleads.backend.app.web.dto;
 
