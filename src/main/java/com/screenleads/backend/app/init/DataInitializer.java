@@ -103,32 +103,33 @@ public class DataInitializer implements CommandLineRunner {
                                 if (company != null && adviceRepository.count() == 0) {
                                         System.out.println("[MOCK] Creando anuncio de test por inicialización...");
                                         String mediaSrc = "https://storage.googleapis.com/screenleads-e7e0b.firebasestorage.app/media/videos/compressed-e69233c4-260a-4b3c-8ba6-876c34989725-tv_desayunos_1.mp4";
-                                        Long mediaId = mediaRepository.findBySrc(mediaSrc).map(m -> m.getId()).orElse(null);
+                                        Long mediaId = mediaRepository.findBySrc(mediaSrc).map(m -> m.getId())
+                                                        .orElse(null);
                                         AdviceDTO mockDto = new AdviceDTO(
-                                                null,
-                                                "Anuncio de test ",
-                                                false,
-                                                0,
-                                                new MediaUpsertDTO(mediaId, mediaSrc),
-                                                null,
-                                                new CompanyRefDTO(company.getId(), company.getName()),
-                                                Arrays.asList(
-                                                        new AdviceScheduleDTO(
-                                                                null,
-                                                                "2025-09-30T22:00:00.000Z",
-                                                                "2025-10-30T23:00:00.000Z",
-                                                                Arrays.asList(
-                                                                        new com.screenleads.backend.app.web.dto.AdviceTimeWindowDTO(
-                                                                                null, "MONDAY", "00:00", "23:59"
-                                                                        ),
-                                                                        new com.screenleads.backend.app.web.dto.AdviceTimeWindowDTO(
-                                                                                null, "SUNDAY", "00:00", "23:59"
-                                                                        )
-                                                                ),
-                                                                null
-                                                        )
-                                                )
-                                        );
+                                                        null,
+                                                        "Anuncio de test ",
+                                                        false,
+                                                        0,
+                                                        new MediaUpsertDTO(mediaId, mediaSrc),
+                                                        null,
+                                                        new CompanyRefDTO(company.getId(), company.getName()),
+                                                        Arrays.asList(
+                                                                        new AdviceScheduleDTO(
+                                                                                        null,
+                                                                                        "2025-09-30T22:00:00.000Z",
+                                                                                        "2025-10-30T23:00:00.000Z",
+                                                                                        Arrays.asList(
+                                                                                                        new com.screenleads.backend.app.web.dto.AdviceTimeWindowDTO(
+                                                                                                                        null,
+                                                                                                                        "MONDAY",
+                                                                                                                        "00:00",
+                                                                                                                        "23:59"),
+                                                                                                        new com.screenleads.backend.app.web.dto.AdviceTimeWindowDTO(
+                                                                                                                        null,
+                                                                                                                        "SUNDAY",
+                                                                                                                        "00:00",
+                                                                                                                        "23:59")),
+                                                                                        null)));
                                         adviceService.saveAdvice(mockDto);
                                 }
                         } catch (Exception e) {

@@ -67,7 +67,7 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public DeviceDTO saveDevice(DeviceDTO dto) {
         // Upsert idempotente por UUID
-            DeviceType type = deviceTypeRepository.findById(dto.type().id())
+        DeviceType type = deviceTypeRepository.findById(dto.type().id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device type not found"));
 
         Device device = deviceRepository.findOptionalByUuid(dto.uuid()).orElseGet(Device::new);
@@ -80,8 +80,8 @@ public class DeviceServiceImpl implements DeviceService {
         device.setHeight(height);
         device.setType(type);
 
-            if (dto.company() != null && dto.company().id() != null) {
-                Company company = companyRepository.findById(dto.company().id())
+        if (dto.company() != null && dto.company().id() != null) {
+            Company company = companyRepository.findById(dto.company().id())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found"));
             device.setCompany(company);
         } else {
@@ -96,11 +96,11 @@ public class DeviceServiceImpl implements DeviceService {
         Device device = deviceRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found"));
 
-            if (deviceDTO.type() == null || deviceDTO.type().id() == null) {
+        if (deviceDTO.type() == null || deviceDTO.type().id() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Device type is required");
         }
 
-            DeviceType type = deviceTypeRepository.findById(deviceDTO.type().id())
+        DeviceType type = deviceTypeRepository.findById(deviceDTO.type().id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device type not found"));
 
         device.setUuid(deviceDTO.uuid());
@@ -111,13 +111,13 @@ public class DeviceServiceImpl implements DeviceService {
         device.setHeight(height);
         device.setType(type);
 
-            if (deviceDTO.company() != null && deviceDTO.company().id() != null) {
-                Company company = companyRepository.findById(deviceDTO.company().id())
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found"));
-                device.setCompany(company);
-            } else {
-                device.setCompany(null);
-            }
+        if (deviceDTO.company() != null && deviceDTO.company().id() != null) {
+            Company company = companyRepository.findById(deviceDTO.company().id())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found"));
+            device.setCompany(company);
+        } else {
+            device.setCompany(null);
+        }
 
         Device updatedDevice = deviceRepository.save(device);
         return convertToDTO(updatedDevice);

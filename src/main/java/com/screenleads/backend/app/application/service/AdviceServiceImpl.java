@@ -36,10 +36,10 @@ public class AdviceServiceImpl implements AdviceService {
     private EntityManager entityManager;
 
     public AdviceServiceImpl(AdviceRepository adviceRepository,
-                             MediaRepository mediaRepository,
-                             UserRepository userRepository,
-                             MediaTypeRepository mediaTypeRepository,
-                             CompanyRepository companyRepository) {
+            MediaRepository mediaRepository,
+            UserRepository userRepository,
+            MediaTypeRepository mediaTypeRepository,
+            CompanyRepository companyRepository) {
         this.adviceRepository = adviceRepository;
         this.mediaRepository = mediaRepository;
         this.userRepository = userRepository;
@@ -166,10 +166,12 @@ public class AdviceServiceImpl implements AdviceService {
         if (dto.getSchedules() != null) {
             for (AdviceScheduleDTO sDto : dto.getSchedules()) {
                 AdviceSchedule mappedSchedule = mapScheduleDTO(sDto, advice);
-                System.out.println("[DEBUG] AdviceSchedule mapeado: startDate=" + mappedSchedule.getStartDate() + ", endDate=" + mappedSchedule.getEndDate());
+                System.out.println("[DEBUG] AdviceSchedule mapeado: startDate=" + mappedSchedule.getStartDate()
+                        + ", endDate=" + mappedSchedule.getEndDate());
                 if (mappedSchedule.getWindows() != null) {
                     for (AdviceTimeWindow win : mappedSchedule.getWindows()) {
-                        System.out.println("[DEBUG] AdviceTimeWindow mapeado: weekday=" + win.getWeekday() + ", from=" + win.getFromTime() + ", to=" + win.getToTime());
+                        System.out.println("[DEBUG] AdviceTimeWindow mapeado: weekday=" + win.getWeekday() + ", from="
+                                + win.getFromTime() + ", to=" + win.getToTime());
                     }
                 }
                 advice.getSchedules().add(mappedSchedule);
@@ -178,9 +180,10 @@ public class AdviceServiceImpl implements AdviceService {
 
         validateAdvice(advice);
         Advice saved = adviceRepository.save(advice);
-            // Log de persistencia real de ventanas
-            int totalWindows = saved.getSchedules() == null ? 0 : saved.getSchedules().stream().mapToInt(s -> s.getWindows() == null ? 0 : s.getWindows().size()).sum();
-            System.out.println("[DEBUG] Advice guardado. Total ventanas: " + totalWindows);
+        // Log de persistencia real de ventanas
+        int totalWindows = saved.getSchedules() == null ? 0
+                : saved.getSchedules().stream().mapToInt(s -> s.getWindows() == null ? 0 : s.getWindows().size()).sum();
+        System.out.println("[DEBUG] Advice guardado. Total ventanas: " + totalWindows);
         return convertToDTO(saved);
     }
 
@@ -326,8 +329,7 @@ public class AdviceServiceImpl implements AdviceService {
                                 w.getId(),
                                 w.getWeekday() != null ? w.getWeekday().name() : null,
                                 formatTime(w.getFromTime()),
-                                formatTime(w.getToTime())
-                        ));
+                                formatTime(w.getToTime())));
                     }
                 }
                 schedules.add(new AdviceScheduleDTO(
@@ -335,8 +337,7 @@ public class AdviceServiceImpl implements AdviceService {
                         formatDate(s.getStartDate()),
                         formatDate(s.getEndDate()),
                         wins,
-                        null
-                ));
+                        null));
             }
         }
 

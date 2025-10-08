@@ -189,7 +189,9 @@ public class UserServiceImpl implements UserService {
                 }
                 if (type == null) {
                     throw new IllegalArgumentException(
-                            "No se pudo determinar el tipo de media para la imagen de perfil");
+                            "No se pudo determinar el tipo de media para la imagen de perfil"
+                                    + (extension != null ? " (extensión: " + extension + ")" : "")
+                                    + ". Asegúrate de que el MediaType existe.");
                 }
                 Media newMedia = Media.builder()
                         .src(mediaDto.src())
