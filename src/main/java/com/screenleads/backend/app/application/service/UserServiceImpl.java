@@ -159,37 +159,17 @@ public class UserServiceImpl implements UserService {
             } else {
                 // Crear Media nueva
                 var mediaDto = dto.getProfileImage();
-                // Buscar o crear MediaType
+                // Buscar o crear MediaType solo por id, type o extension
                 var typeDto = mediaDto.type();
                 MediaType type = null;
                 String src = mediaDto.src();
-                final String extension;
-                if (src != null && src.contains(".")) {
-                    extension = src.substring(src.lastIndexOf('.') + 1).toLowerCase();
-                } else {
-                    extension = null;
-                }
-                String detectedType = null;
-                if (extension != null) {
-                    switch (extension) {
-                        case "jpg": case "jpeg": case "png": case "gif": case "bmp":
-                            detectedType = "IMG"; break;
-                        case "mp4": case "avi": case "mov": case "wmv":
-                            detectedType = "VIDEO"; break;
-                        case "mp3": case "wav": case "ogg":
-                            detectedType = "AUDIO"; break;
-                        default: detectedType = null;
-                    }
-                }
+                String extension = (src != null && src.contains(".")) ? src.substring(src.lastIndexOf('.') + 1).toLowerCase() : null;
                 if (typeDto != null && typeDto.id() != null) {
                     type = mediaTypeRepository.findById(typeDto.id()).orElse(null);
                 } else if (typeDto != null && typeDto.type() != null) {
                     type = mediaTypeRepository.findByType(typeDto.type()).orElse(null);
                 } else if (extension != null) {
                     type = mediaTypeRepository.findByExtension(extension).orElse(null);
-                }
-                if (type == null && detectedType != null) {
-                    type = mediaTypeRepository.findByType(detectedType).orElse(null);
                 }
                 if (type == null) {
                     throw new IllegalArgumentException("No se pudo determinar el tipo de media para la imagen de perfil");
