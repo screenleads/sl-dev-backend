@@ -310,12 +310,12 @@ public class UserServiceImpl implements UserService {
                         // Si type es vacío o nulo, buscar por extensión
                         if ((type == null || typeDto.type() == null || typeDto.type().isBlank())
                                 && typeDto.extension() != null && !typeDto.extension().isBlank()) {
-                            type = mediaTypeRepository.findByExtension(extension).orElse(null);
+                            type = mediaTypeRepository.findByExtensionIgnoreCase(extension).orElse(null);
                         }
                     }
                     // Si sigue sin encontrar, buscar por extensión deducida
                     if (type == null && extension != null) {
-                        type = mediaTypeRepository.findByExtension(extension).orElse(null);
+                        type = mediaTypeRepository.findByExtensionIgnoreCase(extension).orElse(null);
                     }
                     if (type == null) {
                         log.error("[MEDIA PROFILE] No se encontró MediaType con extensión: {}. Payload src: {}",
