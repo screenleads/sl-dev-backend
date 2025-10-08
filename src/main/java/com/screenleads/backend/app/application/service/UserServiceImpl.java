@@ -27,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -276,8 +275,8 @@ public class UserServiceImpl implements UserService {
                 }
             }
 
-            // Si llega un rol (único) en el DTO, cambiarlo con mismas reglas
-            if (dto.getRole() != null && dto.getRole().getId() != null) {
+            // Si llega un nombre de rol en el DTO, cambiarlo con mismas reglas
+            if (dto.getRole() != null) {
                 if (!perm.can("user", "update"))
                     throw new IllegalArgumentException("No autorizado a actualizar usuarios");
                 Role newRole = resolveRoleFromDto(dto);
@@ -393,13 +392,13 @@ public class UserServiceImpl implements UserService {
     private Role resolveRoleFromDto(UserDto dto) {
         if (dto.getRole() == null)
             return null;
-        if (dto.getRole().getId() != null) {
-            return roleRepo.findById(dto.getRole().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("roleId inválido: " + dto.getRole().getId()));
+        if (dto.getRole().id() != null) {
+            return roleRepo.findById(dto.getRole().id())
+                    .orElseThrow(() -> new IllegalArgumentException("roleId inválido: " + dto.getRole().id()));
         }
-        if (dto.getRole().getRole() != null) {
-            return roleRepo.findByRole(dto.getRole().getRole())
-                    .orElseThrow(() -> new IllegalArgumentException("role inválido: " + dto.getRole().getRole()));
+        if (dto.getRole().role() != null) {
+            return roleRepo.findByRole(dto.getRole().role())
+                    .orElseThrow(() -> new IllegalArgumentException("role inválido: " + dto.getRole().role()));
         }
         return null;
     }

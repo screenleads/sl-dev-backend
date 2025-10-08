@@ -15,7 +15,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.hibernate.Hibernate;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -78,17 +80,22 @@ public class AuthenticationService {
                 .build();
     }
 
+    @Transactional
     public UserDto getCurrentUser() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getPrincipal() == null) {
             throw new UsernameNotFoundException("No authenticated user");
         }
-        if (auth.getPrincipal() instanceof User u) {
-            return UserMapper.toDto(u);
+        User u;
+        if (auth.getPrincipal() instanceof User userPrincipal) {
+            // Always reload from DB to ensure eager fetch
+            u = userRepository.findWithCompanyAndProfileImageByUsername(userPrincipal.getUsername())
+                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        } else {
+            String username = auth.getName();
+            u = userRepository.findWithCompanyAndProfileImageByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
         }
-        String username = auth.getName();
-        User u = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
         return UserMapper.toDto(u);
     }
 

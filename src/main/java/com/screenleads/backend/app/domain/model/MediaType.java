@@ -6,6 +6,7 @@ import lombok.*;
 
 
 @Entity
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "media_type",
 uniqueConstraints = @UniqueConstraint(name = "uk_mediatype_type", columnNames = "type")
 )
