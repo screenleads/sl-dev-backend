@@ -276,31 +276,17 @@ public class UserServiceImpl implements UserService {
                         if (typeDto.type() != null && !typeDto.type().isBlank()) {
                             type = mediaTypeRepository.findByType(typeDto.type()).orElse(null);
                         }
-                        if (type == null && typeDto.extension() != null && !typeDto.extension().isBlank()) {
+                        // Si type es vacío o nulo, buscar por extensión
+                        if ((type == null || typeDto.type() == null || typeDto.type().isBlank()) && typeDto.extension() != null && !typeDto.extension().isBlank()) {
                             type = mediaTypeRepository.findByExtension(typeDto.extension()).orElse(null);
                         }
                     }
-                    if (type == null && detectedType != null && extension != null) {
-                        type = mediaTypeRepository.findByType(detectedType)
-                                .filter(t -> t.getExtension().equalsIgnoreCase(extension))
-                                .orElse(null);
-                        if (type == null) {
-                            type = new MediaType();
-                            type.setType(detectedType);
-                            type.setExtension(extension);
-                            type.setEnabled(true);
-                            type = mediaTypeRepository.save(type);
-                        }
+                    // Si sigue sin encontrar, buscar por extensión deducida
+                    if (type == null && extension != null) {
+                        type = mediaTypeRepository.findByExtension(extension).orElse(null);
                     }
                     if (type == null) {
-                        // fallback seguro
-                        type = mediaTypeRepository.findByType("IMG").orElseGet(() -> {
-                            MediaType t = new MediaType();
-                            t.setType("IMG");
-                            t.setExtension("jpg");
-                            t.setEnabled(true);
-                            return mediaTypeRepository.save(t);
-                        });
+                        throw new IllegalArgumentException("No se pudo determinar el tipo de media para la imagen de perfil (extensión: " + extension + ")");
                     }
                     // Buscar compañía
                     Company company = existing.getCompany();
