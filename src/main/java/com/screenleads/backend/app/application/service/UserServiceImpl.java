@@ -318,12 +318,17 @@ public class UserServiceImpl implements UserService {
                         type = mediaTypeRepository.findByExtensionIgnoreCase(extension).orElse(null);
                     }
                     if (type == null) {
-                        log.error("[MEDIA PROFILE] No se encontró MediaType con extensión: {}. Payload src: {}",
-                                extension, src);
-                log.error("[MEDIA PROFILE] No se encontró MediaType con extensión: {}. Payload src: {}", extension, src);
-                throw new IllegalArgumentException(
-                    "No se pudo determinar el tipo de media para la imagen de perfil (extensión: "
-                        + extension + ")");
+                        // Log avanzado: mostrar todos los MediaType y la extensión buscada
+                        var allMediaTypes = mediaTypeRepository.findAll();
+                        log.error("[MEDIA PROFILE] No se encontró MediaType con extensión: {}. Payload src: {}", extension, src);
+                        log.error("[MEDIA PROFILE] MediaTypes en BD:");
+                        for (MediaType mt : allMediaTypes) {
+                            log.error("  - id: {}, type: {}, extension: '{}', enabled: {}", mt.getId(), mt.getType(), mt.getExtension(), mt.getEnabled());
+                        }
+                        log.error("[MEDIA PROFILE] Valor de extensión buscada (TRIM, lower): '{}', original: '{}'", extension != null ? extension.trim().toLowerCase() : null, extension);
+                        throw new IllegalArgumentException(
+                            "No se pudo determinar el tipo de media para la imagen de perfil (extensión: "
+                                + extension + "). Asegúrate de que el MediaType existe y la extensión está bien escrita en la base de datos.");
                     }
                     // Buscar compañía
                     Company company = existing.getCompany();
