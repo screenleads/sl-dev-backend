@@ -109,9 +109,10 @@ public class UserServiceImpl implements UserService {
         // Permisos para crear y jerarquía de nivel
         assertCanCreateUser();
 
-        repo.findByUsername(dto.getUsername()).ifPresent(u -> {
+        // Validar username antes de crear el usuario
+        if (repo.findByUsername(dto.getUsername()).isPresent()) {
             throw new IllegalArgumentException("username ya existe");
-        });
+        }
 
         User u = new User();
         u.setUsername(dto.getUsername());
@@ -125,17 +126,80 @@ public class UserServiceImpl implements UserService {
                 : generateTempPassword(12);
         u.setPassword(passwordEncoder.encode(rawPassword));
 
-        // Company
+        // --- ASIGNAR COMPAÑÍA ---
+        Long companyIdToAssign;
         if (dto.getCompanyId() != null) {
-            Company c = companyRepo.findById(dto.getCompanyId())
-                    .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + dto.getCompanyId()));
-            u.setCompany(c);
+            companyIdToAssign = dto.getCompanyId();
+        } else if (dto.getCompany() != null && dto.getCompany().id() != null) {
+            companyIdToAssign = dto.getCompany().id();
         } else {
-            Long currentCompanyId = currentCompanyId();
-            if (currentCompanyId != null && !isCurrentUserAdmin()) {
-                Company c = companyRepo.findById(currentCompanyId)
-                        .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + currentCompanyId));
-                u.setCompany(c);
+            companyIdToAssign = null;
+        }
+
+        Company companyToSet = null;
+        if (companyIdToAssign != null) {
+            if (!isCurrentUserAdmin()) {
+                Long currentCompanyId = currentCompanyId();
+                if (currentCompanyId == null || !currentCompanyId.equals(companyIdToAssign)) {
+                    throw new IllegalArgumentException("No autorizado a asignar esa compañía");
+                }
+            }
+            companyToSet = companyRepo.findById(companyIdToAssign)
+                    .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + companyIdToAssign));
+        }
+        if (companyToSet != null) {
+            u.setCompany(companyToSet);
+        }
+
+        // --- ASIGNAR IMAGEN DE PERFIL ---
+        if (dto.getProfileImage() != null && dto.getProfileImage().src() != null) {
+            var mediaOpt = mediaRepository.findBySrc(dto.getProfileImage().src());
+            if (mediaOpt.isPresent()) {
+                u.setProfileImage(mediaOpt.get());
+            } else {
+                // Crear Media nueva
+                var mediaDto = dto.getProfileImage();
+                // Buscar o crear MediaType
+                var typeDto = mediaDto.type();
+                MediaType type = null;
+                String src = mediaDto.src();
+                final String extension;
+                if (src != null && src.contains(".")) {
+                    extension = src.substring(src.lastIndexOf('.') + 1).toLowerCase();
+                } else {
+                    extension = null;
+                }
+                String detectedType = null;
+                if (extension != null) {
+                    switch (extension) {
+                        case "jpg": case "jpeg": case "png": case "gif": case "bmp":
+                            detectedType = "IMG"; break;
+                        case "mp4": case "avi": case "mov": case "wmv":
+                            detectedType = "VIDEO"; break;
+                        case "mp3": case "wav": case "ogg":
+                            detectedType = "AUDIO"; break;
+                        default: detectedType = null;
+                    }
+                }
+                if (typeDto != null && typeDto.id() != null) {
+                    type = mediaTypeRepository.findById(typeDto.id()).orElse(null);
+                } else if (typeDto != null && typeDto.type() != null) {
+                    type = mediaTypeRepository.findByType(typeDto.type()).orElse(null);
+                } else if (extension != null) {
+                    type = mediaTypeRepository.findByExtension(extension).orElse(null);
+                }
+                if (type == null && detectedType != null) {
+                    type = mediaTypeRepository.findByType(detectedType).orElse(null);
+                }
+                if (type == null) {
+                    throw new IllegalArgumentException("No se pudo determinar el tipo de media para la imagen de perfil");
+                }
+                Media newMedia = Media.builder()
+                        .src(mediaDto.src())
+                        .type(type)
+                        .company(u.getCompany())
+                        .build();
+                u.setProfileImage(mediaRepository.save(newMedia));
             }
         }
 
