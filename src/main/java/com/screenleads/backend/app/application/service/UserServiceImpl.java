@@ -6,10 +6,15 @@ import com.screenleads.backend.app.domain.model.User;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.RoleRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
+import com.screenleads.backend.app.domain.repositories.MediaRepository;
+import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
+import com.screenleads.backend.app.domain.model.MediaType;
+import com.screenleads.backend.app.domain.model.Media;
 import com.screenleads.backend.app.web.dto.UserDto;
 import com.screenleads.backend.app.web.mapper.UserMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,9 +25,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -32,7 +36,9 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepo;
     private final PasswordEncoder passwordEncoder;
     private final PermissionService perm;
+    private final MediaRepository mediaRepository;
     private final SecureRandom random = new SecureRandom();
+    private final MediaTypeRepository mediaTypeRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -42,12 +48,16 @@ public class UserServiceImpl implements UserService {
             CompanyRepository companyRepo,
             RoleRepository roleRepo,
             PasswordEncoder passwordEncoder,
-            PermissionService perm) {
+            PermissionService perm,
+            MediaRepository mediaRepository,
+            MediaTypeRepository mediaTypeRepository) {
         this.repo = repo;
         this.companyRepo = companyRepo;
         this.roleRepo = roleRepo;
         this.passwordEncoder = passwordEncoder;
         this.perm = perm;
+        this.mediaRepository = mediaRepository;
+        this.mediaTypeRepository = mediaTypeRepository;
     }
 
     // ---------- LECTURAS (activamos filtro en la misma Session/Tx) ----------
@@ -57,6 +67,9 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> getAll() {
         enableCompanyFilterIfNeeded();
         return repo.findAll().stream()
+                .peek(u -> {
+                    if (u.getProfileImage() != null) Hibernate.initialize(u.getProfileImage());
+                })
                 .map(UserMapper::toDto)
                 .toList();
     }
@@ -66,7 +79,10 @@ public class UserServiceImpl implements UserService {
     public UserDto getById(Long id) {
         enableCompanyFilterIfNeeded();
         return repo.findById(id)
-                .map(UserMapper::toDto)
+                .map(u -> {
+                    if (u.getProfileImage() != null) Hibernate.initialize(u.getProfileImage());
+                    return UserMapper.toDto(u);
+                })
                 .orElse(null);
     }
 
@@ -75,24 +91,28 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void delete(Long id) {
-        enableCompanyFilterIfNeeded(); // protege que no borre fuera de su compañía
+        if (!perm.can("user", "delete")) {
+            throw new IllegalArgumentException("No autorizado a borrar usuarios");
+        }
+        enableCompanyFilterIfNeeded(); // protege que no borre fuera de su compañía si no es admin
         repo.deleteById(id);
     }
 
     @Override
     @Transactional
-    public UserDto create(UserDto dto) {
+    public com.screenleads.backend.app.web.dto.UserCreationResponse create(UserDto dto) {
         if (dto == null)
             throw new IllegalArgumentException("Body requerido");
         if (dto.getUsername() == null || dto.getUsername().isBlank())
             throw new IllegalArgumentException("username requerido");
 
-        // Permisos para crear y jerarquía de nivel 1 o 2
+        // Permisos para crear y jerarquía de nivel
         assertCanCreateUser();
 
-        repo.findByUsername(dto.getUsername()).ifPresent(u -> {
+        // Validar username antes de crear el usuario
+        if (repo.findByUsername(dto.getUsername()).isPresent()) {
             throw new IllegalArgumentException("username ya existe");
-        });
+        }
 
         User u = new User();
         u.setUsername(dto.getUsername());
@@ -100,52 +120,111 @@ public class UserServiceImpl implements UserService {
         u.setName(dto.getName());
         u.setLastName(dto.getLastName());
 
-        // Generación/establecimiento de password
+        // Password
         String rawPassword = (dto.getPassword() != null && !dto.getPassword().isBlank())
                 ? dto.getPassword()
                 : generateTempPassword(12);
         u.setPassword(passwordEncoder.encode(rawPassword));
 
-        // Company
+        // --- ASIGNAR COMPAÑÍA ---
+        Long companyIdToAssign;
         if (dto.getCompanyId() != null) {
-            Company c = companyRepo.findById(dto.getCompanyId())
-                    .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + dto.getCompanyId()));
-            u.setCompany(c);
+            companyIdToAssign = dto.getCompanyId();
+        } else if (dto.getCompany() != null && dto.getCompany().id() != null) {
+            companyIdToAssign = dto.getCompany().id();
         } else {
-            // Si no viene companyId y el usuario no es admin, forzar su compañía
-            Long currentCompanyId = currentCompanyId();
-            if (currentCompanyId != null && !isCurrentUserAdmin()) {
-                Company c = companyRepo.findById(currentCompanyId)
-                        .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + currentCompanyId));
-                u.setCompany(c);
+            companyIdToAssign = null;
+        }
+
+        Company companyToSet = null;
+        if (companyIdToAssign != null) {
+            if (!isCurrentUserAdmin()) {
+                Long currentCompanyId = currentCompanyId();
+                if (currentCompanyId == null || !currentCompanyId.equals(companyIdToAssign)) {
+                    throw new IllegalArgumentException("No autorizado a asignar esa compañía");
+                }
+            }
+            companyToSet = companyRepo.findById(companyIdToAssign)
+                    .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + companyIdToAssign));
+        }
+        if (companyToSet != null) {
+            u.setCompany(companyToSet);
+        }
+
+        // --- ASIGNAR IMAGEN DE PERFIL ---
+        if (dto.getProfileImage() != null && dto.getProfileImage().src() != null) {
+            var mediaOpt = mediaRepository.findBySrc(dto.getProfileImage().src());
+            if (mediaOpt.isPresent()) {
+                u.setProfileImage(mediaOpt.get());
+            } else {
+                // Crear Media nueva
+                var mediaDto = dto.getProfileImage();
+                // Buscar o crear MediaType
+                var typeDto = mediaDto.type();
+                MediaType type = null;
+                String src = mediaDto.src();
+                final String extension;
+                if (src != null && src.contains(".")) {
+                    extension = src.substring(src.lastIndexOf('.') + 1).toLowerCase();
+                } else {
+                    extension = null;
+                }
+                String detectedType = null;
+                if (extension != null) {
+                    switch (extension) {
+                        case "jpg": case "jpeg": case "png": case "gif": case "bmp":
+                            detectedType = "IMG"; break;
+                        case "mp4": case "avi": case "mov": case "wmv":
+                            detectedType = "VIDEO"; break;
+                        case "mp3": case "wav": case "ogg":
+                            detectedType = "AUDIO"; break;
+                        default: detectedType = null;
+                    }
+                }
+                if (typeDto != null && typeDto.id() != null) {
+                    type = mediaTypeRepository.findById(typeDto.id()).orElse(null);
+                } else if (typeDto != null && typeDto.type() != null) {
+                    type = mediaTypeRepository.findByType(typeDto.type()).orElse(null);
+                } else if (extension != null) {
+                    type = mediaTypeRepository.findByExtension(extension).orElse(null);
+                }
+                if (type == null && detectedType != null) {
+                    type = mediaTypeRepository.findByType(detectedType).orElse(null);
+                }
+                if (type == null) {
+                    throw new IllegalArgumentException("No se pudo determinar el tipo de media para la imagen de perfil");
+                }
+                Media newMedia = Media.builder()
+                        .src(mediaDto.src())
+                        .type(type)
+                        .company(u.getCompany())
+                        .build();
+                u.setProfileImage(mediaRepository.save(newMedia));
             }
         }
 
-        // Roles
-        Set<Role> roles = new HashSet<>();
-        if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
-            for (String rn : dto.getRoles()) {
-                Role r = roleRepo.findByRole(rn)
-                        .orElseThrow(() -> new IllegalArgumentException("role inválido: " + rn));
-                roles.add(r);
-            }
-        }
-        if (roles.isEmpty())
-            throw new IllegalArgumentException("Se requiere al menos un rol");
+        // Rol ÚNICO desde el DTO
+        Role role = resolveRoleFromDto(dto);
+        if (role == null)
+            throw new IllegalArgumentException("Se requiere un rol");
 
-        // Verificación de jerarquía: no puedes asignar un nivel superior al tuyo
-        assertAssignableRoles(roles);
+        // Verificación de jerarquía (nivel)
+        assertAssignableRole(role);
 
-        u.setRoles(roles);
+        // Asignar como set (si la entidad User mantiene colección)
+        u.setRole(role);
 
         User saved = repo.save(u);
-        return UserMapper.toDto(saved);
+        return new com.screenleads.backend.app.web.dto.UserCreationResponse(
+            UserMapper.toDto(saved),
+            (dto.getPassword() != null && !dto.getPassword().isBlank()) ? null : rawPassword
+        );
     }
 
     @Override
     @Transactional
     public UserDto update(Long id, UserDto dto) {
-        enableCompanyFilterIfNeeded(); // asegura que solo se actualicen usuarios de su compañía (no admin)
+        enableCompanyFilterIfNeeded();
 
         return repo.findById(id).map(existing -> {
             if (dto.getUsername() != null)
@@ -157,41 +236,121 @@ public class UserServiceImpl implements UserService {
             if (dto.getLastName() != null)
                 existing.setLastName(dto.getLastName());
 
-            // Permitir cambio de password
             if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
                 existing.setPassword(passwordEncoder.encode(dto.getPassword()));
             }
 
-            // Cambiar compañía (si se permite)
+            // --- ACTUALIZAR COMPAÑÍA ---
+            Long finalCompanyId;
             if (dto.getCompanyId() != null) {
-                // Si el actual no es admin, no permitir cambiar a otra compañía distinta de la
-                // suya
+                finalCompanyId = dto.getCompanyId();
+            } else if (dto.getCompany() != null && dto.getCompany().id() != null) {
+                finalCompanyId = dto.getCompany().id();
+            } else {
+                finalCompanyId = null;
+            }
+            if (finalCompanyId != null) {
                 if (!isCurrentUserAdmin()) {
                     Long currentCompanyId = currentCompanyId();
-                    if (currentCompanyId == null || !currentCompanyId.equals(dto.getCompanyId())) {
+                    if (currentCompanyId == null || !currentCompanyId.equals(finalCompanyId)) {
                         throw new IllegalArgumentException("No autorizado a cambiar de compañía");
                     }
                 }
-                Company c = companyRepo.findById(dto.getCompanyId())
-                        .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + dto.getCompanyId()));
+                Company c = companyRepo.findById(finalCompanyId)
+                        .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + finalCompanyId));
                 existing.setCompany(c);
             }
 
-            // Roles (si vienen, aplicar mismas reglas de permiso y jerarquía)
-            if (dto.getRoles() != null) {
-                if (!perm.can("user", "update")) {
+            // --- ACTUALIZAR IMAGEN DE PERFIL ---
+            if (dto.getProfileImage() != null && dto.getProfileImage().src() != null) {
+                var mediaOpt = mediaRepository.findBySrc(dto.getProfileImage().src());
+                if (mediaOpt.isPresent()) {
+                    existing.setProfileImage(mediaOpt.get());
+                } else {
+                    // Crear Media nueva
+                    var mediaDto = dto.getProfileImage();
+                    // Buscar o crear MediaType
+                    var typeDto = mediaDto.type();
+                    MediaType type = null;
+                    String src = mediaDto.src();
+                    final String extension;
+                    if (src != null && src.contains(".")) {
+                        extension = src.substring(src.lastIndexOf('.') + 1).toLowerCase();
+                    } else {
+                        extension = null;
+                    }
+                    String detectedType = null;
+                    if (extension != null) {
+                        switch (extension) {
+                            case "jpg": case "jpeg": case "png": case "gif": case "bmp":
+                                detectedType = "IMG"; break;
+                            case "mp4": case "avi": case "mov": case "wmv":
+                                detectedType = "VIDEO"; break;
+                            case "mp3": case "wav": case "ogg":
+                                detectedType = "AUDIO"; break;
+                            default:
+                                detectedType = "FILE"; break;
+                        }
+                    }
+                    if (typeDto != null) {
+                        if (typeDto.type() != null && !typeDto.type().isBlank()) {
+                            type = mediaTypeRepository.findByType(typeDto.type()).orElse(null);
+                        }
+                        if (type == null && typeDto.extension() != null && !typeDto.extension().isBlank()) {
+                            type = mediaTypeRepository.findByExtension(typeDto.extension()).orElse(null);
+                        }
+                    }
+                    if (type == null && detectedType != null && extension != null) {
+                        type = mediaTypeRepository.findByType(detectedType)
+                                .filter(t -> t.getExtension().equalsIgnoreCase(extension))
+                                .orElse(null);
+                        if (type == null) {
+                            type = new MediaType();
+                            type.setType(detectedType);
+                            type.setExtension(extension);
+                            type.setEnabled(true);
+                            type = mediaTypeRepository.save(type);
+                        }
+                    }
+                    if (type == null) {
+                        // fallback seguro
+                        type = mediaTypeRepository.findByType("IMG").orElseGet(() -> {
+                            MediaType t = new MediaType();
+                            t.setType("IMG");
+                            t.setExtension("jpg");
+                            t.setEnabled(true);
+                            return mediaTypeRepository.save(t);
+                        });
+                    }
+                    // Buscar compañía
+                    Company company = existing.getCompany();
+                    if (company == null && dto.getCompanyId() != null) {
+                        company = companyRepo.findById(dto.getCompanyId()).orElse(null);
+                    }
+                    if (company == null && dto.getCompany() != null && dto.getCompany().id() != null) {
+                        company = companyRepo.findById(dto.getCompany().id()).orElse(null);
+                    }
+                    if (company == null) {
+                        throw new IllegalArgumentException("No se puede asociar media: compañía no encontrada");
+                    }
+            var newMedia = Media.builder()
+                .src(mediaDto.src())
+                .type(type)
+                .company(company)
+                .build();
+            existing.setProfileImage(mediaRepository.save(newMedia));
+                }
+            }
+
+            // Si llega un nombre de rol en el DTO, cambiarlo con mismas reglas
+            if (dto.getRole() != null) {
+                if (!perm.can("user", "update"))
                     throw new IllegalArgumentException("No autorizado a actualizar usuarios");
-                }
-                Set<Role> roles = new HashSet<>();
-                for (String rn : dto.getRoles()) {
-                    Role r = roleRepo.findByRole(rn)
-                            .orElseThrow(() -> new IllegalArgumentException("role inválido: " + rn));
-                    roles.add(r);
-                }
-                if (roles.isEmpty())
-                    throw new IllegalArgumentException("Se requiere al menos un rol");
-                assertAssignableRoles(roles);
-                existing.setRoles(roles);
+                Role newRole = resolveRoleFromDto(dto);
+                if (newRole == null)
+                    throw new IllegalArgumentException("Rol inválido");
+                assertAssignableRole(newRole);
+                existing.setRole(newRole);
             }
 
             User saved = repo.save(existing);
@@ -201,11 +360,6 @@ public class UserServiceImpl implements UserService {
 
     // ---------------------------- HELPERS ----------------------------
 
-    /**
-     * Activa el filtro "companyFilter" en la misma Session/Tx usada por el
-     * repositorio
-     * cuando el usuario actual NO es admin.
-     */
     private void enableCompanyFilterIfNeeded() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated())
@@ -249,25 +403,19 @@ public class UserServiceImpl implements UserService {
     private Long resolveCompanyId(Authentication auth) {
         Object principal = auth.getPrincipal();
 
-        // 1) Entidad de dominio como principal
         if (principal instanceof User u) {
             return (u.getCompany() != null) ? u.getCompany().getId() : null;
         }
-
-        // 2) UserDetails estándar
         if (principal instanceof UserDetails ud) {
             return repo.findByUsername(ud.getUsername())
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
-
-        // 3) Principal como String (username), p.ej. JWT con "sub"
         if (principal instanceof String username) {
             return repo.findByUsername(username)
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
-
         return null;
     }
 
@@ -279,7 +427,7 @@ public class UserServiceImpl implements UserService {
         return sb.toString();
     }
 
-    // ======== NUEVOS HELPERS DE PERMISOS/NIVELES ========
+    // ======== PERMISOS / NIVELES ========
 
     private int currentEffectiveLevel() {
         return perm.effectiveLevel();
@@ -289,17 +437,37 @@ public class UserServiceImpl implements UserService {
         if (!perm.can("user", "create"))
             throw new IllegalArgumentException("No autorizado a crear usuarios");
         int L = currentEffectiveLevel();
-        if (L > 2) // solo niveles 1 o 2 pueden crear
+        if (L > 2) // sólo niveles 1 o 2 pueden crear
             throw new IllegalArgumentException("Solo roles de nivel 1 o 2 pueden crear usuarios");
     }
 
-    private void assertAssignableRoles(Set<Role> targetRoles) {
+    private void assertAssignableRole(Role targetRole) {
         int myLevel = currentEffectiveLevel();
-        int newUserLevel = targetRoles.stream().map(Role::getLevel).min(Integer::compareTo)
+        Integer roleLevel = Optional.ofNullable(targetRole.getLevel())
                 .orElse(Integer.MAX_VALUE);
-        if (newUserLevel < myLevel) {
+        if (roleLevel < myLevel) {
             // ej.: soy nivel 2, intento asignar nivel 1 → prohibido
             throw new IllegalArgumentException("No puedes asignar un rol superior al tuyo");
         }
     }
+
+    /**
+     * Resuelve un rol único desde el DTO:
+     * - Si llega roleId → busca por id.
+     * - Si llega role (nombre/código) → busca por nombre.
+     */
+    private Role resolveRoleFromDto(UserDto dto) {
+        if (dto.getRole() == null)
+            return null;
+        if (dto.getRole().id() != null) {
+            return roleRepo.findById(dto.getRole().id())
+                    .orElseThrow(() -> new IllegalArgumentException("roleId inválido: " + dto.getRole().id()));
+        }
+        if (dto.getRole().role() != null) {
+            return roleRepo.findByRole(dto.getRole().role())
+                    .orElseThrow(() -> new IllegalArgumentException("role inválido: " + dto.getRole().role()));
+        }
+        return null;
+    }
+
 }

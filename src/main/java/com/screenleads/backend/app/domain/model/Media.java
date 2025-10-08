@@ -1,30 +1,32 @@
 package com.screenleads.backend.app.domain.model;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
-@Builder(toBuilder = true)
-@Setter
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Table(name = "media", indexes = {
+        @Index(name = "ix_media_company", columnList = "company_id"),
+        @Index(name = "ix_media_created_at", columnList = "created_at")
+}, uniqueConstraints = @UniqueConstraint(name = "uk_media_src", columnNames = { "src" }))
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Media {
+@Builder
+public class Media extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, length = 2048)
     private String src;
-    @ManyToOne
-    @JoinColumn(name = "type", referencedColumnName = "id")
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "type_id", nullable = false, foreignKey = @ForeignKey(name = "fk_media_type"))
     private MediaType type;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "company_id", nullable = false, foreignKey = @ForeignKey(name = "fk_media_company"))
+    private Company company;
 }

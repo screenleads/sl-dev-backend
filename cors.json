@@ -1,0 +1,19 @@
+[
+    {
+        "origin": [
+            "http://localhost:4200",
+            "http://localhost:8100",
+            "capacitor://localhost",
+            "https://localhost/"
+        ],
+        "responseHeader": [
+            "Content-Type"
+        ],
+        "method": [
+            "GET",
+            "HEAD",
+            "OPTIONS"
+        ],
+        "maxAgeSeconds": 3600
+    }
+]

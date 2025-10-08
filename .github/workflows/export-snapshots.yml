@@ -1,0 +1,82 @@
+name: Export AI Snapshots
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure config & script exist (optional bootstrap)
+        run: |
+          mkdir -p docs scripts
+          # Solo crea ejemplos si NO existen (no pisa tus cambios)
+          [ -f docs/ai-snapshots.json ] || cat > docs/ai-snapshots.json << 'JSON'
+          { "title_prefix": "Snapshot AI", "branch_env_fallback": "develop", "snapshots": [] }
+          JSON
+          [ -f scripts/export-snapshots.py ] || cat > scripts/export-snapshots.py << 'PY'
+          #!/usr/bin/env python3
+          import os, sys, json, glob
+          LANG_BY_EXT={".java":"java",".kt":"kotlin",".xml":"xml",".yml":"yaml",".yaml":"yaml",".properties":"properties",".json":"json",".sql":"sql",".md":"markdown",".sh":"bash"}
+          def code_lang(p): return LANG_BY_EXT.get(os.path.splitext(p)[1].lower(), "")
+          def match_files(globs_list, excludes=None):
+              files=set()
+              for g in globs_list: files.update(glob.glob(g, recursive=True))
+              files=[f for f in files if os.path.isfile(f)]; files.sort()
+              if excludes:
+                  import fnmatch
+                  files=[f for f in files if not any(fnmatch.fnmatch(f, ex) for ex in excludes)]
+              return files
+          def write_snapshot(output,title,header,files,branch):
+              os.makedirs(os.path.dirname(output), exist_ok=True)
+              with open(output,"w",encoding="utf-8") as out:
+                  out.write(f"# {title}\n\n")
+                  if header: out.write(f"> {header}\n\n")
+                  out.write(f"> Snapshot generado desde la rama `{branch}`. Contiene el **código completo** de cada archivo.\n\n---\n\n")
+                  for f in files:
+                      lang=code_lang(f)
+                      out.write(f"```{lang}\n// {f}\n")
+                      with open(f,"r",encoding="utf-8",errors="ignore") as fh: out.write(fh.read())
+                      out.write("\n```\n\n")
+          def main():
+              cfg_path="docs/ai-snapshots.json"
+              if len(sys.argv)>1: cfg_path=sys.argv[1]
+              if not os.path.exists(cfg_path): print(f"Config not found: {cfg_path}", file=sys.stderr); sys.exit(1)
+              with open(cfg_path,"r",encoding="utf-8") as f: cfg=json.load(f)
+              branch=os.environ.get("GITHUB_REF_NAME", cfg.get("branch_env_fallback","develop"))
+              total=0
+              for snap in cfg.get("snapshots",[]):
+                  files=match_files(snap.get("globs",[]), snap.get("excludes",[]))
+                  write_snapshot(snap["output"], snap.get("title", snap["output"]), snap.get("header",""), files, branch)
+                  total+=len(files); print(f"Wrote {snap['output']} with {len(files)} file(s).")
+              print(f"Done. Total files included: {total}")
+          if __name__=="__main__": main()
+          PY
+          chmod +x scripts/export-snapshots.py
+
+      - name: Generate snapshots
+        run: |
+          scripts/export-snapshots.py docs/ai-snapshots.json
+
+      - name: Commit changes (if any)
+        run: |
+          CHANGED="$(git status --porcelain docs/*.md)"
+          if [ -n "$CHANGED" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add docs/*.md
+            git commit -m "chore: update AI snapshots [skip ci]"
+            git push
+          else
+            echo "Sin cambios."
+          fi

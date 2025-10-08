@@ -1,63 +1,75 @@
 package com.screenleads.backend.app.domain.model;
 
+
+import java.time.Duration;
 import java.util.List;
 import java.util.Set;
-
 import org.hibernate.annotations.Filter;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.*;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
-@Builder(toBuilder = true)
-@Table(uniqueConstraints = {})
-@Setter
+@Table(
+name = "advice",
+indexes = {
+@Index(name = "ix_advice_company", columnList = "company_id"),
+@Index(name = "ix_advice_media", columnList = "media_id"),
+@Index(name = "ix_advice_promotion", columnList = "promotion_id")
+}
+)
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder(toBuilder = true)
 @Filter(name = "companyFilter", condition = "company_id = :companyId")
-public class Advice {
+public class Advice extends Auditable {
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    private String description;
-    private Boolean customInterval;
-    private Number interval;
+@Column(length = 512)
+private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "company_id", referencedColumnName = "id") // <-- clave: coincide con el @Filter
-    @JsonIgnore
-    private Company company;
 
-    @ManyToOne
-    @JoinColumn(name = "media", referencedColumnName = "id")
-    private Media media;
+@Column(name = "custom_interval", nullable = false)
+@Builder.Default
+private Boolean customInterval = Boolean.FALSE;
 
-    @ManyToOne
-    @JoinColumn(name = "promotion", referencedColumnName = "id")
-    private Promotion promotion;
 
-    @OneToMany(mappedBy = "advice", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AdviceVisibilityRule> visibilityRules;
+/** Almacenada como segundos vía DurationToLongConverter */
+@Column(name = "interval_seconds")
+private Duration interval;
 
-    @JsonIgnore
-    @ManyToMany(mappedBy = "advices")
-    private Set<Device> devices;
+
+@ManyToOne(fetch = FetchType.LAZY, optional = false)
+@JoinColumn(name = "company_id", nullable = false,
+foreignKey = @ForeignKey(name = "fk_advice_company"))
+@JsonIgnore
+private Company company;
+
+
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "media_id",
+foreignKey = @ForeignKey(name = "fk_advice_media"))
+private Media media;
+
+
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "promotion_id",
+foreignKey = @ForeignKey(name = "fk_advice_promotion"))
+private Promotion promotion;
+
+
+/** Rango(s) de fechas y ventanas por día */
+@OneToMany(mappedBy = "advice", cascade = CascadeType.ALL, orphanRemoval = true)
+private List<AdviceSchedule> schedules;
+
+
+@ManyToMany(mappedBy = "advices")
+@JsonIgnore
+private Set<Device> devices;
 }

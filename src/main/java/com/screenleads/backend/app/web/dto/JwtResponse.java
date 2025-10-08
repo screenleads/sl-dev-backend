@@ -1,12 +1,19 @@
+// src/main/java/com/screenleads/backend/app/web/dto/JwtResponse.java
 package com.screenleads.backend.app.web.dto;
 
-import com.screenleads.backend.app.domain.model.User;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class JwtResponse {
-    private String token;
-    private User user;
+    @Builder.Default
+    private String tokenType = "Bearer";
+    private String accessToken;
+    private String refreshToken;
+    private UserDto user;
 }

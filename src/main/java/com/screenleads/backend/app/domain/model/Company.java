@@ -1,51 +1,62 @@
 package com.screenleads.backend.app.domain.model;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.*;
+
 
 @Entity
-@Builder(toBuilder = true)
-@Setter
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Table(name = "company",
+indexes = {
+@Index(name = "ix_company_name", columnList = "name")
+}
+)
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Company {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String name;
-    private String observations;
-    private String primaryColor;
-    private String secondaryColor;
+@Builder
+public class Company extends Auditable {
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "logo", referencedColumnName = "id")
-    private Media logo;
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private List<Device> devices;
+@Column(nullable = false, length = 120)
+private String name;
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private List<Advice> advices;
 
-    @OneToMany(mappedBy = "company")
-    @JsonIgnore
-    private List<User> users;
+@Column(name="observations", length=1000)
+private String observations;
+
+@Column(name = "primary_color", length = 7)
+private String primaryColor; // ej: #FFFFFF
+
+
+@Column(name = "secondary_color", length = 7)
+private String secondaryColor;
+
+
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "logo_id",
+foreignKey = @ForeignKey(name = "fk_company_logo"))
+private Media logo;
+
+
+@OneToMany(mappedBy = "company")
+@JsonIgnore
+private List<Device> devices;
+
+
+@OneToMany(mappedBy = "company")
+@JsonIgnore
+private List<Advice> advices;
+
+
+@OneToMany(mappedBy = "company")
+@JsonIgnore
+private List<User> users;
 }

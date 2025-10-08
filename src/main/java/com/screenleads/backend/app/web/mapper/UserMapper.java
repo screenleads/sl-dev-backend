@@ -1,33 +1,39 @@
 package com.screenleads.backend.app.web.mapper;
 
-import com.screenleads.backend.app.domain.model.Role;
 import com.screenleads.backend.app.domain.model.User;
 import com.screenleads.backend.app.web.dto.UserDto;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class UserMapper {
-
     public static UserDto toDto(User u) {
         if (u == null)
             return null;
-
-        Long companyId = (u.getCompany() != null) ? u.getCompany().getId() : null;
-
-        List<String> roleNames = (u.getRoles() != null)
-                ? u.getRoles().stream().map(Role::getRole).collect(Collectors.toList())
-                : Collections.emptyList();
-
-        return new UserDto(
-                u.getId(),
-                u.getEmail(),
-                u.getUsername(),
-                u.getPassword(),
-                u.getName(),
-                u.getLastName(),
-                companyId,
-                roleNames);
+    return UserDto.builder()
+        .id(u.getId())
+        .username(u.getUsername())
+        .email(u.getEmail())
+        .name(u.getName())
+        .lastName(u.getLastName())
+        .companyId(u.getCompany() != null ? u.getCompany().getId() : null)
+        .company(u.getCompany() != null ? new com.screenleads.backend.app.web.dto.CompanyRefDTO(u.getCompany().getId(), u.getCompany().getName()) : null)
+        .profileImage(u.getProfileImage() != null ? new com.screenleads.backend.app.web.dto.MediaSlimDTO(
+            u.getProfileImage().getId(),
+            u.getProfileImage().getSrc(),
+            u.getProfileImage().getType() != null ? new com.screenleads.backend.app.web.dto.MediaTypeDTO(
+                u.getProfileImage().getType().getId(),
+                u.getProfileImage().getType().getExtension(),
+                u.getProfileImage().getType().getType(),
+                u.getProfileImage().getType().getEnabled()
+            ) : null,
+            u.getProfileImage().getCreatedAt(),
+            u.getProfileImage().getUpdatedAt()
+        ) : null)
+        .role(u.getRole() != null ? new com.screenleads.backend.app.web.dto.RoleDTO(
+            u.getRole().getId(),
+            u.getRole().getRole(),
+            u.getRole().getDescription(),
+            u.getRole().getLevel()
+        ) : null)
+        .build();
     }
 }

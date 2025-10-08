@@ -7,24 +7,19 @@ import com.screenleads.backend.app.domain.model.User;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.RoleRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
-import com.screenleads.backend.app.web.dto.JwtResponse;
-import com.screenleads.backend.app.web.dto.LoginRequest;
-import com.screenleads.backend.app.web.dto.PasswordChangeRequest;
-import com.screenleads.backend.app.web.dto.RegisterRequest;
-import com.screenleads.backend.app.web.dto.UserDto;
+import com.screenleads.backend.app.web.dto.*;
 import com.screenleads.backend.app.web.mapper.UserMapper;
-
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.hibernate.Hibernate;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.sql.SQLException;
 import java.util.Set;
 
 @Service
@@ -55,34 +50,73 @@ public class AuthenticationService {
         if (userRepository.count() == 0) {
             Role adminRole = roleRepository.findByRole("ROLE_ADMIN")
                     .orElseThrow(() -> new RuntimeException("Role ROLE_ADMIN not found"));
-            user.setRoles(Set.of(adminRole));
+            user.setRole(adminRole);
         } else {
             Role defaultRole = roleRepository.findByRole("ROLE_COMPANY_VIEWER")
                     .orElseThrow(() -> new RuntimeException("Default role not found"));
-            user.setRoles(Set.of(defaultRole));
+            user.setRole(defaultRole);
         }
 
         userRepository.save(user);
 
-        return new JwtResponse(jwtService.generateToken(user), user);
+        String token = jwtService.generateToken(user);
+        return JwtResponse.builder()
+                .accessToken(token)
+                .user(UserMapper.toDto(user)) // <<< DTO, no entidad
+                .build();
     }
 
     public JwtResponse login(LoginRequest request) throws AuthenticationException {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        return new JwtResponse(jwtService.generateToken(user), user);
+
+        String token = jwtService.generateToken(user);
+        return JwtResponse.builder()
+                .accessToken(token)
+                .user(UserMapper.toDto(user)) // <<< DTO, no entidad
+                .build();
     }
 
+    @Transactional
     public UserDto getCurrentUser() {
-        var user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return UserMapper.toDto(user);
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getPrincipal() == null) {
+            throw new UsernameNotFoundException("No authenticated user");
+        }
+        User u;
+        if (auth.getPrincipal() instanceof User userPrincipal) {
+            // Always reload from DB to ensure eager fetch
+            u = userRepository.findWithCompanyAndProfileImageByUsername(userPrincipal.getUsername())
+                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        } else {
+            String username = auth.getName();
+            u = userRepository.findWithCompanyAndProfileImageByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        }
+        return UserMapper.toDto(u);
     }
 
     public JwtResponse refreshToken() {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return new JwtResponse(jwtService.generateToken(user), user);
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getPrincipal() == null) {
+            throw new UsernameNotFoundException("No authenticated user");
+        }
+        User user;
+        if (auth.getPrincipal() instanceof User u) {
+            user = u;
+        } else {
+            String username = auth.getName();
+            user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        }
+        String token = jwtService.generateToken(user);
+        return JwtResponse.builder()
+                .accessToken(token)
+                .user(UserMapper.toDto(user))
+                .build();
     }
 
     public void changePassword(PasswordChangeRequest request) {

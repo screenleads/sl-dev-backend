@@ -1,60 +1,63 @@
 package com.screenleads.backend.app.domain.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import java.util.HashSet;
 import java.util.Set;
+import jakarta.persistence.*;
+import lombok.*;
 
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.ParamDef;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
-@Builder(toBuilder = true)
-@Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "uuid" }) })
-@Setter
+@Table(name = "device",
+indexes = {
+@Index(name = "ix_device_uuid", columnList = "uuid", unique = true),
+@Index(name = "ix_device_company", columnList = "company_id"),
+@Index(name = "ix_device_type", columnList = "type_id")
+}
+)
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Filter(name = "companyFilter", condition = "company_id = :companyId")
-public class Device {
+@Builder
+public class Device extends Auditable {
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Column(unique = true)
-    private String uuid;
-    private String descriptionName;
-    private Number width;
-    private Number height;
 
-    @ManyToOne
-    @JoinColumn(name = "type", referencedColumnName = "id")
-    private DeviceType type;
+@Column(nullable = false, unique = true, length = 64)
+private String uuid;
 
-    @ManyToOne
-    @JoinColumn(name = "company_id", referencedColumnName = "id")
-    @JsonIgnoreProperties({ "users", "devices", "advices" })
-    private Company company;
 
-    @ManyToMany
-    @JoinTable(name = "device_advice", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "advice_id"))
-    private Set<Advice> advices;
+
+
+@Column(nullable = false)
+private Integer width;
+
+
+@Column(nullable = false)
+private Integer height;
+
+
+@Column(name="description_name", length=255)
+private String descriptionName;
+
+
+@ManyToOne(fetch = FetchType.LAZY, optional = false)
+@JoinColumn(name = "company_id", nullable = false,
+foreignKey = @ForeignKey(name = "fk_device_company"))
+private Company company;
+
+
+@ManyToOne(fetch = FetchType.LAZY, optional = false)
+@JoinColumn(name = "type_id", nullable = false,
+foreignKey = @ForeignKey(name = "fk_device_type"))
+private DeviceType type;
+
+
+@ManyToMany
+@JoinTable(name = "device_advice",
+joinColumns = @JoinColumn(name = "device_id"),
+inverseJoinColumns = @JoinColumn(name = "advice_id"))
+private Set<Advice> advices;
 }

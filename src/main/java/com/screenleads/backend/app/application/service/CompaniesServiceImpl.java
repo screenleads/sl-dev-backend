@@ -5,27 +5,37 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.screenleads.backend.app.domain.model.Advice;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Device;
 import com.screenleads.backend.app.domain.model.Media;
-import com.screenleads.backend.app.domain.repositories.*;
+import com.screenleads.backend.app.domain.model.MediaType;
+import com.screenleads.backend.app.domain.repositories.AdviceRepository;
+import com.screenleads.backend.app.domain.repositories.CompanyRepository;
+import com.screenleads.backend.app.domain.repositories.DeviceRepository;
+import com.screenleads.backend.app.domain.repositories.MediaRepository;
+import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
 import com.screenleads.backend.app.web.dto.CompanyDTO;
+import com.screenleads.backend.app.web.dto.MediaSlimDTO;
+import com.screenleads.backend.app.web.dto.MediaTypeDTO;
 
 @Service
 public class CompaniesServiceImpl implements CompaniesService {
 
     private final MediaTypeRepository mediaTypeRepository;
-
     private final CompanyRepository companyRepository;
     private final MediaRepository mediaRepository;
     private final AdviceRepository adviceRepository;
     private final DeviceRepository deviceRepository;
 
-    public CompaniesServiceImpl(CompanyRepository companyRepository, MediaRepository mediaRepository,
-            AdviceRepository adviceRepository, DeviceRepository deviceRepository,
+    public CompaniesServiceImpl(CompanyRepository companyRepository,
+            MediaRepository mediaRepository,
+            AdviceRepository adviceRepository,
+            DeviceRepository deviceRepository,
             MediaTypeRepository mediaTypeRepository) {
         this.companyRepository = companyRepository;
         this.mediaRepository = mediaRepository;
@@ -34,7 +44,10 @@ public class CompaniesServiceImpl implements CompaniesService {
         this.mediaTypeRepository = mediaTypeRepository;
     }
 
+    // ===================== READ =====================
+
     @Override
+    @Transactional(readOnly = true)
     public List<CompanyDTO> getAllCompanies() {
         return companyRepository.findAll().stream()
                 .map(this::convertToDTO)
@@ -43,62 +56,63 @@ public class CompaniesServiceImpl implements CompaniesService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<CompanyDTO> getCompanyById(Long id) {
         return companyRepository.findById(id).map(this::convertToDTO);
     }
 
-    @Override
-    public CompanyDTO saveCompany(CompanyDTO companyDTO) {
-        Company company = convertToEntity(companyDTO);
+    // ===================== WRITE =====================
 
-        // Si ya existe por nombre, devolver el existente
+    @Override
+    @Transactional
+    public CompanyDTO saveCompany(CompanyDTO companyDTO) {
+        // Construir entidad base sin logo para evitar cascadas raras
+        Company company = convertToEntity(companyDTO);
+        company.setLogo(null);
+
+        // Idempotencia por nombre
         Optional<Company> exist = companyRepository.findByName(company.getName());
         if (exist.isPresent()) {
             return convertToDTO(exist.get());
         }
 
-        // --- Manejo del logo ---
+        // Guardar primero la company para obtener ID
+        Company savedCompany = companyRepository.save(company);
+
+        // Logo: vincular existente o crear desde src
         if (companyDTO.logo() != null) {
-            if (companyDTO.logo().getId() != null) {
-                // Buscar el Media existente por id
-                Media media = mediaRepository.findById(companyDTO.logo().getId())
+            if (companyDTO.logo().id() != null) {
+                Media media = mediaRepository.findById(companyDTO.logo().id())
                         .orElseThrow(
-                                () -> new RuntimeException("Media no encontrado con id: " + companyDTO.logo().getId()));
-                company.setLogo(media);
+                                () -> new RuntimeException("Media no encontrado con id: " + companyDTO.logo().id()));
+                if (media.getCompany() == null) {
+                    media.setCompany(savedCompany);
+                    mediaRepository.save(media);
+                }
+                savedCompany.setLogo(media);
 
-            } else if (companyDTO.logo().getSrc() != null && !companyDTO.logo().getSrc().isBlank()) {
-                // Crear un nuevo Media con el src
+            } else if (companyDTO.logo().src() != null && !companyDTO.logo().src().isBlank()) {
                 Media newLogo = new Media();
-                newLogo.setSrc(companyDTO.logo().getSrc());
-
-                // Detectar extensión
-                String srcLower = companyDTO.logo().getSrc().toLowerCase();
-                String extension = null;
-                int dotIndex = srcLower.lastIndexOf('.');
-                if (dotIndex != -1 && dotIndex < srcLower.length() - 1) {
-                    extension = srcLower.substring(dotIndex + 1);
-                }
-
-                // Asignar MediaType según extensión
-                if (extension != null) {
-                    mediaTypeRepository.findByExtension(extension).ifPresent(newLogo::setType);
-                }
+                newLogo.setSrc(companyDTO.logo().src());
+                newLogo.setCompany(savedCompany);
+                setMediaTypeFromSrc(newLogo, companyDTO.logo().src());
 
                 Media savedLogo = mediaRepository.save(newLogo);
-                company.setLogo(savedLogo);
+                savedCompany.setLogo(savedLogo);
 
             } else {
-                company.setLogo(null);
+                savedCompany.setLogo(null);
             }
         } else {
-            company.setLogo(null);
+            savedCompany.setLogo(null);
         }
 
-        Company savedCompany = companyRepository.save(company);
+        savedCompany = companyRepository.save(savedCompany);
         return convertToDTO(savedCompany);
     }
 
     @Override
+    @Transactional
     public CompanyDTO updateCompany(Long id, CompanyDTO companyDTO) {
         Company company = companyRepository.findById(id).orElseThrow();
         company.setName(companyDTO.name());
@@ -106,34 +120,31 @@ public class CompaniesServiceImpl implements CompaniesService {
         company.setPrimaryColor(companyDTO.primaryColor());
         company.setSecondaryColor(companyDTO.secondaryColor());
 
-        // Manejo seguro del logo
         if (companyDTO.logo() != null) {
-            if (companyDTO.logo().getId() != null) {
-                Media media = mediaRepository.findById(companyDTO.logo().getId()).orElseThrow();
+            if (companyDTO.logo().id() != null) {
+                Media media = mediaRepository.findById(companyDTO.logo().id())
+                        .orElseThrow(
+                                () -> new RuntimeException("Media no encontrado con id: " + companyDTO.logo().id()));
 
-                String newSrc = companyDTO.logo().getSrc();
+                String newSrc = companyDTO.logo().src();
                 if (newSrc != null && !newSrc.isBlank() && !java.util.Objects.equals(media.getSrc(), newSrc)) {
                     media.setSrc(newSrc);
-                    mediaRepository.save(media);
+                    setMediaTypeFromSrc(media, newSrc);
                 }
 
+                if (media.getCompany() == null) {
+                    media.setCompany(company);
+                }
+
+                mediaRepository.save(media);
                 company.setLogo(media);
 
-            } else if (companyDTO.logo().getSrc() != null && !companyDTO.logo().getSrc().isBlank()) {
-                // Crear nuevo Media desde cero
+            } else if (companyDTO.logo().src() != null && !companyDTO.logo().src().isBlank()) {
                 Media newLogo = new Media();
-                newLogo.setSrc(companyDTO.logo().getSrc());
-                String srcLower = companyDTO.logo().getSrc().toLowerCase();
-                String extension = null;
-                int dotIndex = srcLower.lastIndexOf('.');
-                if (dotIndex != -1 && dotIndex < srcLower.length() - 1) {
-                    extension = srcLower.substring(dotIndex + 1);
-                }
+                newLogo.setSrc(companyDTO.logo().src());
+                newLogo.setCompany(company);
+                setMediaTypeFromSrc(newLogo, companyDTO.logo().src());
 
-                // Asignar MediaType según extensión
-                if (extension != null) {
-                    mediaTypeRepository.findByExtension(extension).ifPresent(newLogo::setType);
-                }
                 Media savedLogo = mediaRepository.save(newLogo);
                 company.setLogo(savedLogo);
 
@@ -149,59 +160,109 @@ public class CompaniesServiceImpl implements CompaniesService {
     }
 
     @Override
+    @Transactional
     public void deleteCompany(Long id) {
         companyRepository.deleteById(id);
     }
 
+    // ===================== MAPPING =====================
+
     private CompanyDTO convertToDTO(Company company) {
+        // Inicializa sólo lo necesario para evitar proxies LAZY en la serialización
+        Media logo = company.getLogo();
+        if (logo != null) {
+            Hibernate.initialize(logo);
+            MediaType type = logo.getType();
+            if (type != null)
+                Hibernate.initialize(type);
+        }
+
+        // Para no arrastrar colecciones LAZY (y evitar ByteBuddy proxies), devolvemos
+        // vacías.
+        // Si quieres devolverlas, mejor pásalas a DTOs o usa @EntityGraph y mapea.
+        List<Device> devices = List.of();
+        List<Advice> advices = List.of();
+
         return new CompanyDTO(
                 company.getId(),
                 company.getName(),
                 company.getObservations(),
-                company.getLogo(),
-                company.getDevices(),
-                company.getAdvices(),
+                toMediaSlimDTO(company.getLogo()),
+                devices,
+                advices,
                 company.getPrimaryColor(),
                 company.getSecondaryColor());
     }
 
-    private Company convertToEntity(CompanyDTO companyDTO) {
-        Company company = new Company();
-        company.setId(companyDTO.id());
-        company.setName(companyDTO.name());
-        company.setPrimaryColor(companyDTO.primaryColor());
-        company.setSecondaryColor(companyDTO.secondaryColor());
-        company.setObservations(companyDTO.observations());
+    private MediaSlimDTO toMediaSlimDTO(Media m) {
+        if (m == null)
+            return null;
+        return new MediaSlimDTO(
+                m.getId(),
+                m.getSrc(),
+                toMediaTypeDTO(m.getType()),
+                m.getCreatedAt(),
+                m.getUpdatedAt());
+    }
 
-        // Manejo seguro del logo
-        if (companyDTO.logo() != null && companyDTO.logo().getId() != null) {
-            mediaRepository.findById(companyDTO.logo().getId()).ifPresent(company::setLogo);
+    private MediaTypeDTO toMediaTypeDTO(MediaType t) {
+        if (t == null)
+            return null;
+        return new MediaTypeDTO(
+                t.getId(),
+                t.getExtension(), // <-- correcto
+                t.getType(), // <-- correcto
+                t.getEnabled());
+    }
+
+    private Company convertToEntity(CompanyDTO dto) {
+        Company c = new Company();
+        c.setId(dto.id());
+        c.setName(dto.name());
+        c.setObservations(dto.observations());
+        c.setPrimaryColor(dto.primaryColor());
+        c.setSecondaryColor(dto.secondaryColor());
+
+        // Logo: si viene id en el DTO slim, enlazamos; si no, se creará en save/update
+        if (dto.logo() != null && dto.logo().id() != null) {
+            mediaRepository.findById(dto.logo().id()).ifPresent(c::setLogo);
         } else {
-            company.setLogo(null);
+            c.setLogo(null);
         }
 
-        if (companyDTO.advices() != null) {
-            List<Advice> advices = companyDTO.advices().stream()
-                    .map(adviceDTO -> adviceRepository.findById(adviceDTO.getId()).orElse(null))
-                    .filter(a -> a != null)
-                    .peek(a -> a.setCompany(company))
-                    .collect(Collectors.toList());
-            company.setAdvices(advices);
-        } else {
-            company.setAdvices(List.of());
-        }
+        // No mapeamos devices/advices desde DTO para evitar inconsistencias (se
+        // gestionan por sus endpoints)
+        c.setDevices(List.of());
+        c.setAdvices(List.of());
 
-        if (companyDTO.devices() != null) {
-            List<Device> devices = companyDTO.devices().stream()
-                    .map(deviceDTO -> deviceRepository.findById(deviceDTO.getId()).orElse(null))
-                    .filter(d -> d != null)
-                    .peek(d -> d.setCompany(company))
-                    .collect(Collectors.toList());
-            company.setDevices(devices);
-        } else {
-            company.setDevices(List.of());
-        }
+        return c;
+    }
 
-        return company;
+    // ===================== HELPERS =====================
+
+    private void setMediaTypeFromSrc(Media media, String src) {
+        if (src == null)
+            return;
+        String lower = src.toLowerCase();
+        int dot = lower.lastIndexOf('.');
+        if (dot != -1 && dot < lower.length() - 1) {
+            String ext = lower.substring(dot + 1);
+            mediaTypeRepository.findByExtension(ext).ifPresent(media::setType);
+        }
+    }
+
+    private String deriveMediaName(String src, String prefix) {
+        if (src == null || src.isBlank())
+            return prefix + "-" + System.currentTimeMillis();
+        String base = src;
+        int q = base.indexOf('?');
+        if (q >= 0)
+            base = base.substring(0, q);
+        int slash = base.lastIndexOf('/');
+        if (slash >= 0 && slash < base.length() - 1)
+            base = base.substring(slash + 1);
+        if (base.isBlank())
+            base = prefix + "-" + System.currentTimeMillis();
+        return base;
     }
 }

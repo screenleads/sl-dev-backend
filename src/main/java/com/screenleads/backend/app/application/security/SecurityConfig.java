@@ -58,11 +58,13 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.OPTIONS, "/ws/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/ws/command/**").authenticated()
 
+                                                .requestMatchers(
+                                                                com.screenleads.backend.app.infraestructure.config.SwaggerWhitelist.ENDPOINTS)
+                                                .permitAll()
                                                 // Auth: solo login/refresh públicos
                                                 .requestMatchers("/auth/login", "/auth/refresh").permitAll()
                                                 // /auth/me requiere autenticación
                                                 .requestMatchers("/auth/me").authenticated()
-
                                                 // Swagger / OpenAPI / Health
                                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**",
                                                                 "/swagger-ui.html")

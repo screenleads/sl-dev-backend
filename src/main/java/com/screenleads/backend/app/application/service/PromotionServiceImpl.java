@@ -1,271 +1,258 @@
 package com.screenleads.backend.app.application.service;
 
-import com.screenleads.backend.app.domain.model.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.screenleads.backend.app.application.service.PromotionService;
+import com.screenleads.backend.app.domain.model.LeadIdentifierType;
+import com.screenleads.backend.app.domain.model.Promotion;
+import com.screenleads.backend.app.domain.model.PromotionLead;
 import com.screenleads.backend.app.domain.repositories.PromotionLeadRepository;
 import com.screenleads.backend.app.domain.repositories.PromotionRepository;
-import com.screenleads.backend.app.web.dto.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.screenleads.backend.app.web.dto.LeadSummaryDTO;
+import com.screenleads.backend.app.web.dto.PromotionDTO;
+import com.screenleads.backend.app.web.dto.PromotionLeadDTO;
 
-import java.time.LocalDate;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.beans.PropertyDescriptor;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
+@Transactional
 public class PromotionServiceImpl implements PromotionService {
 
-    @Autowired
-    private PromotionRepository promotionRepository;
-    @Autowired
-    private PromotionLeadRepository promotionLeadRepository;
+    private final PromotionRepository promotionRepository;
+    private final PromotionLeadRepository promotionLeadRepository;
+    private final ObjectMapper objectMapper; // Autoconfigurado por Spring Boot
 
-    // ===== CRUD =====
+    // =========================================
+    // CRUD Promotion
+    // =========================================
 
     @Override
+    @Transactional(readOnly = true)
     public List<PromotionDTO> getAllPromotions() {
-        return promotionRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
+        return promotionRepository.findAll()
+                .stream()
+                .map(p -> map(p, PromotionDTO.class))
+                .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PromotionDTO getPromotionById(Long id) {
-        return promotionRepository.findById(id).map(this::toDto)
-                .orElseThrow(() -> new RuntimeException("Promotion not found"));
+        Promotion p = promotionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + id));
+        return map(p, PromotionDTO.class);
     }
 
     @Override
     public PromotionDTO savePromotion(PromotionDTO dto) {
-        Promotion entity = toEntity(dto);
-        return toDto(promotionRepository.save(entity));
+        // Mapear DTO -> Entity sin suponer getters concretos
+        Promotion toSave = map(dto, Promotion.class);
+        Promotion saved = promotionRepository.save(toSave);
+        return map(saved, PromotionDTO.class);
     }
 
     @Override
     public PromotionDTO updatePromotion(Long id, PromotionDTO dto) {
-        Promotion entity = toEntity(dto);
-        entity.setId(id);
-        return toDto(promotionRepository.save(entity));
+        Promotion existing = promotionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + id));
+
+        // Creamos un "patch" a partir del DTO y fusionamos solo campos no nulos
+        Promotion patch = map(dto, Promotion.class);
+        mergeNonNull(patch, existing);
+
+        // El entity está gestionado en la sesión; devolver mapeado a DTO
+        return map(existing, PromotionDTO.class);
     }
 
     @Override
     public void deletePromotion(Long id) {
+        if (!promotionRepository.existsById(id)) {
+            throw new IllegalArgumentException("Promotion not found: " + id);
+        }
         promotionRepository.deleteById(id);
     }
 
-    // ===== Leads =====
+    // =========================================
+    // Leads
+    // =========================================
 
     @Override
     public PromotionLeadDTO registerLead(Long promotionId, PromotionLeadDTO dto) {
         Promotion promo = promotionRepository.findById(promotionId)
-                .orElseThrow(() -> new RuntimeException("Promotion not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + promotionId));
 
-        String identifier = normalizeIdentifier(promo.getLeadIdentifierType(), dto);
+        // Mapear DTO -> Entity temporalmente para leer campos como identifier sin usar
+        // getters del DTO
+        PromotionLead candidate = map(dto, PromotionLead.class);
 
-        if (promo.getLeadIdentifierType() == LeadIdentifierType.EMAIL &&
-                (dto.email() == null || dto.email().isBlank())) {
-            throw new IllegalArgumentException("Email es obligatorio para esta promoción");
-        }
-        if (promo.getLeadIdentifierType() == LeadIdentifierType.PHONE &&
-                (dto.phone() == null || dto.phone().isBlank())) {
-            throw new IllegalArgumentException("Teléfono es obligatorio para esta promoción");
-        }
-
-        switch (promo.getLeadLimitType()) {
-            case ONE_PER_PERSON -> promotionLeadRepository
-                    .findTopByPromotion_IdAndIdentifierOrderByCreatedAtDesc(promotionId, identifier)
-                    .ifPresent(l -> {
-                        throw new IllegalStateException("Ya existe un registro para esta persona en esta promoción");
-                    });
-            case ONE_PER_24H -> {
-                ZonedDateTime cutoff = ZonedDateTime.now().minusHours(24);
-                long recent = promotionLeadRepository
-                        .countByPromotion_IdAndIdentifierAndCreatedAtAfter(promotionId, identifier, cutoff);
-                if (recent > 0)
-                    throw new IllegalStateException("Solo se permite un registro cada 24 horas para esta promoción");
-            }
-            case NO_LIMIT -> {
-                /* sin restricciones */ }
+        // Si tienes unique (promotion_id + identifier), prevenimos duplicados
+        if (candidate.getIdentifier() != null &&
+                promotionLeadRepository.existsByPromotionIdAndIdentifier(promotionId, candidate.getIdentifier())) {
+            throw new IllegalArgumentException("Lead already exists for identifier: " + candidate.getIdentifier());
         }
 
-        PromotionLead lead = PromotionLead.builder()
-                .promotion(promo)
-                .identifier(identifier)
-                .firstName(dto.firstName())
-                .lastName(dto.lastName())
-                .email(dto.email() != null ? dto.email().trim() : null)
-                .phone(normalizePhone(dto.phone()))
-                .birthDate(dto.birthDate())
-                .acceptedPrivacyAt(dto.acceptedPrivacyAt())
-                .acceptedTermsAt(dto.acceptedTermsAt())
-                .createdAt(dto.createdAt() != null ? dto.createdAt() : ZonedDateTime.now())
-                .build();
-
-        PromotionLead saved = promotionLeadRepository.save(lead);
-        return toDto(saved);
+        candidate.setPromotion(promo);
+        PromotionLead saved = promotionLeadRepository.save(candidate);
+        return map(saved, PromotionLeadDTO.class);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PromotionLeadDTO> listLeads(Long promotionId) {
-        return promotionLeadRepository.findByPromotion_IdOrderByCreatedAtDesc(promotionId)
-                .stream().map(this::toDto).collect(Collectors.toList());
+        return promotionLeadRepository.findByPromotionId(promotionId).stream()
+                .map(l -> map(l, PromotionLeadDTO.class))
+                .collect(Collectors.toList());
     }
 
-    // ===== Informes / Export =====
+    // =========================================
+    // Export / Informes
+    // =========================================
 
     @Override
+    @Transactional(readOnly = true)
     public String exportLeadsCsv(Long promotionId, ZonedDateTime from, ZonedDateTime to) {
-        ensurePromoExists(promotionId);
-        List<PromotionLead> leads = promotionLeadRepository
-                .findByPromotion_IdAndCreatedAtBetweenOrderByCreatedAtAsc(promotionId, from, to);
+        Instant fromI = from != null ? from.toInstant() : Instant.EPOCH;
+        Instant toI = to != null ? to.toInstant() : Instant.now();
+
+        List<PromotionLead> leads = promotionLeadRepository.findByPromotionId(promotionId).stream()
+                .filter(l -> {
+                    Instant c = l.getCreatedAt();
+                    return (c.equals(fromI) || c.isAfter(fromI)) && (c.equals(toI) || c.isBefore(toI));
+                })
+                .sorted(Comparator.comparing(PromotionLead::getCreatedAt))
+                .collect(Collectors.toList());
 
         StringBuilder sb = new StringBuilder();
         sb.append(
-                "id,promotionId,firstName,lastName,email,phone,birthDate,acceptedPrivacyAt,acceptedTermsAt,createdAt,identifier\n");
+                "id,promotionId,identifierType,identifier,firstName,lastName,email,phone,birthDate,acceptedPrivacyAt,acceptedTermsAt,createdAt\n");
         for (PromotionLead l : leads) {
-            sb.append(csv(l.getId())).append(',')
-                    .append(csv(l.getPromotion().getId())).append(',')
+            sb.append(Optional.ofNullable(l.getId()).orElse(0L)).append(',')
+                    .append(Optional.ofNullable(l.getPromotion()).map(Promotion::getId).orElse(null)).append(',')
+                    .append(Optional.ofNullable(l.getIdentifierType()).map(Enum::name).orElse("")).append(',')
+                    .append(csv(l.getIdentifier())).append(',')
                     .append(csv(l.getFirstName())).append(',')
                     .append(csv(l.getLastName())).append(',')
                     .append(csv(l.getEmail())).append(',')
                     .append(csv(l.getPhone())).append(',')
-                    .append(csv(l.getBirthDate())).append(',')
-                    .append(csv(l.getAcceptedPrivacyAt())).append(',')
-                    .append(csv(l.getAcceptedTermsAt())).append(',')
-                    .append(csv(l.getCreatedAt())).append(',')
-                    .append(csv(l.getIdentifier())).append('\n');
+                    .append(Optional.ofNullable(l.getBirthDate()).orElse(null)).append(',')
+                    .append(Optional.ofNullable(l.getAcceptedPrivacyAt()).orElse(null)).append(',')
+                    .append(Optional.ofNullable(l.getAcceptedTermsAt()).orElse(null)).append(',')
+                    .append(Optional.ofNullable(l.getCreatedAt()).orElse(null))
+                    .append('\n');
         }
         return sb.toString();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public LeadSummaryDTO getLeadSummary(Long promotionId, ZonedDateTime from, ZonedDateTime to) {
-        ensurePromoExists(promotionId);
-        List<PromotionLead> leads = promotionLeadRepository
-                .findByPromotion_IdAndCreatedAtBetweenOrderByCreatedAtAsc(promotionId, from, to);
+        ZoneId zone = ZoneId.systemDefault();
+        Instant fromI = from != null ? from.toInstant() : Instant.EPOCH;
+        Instant toI = to != null ? to.toInstant() : Instant.now();
 
-        long total = leads.size();
-        long uniques = leads.stream().map(PromotionLead::getIdentifier).distinct().count();
+        List<PromotionLead> leads = promotionLeadRepository.findByPromotionId(promotionId).stream()
+                .filter(l -> {
+                    Instant c = l.getCreatedAt();
+                    return (c.equals(fromI) || c.isAfter(fromI)) && (c.equals(toI) || c.isBefore(toI));
+                })
+                .toList();
 
-        Map<LocalDate, Long> byDay = leads.stream()
-                .collect(Collectors.groupingBy(
-                        l -> l.getCreatedAt().withZoneSameInstant(ZoneId.systemDefault()).toLocalDate(),
-                        TreeMap::new,
-                        Collectors.counting()));
+        long totalLeads = leads.size();
+        long uniqueIdentifiers = leads.stream()
+                .map(PromotionLead::getIdentifier)
+                .filter(Objects::nonNull)
+                .distinct()
+                .count();
 
-        return new LeadSummaryDTO(promotionId, total, uniques, byDay);
+        Map<LocalDate, Long> leadsByDay = leads.stream().collect(
+                java.util.stream.Collectors.groupingBy(
+                        l -> l.getCreatedAt().atZone(zone).toLocalDate(),
+                        java.util.TreeMap::new,
+                        java.util.stream.Collectors.counting()));
+
+        return new LeadSummaryDTO(promotionId, totalLeads, uniqueIdentifiers, leadsByDay);
     }
-
-    // ===== Lead de prueba =====
 
     @Override
     public PromotionLeadDTO createTestLead(Long promotionId, PromotionLeadDTO overrides) {
         Promotion promo = promotionRepository.findById(promotionId)
-                .orElseThrow(() -> new RuntimeException("Promotion not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + promotionId));
 
-        long ts = System.currentTimeMillis();
-        String first = "Test";
-        String last = "Lead" + (ts % 100000);
-
-        PromotionLeadDTO base = new PromotionLeadDTO(
-                null,
-                promotionId,
-                first,
-                last,
-                "test" + ts + "@example.com",
-                "600" + String.valueOf(ts).substring(Math.max(0, String.valueOf(ts).length() - 6)), // 600xxxxxx
-                null,
-                ZonedDateTime.now(),
-                ZonedDateTime.now(),
-                ZonedDateTime.now());
-
-        PromotionLeadDTO dto = new PromotionLeadDTO(
-                null,
-                promotionId,
-                overrides != null && overrides.firstName() != null ? overrides.firstName() : base.firstName(),
-                overrides != null && overrides.lastName() != null ? overrides.lastName() : base.lastName(),
-                overrides != null && overrides.email() != null ? overrides.email() : base.email(),
-                overrides != null && overrides.phone() != null ? overrides.phone() : base.phone(),
-                overrides != null ? overrides.birthDate() : base.birthDate(),
-                base.acceptedPrivacyAt(),
-                base.acceptedTermsAt(),
-                base.createdAt());
-
-        return registerLead(promotionId, dto);
-    }
-
-    // ===== Utilidades =====
-
-    private void ensurePromoExists(Long promotionId) {
-        if (!promotionRepository.existsById(promotionId)) {
-            throw new RuntimeException("Promotion not found");
-        }
-    }
-
-    private String csv(Object value) {
-        if (value == null)
-            return "";
-        String s = String.valueOf(value);
-        boolean needsQuotes = s.contains(",") || s.contains("\"") || s.contains("\n") || s.contains("\r");
-        if (needsQuotes)
-            s = "\"" + s.replace("\"", "\"\"") + "\"";
-        return s;
-    }
-
-    private PromotionDTO toDto(Promotion e) {
-        return new PromotionDTO(
-                e.getId(),
-                e.getLegal_url(),
-                e.getUrl(),
-                e.getDescription(),
-                e.getTemplateHtml(),
-                e.getLeadLimitType(),
-                e.getLeadIdentifierType());
-    }
-
-    private Promotion toEntity(PromotionDTO d) {
-        return Promotion.builder()
-                .id(d.id())
-                .legal_url(d.legal_url())
-                .url(d.url())
-                .description(d.description())
-                .templateHtml(d.templateHtml())
-                .leadLimitType(d.leadLimitType() != null ? d.leadLimitType() : LeadLimitType.NO_LIMIT)
-                .leadIdentifierType(d.leadIdentifierType() != null ? d.leadIdentifierType() : LeadIdentifierType.EMAIL)
+        // Base "falsa" en Entity
+        PromotionLead base = PromotionLead.builder()
+                .identifierType(LeadIdentifierType.EMAIL)
+                .identifier(UUID.randomUUID() + "@example.test")
+                .firstName("Test")
+                .lastName("Lead")
+                .email(null) // lo puede aportar overrides
+                .acceptedPrivacyAt(Instant.now())
+                .acceptedTermsAt(Instant.now())
+                .promotion(promo)
                 .build();
+
+        if (overrides != null) {
+            PromotionLead patch = map(overrides, PromotionLead.class);
+            mergeNonNull(patch, base);
+        }
+
+        PromotionLead saved = promotionLeadRepository.save(base);
+        return map(saved, PromotionLeadDTO.class);
     }
 
-    private PromotionLeadDTO toDto(PromotionLead e) {
-        return new PromotionLeadDTO(
-                e.getId(),
-                e.getPromotion().getId(),
-                e.getFirstName(),
-                e.getLastName(),
-                e.getEmail(),
-                e.getPhone(),
-                e.getBirthDate(),
-                e.getAcceptedPrivacyAt(),
-                e.getAcceptedTermsAt(),
-                e.getCreatedAt());
-    }
+    // =========================================
+    // Helpers
+    // =========================================
 
-    private String normalizeIdentifier(LeadIdentifierType type, PromotionLeadDTO dto) {
-        return switch (type) {
-            case EMAIL -> {
-                if (dto.email() == null)
-                    throw new IllegalArgumentException("Email requerido");
-                yield dto.email().trim().toLowerCase();
-            }
-            case PHONE -> {
-                if (dto.phone() == null)
-                    throw new IllegalArgumentException("Teléfono requerido");
-                yield normalizePhone(dto.phone());
-            }
-        };
-    }
-
-    private String normalizePhone(String phone) {
-        if (phone == null)
+    private <T> T map(Object source, Class<T> targetType) {
+        if (source == null)
             return null;
-        return phone.replaceAll("[\\s-]", "");
+        return objectMapper.convertValue(source, targetType);
+    }
+
+    private static void mergeNonNull(Object src, Object target) {
+        if (src == null || target == null)
+            return;
+        BeanUtils.copyProperties(src, target, getNullPropertyNames(src));
+    }
+
+    private static String[] getNullPropertyNames(Object source) {
+        final BeanWrapper src = new BeanWrapperImpl(source);
+        PropertyDescriptor[] pds = src.getPropertyDescriptors();
+
+        Set<String> emptyNames = new HashSet<>();
+        for (PropertyDescriptor pd : pds) {
+            String name = pd.getName();
+            // ignorar "class"
+            if ("class".equals(name))
+                continue;
+            Object value = src.getPropertyValue(name);
+            if (value == null) {
+                emptyNames.add(name);
+            }
+        }
+        return emptyNames.toArray(new String[0]);
+    }
+
+    private static String csv(String s) {
+        if (s == null)
+            return "";
+        String escaped = s.replace("\"", "\"\"");
+        if (escaped.contains(",") || escaped.contains("\"") || escaped.contains("\n")) {
+            return "\"" + escaped + "\"";
+        }
+        return escaped;
     }
 }
