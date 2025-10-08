@@ -104,32 +104,31 @@ public class DataInitializer implements CommandLineRunner {
                                         System.out.println("[MOCK] Creando anuncio de test por inicialización...");
                                         String mediaSrc = "https://storage.googleapis.com/screenleads-e7e0b.firebasestorage.app/media/videos/compressed-e69233c4-260a-4b3c-8ba6-876c34989725-tv_desayunos_1.mp4";
                                         Long mediaId = mediaRepository.findBySrc(mediaSrc).map(m -> m.getId()).orElse(null);
-                                        AdviceDTO mockDto = AdviceDTO.builder()
-                                                        .company(new CompanyRefDTO(company.getId(), company.getName()))
-                                                        .customInterval(false)
-                                                        .description("Anuncio de test ")
-                                                        .interval(0)
-                                                        .media(new MediaUpsertDTO(mediaId, mediaSrc))
-                                                        .promotion(null)
-                                                        .schedules(Arrays.asList(
-                                                                        AdviceScheduleDTO.builder()
-                                                                                        .startDate("2025-09-30T22:00:00.000Z")
-                                                                                        .endDate("2025-10-30T23:00:00.000Z")
-                                                                                        .windows(Arrays.asList(
-                                                                                                        AdviceTimeWindowDTO
-                                                                                                                        .builder()
-                                                                                                                        .weekday("MONDAY")
-                                                                                                                        .fromTime("00:00")
-                                                                                                                        .toTime("23:59")
-                                                                                                                        .build(),
-                                                                                                        AdviceTimeWindowDTO
-                                                                                                                        .builder()
-                                                                                                                        .weekday("SUNDAY")
-                                                                                                                        .fromTime("00:00")
-                                                                                                                        .toTime("23:59")
-                                                                                                                        .build()))
-                                                                                        .build()))
-                                                        .build();
+                                        AdviceDTO mockDto = new AdviceDTO(
+                                                null,
+                                                "Anuncio de test ",
+                                                false,
+                                                0,
+                                                new MediaUpsertDTO(mediaId, mediaSrc),
+                                                null,
+                                                new CompanyRefDTO(company.getId(), company.getName()),
+                                                Arrays.asList(
+                                                        new AdviceScheduleDTO(
+                                                                null,
+                                                                "2025-09-30T22:00:00.000Z",
+                                                                "2025-10-30T23:00:00.000Z",
+                                                                Arrays.asList(
+                                                                        new com.screenleads.backend.app.web.dto.AdviceTimeWindowDTO(
+                                                                                null, "MONDAY", "00:00", "23:59"
+                                                                        ),
+                                                                        new com.screenleads.backend.app.web.dto.AdviceTimeWindowDTO(
+                                                                                null, "SUNDAY", "00:00", "23:59"
+                                                                        )
+                                                                ),
+                                                                null
+                                                        )
+                                                )
+                                        );
                                         adviceService.saveAdvice(mockDto);
                                 }
                         } catch (Exception e) {

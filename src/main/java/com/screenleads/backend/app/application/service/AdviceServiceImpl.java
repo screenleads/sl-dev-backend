@@ -271,18 +271,29 @@ public class AdviceServiceImpl implements AdviceService {
         s.setEndDate(parseDate(sDto.getEndDate()));
 
         List<AdviceTimeWindow> windows = new ArrayList<>();
-        if (sDto.getWindows() != null) {
+        // Soportar ambos formatos: windows plano y dayWindows agrupado
+        if (sDto.getWindows() != null && !sDto.getWindows().isEmpty()) {
             for (AdviceTimeWindowDTO wDto : sDto.getWindows()) {
                 AdviceTimeWindow w = new AdviceTimeWindow();
                 w.setWeekday(parseWeekday(wDto.getWeekday()));
                 w.setFromTime(parseTime(wDto.getFromTime()));
                 w.setToTime(parseTime(wDto.getToTime()));
-                System.out.println("[DEBUG] AdviceTimeWindow mapped: weekday=" + w.getWeekday() + ", from=" + w.getFromTime() + ", to=" + w.getToTime());
                 windows.add(w);
+            }
+        } else if (sDto.getDayWindows() != null && !sDto.getDayWindows().isEmpty()) {
+            for (AdviceScheduleDTO.DayWindowDTO day : sDto.getDayWindows()) {
+                if (day.getRanges() != null) {
+                    for (AdviceScheduleDTO.RangeDTO range : day.getRanges()) {
+                        AdviceTimeWindow w = new AdviceTimeWindow();
+                        w.setWeekday(parseWeekday(day.getWeekday()));
+                        w.setFromTime(parseTime(range.getFromTime()));
+                        w.setToTime(parseTime(range.getToTime()));
+                        windows.add(w);
+                    }
+                }
             }
         }
         validateAndNormalizeWindows(windows);
-        // Asignar la referencia schedule a cada ventana después de la validación
         for (AdviceTimeWindow w : windows) {
             w.setSchedule(s);
         }
@@ -311,20 +322,21 @@ public class AdviceServiceImpl implements AdviceService {
                 List<AdviceTimeWindowDTO> wins = new ArrayList<>();
                 if (s.getWindows() != null) {
                     for (AdviceTimeWindow w : s.getWindows()) {
-                        wins.add(AdviceTimeWindowDTO.builder()
-                                .id(w.getId())
-                                .weekday(w.getWeekday() != null ? w.getWeekday().name() : null)
-                                .fromTime(formatTime(w.getFromTime()))
-                                .toTime(formatTime(w.getToTime()))
-                                .build());
+                        wins.add(new AdviceTimeWindowDTO(
+                                w.getId(),
+                                w.getWeekday() != null ? w.getWeekday().name() : null,
+                                formatTime(w.getFromTime()),
+                                formatTime(w.getToTime())
+                        ));
                     }
                 }
-                schedules.add(AdviceScheduleDTO.builder()
-                        .id(s.getId())
-                        .startDate(formatDate(s.getStartDate()))
-                        .endDate(formatDate(s.getEndDate()))
-                        .windows(wins)
-                        .build());
+                schedules.add(new AdviceScheduleDTO(
+                        s.getId(),
+                        formatDate(s.getStartDate()),
+                        formatDate(s.getEndDate()),
+                        wins,
+                        null
+                ));
             }
         }
 
