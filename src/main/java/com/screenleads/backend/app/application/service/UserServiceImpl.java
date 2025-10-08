@@ -6,10 +6,15 @@ import com.screenleads.backend.app.domain.model.User;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.RoleRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
+import com.screenleads.backend.app.domain.repositories.MediaRepository;
+import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
+import com.screenleads.backend.app.domain.model.MediaType;
+import com.screenleads.backend.app.domain.model.Media;
 import com.screenleads.backend.app.web.dto.UserDto;
 import com.screenleads.backend.app.web.mapper.UserMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -32,7 +36,9 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepo;
     private final PasswordEncoder passwordEncoder;
     private final PermissionService perm;
+    private final MediaRepository mediaRepository;
     private final SecureRandom random = new SecureRandom();
+    private final MediaTypeRepository mediaTypeRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -42,12 +48,16 @@ public class UserServiceImpl implements UserService {
             CompanyRepository companyRepo,
             RoleRepository roleRepo,
             PasswordEncoder passwordEncoder,
-            PermissionService perm) {
+            PermissionService perm,
+            MediaRepository mediaRepository,
+            MediaTypeRepository mediaTypeRepository) {
         this.repo = repo;
         this.companyRepo = companyRepo;
         this.roleRepo = roleRepo;
         this.passwordEncoder = passwordEncoder;
         this.perm = perm;
+        this.mediaRepository = mediaRepository;
+        this.mediaTypeRepository = mediaTypeRepository;
     }
 
     // ---------- LECTURAS (activamos filtro en la misma Session/Tx) ----------
@@ -57,6 +67,9 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> getAll() {
         enableCompanyFilterIfNeeded();
         return repo.findAll().stream()
+                .peek(u -> {
+                    if (u.getProfileImage() != null) Hibernate.initialize(u.getProfileImage());
+                })
                 .map(UserMapper::toDto)
                 .toList();
     }
@@ -66,7 +79,10 @@ public class UserServiceImpl implements UserService {
     public UserDto getById(Long id) {
         enableCompanyFilterIfNeeded();
         return repo.findById(id)
-                .map(UserMapper::toDto)
+                .map(u -> {
+                    if (u.getProfileImage() != null) Hibernate.initialize(u.getProfileImage());
+                    return UserMapper.toDto(u);
+                })
                 .orElse(null);
     }
 
@@ -157,20 +173,110 @@ public class UserServiceImpl implements UserService {
                 existing.setPassword(passwordEncoder.encode(dto.getPassword()));
             }
 
+            // --- ACTUALIZAR COMPAÑÍA ---
+            Long finalCompanyId;
             if (dto.getCompanyId() != null) {
+                finalCompanyId = dto.getCompanyId();
+            } else if (dto.getCompany() != null && dto.getCompany().id() != null) {
+                finalCompanyId = dto.getCompany().id();
+            } else {
+                finalCompanyId = null;
+            }
+            if (finalCompanyId != null) {
                 if (!isCurrentUserAdmin()) {
                     Long currentCompanyId = currentCompanyId();
-                    if (currentCompanyId == null || !currentCompanyId.equals(dto.getCompanyId())) {
+                    if (currentCompanyId == null || !currentCompanyId.equals(finalCompanyId)) {
                         throw new IllegalArgumentException("No autorizado a cambiar de compañía");
                     }
                 }
-                Company c = companyRepo.findById(dto.getCompanyId())
-                        .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + dto.getCompanyId()));
+                Company c = companyRepo.findById(finalCompanyId)
+                        .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + finalCompanyId));
                 existing.setCompany(c);
             }
 
-            // Si llega un rol (único) en el DTO, cambiarlo con mismas reglas
-            if (dto.getRole() != null && dto.getRole().getId() != null) {
+            // --- ACTUALIZAR IMAGEN DE PERFIL ---
+            if (dto.getProfileImage() != null && dto.getProfileImage().src() != null) {
+                var mediaOpt = mediaRepository.findBySrc(dto.getProfileImage().src());
+                if (mediaOpt.isPresent()) {
+                    existing.setProfileImage(mediaOpt.get());
+                } else {
+                    // Crear Media nueva
+                    var mediaDto = dto.getProfileImage();
+                    // Buscar o crear MediaType
+                    var typeDto = mediaDto.type();
+                    MediaType type = null;
+                    String src = mediaDto.src();
+                    final String extension;
+                    if (src != null && src.contains(".")) {
+                        extension = src.substring(src.lastIndexOf('.') + 1).toLowerCase();
+                    } else {
+                        extension = null;
+                    }
+                    String detectedType = null;
+                    if (extension != null) {
+                        switch (extension) {
+                            case "jpg": case "jpeg": case "png": case "gif": case "bmp":
+                                detectedType = "IMG"; break;
+                            case "mp4": case "avi": case "mov": case "wmv":
+                                detectedType = "VIDEO"; break;
+                            case "mp3": case "wav": case "ogg":
+                                detectedType = "AUDIO"; break;
+                            default:
+                                detectedType = "FILE"; break;
+                        }
+                    }
+                    if (typeDto != null) {
+                        if (typeDto.type() != null && !typeDto.type().isBlank()) {
+                            type = mediaTypeRepository.findByType(typeDto.type()).orElse(null);
+                        }
+                        if (type == null && typeDto.extension() != null && !typeDto.extension().isBlank()) {
+                            type = mediaTypeRepository.findByExtension(typeDto.extension()).orElse(null);
+                        }
+                    }
+                    if (type == null && detectedType != null && extension != null) {
+                        type = mediaTypeRepository.findByType(detectedType)
+                                .filter(t -> t.getExtension().equalsIgnoreCase(extension))
+                                .orElse(null);
+                        if (type == null) {
+                            type = new MediaType();
+                            type.setType(detectedType);
+                            type.setExtension(extension);
+                            type.setEnabled(true);
+                            type = mediaTypeRepository.save(type);
+                        }
+                    }
+                    if (type == null) {
+                        // fallback seguro
+                        type = mediaTypeRepository.findByType("IMG").orElseGet(() -> {
+                            MediaType t = new MediaType();
+                            t.setType("IMG");
+                            t.setExtension("jpg");
+                            t.setEnabled(true);
+                            return mediaTypeRepository.save(t);
+                        });
+                    }
+                    // Buscar compañía
+                    Company company = existing.getCompany();
+                    if (company == null && dto.getCompanyId() != null) {
+                        company = companyRepo.findById(dto.getCompanyId()).orElse(null);
+                    }
+                    if (company == null && dto.getCompany() != null && dto.getCompany().id() != null) {
+                        company = companyRepo.findById(dto.getCompany().id()).orElse(null);
+                    }
+                    if (company == null) {
+                        throw new IllegalArgumentException("No se puede asociar media: compañía no encontrada");
+                    }
+            var newMedia = Media.builder()
+                .src(mediaDto.src())
+                .type(type)
+                .company(company)
+                .build();
+            existing.setProfileImage(mediaRepository.save(newMedia));
+                }
+            }
+
+            // Si llega un nombre de rol en el DTO, cambiarlo con mismas reglas
+            if (dto.getRole() != null) {
                 if (!perm.can("user", "update"))
                     throw new IllegalArgumentException("No autorizado a actualizar usuarios");
                 Role newRole = resolveRoleFromDto(dto);
@@ -286,13 +392,13 @@ public class UserServiceImpl implements UserService {
     private Role resolveRoleFromDto(UserDto dto) {
         if (dto.getRole() == null)
             return null;
-        if (dto.getRole().getId() != null) {
-            return roleRepo.findById(dto.getRole().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("roleId inválido: " + dto.getRole().getId()));
+        if (dto.getRole().id() != null) {
+            return roleRepo.findById(dto.getRole().id())
+                    .orElseThrow(() -> new IllegalArgumentException("roleId inválido: " + dto.getRole().id()));
         }
-        if (dto.getRole().getRole() != null) {
-            return roleRepo.findByRole(dto.getRole().getRole())
-                    .orElseThrow(() -> new IllegalArgumentException("role inválido: " + dto.getRole().getRole()));
+        if (dto.getRole().role() != null) {
+            return roleRepo.findByRole(dto.getRole().role())
+                    .orElseThrow(() -> new IllegalArgumentException("role inválido: " + dto.getRole().role()));
         }
         return null;
     }

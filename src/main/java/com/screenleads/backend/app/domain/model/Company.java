@@ -8,6 +8,7 @@ import lombok.*;
 
 
 @Entity
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "company",
 indexes = {
 @Index(name = "ix_company_name", columnList = "name")
