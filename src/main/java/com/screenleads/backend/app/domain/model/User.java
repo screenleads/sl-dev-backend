@@ -23,6 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @AllArgsConstructor
 @Builder
 @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+@org.hibernate.annotations.Filter(name = "companyFilter", condition = "company_id = :companyId")
 public class User extends Auditable implements UserDetails {
 
     @Id
