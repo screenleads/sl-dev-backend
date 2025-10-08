@@ -18,7 +18,9 @@ import org.springframework.stereotype.Service;
 import com.screenleads.backend.app.domain.model.*;
 import com.screenleads.backend.app.domain.repositories.AdviceRepository;
 import com.screenleads.backend.app.domain.repositories.MediaRepository;
+import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
+import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
 import com.screenleads.backend.app.web.dto.*;
 
 @Service
@@ -27,16 +29,22 @@ public class AdviceServiceImpl implements AdviceService {
     private final AdviceRepository adviceRepository;
     private final MediaRepository mediaRepository;
     private final UserRepository userRepository;
+    private final MediaTypeRepository mediaTypeRepository;
+    private final CompanyRepository companyRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     public AdviceServiceImpl(AdviceRepository adviceRepository,
-            MediaRepository mediaRepository,
-            UserRepository userRepository) {
+                             MediaRepository mediaRepository,
+                             UserRepository userRepository,
+                             MediaTypeRepository mediaTypeRepository,
+                             CompanyRepository companyRepository) {
         this.adviceRepository = adviceRepository;
         this.mediaRepository = mediaRepository;
         this.userRepository = userRepository;
+        this.mediaTypeRepository = mediaTypeRepository;
+        this.companyRepository = companyRepository;
     }
 
     // ======================= LECTURAS =======================
@@ -106,25 +114,73 @@ public class AdviceServiceImpl implements AdviceService {
     public AdviceDTO saveAdvice(AdviceDTO dto) {
         enableCompanyFilterIfNeeded();
 
+        System.out.println("[DEBUG] AdviceDTO recibido: " + dto);
+
         Advice advice = new Advice();
         advice.setDescription(dto.getDescription());
         advice.setCustomInterval(Boolean.TRUE.equals(dto.getCustomInterval()));
         advice.setInterval(numberToDuration(dto.getInterval()));
 
         advice.setCompany(resolveCompanyForWrite(dto.getCompany(), null));
-        advice.setMedia(resolveMediaFromDto(dto.getMedia()));
+        // Si la media no existe, crearla con los datos mínimos
+        Media media = null;
+        MediaUpsertDTO mediaDto = dto.getMedia();
+        if (mediaDto != null) {
+            if (mediaDto.id() != null && mediaDto.id() > 0) {
+                media = mediaRepository.findById(mediaDto.id()).orElse(null);
+            } else if (mediaDto.src() != null && !mediaDto.src().isBlank()) {
+                media = mediaRepository.findBySrc(mediaDto.src().trim()).orElse(null);
+                if (media == null) {
+                    // Crear nueva Media
+                    MediaType defaultType = null;
+                    Company company = advice.getCompany();
+                    // Buscar tipo por extensión
+                    String ext = null;
+                    String src = mediaDto.src().trim();
+                    int dotIdx = src.lastIndexOf('.');
+                    if (dotIdx > 0 && dotIdx < src.length() - 1) {
+                        ext = src.substring(dotIdx + 1).toLowerCase();
+                    }
+                    if (ext != null) {
+                        defaultType = mediaTypeRepository.findByExtension(ext).orElse(null);
+                    }
+                    if (defaultType == null) {
+                        // fallback: primer tipo disponible
+                        defaultType = mediaTypeRepository.findAll().stream().findFirst().orElse(null);
+                    }
+                    if (company != null && defaultType != null) {
+                        Media newMedia = new Media();
+                        newMedia.setSrc(src);
+                        newMedia.setType(defaultType);
+                        newMedia.setCompany(company);
+                        media = mediaRepository.save(newMedia);
+                    }
+                }
+            }
+        }
+        advice.setMedia(media);
         advice.setPromotion(resolvePromotionFromDto(dto.getPromotion()));
 
         // schedules
         advice.setSchedules(new ArrayList<>());
         if (dto.getSchedules() != null) {
             for (AdviceScheduleDTO sDto : dto.getSchedules()) {
-                advice.getSchedules().add(mapScheduleDTO(sDto, advice));
+                AdviceSchedule mappedSchedule = mapScheduleDTO(sDto, advice);
+                System.out.println("[DEBUG] AdviceSchedule mapeado: startDate=" + mappedSchedule.getStartDate() + ", endDate=" + mappedSchedule.getEndDate());
+                if (mappedSchedule.getWindows() != null) {
+                    for (AdviceTimeWindow win : mappedSchedule.getWindows()) {
+                        System.out.println("[DEBUG] AdviceTimeWindow mapeado: weekday=" + win.getWeekday() + ", from=" + win.getFromTime() + ", to=" + win.getToTime());
+                    }
+                }
+                advice.getSchedules().add(mappedSchedule);
             }
         }
 
         validateAdvice(advice);
         Advice saved = adviceRepository.save(advice);
+            // Log de persistencia real de ventanas
+            int totalWindows = saved.getSchedules() == null ? 0 : saved.getSchedules().stream().mapToInt(s -> s.getWindows() == null ? 0 : s.getWindows().size()).sum();
+            System.out.println("[DEBUG] Advice guardado. Total ventanas: " + totalWindows);
         return convertToDTO(saved);
     }
 
@@ -218,14 +274,18 @@ public class AdviceServiceImpl implements AdviceService {
         if (sDto.getWindows() != null) {
             for (AdviceTimeWindowDTO wDto : sDto.getWindows()) {
                 AdviceTimeWindow w = new AdviceTimeWindow();
-                w.setSchedule(s);
                 w.setWeekday(parseWeekday(wDto.getWeekday()));
                 w.setFromTime(parseTime(wDto.getFromTime()));
                 w.setToTime(parseTime(wDto.getToTime()));
+                System.out.println("[DEBUG] AdviceTimeWindow mapped: weekday=" + w.getWeekday() + ", from=" + w.getFromTime() + ", to=" + w.getToTime());
                 windows.add(w);
             }
         }
         validateAndNormalizeWindows(windows);
+        // Asignar la referencia schedule a cada ventana después de la validación
+        for (AdviceTimeWindow w : windows) {
+            w.setSchedule(s);
+        }
         s.setWindows(windows);
         return s;
     }
@@ -292,7 +352,17 @@ public class AdviceServiceImpl implements AdviceService {
     private LocalDate parseDate(String s) {
         if (s == null || s.isBlank())
             return null;
-        return LocalDate.parse(s.trim());
+        String value = s.trim();
+        try {
+            // Si viene en formato 'YYYY-MM-DD', parse normal
+            if (value.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
+                return LocalDate.parse(value);
+            }
+            // Si viene en formato ISO con zona (ej: 2025-09-30T22:00:00.000Z)
+            return Instant.parse(value).atZone(ZoneId.systemDefault()).toLocalDate();
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Fecha inválida: " + value, ex);
+        }
     }
 
     private String formatDate(LocalDate d) {
@@ -343,30 +413,24 @@ public class AdviceServiceImpl implements AdviceService {
     }
 
     private Company resolveCompanyForWrite(CompanyRefDTO incoming, Company current) {
-        boolean isAdmin = isCurrentUserAdmin();
-        Long userCompanyId = currentCompanyId();
-
-        if (!isAdmin) {
-            if (userCompanyId != null) {
-                Company c = new Company();
-                c.setId(userCompanyId);
-                return c;
-            }
-            return current;
-        }
-
+        // Si el DTO trae un id válido, buscar y asignar la compañía SIEMPRE
         Long desiredId = (incoming != null) ? incoming.id() : null;
         if (desiredId != null && desiredId > 0) {
-            Company c = new Company();
-            c.setId(desiredId);
-            return c;
+            return companyRepository.findById(desiredId).orElse(null);
+        }
+        // Si no, usar la lógica anterior (usuario actual, current, etc)
+        boolean isAdmin = isCurrentUserAdmin();
+        Long userCompanyId = currentCompanyId();
+        if (!isAdmin) {
+            if (userCompanyId != null) {
+                return companyRepository.findById(userCompanyId).orElse(null);
+            }
+            return current;
         }
         if (current != null)
             return current;
         if (userCompanyId != null) {
-            Company c = new Company();
-            c.setId(userCompanyId);
-            return c;
+            return companyRepository.findById(userCompanyId).orElse(null);
         }
         return null;
     }

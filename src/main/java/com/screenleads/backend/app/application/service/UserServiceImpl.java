@@ -6,6 +6,7 @@ import com.screenleads.backend.app.domain.model.User;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.RoleRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
+import com.screenleads.backend.app.domain.repositories.MediaRepository;
 import com.screenleads.backend.app.web.dto.UserDto;
 import com.screenleads.backend.app.web.mapper.UserMapper;
 import jakarta.persistence.EntityManager;
@@ -32,6 +33,7 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepo;
     private final PasswordEncoder passwordEncoder;
     private final PermissionService perm;
+    private final MediaRepository mediaRepository;
     private final SecureRandom random = new SecureRandom();
 
     @PersistenceContext
@@ -42,12 +44,14 @@ public class UserServiceImpl implements UserService {
             CompanyRepository companyRepo,
             RoleRepository roleRepo,
             PasswordEncoder passwordEncoder,
-            PermissionService perm) {
+            PermissionService perm,
+            MediaRepository mediaRepository) {
         this.repo = repo;
         this.companyRepo = companyRepo;
         this.roleRepo = roleRepo;
         this.passwordEncoder = passwordEncoder;
         this.perm = perm;
+        this.mediaRepository = mediaRepository;
     }
 
     // ---------- LECTURAS (activamos filtro en la misma Session/Tx) ----------
@@ -157,16 +161,32 @@ public class UserServiceImpl implements UserService {
                 existing.setPassword(passwordEncoder.encode(dto.getPassword()));
             }
 
+            // --- ACTUALIZAR COMPAÑÍA ---
+            Long finalCompanyId;
             if (dto.getCompanyId() != null) {
+                finalCompanyId = dto.getCompanyId();
+            } else if (dto.getCompany() != null && dto.getCompany().id() != null) {
+                finalCompanyId = dto.getCompany().id();
+            } else {
+                finalCompanyId = null;
+            }
+            if (finalCompanyId != null) {
                 if (!isCurrentUserAdmin()) {
                     Long currentCompanyId = currentCompanyId();
-                    if (currentCompanyId == null || !currentCompanyId.equals(dto.getCompanyId())) {
+                    if (currentCompanyId == null || !currentCompanyId.equals(finalCompanyId)) {
                         throw new IllegalArgumentException("No autorizado a cambiar de compañía");
                     }
                 }
-                Company c = companyRepo.findById(dto.getCompanyId())
-                        .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + dto.getCompanyId()));
+                Company c = companyRepo.findById(finalCompanyId)
+                        .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + finalCompanyId));
                 existing.setCompany(c);
+            }
+
+            // --- ACTUALIZAR IMAGEN DE PERFIL ---
+            if (dto.getProfileImage() != null && dto.getProfileImage().src() != null) {
+                var mediaOpt = mediaRepository.findBySrc(dto.getProfileImage().src());
+                mediaOpt.ifPresent(existing::setProfileImage);
+                // Si quieres crear la media si no existe, puedes agregar lógica aquí
             }
 
             // Si llega un rol (único) en el DTO, cambiarlo con mismas reglas

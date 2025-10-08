@@ -21,6 +21,12 @@ public class UserDto {
     private Long companyId;
     private Role role;
 
+    // Nuevo: referencia a compañía como objeto
+    private CompanyRefDTO company;
+
+    // Nuevo: imagen de perfil como objeto slim
+    private MediaSlimDTO profileImage;
+
     // solo para crear/actualizar; no lo rellenes al responder
     private String password;
 }
