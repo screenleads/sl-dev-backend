@@ -5,9 +5,12 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.screenleads.backend.app.domain.model.Company;
+import com.stripe.model.StripeObject;
 
 public interface CompanyRepository extends JpaRepository<Company, Long> {
     Optional<Company> findByName(String name);
 
     boolean existsByName(String name);
+
+    Optional<Company> findByStripeCustomerId(String customerId);
 }

@@ -34,6 +34,7 @@ public class PromotionServiceImpl implements PromotionService {
     private final PromotionRepository promotionRepository;
     private final PromotionLeadRepository promotionLeadRepository;
     private final ObjectMapper objectMapper; // Autoconfigurado por Spring Boot
+    private final StripeBillingService billingService;
 
     // =========================================
     // CRUD Promotion
@@ -106,6 +107,17 @@ public class PromotionServiceImpl implements PromotionService {
 
         candidate.setPromotion(promo);
         PromotionLead saved = promotionLeadRepository.save(candidate);
+
+        // Reportar lead a Stripe si la promoción está asociada a una company con Stripe
+        if (promo.getCompany() != null) {
+            try {
+                billingService.reportLeadUsage(promo.getCompany(), 1L, java.time.Instant.now().getEpochSecond());
+            } catch (Exception e) {
+                // Loguear el error, pero no interrumpir el registro del lead
+                e.printStackTrace();
+            }
+        }
+
         return map(saved, PromotionLeadDTO.class);
     }
 

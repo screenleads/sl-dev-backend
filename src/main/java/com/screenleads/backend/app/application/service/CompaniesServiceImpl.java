@@ -191,7 +191,11 @@ public class CompaniesServiceImpl implements CompaniesService {
                 devices,
                 advices,
                 company.getPrimaryColor(),
-                company.getSecondaryColor());
+                company.getSecondaryColor(),
+                company.getStripeCustomerId(),
+                company.getStripeSubscriptionId(),
+                company.getStripeSubscriptionItemId(),
+                company.getBillingStatus());
     }
 
     private MediaSlimDTO toMediaSlimDTO(Media m) {
@@ -222,6 +226,16 @@ public class CompaniesServiceImpl implements CompaniesService {
         c.setObservations(dto.observations());
         c.setPrimaryColor(dto.primaryColor());
         c.setSecondaryColor(dto.secondaryColor());
+
+        // Stripe & billing
+        c.setStripeCustomerId(dto.stripeCustomerId());
+        c.setStripeSubscriptionId(dto.stripeSubscriptionId());
+        c.setStripeSubscriptionItemId(dto.stripeSubscriptionItemId());
+        if (dto.billingStatus() != null) {
+            c.setBillingStatus(dto.billingStatus().toString());
+        } else {
+            c.setBillingStatus(Company.BillingStatus.INCOMPLETE.name());
+        }
 
         // Logo: si viene id en el DTO slim, enlazamos; si no, se creará en save/update
         if (dto.logo() != null && dto.logo().id() != null) {

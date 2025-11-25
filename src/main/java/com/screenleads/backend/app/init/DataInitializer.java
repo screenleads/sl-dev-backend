@@ -623,7 +623,15 @@ public class DataInitializer implements CommandLineRunner {
 
         private void createDefaultCompany(String name, String observations) {
                 if (!companyRepository.existsByName(name)) {
-                        companyRepository.save(Company.builder().name(name).observations(observations).build());
+                        companyRepository.save(
+                                        Company.builder()
+                                                        .name(name)
+                                                        .observations(observations)
+                                                        .stripeCustomerId(null)
+                                                        .stripeSubscriptionId(null)
+                                                        .stripeSubscriptionItemId(null)
+                                                        .billingStatus(Company.BillingStatus.INCOMPLETE)
+                                                        .build());
                 }
         }
 

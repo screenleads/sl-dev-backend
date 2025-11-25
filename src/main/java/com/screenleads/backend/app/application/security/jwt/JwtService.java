@@ -1,3 +1,4 @@
+
 package com.screenleads.backend.app.application.security.jwt;
 
 import io.jsonwebtoken.Claims;
@@ -13,12 +14,16 @@ import org.springframework.stereotype.Service;
 import com.screenleads.backend.app.domain.model.User;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
 
 @Service
 public class JwtService {
+    public Key getSigningKey() {
+        return signingKey;
+    }
 
     @Value("${application.security.jwt.secret-key}")
     private String secretKey;
@@ -27,7 +32,8 @@ public class JwtService {
 
     @PostConstruct
     public void init() {
-        signingKey = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+        byte[] keyBytes = Base64.getDecoder().decode(secretKey);
+        signingKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String extractUsername(String token) {
@@ -61,8 +67,8 @@ public class JwtService {
                 .builder()
                 .setSubject(user.getUsername())
                 .claim("roles", user.getAuthorities().stream()
-                    .map(Object::toString)
-                    .toList())
+                        .map(Object::toString)
+                        .toList())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24h
                 .signWith(signingKey, SignatureAlgorithm.HS256)
