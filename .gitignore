@@ -38,3 +38,5 @@ build/
 /.gradle/
 
 **/clave-firebase.json
+
+keystore.p12

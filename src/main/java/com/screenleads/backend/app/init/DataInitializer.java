@@ -172,6 +172,10 @@ public class DataInitializer implements CommandLineRunner {
 
         // ========= SEED ENTIDADES (sólo esqueleto) =========
         private void seedAppEntitiesSkeleton() {
+                                upsertAppEntity("companytoken", "CompanyToken",
+                                                "com.screenleads.backend.app.domain.model.CompanyToken", "company_token", "Long",
+                                                "/company-tokens", 3, 3, 3, 3, true, null,
+                                                "API Keys", "vpn_key", 12);
                 // Para evitar choques, pasamos sortOrder deseado (o null) y dentro se normaliza
                 upsertAppEntity("company", "Company",
                                 "com.screenleads.backend.app.domain.model.Company", "company", "Long",

@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface CompanyTokenRepository extends JpaRepository<CompanyToken, Long> {
     List<CompanyToken> findByCompanyId(Long companyId);
-    void deleteByToken(String token);
+    void deleteById(Long id);
     CompanyToken findByToken(String token);
 }

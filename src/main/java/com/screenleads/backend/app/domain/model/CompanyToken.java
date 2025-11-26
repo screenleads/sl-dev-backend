@@ -16,8 +16,12 @@ public class CompanyToken {
     @Column(nullable = false, unique = true, length = 512)
     private String token;
 
+
     @Column(nullable = false)
     private String role;
+
+    @Column(nullable = true, length = 255)
+    private String descripcion;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -26,6 +30,12 @@ public class CompanyToken {
     private LocalDateTime expiresAt;
 
     // Getters and setters
+    public String getDescripcion() {
+        return descripcion;
+    }
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
     public Long getId() {
         return id;
     }

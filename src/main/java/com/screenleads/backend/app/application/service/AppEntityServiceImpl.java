@@ -92,8 +92,12 @@ public class AppEntityServiceImpl implements AppEntityService {
             throw new IllegalArgumentException("resource obligatorio en AppEntityDTO");
         }
 
-        AppEntity e = repo.findByResource(dto.resource())
-                .orElseGet(() -> AppEntity.builder().resource(dto.resource()).build());
+        AppEntity e;
+        if (dto.id() != null) {
+            e = repo.findById(dto.id()).orElseGet(() -> AppEntity.builder().id(dto.id()).resource(dto.resource()).build());
+        } else {
+            e = repo.findByResource(dto.resource()).orElseGet(() -> AppEntity.builder().resource(dto.resource()).build());
+        }
 
         // Metadatos principales
         e.setEntityName(nullIfBlank(dto.entityName(), e.getEntityName()));
