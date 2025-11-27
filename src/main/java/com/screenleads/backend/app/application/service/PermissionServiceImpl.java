@@ -4,6 +4,7 @@ import com.screenleads.backend.app.domain.model.AppEntity;
 import com.screenleads.backend.app.domain.model.User;
 import com.screenleads.backend.app.domain.repositories.AppEntityRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
+import com.screenleads.backend.app.application.service.SpringContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -20,37 +21,40 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public boolean can(String resource, String action) {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth == null || !auth.isAuthenticated())
+            try {
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                if (auth == null || !auth.isAuthenticated())
+                    return false;
+
+                // Si es API_CLIENT, delega en ApiKeyPermissionService
+                if (auth.getAuthorities().stream().anyMatch(a -> "API_CLIENT".equals(a.getAuthority()))) {
+                    // Puedes inyectar ApiKeyPermissionService con @Autowired si lo prefieres
+                    ApiKeyPermissionService apiKeyPerm = SpringContext.getBean(ApiKeyPermissionService.class);
+                    return apiKeyPerm.can(resource, action);
+                }
+
+                User u = userRepository.findByUsername(auth.getName()).orElse(null);
+                if (u == null || u.getRole() == null || u.getRole().getLevel() == null)
+                    return false;
+
+                int myLevel = u.getRole().getLevel();
+                AppEntity p = permissionRepository.findByResource(resource).orElse(null);
+                if (p == null)
+                    return false;
+                Integer required = switch (action) {
+                    case "read" -> p.getReadLevel();
+                    case "create" -> p.getCreateLevel();
+                    case "update" -> p.getUpdateLevel();
+                    case "delete" -> p.getDeleteLevel();
+                    default -> null;
+                };
+                if (required == null)
+                    return false;
+                return myLevel <= required;
+            } catch (Exception e) {
+                log.warn("perm.can({}, {}) falló", resource, action, e);
                 return false;
-
-            User u = userRepository.findByUsername(auth.getName()).orElse(null);
-            if (u == null || u.getRole() == null || u.getRole().getLevel() == null)
-                return false;
-
-            int myLevel = u.getRole().getLevel(); // 👈 rol único
-
-            AppEntity p = permissionRepository.findByResource(resource).orElse(null);
-            if (p == null)
-                return false;
-
-            Integer required = switch (action) {
-                case "read" -> p.getReadLevel();
-                case "create" -> p.getCreateLevel();
-                case "update" -> p.getUpdateLevel();
-                case "delete" -> p.getDeleteLevel();
-                default -> null;
-            };
-            if (required == null)
-                return false;
-
-            // Niveles: 1 (más alto) permite todo ≤ requerido
-            return myLevel <= required;
-        } catch (Exception e) {
-            log.warn("perm.can({}, {}) falló", resource, action, e);
-            return false; // nunca romper la evaluación SpEL
-        }
+            }
     }
 
     @Override

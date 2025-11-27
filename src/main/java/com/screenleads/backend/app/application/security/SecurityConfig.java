@@ -30,6 +30,7 @@ import java.util.List;
 public class SecurityConfig {
 
         private final JwtAuthenticationFilter jwtAuthFilter;
+        private final ApiKeyAuthenticationFilter apiKeyAuthFilter;
         private final UserDetailsService userDetailsService;
 
         // Respuestas JSON limpias para 401 / 403
@@ -74,7 +75,8 @@ public class SecurityConfig {
                                                 // El resto autenticado
                                                 .anyRequest().authenticated())
                                 .authenticationProvider(authenticationProvider())
-                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                                        .addFilterBefore(apiKeyAuthFilter, JwtAuthenticationFilter.class)
+                                        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();
         }

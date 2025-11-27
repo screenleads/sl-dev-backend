@@ -161,7 +161,6 @@ public class DataInitializer implements CommandLineRunner {
                                 continue;
                         if (Boolean.TRUE.equals(e.getVisibleInMenu()) && e.getSortOrder() != null) {
                                 used.add(e.getSortOrder());
-                                max = Math.max(max, e.getSortOrder());
                         }
                 }
                 int n = (desired != null) ? desired : (max + 1);
@@ -172,10 +171,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // ========= SEED ENTIDADES (sólo esqueleto) =========
         private void seedAppEntitiesSkeleton() {
-                                upsertAppEntity("companytoken", "CompanyToken",
-                                                "com.screenleads.backend.app.domain.model.CompanyToken", "company_token", "Long",
-                                                "/company-tokens", 3, 3, 3, 3, true, null,
-                                                "API Keys", "vpn_key", 12);
+                                // Eliminado: lógica de CompanyToken
                 // Para evitar choques, pasamos sortOrder deseado (o null) y dentro se normaliza
                 upsertAppEntity("company", "Company",
                                 "com.screenleads.backend.app.domain.model.Company", "company", "Long",
@@ -231,6 +227,11 @@ public class DataInitializer implements CommandLineRunner {
                                 "com.screenleads.backend.app.domain.model.AppVersion", "app_version", "Long",
                                 "/app-versions", 1, 1, 1, 1, true, null,
                                 "App Versions", "download-cloud", 11);
+
+                upsertAppEntity("api_key", "ApiKey",
+                                "com.screenleads.backend.app.domain.model.ApiKey", "api_key", "Long",
+                                "/api-keys", 1, 3, 2, 2, true, null,
+                                "API Keys", "vpn_key", 13);
 
                 // AppEntity (metamodelo) visible en el menú -> sortOrder único (pasa null o
                 // repetido, se corrige)
