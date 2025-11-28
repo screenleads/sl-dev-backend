@@ -1,6 +1,8 @@
 package com.screenleads.backend.app.application.service;
 
 import com.screenleads.backend.app.domain.model.ApiKey;
+import com.screenleads.backend.app.domain.model.Client;
+import com.screenleads.backend.app.domain.repositories.ClientRepository;
 import com.screenleads.backend.app.domain.repositories.ApiKeyRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,16 +15,20 @@ import java.util.UUID;
 @Transactional
 public class ApiKeyServiceImpl implements ApiKeyService {
     private final ApiKeyRepository apiKeyRepository;
+    private final ClientRepository clientRepository;
 
-    public ApiKeyServiceImpl(ApiKeyRepository apiKeyRepository) {
+    public ApiKeyServiceImpl(ApiKeyRepository apiKeyRepository, ClientRepository clientRepository) {
         this.apiKeyRepository = apiKeyRepository;
+        this.clientRepository = clientRepository;
     }
 
     @Override
     public ApiKey createApiKey(String clientId, String permissions, int daysValid) {
+        Client client = clientRepository.findByClientIdAndActiveTrue(clientId)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado o inactivo"));
         ApiKey key = new ApiKey();
         key.setKey(UUID.randomUUID().toString().replace("-", ""));
-        key.setClientId(clientId);
+        key.setClient(client);
         key.setPermissions(permissions);
         key.setActive(true);
         key.setCreatedAt(LocalDateTime.now());
@@ -52,9 +58,22 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     @Override
-    public List<ApiKey> getApiKeysByClient(String clientId) {
-        return apiKeyRepository.findAll().stream()
-                .filter(key -> key.getClientId().equals(clientId))
-                .toList();
+    public ApiKey createApiKeyByDbId(Long clientDbId, String permissions, int daysValid) {
+        Client client = clientRepository.findById(clientDbId)
+            .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado por id"));
+        ApiKey key = new ApiKey();
+        key.setKey(UUID.randomUUID().toString().replace("-", ""));
+        key.setClient(client);
+        key.setPermissions(permissions);
+        key.setActive(true);
+        key.setCreatedAt(LocalDateTime.now());
+        key.setExpiresAt(LocalDateTime.now().plusDays(daysValid));
+        return apiKeyRepository.save(key);
+    }
+
+    @Override
+    public List<ApiKey> getApiKeysByClientDbId(Long clientDbId) {
+        // Usar el método del repositorio para evitar errores de tipo
+        return apiKeyRepository.findAllByClient_Id(clientDbId);
     }
 }

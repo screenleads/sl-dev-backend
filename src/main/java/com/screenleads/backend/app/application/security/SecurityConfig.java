@@ -62,10 +62,12 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 com.screenleads.backend.app.infraestructure.config.SwaggerWhitelist.ENDPOINTS)
                                                 .permitAll()
+
                                                 // Auth: solo login/refresh públicos
                                                 .requestMatchers("/auth/login", "/auth/refresh").permitAll()
                                                 // /auth/me requiere autenticación
                                                 .requestMatchers("/auth/me").authenticated()
+
                                                 // Swagger / OpenAPI / Health
                                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**",
                                                                 "/swagger-ui.html")
@@ -75,8 +77,10 @@ public class SecurityConfig {
                                                 // El resto autenticado
                                                 .anyRequest().authenticated())
                                 .authenticationProvider(authenticationProvider())
-                                        .addFilterBefore(apiKeyAuthFilter, JwtAuthenticationFilter.class)
-                                        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+                                // ✅ IMPORTANTE: anclar SIEMPRE a un filtro estándar (no a filtros custom)
+                                .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();
         }
@@ -123,7 +127,7 @@ public class SecurityConfig {
 
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
-                // 🔴 Añadimos los headers que envía el interceptor
+                // Headers que envía el interceptor
                 config.setAllowedHeaders(List.of(
                                 "Authorization",
                                 "Content-Type",
@@ -132,8 +136,10 @@ public class SecurityConfig {
                                 "X-Requested-With",
                                 "X-Timezone",
                                 "X-Timezone-Offset",
-                                "Accept-Language" // útil si lo usas
-                ));
+                                "Accept-Language",
+                                "X-API-KEY",
+                                        "client_id",
+                                        "client-id"));
 
                 // (Opcional) Headers expuestos al frontend si necesitas leerlos
                 config.setExposedHeaders(List.of(
@@ -141,10 +147,7 @@ public class SecurityConfig {
                                 "X-Timezone",
                                 "X-Timezone-Offset"));
 
-                // Cookies/JWT entre dominios
                 config.setAllowCredentials(true);
-
-                // Cache de preflight
                 config.setMaxAge(3600L);
 
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

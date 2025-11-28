@@ -1,25 +1,13 @@
-package com.screenleads.backend.app.domain.model;
+package com.screenleads.backend.app.web.dto;
 
-import jakarta.persistence.*;
 import java.util.List;
 
-@Entity
-public class Client {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ClientDTO {
     private Long id;
-
-    @Column(nullable = false, unique = true)
     private String clientId;
-
-    @Column(nullable = false)
     private String name;
-
-    @Column(nullable = false)
-    private boolean active = true;
-
-    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
-    private List<ApiKey> apiKeys;
+    private boolean active;
+    private List<ApiKeyDTO> apiKeys;
 
     // Getters y setters
     public Long getId() { return id; }
@@ -30,6 +18,6 @@ public class Client {
     public void setName(String name) { this.name = name; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
-    public List<ApiKey> getApiKeys() { return apiKeys; }
-    public void setApiKeys(List<ApiKey> apiKeys) { this.apiKeys = apiKeys; }
+    public List<ApiKeyDTO> getApiKeys() { return apiKeys; }
+    public void setApiKeys(List<ApiKeyDTO> apiKeys) { this.apiKeys = apiKeys; }
 }

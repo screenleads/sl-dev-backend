@@ -16,10 +16,10 @@ public class ApiKeyController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiKey> createApiKey(@RequestParam String clientId,
-                                               @RequestParam String permissions,
-                                               @RequestParam(defaultValue = "365") int daysValid) {
-        ApiKey key = apiKeyService.createApiKey(clientId, permissions, daysValid);
+    public ResponseEntity<ApiKey> createApiKey(@RequestParam Long clientDbId,
+            @RequestParam String permissions,
+            @RequestParam(defaultValue = "365") int daysValid) {
+        ApiKey key = apiKeyService.createApiKeyByDbId(clientDbId, permissions, daysValid);
         return ResponseEntity.ok(key);
     }
 
@@ -41,9 +41,9 @@ public class ApiKeyController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/client/{clientId}")
-    public ResponseEntity<List<ApiKey>> getApiKeysByClient(@PathVariable String clientId) {
-        List<ApiKey> keys = apiKeyService.getApiKeysByClient(clientId);
+    @GetMapping("/client/{clientDbId}")
+    public ResponseEntity<List<ApiKey>> getApiKeysByClient(@PathVariable Long clientDbId) {
+        List<ApiKey> keys = apiKeyService.getApiKeysByClientDbId(clientDbId);
         return ResponseEntity.ok(keys);
     }
 }

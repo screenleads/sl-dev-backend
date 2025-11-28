@@ -8,5 +8,6 @@ public interface ApiKeyService {
     void deactivateApiKey(Long id);
     void activateApiKey(Long id);
     void deleteApiKey(Long id);
-    List<ApiKey> getApiKeysByClient(String clientId);
+    ApiKey createApiKeyByDbId(Long clientDbId, String permissions, int daysValid);
+    List<ApiKey> getApiKeysByClientDbId(Long clientDbId);
 }

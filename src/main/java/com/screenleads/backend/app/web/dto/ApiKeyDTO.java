@@ -1,36 +1,20 @@
-package com.screenleads.backend.app.domain.model;
+package com.screenleads.backend.app.web.dto;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity
-public class ApiKey {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ApiKeyDTO {
     private Long id;
-
-    @Column(nullable = false, unique = true)
     private String key;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "client", nullable = false)
-    private Client client;
-
-    @Column(nullable = false)
-    private boolean active = true;
-
+    private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;
-
-    private String permissions; // Puedes usar un Set<String> o relación si lo prefieres
+    private String permissions;
 
     // Getters y setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getKey() { return key; }
     public void setKey(String key) { this.key = key; }
-    public Client getClient() { return client; }
-    public void setClient(Client client) { this.client = client; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
     public LocalDateTime getCreatedAt() { return createdAt; }
