@@ -1,13 +1,13 @@
 name: Export AI Snapshots
-
+ 
 on:
   push:
     branches: [ develop ]
   workflow_dispatch:
-
+ 
 permissions:
   contents: write
-
+ 
 jobs:
   generate:
     runs-on: ubuntu-latest
@@ -16,15 +16,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
+ 
       - name: Ensure config & script exist (optional bootstrap)
         run: |
-          mkdir -p docs scripts
+          mkdir -p docs scripts/export
           # Solo crea ejemplos si NO existen (no pisa tus cambios)
           [ -f docs/ai-snapshots.json ] || cat > docs/ai-snapshots.json << 'JSON'
           { "title_prefix": "Snapshot AI", "branch_env_fallback": "develop", "snapshots": [] }
           JSON
-          [ -f scripts/export-snapshots.py ] || cat > scripts/export-snapshots.py << 'PY'
+          [ -f scripts/export/export-snapshots.py ] || cat > scripts/export/export-snapshots.py << 'PY'
           #!/usr/bin/env python3
           import os, sys, json, glob
           LANG_BY_EXT={".java":"java",".kt":"kotlin",".xml":"xml",".yml":"yaml",".yaml":"yaml",".properties":"properties",".json":"json",".sql":"sql",".md":"markdown",".sh":"bash"}
@@ -62,12 +62,12 @@ jobs:
               print(f"Done. Total files included: {total}")
           if __name__=="__main__": main()
           PY
-          chmod +x scripts/export-snapshots.py
-
+          chmod +x scripts/export/export-snapshots.py
+ 
       - name: Generate snapshots
         run: |
-          scripts/export-snapshots.py docs/ai-snapshots.json
-
+          scripts/export/export-snapshots.py docs/ai-snapshots.json
+ 
       - name: Commit changes (if any)
         run: |
           CHANGED="$(git status --porcelain docs/*.md)"
