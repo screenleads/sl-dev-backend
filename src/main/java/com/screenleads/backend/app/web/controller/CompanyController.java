@@ -26,12 +26,14 @@ public class CompanyController {
         this.companiesService = companiesService;
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'read')")
     @GetMapping
     @Operation(summary = "Listar compañías")
     public ResponseEntity<List<CompanyDTO>> getAllCompanies() {
         return ResponseEntity.ok(companiesService.getAllCompanies());
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'read')")
     @GetMapping("/{id}")
     @Operation(summary = "Obtener compañía por id")
     public ResponseEntity<CompanyDTO> getCompanyById(@PathVariable Long id) {
@@ -39,24 +41,24 @@ public class CompanyController {
         return company.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'create')")
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @Operation(summary = "Crear compañía", description = "Solo ROLE_ADMIN")
+    @Operation(summary = "Crear compañía", description = "ROLE_ADMIN o permiso company:create")
     public ResponseEntity<CompanyDTO> createCompany(@RequestBody CompanyDTO companyDTO) {
         return ResponseEntity.ok(companiesService.saveCompany(companyDTO));
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'update')")
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @Operation(summary = "Actualizar compañía", description = "Solo ROLE_ADMIN")
+    @Operation(summary = "Actualizar compañía", description = "ROLE_ADMIN o permiso company:update")
     public ResponseEntity<CompanyDTO> updateCompany(@PathVariable Long id, @RequestBody CompanyDTO companyDTO) {
         CompanyDTO updatedCompany = companiesService.updateCompany(id, companyDTO);
         return ResponseEntity.ok(updatedCompany);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'delete')")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @Operation(summary = "Eliminar compañía", description = "Solo ROLE_ADMIN")
+    @Operation(summary = "Eliminar compañía", description = "ROLE_ADMIN o permiso company:delete")
     public ResponseEntity<Void> deleteCompany(@PathVariable Long id) {
         companiesService.deleteCompany(id);
         return ResponseEntity.noContent().build();

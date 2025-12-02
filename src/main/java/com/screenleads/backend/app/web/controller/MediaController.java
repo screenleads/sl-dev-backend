@@ -10,6 +10,7 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,6 +33,7 @@ public class MediaController {
 
     // ---------------- LIST/CRUD ----------------
 
+    @PreAuthorize("@perm.can('media', 'read')")
     @CrossOrigin
     @GetMapping("/medias")
     public ResponseEntity<List<MediaDTO>> getAllMedias() {
@@ -40,6 +42,7 @@ public class MediaController {
 
     // ---------------- UPLOAD ----------------
 
+    @PreAuthorize("@perm.can('media', 'create')")
     @CrossOrigin
     @PostMapping(
         value = "/medias/upload",

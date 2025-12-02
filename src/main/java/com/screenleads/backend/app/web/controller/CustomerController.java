@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.CustomerService;
@@ -25,6 +26,7 @@ public class CustomerController {
     private final CustomerService customerService;
 
     // ===== Listar por company (opcional) + búsqueda parcial en identifier =====
+    @PreAuthorize("@perm.can('customer', 'read')")
     @GetMapping
     @Operation(summary = "Listar clientes", description = "Filtra por companyId y búsqueda parcial en identifier")
     public ResponseEntity<List<CustomerResponse>> list(
@@ -36,6 +38,7 @@ public class CustomerController {
     }
 
     // ===== Obtener por id =====
+    @PreAuthorize("@perm.can('customer', 'read')")
     @GetMapping("/{id}")
     @Operation(summary = "Obtener cliente por id")
     public ResponseEntity<CustomerResponse> get(@PathVariable Long id) {
@@ -44,6 +47,7 @@ public class CustomerController {
     }
 
     // ===== Crear =====
+    @PreAuthorize("@perm.can('customer', 'create')")
     @PostMapping
     @Operation(summary = "Crear cliente", description = "Crea un cliente normalizando el identificador y aplicando unicidad por empresa")
     public ResponseEntity<CustomerResponse> create(@RequestBody CreateRequest req) {
@@ -59,6 +63,7 @@ public class CustomerController {
     }
 
     // ===== Actualizar =====
+    @PreAuthorize("@perm.can('customer', 'update')")
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar cliente")
     public ResponseEntity<CustomerResponse> update(@PathVariable Long id, @RequestBody UpdateRequest req) {
@@ -72,6 +77,7 @@ public class CustomerController {
     }
 
     // ===== Borrar =====
+    @PreAuthorize("@perm.can('customer', 'delete')")
     @DeleteMapping("/{id}")
     @Operation(summary = "Borrar cliente")
     public ResponseEntity<Void> delete(@PathVariable Long id) {

@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.DeviceService;
@@ -31,12 +32,14 @@ public class DevicesController {
     // CRUD básico
     // -------------------------------------------------------------------------
 
+    @PreAuthorize("@perm.can('device', 'read')")
     @GetMapping
     @Operation(summary = "Listar dispositivos")
     public ResponseEntity<List<DeviceDTO>> getAllDevices() {
         return ResponseEntity.ok(deviceService.getAllDevices());
     }
 
+    @PreAuthorize("@perm.can('device', 'read')")
     @GetMapping("/{id}")
     @Operation(summary = "Obtener dispositivo por id")
     public ResponseEntity<DeviceDTO> getDeviceById(@PathVariable Long id) {
@@ -44,6 +47,7 @@ public class DevicesController {
         return device.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@perm.can('device', 'create')")
     @PostMapping
     @Operation(summary = "Crear dispositivo")
     public ResponseEntity<DeviceDTO> createDevice(@RequestBody DeviceDTO deviceDTO) {
@@ -51,6 +55,7 @@ public class DevicesController {
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
+    @PreAuthorize("@perm.can('device', 'update')")
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar dispositivo")
     public ResponseEntity<DeviceDTO> updateDevice(@PathVariable Long id, @RequestBody DeviceDTO deviceDTO) {
@@ -58,6 +63,7 @@ public class DevicesController {
         return ResponseEntity.ok(updatedDevice);
     }
 
+    @PreAuthorize("@perm.can('device', 'delete')")
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar dispositivo")
     public ResponseEntity<Void> deleteDevice(@PathVariable Long id) {
@@ -69,6 +75,7 @@ public class DevicesController {
     // Búsqueda / existencia por UUID (para que el frontend se "autocure")
     // -------------------------------------------------------------------------
 
+    @PreAuthorize("@perm.can('device', 'read')")
     @GetMapping("/uuid/{uuid}")
     @Operation(summary = "Obtener dispositivo por UUID")
     public ResponseEntity<DeviceDTO> getDeviceByUuid(@PathVariable String uuid) {

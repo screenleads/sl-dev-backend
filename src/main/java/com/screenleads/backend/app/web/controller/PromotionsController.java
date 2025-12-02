@@ -4,6 +4,7 @@ import com.screenleads.backend.app.application.service.PromotionService;
 import com.screenleads.backend.app.web.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -20,43 +21,51 @@ public class PromotionsController {
     private PromotionService promotionService;
 
     // ===== CRUD =====
+    @PreAuthorize("@perm.can('promotion', 'read')")
     @GetMapping
     public List<PromotionDTO> getAllPromotions() {
         return promotionService.getAllPromotions();
     }
 
+    @PreAuthorize("@perm.can('promotion', 'read')")
     @GetMapping("/{id}")
     public PromotionDTO getPromotionById(@PathVariable Long id) {
         return promotionService.getPromotionById(id);
     }
 
+    @PreAuthorize("@perm.can('promotion', 'create')")
     @PostMapping
     public PromotionDTO createPromotion(@RequestBody PromotionDTO promotionDTO) {
         return promotionService.savePromotion(promotionDTO);
     }
 
+    @PreAuthorize("@perm.can('promotion', 'update')")
     @PutMapping("/{id}")
     public PromotionDTO updatePromotion(@PathVariable Long id, @RequestBody PromotionDTO promotionDTO) {
         return promotionService.updatePromotion(id, promotionDTO);
     }
 
+    @PreAuthorize("@perm.can('promotion', 'delete')")
     @DeleteMapping("/{id}")
     public void deletePromotion(@PathVariable Long id) {
         promotionService.deletePromotion(id);
     }
 
     // ===== Leads =====
+    @PreAuthorize("@perm.can('lead', 'create')")
     @PostMapping("/{id}/leads")
     public PromotionLeadDTO registerLead(@PathVariable Long id, @RequestBody PromotionLeadDTO leadDTO) {
         return promotionService.registerLead(id, leadDTO);
     }
 
+    @PreAuthorize("@perm.can('lead', 'read')")
     @GetMapping("/{id}/leads")
     public List<PromotionLeadDTO> listLeads(@PathVariable Long id) {
         return promotionService.listLeads(id);
     }
 
     // ===== Lead de prueba =====
+    @PreAuthorize("@perm.can('lead', 'create')")
     @PostMapping("/{id}/leads/test")
     public PromotionLeadDTO createTestLead(
             @PathVariable Long id,
@@ -65,6 +74,7 @@ public class PromotionsController {
     }
 
     // ===== Export CSV (Streaming) =====
+    @PreAuthorize("@perm.can('lead', 'read')")
     @GetMapping(value = "/{id}/leads/export.csv", produces = "text/csv")
     public ResponseEntity<StreamingResponseBody> exportLeadsCsv(
             @PathVariable Long id,

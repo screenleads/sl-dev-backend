@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.AdviceService;
@@ -30,6 +31,7 @@ public class AdvicesController {
         this.adviceService = adviceService;
     }
 
+    @PreAuthorize("@perm.can('advice', 'read')")
     @GetMapping
     @Operation(summary = "Listar todos los advices")
     public ResponseEntity<List<AdviceDTO>> getAllAdvices() {
@@ -42,6 +44,7 @@ public class AdvicesController {
      * - X-Timezone: IANA TZ (p.ej. "Europe/Madrid")
      * - X-Timezone-Offset: minutos al ESTE de UTC (p.ej. "120")
      */
+    @PreAuthorize("@perm.can('advice', 'read')")
     @GetMapping("/visibles")
     @Operation(
         summary = "Advices visibles ahora",
@@ -60,6 +63,7 @@ public class AdvicesController {
         return ResponseEntity.ok(adviceService.getVisibleAdvicesNow(zone));
     }
 
+    @PreAuthorize("@perm.can('advice', 'read')")
     @GetMapping("/{id}")
     @Operation(summary = "Obtener un advice por id")
     public ResponseEntity<AdviceDTO> getAdviceById(@PathVariable Long id) {
@@ -67,12 +71,14 @@ public class AdvicesController {
         return advice.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@perm.can('advice', 'create')")
     @PostMapping
     @Operation(summary = "Crear un advice")
     public ResponseEntity<AdviceDTO> createAdvice(@RequestBody AdviceDTO adviceDTO) {
         return ResponseEntity.ok(adviceService.saveAdvice(adviceDTO));
     }
 
+    @PreAuthorize("@perm.can('advice', 'update')")
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar un advice")
     public ResponseEntity<AdviceDTO> updateAdvice(@PathVariable Long id, @RequestBody AdviceDTO adviceDTO) {
@@ -81,6 +87,7 @@ public class AdvicesController {
         return ResponseEntity.ok(updatedAdvice);
     }
 
+    @PreAuthorize("@perm.can('advice', 'delete')")
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar un advice")
     public ResponseEntity<Void> deleteAdvice(@PathVariable Long id) {

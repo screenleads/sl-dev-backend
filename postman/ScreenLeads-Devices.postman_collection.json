@@ -1,0 +1,257 @@
+{
+	"info": {
+		"_postman_id": "devices-collection-002",
+		"name": "ScreenLeads - 02. Devices",
+		"description": "Gestión de dispositivos (pantallas LED)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_path",
+			"value": "/devices",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "JWT Auth",
+			"item": [
+				{
+					"name": "Get All Devices",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var devices = pm.response.json();",
+									"    if (devices.length > 0) {",
+									"        pm.environment.set('device_id', devices[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/devices",
+							"host": ["{{base_url}}"],
+							"path": ["devices"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/devices/{{device_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["devices", "{{device_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device by UUID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/devices/uuid/abc-123-def",
+							"host": ["{{base_url}}"],
+							"path": ["devices", "uuid", "abc-123-def"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Device",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"uuid\": \"device-uuid-001\",\n  \"name\": \"Pantalla LED Principal\",\n  \"companyId\": {{company_id}},\n  \"deviceTypeId\": 1,\n  \"location\": \"Entrada Principal\",\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/devices",
+							"host": ["{{base_url}}"],
+							"path": ["devices"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Device",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Pantalla LED Principal - Actualizada\",\n  \"location\": \"Entrada Principal - Piso 1\",\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/devices/{{device_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["devices", "{{device_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Device",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/devices/{{device_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["devices", "{{device_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "API Key Auth",
+			"item": [
+				{
+					"name": "Get All Devices (API Key)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "client-id",
+								"value": "{{client_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/devices",
+							"host": ["{{base_url}}"],
+							"path": ["devices"]
+						},
+						"description": "Con API Key que tenga permiso 'device:read'"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Device (API Key)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "client-id",
+								"value": "{{client_id}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"uuid\": \"device-api-001\",\n  \"name\": \"Dispositivo via API Key\",\n  \"companyId\": {{company_id}},\n  \"deviceTypeId\": 1,\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/devices",
+							"host": ["{{base_url}}"],
+							"path": ["devices"]
+						},
+						"description": "Con API Key que tenga permiso 'device:create'"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

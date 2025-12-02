@@ -1,0 +1,158 @@
+{
+	"info": {
+		"_postman_id": "auth-collection-001",
+		"name": "ScreenLeads - 01. Authentication",
+		"description": "Endpoints de autenticación JWT (Login, Register, Refresh, etc.)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_path",
+			"value": "/auth",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 200) {",
+							"    var jsonData = pm.response.json();",
+							"    pm.environment.set('jwt_token', jsonData.accessToken);",
+							"    console.log('JWT Token saved to environment');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/login",
+					"host": ["{{base_url}}"],
+					"path": ["auth", "login"]
+				},
+				"description": "Login con usuario y contraseña. Devuelve JWT token."
+			},
+			"response": []
+		},
+		{
+			"name": "Register",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"newuser\",\n  \"password\": \"password123\",\n  \"email\": \"newuser@example.com\",\n  \"name\": \"New User\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/register",
+					"host": ["{{base_url}}"],
+					"path": ["auth", "register"]
+				},
+				"description": "Registrar nuevo usuario (si está habilitado)"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Current User",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/auth/me",
+					"host": ["{{base_url}}"],
+					"path": ["auth", "me"]
+				},
+				"description": "Obtener datos del usuario autenticado"
+			},
+			"response": []
+		},
+		{
+			"name": "Change Password",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"oldPassword\": \"currentpass123\",\n  \"newPassword\": \"newpass123\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/change-password",
+					"host": ["{{base_url}}"],
+					"path": ["auth", "change-password"]
+				},
+				"description": "Cambiar contraseña del usuario autenticado"
+			},
+			"response": []
+		},
+		{
+			"name": "Refresh Token",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"refreshToken\": \"your-refresh-token-here\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/refresh",
+					"host": ["{{base_url}}"],
+					"path": ["auth", "refresh"]
+				},
+				"description": "Renovar JWT token usando refresh token"
+			},
+			"response": []
+		}
+	]
+}

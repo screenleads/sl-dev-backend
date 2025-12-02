@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.DeviceTypeService;
@@ -27,6 +28,7 @@ public class DeviceTypesController {
 
     @CrossOrigin
     @GetMapping("/devices/types")
+    @PreAuthorize("@perm.can('devicetype', 'read')")
     @Operation(summary = "Listar tipos de dispositivo")
     public ResponseEntity<List<DeviceTypeDTO>> getAllDeviceTypes() {
         return ResponseEntity.ok(deviceTypeService.getAllDeviceTypes());
@@ -34,6 +36,7 @@ public class DeviceTypesController {
 
     @CrossOrigin
     @GetMapping("/devices/types/{id}")
+    @PreAuthorize("@perm.can('devicetype', 'read')")
     @Operation(summary = "Obtener tipo de dispositivo por id")
     public ResponseEntity<DeviceTypeDTO> getDeviceTypeById(@PathVariable Long id) {
         Optional<DeviceTypeDTO> device = deviceTypeService.getDeviceTypeById(id);
@@ -42,6 +45,7 @@ public class DeviceTypesController {
 
     @CrossOrigin
     @PostMapping("/devices/types")
+    @PreAuthorize("@perm.can('devicetype', 'create')")
     @Operation(summary = "Crear tipo de dispositivo")
     public ResponseEntity<DeviceTypeDTO> createDeviceType(@RequestBody DeviceTypeDTO deviceDTO) {
         return ResponseEntity.ok(deviceTypeService.saveDeviceType(deviceDTO));
@@ -49,6 +53,7 @@ public class DeviceTypesController {
 
     @CrossOrigin
     @PutMapping("/devices/types/{id}")
+    @PreAuthorize("@perm.can('devicetype', 'update')")
     @Operation(summary = "Actualizar tipo de dispositivo")
     public ResponseEntity<DeviceTypeDTO> updateDeviceType(@PathVariable Long id, @RequestBody DeviceTypeDTO deviceDTO) {
         DeviceTypeDTO updatedDevice = deviceTypeService.updateDeviceType(id, deviceDTO);
@@ -57,6 +62,7 @@ public class DeviceTypesController {
 
     @CrossOrigin
     @DeleteMapping("/devices/types/{id}")
+    @PreAuthorize("@perm.can('devicetype', 'delete')")
     @Operation(summary = "Eliminar tipo de dispositivo")
     public ResponseEntity<String> deleteDeviceType(@PathVariable Long id) {
         deviceTypeService.deleteDeviceType(id);

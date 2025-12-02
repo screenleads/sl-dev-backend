@@ -4,6 +4,7 @@ import com.screenleads.backend.app.domain.model.Client;
 import com.screenleads.backend.app.domain.repositories.ClientRepository;
 import com.screenleads.backend.app.application.service.ApiKeyService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -54,6 +55,7 @@ public class ClientController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('client', 'read')")
     public ResponseEntity<java.util.List<com.screenleads.backend.app.web.dto.ClientDTO>> listClients() {
         java.util.List<Client> clients = clientRepository.findAll();
         java.util.List<com.screenleads.backend.app.web.dto.ClientDTO> dtos = clients.stream().map(this::toDTO).toList();
@@ -61,6 +63,7 @@ public class ClientController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('client', 'read')")
     public ResponseEntity<Client> getClient(@PathVariable Long id) {
         return clientRepository.findById(id)
                 .map(ResponseEntity::ok)
@@ -68,6 +71,7 @@ public class ClientController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('client', 'create')")
     public ResponseEntity<Client> createClient(@RequestBody Client client) {
         // Autogenerar clientId alfanumérico
         client.setClientId(java.util.UUID.randomUUID().toString());
@@ -79,6 +83,7 @@ public class ClientController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('client', 'update')")
     public ResponseEntity<Client> updateClient(@PathVariable Long id, @RequestBody Client client) {
         return clientRepository.findById(id)
                 .map(existing -> {
@@ -91,12 +96,14 @@ public class ClientController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('client', 'delete')")
     public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
         clientRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/activate")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('client', 'update')")
     public ResponseEntity<Void> activateClient(@PathVariable Long id) {
         return clientRepository.findById(id)
                 .map(this::activate)
@@ -104,6 +111,7 @@ public class ClientController {
     }
 
     @PostMapping("/{id}/deactivate")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('client', 'update')")
     public ResponseEntity<Void> deactivateClient(@PathVariable Long id) {
         return clientRepository.findById(id)
                 .map(this::deactivate)

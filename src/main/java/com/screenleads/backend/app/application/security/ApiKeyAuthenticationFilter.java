@@ -16,8 +16,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
@@ -51,16 +52,38 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         if (apiKey != null && clientId != null) {
             Optional<Client> clientOpt = clientRepository.findByClientIdAndActiveTrue(clientId);
             if (clientOpt.isPresent()) {
-                        Client client = clientOpt.get();
-                        Optional<ApiKey> keyOpt = apiKeyRepository.findByKeyAndClientAndActiveTrue(apiKey, client);
+                Client client = clientOpt.get();
+                Optional<ApiKey> keyOpt = apiKeyRepository.findByKeyAndClientAndActiveTrue(apiKey, client);
+                
                 if (keyOpt.isPresent()) {
                     ApiKey key = keyOpt.get();
-                            // Acceder a clientId aquí para evitar LazyInitializationException
-                            String safeClientId = client.getClientId();
-                            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                                    safeClientId,
-                                    null,
-                                    Collections.singletonList(new SimpleGrantedAuthority("API_CLIENT")));
+                    
+                    // Verificar si la API Key ha expirado
+                    if (key.getExpiresAt() != null && key.getExpiresAt().isBefore(LocalDateTime.now())) {
+                        // API Key expirada, no autenticar
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+                    
+                    // Parsear permisos desde el string
+                    Set<String> permissions = parsePermissions(key.getPermissions());
+                    
+                    // Crear el principal con toda la información
+                    ApiKeyPrincipal principal = new ApiKeyPrincipal(
+                        key.getId(),
+                        client.getClientId(),
+                        client.getId(),
+                        permissions,
+                        key.getCompanyScope()
+                    );
+                    
+                    // Crear autenticación con la autoridad API_CLIENT
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        principal,
+                        null,
+                        Collections.singletonList(new SimpleGrantedAuthority("API_CLIENT"))
+                    );
+                    
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
@@ -68,5 +91,20 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Parsea el string de permisos a un Set.
+     * Formato esperado: "snapshot:read,snapshot:create,lead:read,lead:update"
+     */
+    private Set<String> parsePermissions(String permissionsStr) {
+        if (permissionsStr == null || permissionsStr.trim().isEmpty()) {
+            return Collections.emptySet();
+        }
+        
+        return Arrays.stream(permissionsStr.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .collect(Collectors.toSet());
     }
 }

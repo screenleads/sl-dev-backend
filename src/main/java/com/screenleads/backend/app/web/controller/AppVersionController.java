@@ -3,6 +3,7 @@ package com.screenleads.backend.app.web.controller;
 
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.AppVersionService;
@@ -21,36 +22,42 @@ public class AppVersionController {
     private final AppVersionService service;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appversion', 'create')")
     @Operation(summary = "Crear versión")
     public AppVersionDTO save(@RequestBody AppVersionDTO dto) {
         return service.save(dto);
     }
 
     @GetMapping
+    @PreAuthorize("@perm.can('appversion', 'read')")
     @Operation(summary = "Listar versiones")
     public List<AppVersionDTO> findAll() {
         return service.findAll();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@perm.can('appversion', 'read')")
     @Operation(summary = "Obtener versión por id")
     public AppVersionDTO findById(@PathVariable Long id) {
         return service.findById(id);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appversion', 'delete')")
     @Operation(summary = "Eliminar versión por id")
     public void deleteById(@PathVariable Long id) {
         service.deleteById(id);
     }
 
     @GetMapping("/latest/{platform}")
+    @PreAuthorize("@perm.can('appversion', 'read')")
     @Operation(summary = "Última versión por plataforma")
     public AppVersionDTO getLatestVersion(@PathVariable String platform) {
         return service.getLatestVersion(platform);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appversion', 'update')")
     @Operation(summary = "Actualizar versión por id")
     public AppVersionDTO update(@PathVariable Long id, @RequestBody AppVersionDTO dto) {
         dto.setId(id);

@@ -9,6 +9,8 @@ public class ApiKeyDTO {
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;
     private String permissions;
+    private Long companyScope;
+    private String description;
 
     // Getters y setters
     public Long getId() { return id; }
@@ -23,4 +25,8 @@ public class ApiKeyDTO {
     public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
     public String getPermissions() { return permissions; }
     public void setPermissions(String permissions) { this.permissions = permissions; }
+    public Long getCompanyScope() { return companyScope; }
+    public void setCompanyScope(Long companyScope) { this.companyScope = companyScope; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 }
