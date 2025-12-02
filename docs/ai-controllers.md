@@ -19,6 +19,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.AdviceService;
@@ -40,6 +41,7 @@ public class AdvicesController {
         this.adviceService = adviceService;
     }
 
+    @PreAuthorize("@perm.can('advice', 'read')")
     @GetMapping
     @Operation(summary = "Listar todos los advices")
     public ResponseEntity<List<AdviceDTO>> getAllAdvices() {
@@ -52,6 +54,7 @@ public class AdvicesController {
      * - X-Timezone: IANA TZ (p.ej. "Europe/Madrid")
      * - X-Timezone-Offset: minutos al ESTE de UTC (p.ej. "120")
      */
+    @PreAuthorize("@perm.can('advice', 'read')")
     @GetMapping("/visibles")
     @Operation(
         summary = "Advices visibles ahora",
@@ -70,6 +73,7 @@ public class AdvicesController {
         return ResponseEntity.ok(adviceService.getVisibleAdvicesNow(zone));
     }
 
+    @PreAuthorize("@perm.can('advice', 'read')")
     @GetMapping("/{id}")
     @Operation(summary = "Obtener un advice por id")
     public ResponseEntity<AdviceDTO> getAdviceById(@PathVariable Long id) {
@@ -77,12 +81,14 @@ public class AdvicesController {
         return advice.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@perm.can('advice', 'create')")
     @PostMapping
     @Operation(summary = "Crear un advice")
     public ResponseEntity<AdviceDTO> createAdvice(@RequestBody AdviceDTO adviceDTO) {
         return ResponseEntity.ok(adviceService.saveAdvice(adviceDTO));
     }
 
+    @PreAuthorize("@perm.can('advice', 'update')")
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar un advice")
     public ResponseEntity<AdviceDTO> updateAdvice(@PathVariable Long id, @RequestBody AdviceDTO adviceDTO) {
@@ -91,6 +97,7 @@ public class AdvicesController {
         return ResponseEntity.ok(updatedAdvice);
     }
 
+    @PreAuthorize("@perm.can('advice', 'delete')")
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar un advice")
     public ResponseEntity<Void> deleteAdvice(@PathVariable Long id) {
@@ -122,6 +129,247 @@ public class AdvicesController {
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/web/controller/ApiKeyController.java
+package com.screenleads.backend.app.web.controller;
+
+import com.screenleads.backend.app.application.service.ApiKeyService;
+import com.screenleads.backend.app.domain.model.ApiKey;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api-keys")
+public class ApiKeyController {
+    private final ApiKeyService apiKeyService;
+
+    public ApiKeyController(ApiKeyService apiKeyService) {
+        this.apiKeyService = apiKeyService;
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiKey> createApiKey(@RequestParam Long clientDbId,
+            @RequestParam String permissions,
+            @RequestParam(defaultValue = "365") int daysValid) {
+        ApiKey key = apiKeyService.createApiKeyByDbId(clientDbId, permissions, daysValid);
+        return ResponseEntity.ok(key);
+    }
+
+    @PostMapping("/{id}/activate")
+    public ResponseEntity<Void> activateApiKey(@PathVariable Long id) {
+        apiKeyService.activateApiKey(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/deactivate")
+    public ResponseEntity<Void> deactivateApiKey(@PathVariable Long id) {
+        apiKeyService.deactivateApiKey(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteApiKey(@PathVariable Long id) {
+        apiKeyService.deleteApiKey(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/client/{clientDbId}")
+    public ResponseEntity<List<ApiKey>> getApiKeysByClient(@PathVariable Long clientDbId) {
+        List<ApiKey> keys = apiKeyService.getApiKeysByClientDbId(clientDbId);
+        return ResponseEntity.ok(keys);
+    }
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/web/controller/ApiKeyPermissionTestController.java
+package com.screenleads.backend.app.web.controller;
+
+import com.screenleads.backend.app.application.service.ApiKeyPermissionService;
+import com.screenleads.backend.app.application.security.ApiKeyPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Ejemplo de controlador que demuestra el uso del sistema de permisos de API Keys.
+ * Este controlador puede ser usado para testing y como referencia.
+ */
+@RestController
+@RequestMapping("/api/test-permissions")
+public class ApiKeyPermissionTestController {
+
+    private final ApiKeyPermissionService apiKeyPermissionService;
+
+    public ApiKeyPermissionTestController(ApiKeyPermissionService apiKeyPermissionService) {
+        this.apiKeyPermissionService = apiKeyPermissionService;
+    }
+
+    /**
+     * Endpoint público que muestra información sobre la API Key autenticada.
+     * Útil para debugging y verificación.
+     */
+    @GetMapping("/info")
+    public Map<String, Object> getApiKeyInfo() {
+        Map<String, Object> info = new HashMap<>();
+        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (auth == null || !auth.isAuthenticated()) {
+            info.put("authenticated", false);
+            return info;
+        }
+        
+        info.put("authenticated", true);
+        info.put("principal_type", auth.getPrincipal().getClass().getSimpleName());
+        
+        if (auth.getPrincipal() instanceof ApiKeyPrincipal) {
+            ApiKeyPrincipal principal = (ApiKeyPrincipal) auth.getPrincipal();
+            info.put("client_id", principal.getClientId());
+            info.put("permissions", principal.getPermissions());
+            info.put("company_scope", principal.getCompanyScope());
+            info.put("has_global_access", principal.hasGlobalAccess());
+            info.put("has_restricted_access", principal.hasRestrictedAccess());
+            
+            // Ejemplos de verificación de permisos
+            Map<String, Boolean> permissionChecks = new HashMap<>();
+            permissionChecks.put("snapshot:read", principal.hasPermission("snapshot", "read"));
+            permissionChecks.put("snapshot:create", principal.hasPermission("snapshot", "create"));
+            permissionChecks.put("snapshot:update", principal.hasPermission("snapshot", "update"));
+            permissionChecks.put("snapshot:delete", principal.hasPermission("snapshot", "delete"));
+            permissionChecks.put("lead:read", principal.hasPermission("lead", "read"));
+            permissionChecks.put("lead:create", principal.hasPermission("lead", "create"));
+            
+            info.put("permission_checks", permissionChecks);
+        }
+        
+        return info;
+    }
+
+    /**
+     * Endpoint que requiere permiso de lectura sobre snapshots.
+     */
+    @PreAuthorize("@apiKeyPerm.can('snapshot', 'read')")
+    @GetMapping("/snapshot/read")
+    public Map<String, Object> testSnapshotRead() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("action", "snapshot:read");
+        result.put("success", true);
+        result.put("message", "You have permission to read snapshots");
+        result.put("company_scope", apiKeyPermissionService.getCompanyScope());
+        return result;
+    }
+
+    /**
+     * Endpoint que requiere permiso de creación sobre snapshots.
+     */
+    @PreAuthorize("@apiKeyPerm.can('snapshot', 'create')")
+    @PostMapping("/snapshot/create")
+    public Map<String, Object> testSnapshotCreate() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("action", "snapshot:create");
+        result.put("success", true);
+        result.put("message", "You have permission to create snapshots");
+        result.put("company_scope", apiKeyPermissionService.getCompanyScope());
+        return result;
+    }
+
+    /**
+     * Endpoint que requiere permiso de actualización sobre leads.
+     */
+    @PreAuthorize("@apiKeyPerm.can('lead', 'update')")
+    @PutMapping("/lead/update")
+    public Map<String, Object> testLeadUpdate() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("action", "lead:update");
+        result.put("success", true);
+        result.put("message", "You have permission to update leads");
+        result.put("company_scope", apiKeyPermissionService.getCompanyScope());
+        return result;
+    }
+
+    /**
+     * Endpoint que requiere permiso de eliminación sobre leads.
+     */
+    @PreAuthorize("@apiKeyPerm.can('lead', 'delete')")
+    @DeleteMapping("/lead/delete")
+    public Map<String, Object> testLeadDelete() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("action", "lead:delete");
+        result.put("success", true);
+        result.put("message", "You have permission to delete leads");
+        result.put("company_scope", apiKeyPermissionService.getCompanyScope());
+        return result;
+    }
+
+    /**
+     * Endpoint que requiere acceso global (sin restricción de compañía).
+     */
+    @GetMapping("/global-access-required")
+    public Map<String, Object> testGlobalAccess() {
+        Map<String, Object> result = new HashMap<>();
+        
+        if (!apiKeyPermissionService.hasGlobalAccess()) {
+            result.put("success", false);
+            result.put("message", "This endpoint requires global access");
+            result.put("your_scope", apiKeyPermissionService.getCompanyScope());
+            return result;
+        }
+        
+        result.put("success", true);
+        result.put("message", "You have global access");
+        return result;
+    }
+
+    /**
+     * Endpoint que verifica si puede acceder a una compañía específica.
+     */
+    @GetMapping("/can-access-company/{companyId}")
+    public Map<String, Object> testCompanyAccess(@PathVariable Long companyId) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("company_id_requested", companyId);
+        result.put("your_company_scope", apiKeyPermissionService.getCompanyScope());
+        result.put("has_global_access", apiKeyPermissionService.hasGlobalAccess());
+        
+        boolean canAccess = apiKeyPermissionService.canAccessCompany(companyId);
+        result.put("can_access", canAccess);
+        
+        if (canAccess) {
+            result.put("message", "You can access data from company " + companyId);
+        } else {
+            result.put("message", "You cannot access data from company " + companyId);
+        }
+        
+        return result;
+    }
+
+    /**
+     * Endpoint de prueba múltiple que verifica varios permisos a la vez.
+     */
+    @GetMapping("/check-multiple")
+    public Map<String, Object> checkMultiplePermissions(
+            @RequestParam(required = false, defaultValue = "snapshot") String resource,
+            @RequestParam(required = false, defaultValue = "read") String action) {
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("resource", resource);
+        result.put("action", action);
+        result.put("has_permission", apiKeyPermissionService.can(resource, action));
+        result.put("company_scope", apiKeyPermissionService.getCompanyScope());
+        result.put("has_global_access", apiKeyPermissionService.hasGlobalAccess());
+        
+        return result;
+    }
+}
+
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/web/controller/AppEntityController.java
 package com.screenleads.backend.app.web.controller;
 
@@ -129,6 +377,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -150,6 +399,7 @@ public class AppEntityController {
 
     // ---- LISTAR ----
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'read')")
     public ResponseEntity<List<AppEntityDTO>> list(
             @RequestParam(name = "withCount", defaultValue = "false") boolean withCount) {
         return ResponseEntity.ok(service.findAll(withCount));
@@ -157,6 +407,7 @@ public class AppEntityController {
 
     // ---- OBTENER POR ID ----
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'read')")
     public ResponseEntity<AppEntityDTO> getById(
             @PathVariable Long id,
             @RequestParam(name = "withCount", defaultValue = "false") boolean withCount) {
@@ -165,6 +416,7 @@ public class AppEntityController {
 
     // ---- OBTENER POR RESOURCE ----
     @GetMapping("/by-resource/{resource}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'read')")
     public ResponseEntity<AppEntityDTO> getByResource(
             @PathVariable String resource,
             @RequestParam(name = "withCount", defaultValue = "false") boolean withCount) {
@@ -173,12 +425,14 @@ public class AppEntityController {
 
     // ---- UPSERT (CREAR/ACTUALIZAR) ----
     @PutMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'update')")
     public ResponseEntity<AppEntityDTO> upsert(@RequestBody AppEntityDTO dto) {
         AppEntityDTO saved = service.upsert(dto);
         return new ResponseEntity<>(saved, HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'update')")
     public ResponseEntity<AppEntityDTO> update(@PathVariable Long id, @RequestBody AppEntityDTO dto) {
         if (dto.id() != null && !dto.id().equals(id)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Path id y body id no coinciden");
@@ -189,6 +443,7 @@ public class AppEntityController {
 
     // ---- BORRAR ----
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'delete')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         service.deleteById(id);
@@ -196,6 +451,7 @@ public class AppEntityController {
 
     // ---- REORDENAR ENTIDADES (drag & drop) ----
     @PutMapping("/reorder")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'update')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void reorderEntities(@RequestBody ReorderRequest request) {
         service.reorderEntities(request.ids());
@@ -203,6 +459,7 @@ public class AppEntityController {
 
     // ---- REORDENAR ATRIBUTOS DE UNA ENTIDAD (drag & drop) ----
     @PutMapping("/{id}/attributes/reorder")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'update')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void reorderAttributes(@PathVariable Long id, @RequestBody ReorderRequest request) {
         service.reorderAttributes(id, request.ids());
@@ -218,6 +475,7 @@ package com.screenleads.backend.app.web.controller;
 
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.AppVersionService;
@@ -236,40 +494,204 @@ public class AppVersionController {
     private final AppVersionService service;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appversion', 'create')")
     @Operation(summary = "Crear versión")
     public AppVersionDTO save(@RequestBody AppVersionDTO dto) {
         return service.save(dto);
     }
 
     @GetMapping
+    @PreAuthorize("@perm.can('appversion', 'read')")
     @Operation(summary = "Listar versiones")
     public List<AppVersionDTO> findAll() {
         return service.findAll();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@perm.can('appversion', 'read')")
     @Operation(summary = "Obtener versión por id")
     public AppVersionDTO findById(@PathVariable Long id) {
         return service.findById(id);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appversion', 'delete')")
     @Operation(summary = "Eliminar versión por id")
     public void deleteById(@PathVariable Long id) {
         service.deleteById(id);
     }
 
     @GetMapping("/latest/{platform}")
+    @PreAuthorize("@perm.can('appversion', 'read')")
     @Operation(summary = "Última versión por plataforma")
     public AppVersionDTO getLatestVersion(@PathVariable String platform) {
         return service.getLatestVersion(platform);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appversion', 'update')")
     @Operation(summary = "Actualizar versión por id")
     public AppVersionDTO update(@PathVariable Long id, @RequestBody AppVersionDTO dto) {
         dto.setId(id);
         return service.save(dto);
+    }
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/web/controller/BillingController.java
+package com.screenleads.backend.app.web.controller;
+
+import com.screenleads.backend.app.application.service.StripeBillingService;
+import com.screenleads.backend.app.domain.repositories.CompanyRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/billing")
+@RequiredArgsConstructor
+public class BillingController {
+    private final StripeBillingService billing;
+    private final CompanyRepository companies;
+
+    @PostMapping("/checkout-session/{companyId}")
+    @PreAuthorize("hasRole('admin') or hasRole('company_admin')")
+    public Map<String, String> createCheckout(@PathVariable Long companyId) throws Exception {
+        var company = companies.findById(companyId).orElseThrow();
+        String sessionId = billing.createCheckoutSession(company);
+        return Map.of("id", sessionId);
+    }
+
+    @PostMapping("/portal-session/{companyId}")
+    @PreAuthorize("hasRole('admin') or hasRole('company_admin')")
+    public Map<String, String> portal(@PathVariable Long companyId) throws Exception {
+        var company = companies.findById(companyId).orElseThrow();
+        String url = billing.createBillingPortalSession(company);
+        return Map.of("url", url);
+    }
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/web/controller/ClientController.java
+package com.screenleads.backend.app.web.controller;
+
+import com.screenleads.backend.app.domain.model.Client;
+import com.screenleads.backend.app.domain.repositories.ClientRepository;
+import com.screenleads.backend.app.application.service.ApiKeyService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import org.springframework.http.HttpStatus;
+
+@RestController
+@RequestMapping("/clients")
+public class ClientController {
+    private com.screenleads.backend.app.web.dto.ClientDTO toDTO(Client client) {
+        com.screenleads.backend.app.web.dto.ClientDTO dto = new com.screenleads.backend.app.web.dto.ClientDTO();
+        dto.setId(client.getId());
+        dto.setClientId(client.getClientId());
+        dto.setName(client.getName());
+        dto.setActive(client.isActive());
+        if (client.getApiKeys() != null) {
+            java.util.List<com.screenleads.backend.app.web.dto.ApiKeyDTO> apiKeyDTOs = client.getApiKeys().stream()
+                    .map(apiKey -> {
+                        com.screenleads.backend.app.web.dto.ApiKeyDTO akDto = new com.screenleads.backend.app.web.dto.ApiKeyDTO();
+                        akDto.setId(apiKey.getId());
+                        akDto.setKey(apiKey.getKey());
+                        akDto.setActive(apiKey.isActive());
+                        akDto.setCreatedAt(apiKey.getCreatedAt());
+                        akDto.setExpiresAt(apiKey.getExpiresAt());
+                        akDto.setPermissions(apiKey.getPermissions());
+                        return akDto;
+                    }).toList();
+            dto.setApiKeys(apiKeyDTOs);
+        }
+        return dto;
+    }
+
+    private ResponseEntity<Void> activate(Client client) {
+        client.setActive(true);
+        clientRepository.save(client);
+        return ResponseEntity.ok().build();
+    }
+
+    private ResponseEntity<Void> deactivate(Client client) {
+        client.setActive(false);
+        clientRepository.save(client);
+        return ResponseEntity.ok().build();
+    }
+
+    private final ClientRepository clientRepository;
+
+    private final ApiKeyService apiKeyService;
+
+    public ClientController(ClientRepository clientRepository, ApiKeyService apiKeyService) {
+        this.clientRepository = clientRepository;
+        this.apiKeyService = apiKeyService;
+    }
+
+    @GetMapping
+    public ResponseEntity<java.util.List<com.screenleads.backend.app.web.dto.ClientDTO>> listClients() {
+        java.util.List<Client> clients = clientRepository.findAll();
+        java.util.List<com.screenleads.backend.app.web.dto.ClientDTO> dtos = clients.stream().map(this::toDTO).toList();
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Client> getClient(@PathVariable Long id) {
+        return clientRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<Client> createClient(@RequestBody Client client) {
+        // Autogenerar clientId alfanumérico
+        client.setClientId(java.util.UUID.randomUUID().toString());
+        client.setActive(true);
+        Client saved = clientRepository.save(client);
+        // Crear la primera API Key con permisos básicos de lectura
+        String defaultPermissions = "device:read,customer:read,promotion:read,advice:read,media:read";
+        apiKeyService.createApiKeyByDbId(saved.getId(), defaultPermissions, 365);
+        return ResponseEntity.ok(saved);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Client> updateClient(@PathVariable Long id, @RequestBody Client client) {
+        return clientRepository.findById(id)
+                .map(existing -> {
+                    existing.setName(client.getName());
+                    existing.setClientId(client.getClientId());
+                    existing.setActive(client.isActive());
+                    return ResponseEntity.ok(clientRepository.save(existing));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
+        clientRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/activate")
+    public ResponseEntity<Void> activateClient(@PathVariable Long id) {
+        return clientRepository.findById(id)
+                .map(this::activate)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{id}/deactivate")
+    public ResponseEntity<Void> deactivateClient(@PathVariable Long id) {
+        return clientRepository.findById(id)
+                .map(this::deactivate)
+                .orElse(ResponseEntity.notFound().build());
     }
 }
 
@@ -305,12 +727,14 @@ public class CompanyController {
         this.companiesService = companiesService;
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'read')")
     @GetMapping
     @Operation(summary = "Listar compañías")
     public ResponseEntity<List<CompanyDTO>> getAllCompanies() {
         return ResponseEntity.ok(companiesService.getAllCompanies());
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'read')")
     @GetMapping("/{id}")
     @Operation(summary = "Obtener compañía por id")
     public ResponseEntity<CompanyDTO> getCompanyById(@PathVariable Long id) {
@@ -318,27 +742,112 @@ public class CompanyController {
         return company.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'create')")
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @Operation(summary = "Crear compañía", description = "Solo ROLE_ADMIN")
+    @Operation(summary = "Crear compañía", description = "ROLE_ADMIN o permiso company:create")
     public ResponseEntity<CompanyDTO> createCompany(@RequestBody CompanyDTO companyDTO) {
         return ResponseEntity.ok(companiesService.saveCompany(companyDTO));
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'update')")
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @Operation(summary = "Actualizar compañía", description = "Solo ROLE_ADMIN")
+    @Operation(summary = "Actualizar compañía", description = "ROLE_ADMIN o permiso company:update")
     public ResponseEntity<CompanyDTO> updateCompany(@PathVariable Long id, @RequestBody CompanyDTO companyDTO) {
         CompanyDTO updatedCompany = companiesService.updateCompany(id, companyDTO);
         return ResponseEntity.ok(updatedCompany);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'delete')")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @Operation(summary = "Eliminar compañía", description = "Solo ROLE_ADMIN")
+    @Operation(summary = "Eliminar compañía", description = "ROLE_ADMIN o permiso company:delete")
     public ResponseEntity<Void> deleteCompany(@PathVariable Long id) {
         companiesService.deleteCompany(id);
         return ResponseEntity.noContent().build();
+    }
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/web/controller/CompanyTokenController.java
+package com.screenleads.backend.app.web.controller;
+
+import com.screenleads.backend.app.domain.model.CompanyToken;
+import com.screenleads.backend.app.application.service.CompanyTokenService;
+import com.screenleads.backend.app.web.dto.CompanyTokenDTO;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/company-tokens")
+public class CompanyTokenController {
+    @PutMapping("/{id}")
+    public ResponseEntity<CompanyTokenDTO> updateToken(@PathVariable Long id, @RequestBody CompanyTokenDTO dto) {
+        Optional<CompanyToken> updated = companyTokenService.updateToken(id, dto);
+        return updated.map(t -> ResponseEntity.ok(toDto(t))).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CompanyTokenDTO> getTokenById(@PathVariable Long id) {
+        Optional<CompanyToken> token = companyTokenService.getTokenById(id);
+        return token.map(t -> ResponseEntity.ok(toDto(t))).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    private final CompanyTokenService companyTokenService;
+
+    public CompanyTokenController(CompanyTokenService companyTokenService) {
+        this.companyTokenService = companyTokenService;
+    }
+
+    @PostMapping
+    public ResponseEntity<CompanyTokenDTO> createToken(@AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody(required = false) CompanyTokenDTO dto) {
+        CompanyToken token = companyTokenService.createTokenForUser(userDetails.getUsername(),
+                dto != null ? dto.getDescripcion() : null);
+        return ResponseEntity.ok(toDto(token));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<CompanyTokenDTO>> getTokens(@AuthenticationPrincipal UserDetails userDetails) {
+        List<CompanyToken> tokens = companyTokenService.getTokensForAuthenticatedUser(userDetails.getUsername());
+        List<CompanyTokenDTO> dtos = tokens.stream().map(this::toDto).toList();
+        return ResponseEntity.ok(dtos);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteToken(@PathVariable Long id) {
+        companyTokenService.deleteToken(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{token}/renew")
+    public ResponseEntity<CompanyTokenDTO> renewToken(@PathVariable String token) {
+        Optional<CompanyToken> renewed = companyTokenService.renewToken(token);
+        return renewed.map(t -> ResponseEntity.ok(toDto(t))).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{token}/description")
+    public ResponseEntity<CompanyTokenDTO> updateDescription(@PathVariable String token,
+            @RequestBody CompanyTokenDTO dto) {
+        Optional<CompanyToken> updated = companyTokenService.updateDescription(token, dto.getDescripcion());
+        return updated.map(t -> ResponseEntity.ok(toDto(t))).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    private CompanyTokenDTO toDto(CompanyToken token) {
+        return CompanyTokenDTO.builder()
+                .id(token.getId())
+                .companyId(token.getCompanyId())
+                .token(token.getToken())
+                .role(token.getRole())
+                .createdAt(token.getCreatedAt())
+                .expiresAt(token.getExpiresAt())
+                .descripcion(token.getDescripcion())
+                .build();
     }
 }
 
@@ -351,6 +860,7 @@ package com.screenleads.backend.app.web.controller;
 import java.time.Instant;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.CouponService;
@@ -373,6 +883,7 @@ public class CouponController {
 
     // === GET /coupons/{code} -> validar ===
     @GetMapping("/{code}")
+    @PreAuthorize("@perm.can('coupon', 'read')")
     @Operation(summary = "Validar cupón por código",
                description = "Devuelve el estado y si es válido en este momento")
     public ResponseEntity<CouponValidationResponse> validate(@PathVariable String code) {
@@ -387,6 +898,7 @@ public class CouponController {
 
     // === POST /coupons/{code}/redeem -> canjear ===
     @PostMapping("/{code}/redeem")
+    @PreAuthorize("@perm.can('coupon', 'update')")
     @Operation(summary = "Canjear cupón por código",
                description = "Marca el cupón como REDEEMED si es válido")
     public ResponseEntity<CouponValidationResponse> redeem(@PathVariable String code) {
@@ -396,6 +908,7 @@ public class CouponController {
 
     // === POST /coupons/{code}/expire -> caducar manualmente ===
     @PostMapping("/{code}/expire")
+    @PreAuthorize("@perm.can('coupon', 'update')")
     @Operation(summary = "Caducar cupón por código",
                description = "Marca el cupón como EXPIRED si aún no se ha canjeado")
     public ResponseEntity<CouponValidationResponse> expire(@PathVariable String code) {
@@ -405,6 +918,7 @@ public class CouponController {
 
     // === POST /coupons/issue?promotionId=&customerId= -> emitir ===
     @PostMapping("/issue")
+    @PreAuthorize("@perm.can('coupon', 'create')")
     @Operation(summary = "Emitir cupón (crear lead histórico)",
                description = "Genera un nuevo cupón interno para un cliente y una promoción, respetando límites")
     public ResponseEntity<CouponValidationResponse> issue(
@@ -448,6 +962,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.CustomerService;
@@ -469,6 +984,7 @@ public class CustomerController {
     private final CustomerService customerService;
 
     // ===== Listar por company (opcional) + búsqueda parcial en identifier =====
+    @PreAuthorize("@perm.can('customer', 'read')")
     @GetMapping
     @Operation(summary = "Listar clientes", description = "Filtra por companyId y búsqueda parcial en identifier")
     public ResponseEntity<List<CustomerResponse>> list(
@@ -480,6 +996,7 @@ public class CustomerController {
     }
 
     // ===== Obtener por id =====
+    @PreAuthorize("@perm.can('customer', 'read')")
     @GetMapping("/{id}")
     @Operation(summary = "Obtener cliente por id")
     public ResponseEntity<CustomerResponse> get(@PathVariable Long id) {
@@ -488,6 +1005,7 @@ public class CustomerController {
     }
 
     // ===== Crear =====
+    @PreAuthorize("@perm.can('customer', 'create')")
     @PostMapping
     @Operation(summary = "Crear cliente", description = "Crea un cliente normalizando el identificador y aplicando unicidad por empresa")
     public ResponseEntity<CustomerResponse> create(@RequestBody CreateRequest req) {
@@ -503,6 +1021,7 @@ public class CustomerController {
     }
 
     // ===== Actualizar =====
+    @PreAuthorize("@perm.can('customer', 'update')")
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar cliente")
     public ResponseEntity<CustomerResponse> update(@PathVariable Long id, @RequestBody UpdateRequest req) {
@@ -516,6 +1035,7 @@ public class CustomerController {
     }
 
     // ===== Borrar =====
+    @PreAuthorize("@perm.can('customer', 'delete')")
     @DeleteMapping("/{id}")
     @Operation(summary = "Borrar cliente")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
@@ -587,6 +1107,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.DeviceTypeService;
@@ -608,6 +1129,7 @@ public class DeviceTypesController {
 
     @CrossOrigin
     @GetMapping("/devices/types")
+    @PreAuthorize("@perm.can('devicetype', 'read')")
     @Operation(summary = "Listar tipos de dispositivo")
     public ResponseEntity<List<DeviceTypeDTO>> getAllDeviceTypes() {
         return ResponseEntity.ok(deviceTypeService.getAllDeviceTypes());
@@ -615,6 +1137,7 @@ public class DeviceTypesController {
 
     @CrossOrigin
     @GetMapping("/devices/types/{id}")
+    @PreAuthorize("@perm.can('devicetype', 'read')")
     @Operation(summary = "Obtener tipo de dispositivo por id")
     public ResponseEntity<DeviceTypeDTO> getDeviceTypeById(@PathVariable Long id) {
         Optional<DeviceTypeDTO> device = deviceTypeService.getDeviceTypeById(id);
@@ -623,6 +1146,7 @@ public class DeviceTypesController {
 
     @CrossOrigin
     @PostMapping("/devices/types")
+    @PreAuthorize("@perm.can('devicetype', 'create')")
     @Operation(summary = "Crear tipo de dispositivo")
     public ResponseEntity<DeviceTypeDTO> createDeviceType(@RequestBody DeviceTypeDTO deviceDTO) {
         return ResponseEntity.ok(deviceTypeService.saveDeviceType(deviceDTO));
@@ -630,6 +1154,7 @@ public class DeviceTypesController {
 
     @CrossOrigin
     @PutMapping("/devices/types/{id}")
+    @PreAuthorize("@perm.can('devicetype', 'update')")
     @Operation(summary = "Actualizar tipo de dispositivo")
     public ResponseEntity<DeviceTypeDTO> updateDeviceType(@PathVariable Long id, @RequestBody DeviceTypeDTO deviceDTO) {
         DeviceTypeDTO updatedDevice = deviceTypeService.updateDeviceType(id, deviceDTO);
@@ -638,6 +1163,7 @@ public class DeviceTypesController {
 
     @CrossOrigin
     @DeleteMapping("/devices/types/{id}")
+    @PreAuthorize("@perm.can('devicetype', 'delete')")
     @Operation(summary = "Eliminar tipo de dispositivo")
     public ResponseEntity<String> deleteDeviceType(@PathVariable Long id) {
         deviceTypeService.deleteDeviceType(id);
@@ -657,6 +1183,7 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.DeviceService;
@@ -682,12 +1209,14 @@ public class DevicesController {
     // CRUD básico
     // -------------------------------------------------------------------------
 
+    @PreAuthorize("@perm.can('device', 'read')")
     @GetMapping
     @Operation(summary = "Listar dispositivos")
     public ResponseEntity<List<DeviceDTO>> getAllDevices() {
         return ResponseEntity.ok(deviceService.getAllDevices());
     }
 
+    @PreAuthorize("@perm.can('device', 'read')")
     @GetMapping("/{id}")
     @Operation(summary = "Obtener dispositivo por id")
     public ResponseEntity<DeviceDTO> getDeviceById(@PathVariable Long id) {
@@ -695,6 +1224,7 @@ public class DevicesController {
         return device.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@perm.can('device', 'create')")
     @PostMapping
     @Operation(summary = "Crear dispositivo")
     public ResponseEntity<DeviceDTO> createDevice(@RequestBody DeviceDTO deviceDTO) {
@@ -702,6 +1232,7 @@ public class DevicesController {
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
+    @PreAuthorize("@perm.can('device', 'update')")
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar dispositivo")
     public ResponseEntity<DeviceDTO> updateDevice(@PathVariable Long id, @RequestBody DeviceDTO deviceDTO) {
@@ -709,6 +1240,7 @@ public class DevicesController {
         return ResponseEntity.ok(updatedDevice);
     }
 
+    @PreAuthorize("@perm.can('device', 'delete')")
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar dispositivo")
     public ResponseEntity<Void> deleteDevice(@PathVariable Long id) {
@@ -720,6 +1252,7 @@ public class DevicesController {
     // Búsqueda / existencia por UUID (para que el frontend se "autocure")
     // -------------------------------------------------------------------------
 
+    @PreAuthorize("@perm.can('device', 'read')")
     @GetMapping("/uuid/{uuid}")
     @Operation(summary = "Obtener dispositivo por UUID")
     public ResponseEntity<DeviceDTO> getDeviceByUuid(@PathVariable String uuid) {
@@ -784,6 +1317,7 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
@@ -806,6 +1340,7 @@ public class MediaController {
 
     // ---------------- LIST/CRUD ----------------
 
+    @PreAuthorize("@perm.can('media', 'read')")
     @CrossOrigin
     @GetMapping("/medias")
     public ResponseEntity<List<MediaDTO>> getAllMedias() {
@@ -814,6 +1349,7 @@ public class MediaController {
 
     // ---------------- UPLOAD ----------------
 
+    @PreAuthorize("@perm.can('media', 'create')")
     @CrossOrigin
     @PostMapping(
         value = "/medias/upload",
@@ -1008,6 +1544,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -1031,12 +1568,14 @@ public class MediaTypesController {
 
     @CrossOrigin
     @GetMapping("/medias/types")
+    @PreAuthorize("@perm.can('mediatype', 'read')")
     public ResponseEntity<List<MediaTypeDTO>> getAllMediaTypes() {
         return ResponseEntity.ok(deviceTypeService.getAllMediaTypes());
     }
 
     @CrossOrigin
     @GetMapping("/medias/types/{id}")
+    @PreAuthorize("@perm.can('mediatype', 'read')")
     public ResponseEntity<MediaTypeDTO> getMediaTypeById(@PathVariable Long id) {
         Optional<MediaTypeDTO> device = deviceTypeService.getMediaTypeById(id);
         return device.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
@@ -1044,12 +1583,14 @@ public class MediaTypesController {
 
     @CrossOrigin
     @PostMapping("/medias/types")
+    @PreAuthorize("@perm.can('mediatype', 'create')")
     public ResponseEntity<MediaTypeDTO> createMediaType(@RequestBody MediaTypeDTO deviceDTO) {
         return ResponseEntity.ok(deviceTypeService.saveMediaType(deviceDTO));
     }
 
     @CrossOrigin
     @PutMapping("/medias/types/{id}")
+    @PreAuthorize("@perm.can('mediatype', 'update')")
     public ResponseEntity<MediaTypeDTO> updateMediaType(@PathVariable Long id, @RequestBody MediaTypeDTO deviceDTO) {
 
         MediaTypeDTO updatedDevice = deviceTypeService.updateMediaType(id, deviceDTO);
@@ -1059,6 +1600,7 @@ public class MediaTypesController {
 
     @CrossOrigin
     @DeleteMapping("/medias/types/{id}")
+    @PreAuthorize("@perm.can('mediatype', 'delete')")
     public ResponseEntity<String> deleteMediaType(@PathVariable Long id) {
         deviceTypeService.deleteMediaType(id);
         return ResponseEntity.ok("Media Type (" + id + ") deleted succesfully");
@@ -1074,6 +1616,7 @@ import com.screenleads.backend.app.application.service.PromotionService;
 import com.screenleads.backend.app.web.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -1090,43 +1633,51 @@ public class PromotionsController {
     private PromotionService promotionService;
 
     // ===== CRUD =====
+    @PreAuthorize("@perm.can('promotion', 'read')")
     @GetMapping
     public List<PromotionDTO> getAllPromotions() {
         return promotionService.getAllPromotions();
     }
 
+    @PreAuthorize("@perm.can('promotion', 'read')")
     @GetMapping("/{id}")
     public PromotionDTO getPromotionById(@PathVariable Long id) {
         return promotionService.getPromotionById(id);
     }
 
+    @PreAuthorize("@perm.can('promotion', 'create')")
     @PostMapping
     public PromotionDTO createPromotion(@RequestBody PromotionDTO promotionDTO) {
         return promotionService.savePromotion(promotionDTO);
     }
 
+    @PreAuthorize("@perm.can('promotion', 'update')")
     @PutMapping("/{id}")
     public PromotionDTO updatePromotion(@PathVariable Long id, @RequestBody PromotionDTO promotionDTO) {
         return promotionService.updatePromotion(id, promotionDTO);
     }
 
+    @PreAuthorize("@perm.can('promotion', 'delete')")
     @DeleteMapping("/{id}")
     public void deletePromotion(@PathVariable Long id) {
         promotionService.deletePromotion(id);
     }
 
     // ===== Leads =====
+    @PreAuthorize("@perm.can('lead', 'create')")
     @PostMapping("/{id}/leads")
     public PromotionLeadDTO registerLead(@PathVariable Long id, @RequestBody PromotionLeadDTO leadDTO) {
         return promotionService.registerLead(id, leadDTO);
     }
 
+    @PreAuthorize("@perm.can('lead', 'read')")
     @GetMapping("/{id}/leads")
     public List<PromotionLeadDTO> listLeads(@PathVariable Long id) {
         return promotionService.listLeads(id);
     }
 
     // ===== Lead de prueba =====
+    @PreAuthorize("@perm.can('lead', 'create')")
     @PostMapping("/{id}/leads/test")
     public PromotionLeadDTO createTestLead(
             @PathVariable Long id,
@@ -1135,6 +1686,7 @@ public class PromotionsController {
     }
 
     // ===== Export CSV (Streaming) =====
+    @PreAuthorize("@perm.can('lead', 'read')")
     @GetMapping(value = "/{id}/leads/export.csv", produces = "text/csv")
     public ResponseEntity<StreamingResponseBody> exportLeadsCsv(
             @PathVariable Long id,

@@ -90,6 +90,26 @@ public class OpenApiConfig {
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/infraestructure/config/StripeConfig.java
+package com.screenleads.backend.app.infraestructure.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Value;
+
+@Configuration
+public class StripeConfig {
+    @Value("${stripe.secret}")
+    private String secret;
+
+    @Bean
+    public com.stripe.StripeClient stripeClient() {
+        return new com.stripe.StripeClient(secret);
+    }
+}
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/infraestructure/config/SwaggerWhitelist.java
 package com.screenleads.backend.app.infraestructure.config;
 
@@ -179,7 +199,7 @@ server.servlet.encoding.charset=UTF-8
 server.servlet.encoding.enabled=true
 server.servlet.encoding.force=true
 
-application.security.jwt.secret-key=KpG2vh6T9X5uN0rA3LqD7zW1mZcB8VtY
+application.security.jwt.secret-key=U0hKQkNGR0hJSktMTU5PUFFSU1RVVldYWVo3ODkwQUJDREVGRw==
 
 logging.level.org.springframework.security=DEBUG
 
@@ -207,7 +227,7 @@ server.servlet.encoding.charset=UTF-8
 server.servlet.encoding.enabled=true
 server.servlet.encoding.force=true
 
-application.security.jwt.secret-key=KpG2vh6T9X5uN0rA3LqD7zW1mZcB8VtY
+application.security.jwt.secret-key=U0hKQkNGR0hJSktMTU5PUFFSU1RVVldYWVo3ODkwQUJDREVGRw==
 
 
 # --- MOSTRAR ERROR EN RESPUESTA (temporal para depurar) ---
@@ -253,23 +273,26 @@ server.servlet.encoding.charset=UTF-8
 server.servlet.encoding.enabled=true
 server.servlet.encoding.force=true
 
-application.security.jwt.secret-key=KpG2vh6T9X5uN0rA3LqD7zW1mZcB8VtY
+application.security.jwt.secret-key=U0hKQkNGR0hJSktMTU5PUFFSU1RVVldYWVo3ODkwQUJDREVGRw==
 
 logging.level.org.springframework.security=DEBUG
 ```
 
 ```properties
 // src/main/resources/application.properties
+stripe.secret=test_secret
+app.frontendUrl=http://localhost:4200
+stripe.priceId=10
 spring.application.name=app
 server.port=3000
 # PostgreSQL database configuration
-# spring.datasource.url=jdbc:postgresql://localhost:5432/sl_db
-# spring.datasource.username=postgres
-# spring.datasource.password=52866617jJ@
-spring.datasource.url=${JDBC_DATABASE_URL}
-spring.datasource.username=${JDBC_DATABASE_USERNAME}
-spring.datasource.password=${JDBC_DATABASE_PASSWORD}
-spring.datasource.driver-class-name=org.postgresql.Driver
+spring.datasource.url=jdbc:postgresql://localhost:5432/sl_db
+spring.datasource.username=postgres
+spring.datasource.password=52866617jJ@
+# spring.datasource.url=${JDBC_DATABASE_URL}
+# spring.datasource.username=${JDBC_DATABASE_USERNAME}
+# spring.datasource.password=${JDBC_DATABASE_PASSWORD}
+# spring.datasource.driver-class-name=org.postgresql.Driver
 
 # JPA configurations
 spring.jpa.hibernate.ddl-auto=update
@@ -277,12 +300,14 @@ spring.jpa.show-sql=true
 
 spring.servlet.multipart.max-file-size=200MB
 spring.servlet.multipart.max-request-size=200MB
+stripe.webhookSecret=test_webhook_secret
+GOOGLE_CREDENTIALS_BASE64=dummy_base64_value
 
 server.servlet.encoding.charset=UTF-8
 server.servlet.encoding.enabled=true
 server.servlet.encoding.force=true
 
-application.security.jwt.secret-key=KpG2vh6T9X5uN0rA3LqD7zW1mZcB8VtY
+application.security.jwt.secret-key=U0hKQkNGR0hJSktMTU5PUFFSU1RVVldYWVo3ODkwQUJDREVGRw==
 
 logging.level.org.springframework.security=DEBUG
 # ==== CORS (separados por coma) ====

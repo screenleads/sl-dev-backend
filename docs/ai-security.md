@@ -7,6 +7,286 @@
 ---
 
 ```java
+// src/main/java/com/screenleads/backend/app/application/security/ApiKeyAuthenticationFilter.java
+package com.screenleads.backend.app.application.security;
+
+import com.screenleads.backend.app.domain.model.ApiKey;
+import com.screenleads.backend.app.domain.repositories.ApiKeyRepository;
+import com.screenleads.backend.app.domain.model.Client;
+import com.screenleads.backend.app.domain.repositories.ClientRepository;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Optional;
+
+@Component
+public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
+
+    private final ApiKeyRepository apiKeyRepository;
+    private final ClientRepository clientRepository;
+
+    public ApiKeyAuthenticationFilter(ApiKeyRepository apiKeyRepository, ClientRepository clientRepository) {
+        this.apiKeyRepository = apiKeyRepository;
+        this.clientRepository = clientRepository;
+    }
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
+
+        // ✅ Si ya hay autenticación (por ejemplo JWT), no machacamos
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String apiKey = request.getHeader("X-API-KEY");
+        String clientId = request.getHeader("client_id");
+        if (clientId == null || clientId.isEmpty()) {
+            clientId = request.getHeader("client-id");
+        }
+
+        if (apiKey != null && clientId != null) {
+            Optional<Client> clientOpt = clientRepository.findByClientIdAndActiveTrue(clientId);
+            if (clientOpt.isPresent()) {
+                Client client = clientOpt.get();
+                Optional<ApiKey> keyOpt = apiKeyRepository.findByKeyAndClientAndActiveTrue(apiKey, client);
+                if (keyOpt.isPresent()) {
+                    ApiKey key = keyOpt.get();
+                    // Acceder a clientId aquí para evitar LazyInitializationException
+                    String safeClientId = client.getClientId();
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            safeClientId,
+                            null,
+                            Collections.singletonList(new SimpleGrantedAuthority("API_CLIENT")));
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/application/security/ApiKeyCompanyFilterEnabler.java
+package com.screenleads.backend.app.application.security;
+
+import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Session;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+/**
+ * Filtro que habilita automáticamente el filtro de Hibernate para restringir
+ * las consultas a una compañía específica cuando una API Key con alcance
+ * restringido está autenticada.
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class ApiKeyCompanyFilterEnabler extends OncePerRequestFilter {
+
+    private final EntityManager entityManager;
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
+
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            
+            if (auth != null && auth.isAuthenticated()) {
+                // Verificar si es una autenticación de API_CLIENT
+                boolean isApiClient = auth.getAuthorities().stream()
+                    .anyMatch(a -> "API_CLIENT".equals(a.getAuthority()));
+
+                if (isApiClient) {
+                    Object principal = auth.getPrincipal();
+                    
+                    if (principal instanceof ApiKeyPrincipal) {
+                        ApiKeyPrincipal apiKeyPrincipal = (ApiKeyPrincipal) principal;
+                        
+                        // Si tiene alcance restringido a una compañía, habilitar el filtro
+                        if (apiKeyPrincipal.hasRestrictedAccess()) {
+                            Long companyId = apiKeyPrincipal.getCompanyScope();
+                            enableCompanyFilter(companyId);
+                            log.debug("Filtro de compañía habilitado para API Key. CompanyId: {}", companyId);
+                        } else {
+                            log.debug("API Key con acceso global. No se aplica filtro de compañía.");
+                        }
+                    }
+                }
+            }
+
+            filterChain.doFilter(request, response);
+            
+        } finally {
+            // Limpiar filtros de Hibernate al terminar la petición
+            disableCompanyFilter();
+        }
+    }
+
+    /**
+     * Habilita el filtro de Hibernate para la compañía específica.
+     */
+    private void enableCompanyFilter(Long companyId) {
+        try {
+            Session session = entityManager.unwrap(Session.class);
+            org.hibernate.Filter filter = session.enableFilter("companyFilter");
+            filter.setParameter("companyId", companyId);
+            log.trace("Filtro Hibernate 'companyFilter' habilitado con companyId={}", companyId);
+        } catch (Exception e) {
+            log.warn("No se pudo habilitar el filtro de compañía", e);
+        }
+    }
+
+    /**
+     * Deshabilita el filtro de Hibernate.
+     */
+    private void disableCompanyFilter() {
+        try {
+            Session session = entityManager.unwrap(Session.class);
+            session.disableFilter("companyFilter");
+            log.trace("Filtro Hibernate 'companyFilter' deshabilitado");
+        } catch (Exception e) {
+            log.trace("Error deshabilitando filtro de compañía (puede ser normal si no estaba habilitado)", e);
+        }
+    }
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/application/security/ApiKeyPrincipal.java
+package com.screenleads.backend.app.application.security;
+
+import java.util.Set;
+
+/**
+ * Representa el principal de autenticación para una API Key.
+ * Contiene toda la información necesaria para verificar permisos y aplicar filtros de datos.
+ */
+public class ApiKeyPrincipal {
+    private final Long apiKeyId;
+    private final String clientId;
+    private final Long clientDbId;
+    private final Set<String> permissions;
+    private final Long companyScope; // null = acceso a todas las compañías
+
+    public ApiKeyPrincipal(Long apiKeyId, String clientId, Long clientDbId, Set<String> permissions, Long companyScope) {
+        this.apiKeyId = apiKeyId;
+        this.clientId = clientId;
+        this.clientDbId = clientDbId;
+        this.permissions = permissions;
+        this.companyScope = companyScope;
+    }
+
+    public Long getApiKeyId() {
+        return apiKeyId;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public Long getClientDbId() {
+        return clientDbId;
+    }
+
+    public Set<String> getPermissions() {
+        return permissions;
+    }
+
+    public Long getCompanyScope() {
+        return companyScope;
+    }
+
+    /**
+     * Verifica si tiene un permiso específico.
+     * @param resource El recurso (ej: "snapshot", "lead", "company")
+     * @param action La acción (ej: "read", "create", "update", "delete")
+     * @return true si tiene el permiso
+     */
+    public boolean hasPermission(String resource, String action) {
+        if (permissions == null || permissions.isEmpty()) {
+            return false;
+        }
+        // Formatos soportados:
+        // - "snapshot:read" (permiso específico)
+        // - "snapshot:*" (todas las acciones sobre snapshot)
+        // - "*:read" (leer cualquier recurso)
+        // - "*:*" o "*" (superadmin)
+        
+        String specific = resource + ":" + action;
+        String allActions = resource + ":*";
+        String allResources = "*:" + action;
+        
+        return permissions.contains(specific) 
+            || permissions.contains(allActions)
+            || permissions.contains(allResources)
+            || permissions.contains("*:*")
+            || permissions.contains("*");
+    }
+
+    /**
+     * Indica si tiene acceso global a todas las compañías.
+     * @return true si puede acceder a datos de todas las compañías sin filtro
+     */
+    public boolean hasGlobalAccess() {
+        return companyScope == null;
+    }
+
+    /**
+     * Indica si está restringido a una compañía específica.
+     * @return true si solo puede acceder a datos de una compañía
+     */
+    public boolean hasRestrictedAccess() {
+        return companyScope != null;
+    }
+
+    @Override
+    public String toString() {
+        return "ApiKeyPrincipal{" +
+                "apiKeyId=" + apiKeyId +
+                ", clientId='" + clientId + '\'' +
+                ", clientDbId=" + clientDbId +
+                ", permissions=" + permissions +
+                ", companyScope=" + companyScope +
+                '}';
+    }
+}
+
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/application/security/AuthenticationService.java
 package com.screenleads.backend.app.application.security;
 
@@ -97,7 +377,8 @@ public class AuthenticationService {
             throw new UsernameNotFoundException("No authenticated user");
         }
         User u;
-        if (auth.getPrincipal() instanceof User userPrincipal) {
+        if (auth.getPrincipal() instanceof User) {
+            User userPrincipal = (User) auth.getPrincipal();
             // Always reload from DB to ensure eager fetch
             u = userRepository.findWithCompanyAndProfileImageByUsername(userPrincipal.getUsername())
                     .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
@@ -115,8 +396,8 @@ public class AuthenticationService {
             throw new UsernameNotFoundException("No authenticated user");
         }
         User user;
-        if (auth.getPrincipal() instanceof User u) {
-            user = u;
+        if (auth.getPrincipal() instanceof User) {
+            user = (User) auth.getPrincipal();
         } else {
             String username = auth.getName();
             user = userRepository.findByUsername(username)
@@ -161,9 +442,8 @@ public class CustomAccessDeniedHandler implements org.springframework.security.w
     public void handle(HttpServletRequest req, HttpServletResponse res, AccessDeniedException ex) throws IOException {
         res.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403
         res.setContentType("application/json;charset=UTF-8");
-        String body = """
-                {"error":"Forbidden","message":"Insufficient permissions","path":"%s"}
-                """.formatted(req.getRequestURI());
+        String body = String.format("{\"error\":\"Forbidden\",\"message\":\"Insufficient permissions\",\"path\":\"%s\"}", 
+                req.getRequestURI());
         res.getWriter().write(body);
     }
 }
@@ -187,9 +467,8 @@ public class CustomAuthenticationEntryPoint implements org.springframework.secur
             throws IOException {
         res.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
         res.setContentType("application/json;charset=UTF-8");
-        String body = """
-                {"error":"Unauthorized","message":"Invalid or missing token","path":"%s"}
-                """.formatted(req.getRequestURI());
+        String body = String.format("{\"error\":\"Unauthorized\",\"message\":\"Invalid or missing token\",\"path\":\"%s\"}", 
+                req.getRequestURI());
         res.getWriter().write(body);
     }
 }
@@ -230,6 +509,7 @@ import java.util.List;
 public class SecurityConfig {
 
         private final JwtAuthenticationFilter jwtAuthFilter;
+        private final ApiKeyAuthenticationFilter apiKeyAuthFilter;
         private final UserDetailsService userDetailsService;
 
         // Respuestas JSON limpias para 401 / 403
@@ -261,10 +541,12 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 com.screenleads.backend.app.infraestructure.config.SwaggerWhitelist.ENDPOINTS)
                                                 .permitAll()
+
                                                 // Auth: solo login/refresh públicos
                                                 .requestMatchers("/auth/login", "/auth/refresh").permitAll()
                                                 // /auth/me requiere autenticación
                                                 .requestMatchers("/auth/me").authenticated()
+
                                                 // Swagger / OpenAPI / Health
                                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**",
                                                                 "/swagger-ui.html")
@@ -274,6 +556,9 @@ public class SecurityConfig {
                                                 // El resto autenticado
                                                 .anyRequest().authenticated())
                                 .authenticationProvider(authenticationProvider())
+
+                                // ✅ IMPORTANTE: anclar SIEMPRE a un filtro estándar (no a filtros custom)
+                                .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
                                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();
@@ -321,7 +606,7 @@ public class SecurityConfig {
 
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
-                // 🔴 Añadimos los headers que envía el interceptor
+                // Headers que envía el interceptor
                 config.setAllowedHeaders(List.of(
                                 "Authorization",
                                 "Content-Type",
@@ -330,8 +615,10 @@ public class SecurityConfig {
                                 "X-Requested-With",
                                 "X-Timezone",
                                 "X-Timezone-Offset",
-                                "Accept-Language" // útil si lo usas
-                ));
+                                "Accept-Language",
+                                "X-API-KEY",
+                                "client_id",
+                                "client-id"));
 
                 // (Opcional) Headers expuestos al frontend si necesitas leerlos
                 config.setExposedHeaders(List.of(
@@ -339,10 +626,7 @@ public class SecurityConfig {
                                 "X-Timezone",
                                 "X-Timezone-Offset"));
 
-                // Cookies/JWT entre dominios
                 config.setAllowCredentials(true);
-
-                // Cache de preflight
                 config.setMaxAge(3600L);
 
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -370,7 +654,8 @@ public final class SecurityUtils {
 
     public static Optional<User> getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof User u) {
+        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof User) {
+            User u = (User) auth.getPrincipal();
             return Optional.of(u);
         }
         return Optional.empty();
@@ -500,19 +785,22 @@ public class CompanyFilterRequestEnabler extends OncePerRequestFilter {
         Object principal = auth.getPrincipal();
 
         // 1) Tu entidad de dominio como principal
-        if (principal instanceof com.screenleads.backend.app.domain.model.User u) {
+        if (principal instanceof com.screenleads.backend.app.domain.model.User) {
+            com.screenleads.backend.app.domain.model.User u = (com.screenleads.backend.app.domain.model.User) principal;
             return u.getCompany() != null ? u.getCompany().getId() : null;
         }
 
         // 2) UserDetails estándar
-        if (principal instanceof UserDetails ud) {
+        if (principal instanceof UserDetails) {
+            UserDetails ud = (UserDetails) principal;
             return userRepository.findByUsername(ud.getUsername())
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
 
         // 3) Principal como String (username), típico en JWT con claim "sub"
-        if (principal instanceof String username) {
+        if (principal instanceof String) {
+            String username = (String) principal;
             return userRepository.findByUsername(username)
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
@@ -713,6 +1001,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 ```java
 // src/main/java/com/screenleads/backend/app/application/security/jwt/JwtService.java
+
 package com.screenleads.backend.app.application.security.jwt;
 
 import io.jsonwebtoken.Claims;
@@ -728,12 +1017,16 @@ import org.springframework.stereotype.Service;
 import com.screenleads.backend.app.domain.model.User;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
 
 @Service
 public class JwtService {
+    public Key getSigningKey() {
+        return signingKey;
+    }
 
     @Value("${application.security.jwt.secret-key}")
     private String secretKey;
@@ -742,7 +1035,8 @@ public class JwtService {
 
     @PostConstruct
     public void init() {
-        signingKey = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+        byte[] keyBytes = Base64.getDecoder().decode(secretKey);
+        signingKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String extractUsername(String token) {
@@ -776,8 +1070,8 @@ public class JwtService {
                 .builder()
                 .setSubject(user.getUsername())
                 .claim("roles", user.getAuthorities().stream()
-                    .map(Object::toString)
-                    .toList())
+                        .map(Object::toString)
+                        .toList())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24h
                 .signWith(signingKey, SignatureAlgorithm.HS256)

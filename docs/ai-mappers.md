@@ -37,22 +37,27 @@ import java.util.List;
  * Mapper para Advice con el nuevo esquema:
  * - Advice.interval (Duration) <-> AdviceDTO.interval (Number: segundos)
  * - Advice.schedules[] (rango de fechas)
- *   - AdviceTimeWindow[] (weekday + rangos horarios)
+ * - AdviceTimeWindow[] (weekday + rangos horarios)
  *
  * Reglas:
- * - Si un día no tiene ventanas en un schedule, NO es visible ese día (lógica se aplica en servicio).
- * - Horario [from, to) (fin exclusivo). Esta versión no soporta overnight en un único rango.
+ * - Si un día no tiene ventanas en un schedule, NO es visible ese día (lógica
+ * se aplica en servicio).
+ * - Horario [from, to) (fin exclusivo). Esta versión no soporta overnight en un
+ * único rango.
  *
- * Además, incluye helpers de reflexión para tolerar distintos shapes en Company/Promotion/Media DTOs.
+ * Además, incluye helpers de reflexión para tolerar distintos shapes en
+ * Company/Promotion/Media DTOs.
  */
 public final class AdviceMapper {
 
-    private AdviceMapper() {}
+    private AdviceMapper() {
+    }
 
     // ================= Entity -> DTO =================
 
     public static AdviceDTO toDto(Advice a) {
-        if (a == null) return null;
+        if (a == null)
+            return null;
 
         // interval Duration -> segundos
         Number intervalSecs = (a.getInterval() == null) ? null : a.getInterval().getSeconds();
@@ -81,8 +86,7 @@ public final class AdviceMapper {
                                 w.getId(),
                                 w.getWeekday() != null ? w.getWeekday().name() : null,
                                 formatTime(w.getFromTime()),
-                                formatTime(w.getToTime())
-                        ));
+                                formatTime(w.getToTime())));
                     }
                 }
                 schedules.add(new AdviceScheduleDTO(
@@ -90,8 +94,7 @@ public final class AdviceMapper {
                         formatDate(s.getStartDate()),
                         formatDate(s.getEndDate()),
                         wins,
-                        null
-                ));
+                        null));
             }
         }
 
@@ -108,12 +111,15 @@ public final class AdviceMapper {
     }
 
     /** Alias: por si lo referenciabas como AdviceMapper::toDTO */
-    public static AdviceDTO toDTO(Advice a) { return toDto(a); }
+    public static AdviceDTO toDTO(Advice a) {
+        return toDto(a);
+    }
 
     // ================= DTO -> Entity =================
 
     public static Advice toEntity(AdviceDTO dto) {
-        if (dto == null) return null;
+        if (dto == null)
+            return null;
 
         Advice a = new Advice();
         a.setId(dto.getId());
@@ -158,50 +164,60 @@ public final class AdviceMapper {
     // ================= Helpers de referencia (con reflexión) =================
 
     private static Company refToCompany(Object companyDto) {
-        if (companyDto == null) return null;
+        if (companyDto == null)
+            return null;
         Long id = extractLong(companyDto,
                 "getId", "id", "getCompanyId", "companyId", "getCompanyID", "companyID");
-        if (id == null) return null;
+        if (id == null)
+            return null;
         Company c = new Company();
         c.setId(id);
         return c;
     }
 
     private static Promotion refToPromotion(Object promoDto) {
-        if (promoDto == null) return null;
+        if (promoDto == null)
+            return null;
         Long id = extractLong(promoDto,
                 "getId", "id", "getPromotionId", "promotionId", "getPromotionID", "promotionID");
-        if (id == null) return null;
+        if (id == null)
+            return null;
         Promotion p = new Promotion();
         p.setId(id);
         return p;
     }
 
     private static Media refToMedia(Object mediaDto) {
-        if (mediaDto == null) return null;
+        if (mediaDto == null)
+            return null;
         Long id = extractLong(mediaDto,
                 "getId", "id", "getMediaId", "mediaId", "getMediaID", "mediaID");
         String src = extractString(mediaDto, "getSrc", "src");
 
-        if (id == null && (src == null || src.isBlank())) return null;
+        if (id == null && (src == null || src.isBlank()))
+            return null;
 
         Media m = new Media();
-        if (id != null) m.setId(id);
-        if (src != null && !src.isBlank()) m.setSrc(src.trim());
+        if (id != null)
+            m.setId(id);
+        if (src != null && !src.isBlank())
+            m.setSrc(src.trim());
         return m;
     }
 
     // ================= Utilidades date/time =================
 
     private static Duration numberToDuration(Number n) {
-        if (n == null) return null;
+        if (n == null)
+            return null;
         long s = n.longValue();
         return (s > 0) ? Duration.ofSeconds(s) : null;
         // si s <= 0 devolvemos null para "no usar intervalo personalizado"
     }
 
     private static LocalDate parseDate(String s) {
-        if (s == null || s.isBlank()) return null;
+        if (s == null || s.isBlank())
+            return null;
         return LocalDate.parse(s.trim()); // "YYYY-MM-DD"
     }
 
@@ -210,9 +226,11 @@ public final class AdviceMapper {
     }
 
     private static LocalTime parseTime(String s) {
-        if (s == null || s.isBlank()) return null;
+        if (s == null || s.isBlank())
+            return null;
         String t = s.trim();
-        if (t.matches("^\\d{2}:\\d{2}$")) t = t + ":00";
+        if (t.matches("^\\d{2}:\\d{2}$"))
+            t = t + ":00";
         return LocalTime.parse(t, DateTimeFormatter.ISO_LOCAL_TIME); // "HH:mm[:ss]"
     }
 
@@ -221,7 +239,8 @@ public final class AdviceMapper {
     }
 
     private static DayOfWeek parseWeekday(String s) {
-        if (s == null || s.isBlank()) return null;
+        if (s == null || s.isBlank())
+            return null;
         return DayOfWeek.valueOf(s.trim().toUpperCase());
     }
 
@@ -232,8 +251,10 @@ public final class AdviceMapper {
             try {
                 Method m = obj.getClass().getMethod(name);
                 Object v = m.invoke(obj);
-                if (v instanceof Number) return ((Number) v).longValue();
-                if (v != null && v.getClass() == Long.class) return (Long) v;
+                if (v instanceof Number)
+                    return ((Number) v).longValue();
+                if (v != null && v.getClass() == Long.class)
+                    return (Long) v;
             } catch (NoSuchMethodException ignored) {
             } catch (Exception ignored) {
             }
@@ -246,7 +267,8 @@ public final class AdviceMapper {
             try {
                 Method m = obj.getClass().getMethod(name);
                 Object v = m.invoke(obj);
-                if (v instanceof String) return (String) v;
+                if (v instanceof String)
+                    return (String) v;
             } catch (NoSuchMethodException ignored) {
             } catch (Exception ignored) {
             }

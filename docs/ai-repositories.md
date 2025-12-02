@@ -48,22 +48,40 @@ public interface AdviceTimeWindowRepository extends JpaRepository<AdviceTimeWind
      *  - que la fecha esté dentro del rango del schedule (startDate/endDate pueden ser null)
      *  - que la hora esté dentro de una ventana [fromTime, toTime) (fin exclusivo)
      */
-    @Query("""
-        SELECT (COUNT(w.id) > 0)
-          FROM Advice a
-          JOIN a.schedules s
-          JOIN s.windows w
-         WHERE a.id = :adviceId
-           AND w.weekday = :dow
-           AND (:date >= s.startDate OR s.startDate IS NULL)
-           AND (:date <= s.endDate   OR s.endDate   IS NULL)
-           AND :time >= w.fromTime
-           AND :time <  w.toTime
-        """)
+    @Query("SELECT (COUNT(w.id) > 0) " +
+           "FROM Advice a " +
+           "JOIN a.schedules s " +
+           "JOIN s.windows w " +
+           "WHERE a.id = :adviceId " +
+           "AND w.weekday = :dow " +
+           "AND (:date >= s.startDate OR s.startDate IS NULL) " +
+           "AND (:date <= s.endDate OR s.endDate IS NULL) " +
+           "AND :time >= w.fromTime " +
+           "AND :time < w.toTime")
     boolean existsActive(@Param("adviceId") Long adviceId,
                          @Param("dow") DayOfWeek dow,
                          @Param("date") LocalDate date,
                          @Param("time") LocalTime time);
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/domain/repositories/ApiKeyRepository.java
+package com.screenleads.backend.app.domain.repositories;
+
+import com.screenleads.backend.app.domain.model.ApiKey;
+import com.screenleads.backend.app.domain.model.Client;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
+
+public interface ApiKeyRepository extends JpaRepository<ApiKey, Long> {
+    // Obtener todas las ApiKeys por id de cliente
+    java.util.List<ApiKey> findAllByClient_Id(Long clientId);
+
+    Optional<ApiKey> findByKeyAndClientAndActiveTrue(String key, Client client);
+
+    Optional<ApiKey> findByKey(String key);
 }
 
 ```
@@ -128,6 +146,21 @@ public interface AppVersionRepository extends JpaRepository<AppVersion, Long> {
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/domain/repositories/ClientRepository.java
+package com.screenleads.backend.app.domain.repositories;
+
+import com.screenleads.backend.app.domain.model.Client;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
+
+public interface ClientRepository extends JpaRepository<Client, Long> {
+    Optional<Client> findByClientIdAndActiveTrue(String clientId);
+    Optional<Client> findByClientId(String clientId);
+}
+
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/domain/repositories/CompanyRepository.java
 package com.screenleads.backend.app.domain.repositories;
 
@@ -136,12 +169,31 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.screenleads.backend.app.domain.model.Company;
+import com.stripe.model.StripeObject;
 
 public interface CompanyRepository extends JpaRepository<Company, Long> {
     Optional<Company> findByName(String name);
 
     boolean existsByName(String name);
+
+    Optional<Company> findByStripeCustomerId(String customerId);
 }
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/domain/repositories/CompanyTokenRepository.java
+package com.screenleads.backend.app.domain.repositories;
+
+import com.screenleads.backend.app.domain.model.CompanyToken;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface CompanyTokenRepository extends JpaRepository<CompanyToken, Long> {
+    List<CompanyToken> findByCompanyId(Long companyId);
+    void deleteById(Long id);
+    CompanyToken findByToken(String token);
+}
+
 ```
 
 ```java
@@ -222,9 +274,9 @@ public interface MediaRepository extends JpaRepository<Media, Long> {
 package com.screenleads.backend.app.domain.repositories;
 
 import java.util.Optional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
-
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import com.screenleads.backend.app.domain.model.MediaType;
 
 public interface MediaTypeRepository extends JpaRepository<MediaType, Long> {
@@ -236,6 +288,8 @@ public interface MediaTypeRepository extends JpaRepository<MediaType, Long> {
 
     boolean existsByType(String type);
 
+    @Query("SELECT m FROM MediaType m WHERE LOWER(TRIM(m.extension)) = LOWER(TRIM(:extension))")
+    Optional<MediaType> findByExtensionIgnoreCase(@Param("extension") String extension);
 }
 ```
 
@@ -282,24 +336,20 @@ public interface PromotionLeadRepository extends JpaRepository<PromotionLead, Lo
             Long promotionId, Long customerId, CouponStatus couponStatus);
 
     // Conteo en rango temporal (útil para ventanas deslizantes)
-    @Query("""
-        select count(pl) from PromotionLead pl
-        where pl.promotion.id = :promotionId
-          and pl.customer.id  = :customerId
-          and pl.createdAt between :from and :to
-    """)
+    @Query("select count(pl) from PromotionLead pl " +
+           "where pl.promotion.id = :promotionId " +
+           "and pl.customer.id  = :customerId " +
+           "and pl.createdAt between :from and :to")
     long countByPromotionIdAndCustomerIdBetweenDates(@Param("promotionId") Long promotionId,
                                                      @Param("customerId") Long customerId,
                                                      @Param("from") Instant from,
                                                      @Param("to") Instant to);
 
     // Conteo desde un instante (Since = createdAt >= :since)
-    @Query("""
-        select count(pl) from PromotionLead pl
-        where pl.promotion.id = :promotionId
-          and pl.customer.id  = :customerId
-          and pl.createdAt    >= :since
-    """)
+    @Query("select count(pl) from PromotionLead pl " +
+           "where pl.promotion.id = :promotionId " +
+           "and pl.customer.id  = :customerId " +
+           "and pl.createdAt    >= :since")
     long countByPromotionAndCustomerSince(@Param("promotionId") Long promotionId,
                                           @Param("customerId") Long customerId,
                                           @Param("since") Instant since);

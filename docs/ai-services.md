@@ -73,10 +73,10 @@ public class AdviceServiceImpl implements AdviceService {
     private EntityManager entityManager;
 
     public AdviceServiceImpl(AdviceRepository adviceRepository,
-                             MediaRepository mediaRepository,
-                             UserRepository userRepository,
-                             MediaTypeRepository mediaTypeRepository,
-                             CompanyRepository companyRepository) {
+            MediaRepository mediaRepository,
+            UserRepository userRepository,
+            MediaTypeRepository mediaTypeRepository,
+            CompanyRepository companyRepository) {
         this.adviceRepository = adviceRepository;
         this.mediaRepository = mediaRepository;
         this.userRepository = userRepository;
@@ -203,10 +203,12 @@ public class AdviceServiceImpl implements AdviceService {
         if (dto.getSchedules() != null) {
             for (AdviceScheduleDTO sDto : dto.getSchedules()) {
                 AdviceSchedule mappedSchedule = mapScheduleDTO(sDto, advice);
-                System.out.println("[DEBUG] AdviceSchedule mapeado: startDate=" + mappedSchedule.getStartDate() + ", endDate=" + mappedSchedule.getEndDate());
+                System.out.println("[DEBUG] AdviceSchedule mapeado: startDate=" + mappedSchedule.getStartDate()
+                        + ", endDate=" + mappedSchedule.getEndDate());
                 if (mappedSchedule.getWindows() != null) {
                     for (AdviceTimeWindow win : mappedSchedule.getWindows()) {
-                        System.out.println("[DEBUG] AdviceTimeWindow mapeado: weekday=" + win.getWeekday() + ", from=" + win.getFromTime() + ", to=" + win.getToTime());
+                        System.out.println("[DEBUG] AdviceTimeWindow mapeado: weekday=" + win.getWeekday() + ", from="
+                                + win.getFromTime() + ", to=" + win.getToTime());
                     }
                 }
                 advice.getSchedules().add(mappedSchedule);
@@ -215,9 +217,10 @@ public class AdviceServiceImpl implements AdviceService {
 
         validateAdvice(advice);
         Advice saved = adviceRepository.save(advice);
-            // Log de persistencia real de ventanas
-            int totalWindows = saved.getSchedules() == null ? 0 : saved.getSchedules().stream().mapToInt(s -> s.getWindows() == null ? 0 : s.getWindows().size()).sum();
-            System.out.println("[DEBUG] Advice guardado. Total ventanas: " + totalWindows);
+        // Log de persistencia real de ventanas
+        int totalWindows = saved.getSchedules() == null ? 0
+                : saved.getSchedules().stream().mapToInt(s -> s.getWindows() == null ? 0 : s.getWindows().size()).sum();
+        System.out.println("[DEBUG] Advice guardado. Total ventanas: " + totalWindows);
         return convertToDTO(saved);
     }
 
@@ -363,8 +366,7 @@ public class AdviceServiceImpl implements AdviceService {
                                 w.getId(),
                                 w.getWeekday() != null ? w.getWeekday().name() : null,
                                 formatTime(w.getFromTime()),
-                                formatTime(w.getToTime())
-                        ));
+                                formatTime(w.getToTime())));
                     }
                 }
                 schedules.add(new AdviceScheduleDTO(
@@ -372,8 +374,7 @@ public class AdviceServiceImpl implements AdviceService {
                         formatDate(s.getStartDate()),
                         formatDate(s.getEndDate()),
                         wins,
-                        null
-                ));
+                        null));
             }
         }
 
@@ -528,20 +529,251 @@ public class AdviceServiceImpl implements AdviceService {
     private Long resolveCompanyId(Authentication auth) {
         Object principal = auth.getPrincipal();
 
-        if (principal instanceof com.screenleads.backend.app.domain.model.User u) {
+        if (principal instanceof com.screenleads.backend.app.domain.model.User) {
+            com.screenleads.backend.app.domain.model.User u = (com.screenleads.backend.app.domain.model.User) principal;
             return (u.getCompany() != null) ? u.getCompany().getId() : null;
         }
-        if (principal instanceof org.springframework.security.core.userdetails.UserDetails ud) {
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+            org.springframework.security.core.userdetails.UserDetails ud = (org.springframework.security.core.userdetails.UserDetails) principal;
             return userRepository.findByUsername(ud.getUsername())
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
-        if (principal instanceof String username) {
+        if (principal instanceof String) {
+            String username = (String) principal;
             return userRepository.findByUsername(username)
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
         return null;
+    }
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/application/service/ApiKeyPermissionService.java
+package com.screenleads.backend.app.application.service;
+
+import com.screenleads.backend.app.domain.model.ApiKey;
+import com.screenleads.backend.app.domain.repositories.ApiKeyRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+@Service("apiKeyPerm")
+public class ApiKeyPermissionService {
+    private final ApiKeyRepository apiKeyRepository;
+
+    public ApiKeyPermissionService(ApiKeyRepository apiKeyRepository) {
+        this.apiKeyRepository = apiKeyRepository;
+    }
+
+    public boolean can(String resource, String action) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated())
+            return false;
+        if (!"API_CLIENT".equals(auth.getAuthorities().stream().findFirst().map(Object::toString).orElse(null)))
+            return false;
+        Object principal = auth.getPrincipal();
+        Long clientDbId = null;
+        if (principal instanceof Long) {
+            clientDbId = (Long) principal;
+        } else if (principal instanceof String) {
+            try {
+                clientDbId = Long.valueOf((String) principal);
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        if (clientDbId == null)
+            return false;
+        ApiKey apiKey = apiKeyRepository.findAllByClient_Id(clientDbId).stream()
+                .filter(ApiKey::isActive)
+                .findFirst().orElse(null);
+        if (apiKey == null)
+            return false;
+        // Permisos: puedes usar lógica más avanzada si lo necesitas
+        return apiKey.getPermissions() != null && apiKey.getPermissions().contains(resource + ":" + action);
+    }
+
+    /**
+     * Obtiene el scope de compañía de la API Key autenticada.
+     * Retorna null si tiene acceso global o si no está autenticada.
+     */
+    public Long getCompanyScope() {
+        ApiKey apiKey = getAuthenticatedApiKey();
+        if (apiKey == null)
+            return null;
+        return apiKey.getCompanyScope();
+    }
+
+    /**
+     * Verifica si la API Key autenticada tiene acceso global (sin restricción de compañía).
+     */
+    public boolean hasGlobalAccess() {
+        ApiKey apiKey = getAuthenticatedApiKey();
+        if (apiKey == null)
+            return false;
+        return apiKey.getCompanyScope() == null;
+    }
+
+    /**
+     * Verifica si la API Key puede acceder a datos de una compañía específica.
+     */
+    public boolean canAccessCompany(Long companyId) {
+        if (companyId == null)
+            return false;
+        
+        ApiKey apiKey = getAuthenticatedApiKey();
+        if (apiKey == null)
+            return false;
+        
+        // Si tiene acceso global, puede acceder a cualquier compañía
+        if (apiKey.getCompanyScope() == null)
+            return true;
+        
+        // Si tiene scope de compañía, solo puede acceder a esa compañía
+        return companyId.equals(apiKey.getCompanyScope());
+    }
+
+    /**
+     * Método auxiliar para obtener la API Key autenticada del contexto de seguridad.
+     */
+    private ApiKey getAuthenticatedApiKey() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated())
+            return null;
+        
+        if (!"API_CLIENT".equals(auth.getAuthorities().stream().findFirst().map(Object::toString).orElse(null)))
+            return null;
+        
+        Object principal = auth.getPrincipal();
+        Long clientDbId = null;
+        
+        if (principal instanceof Long) {
+            clientDbId = (Long) principal;
+        } else if (principal instanceof String) {
+            try {
+                clientDbId = Long.valueOf((String) principal);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        
+        if (clientDbId == null)
+            return null;
+        
+        return apiKeyRepository.findAllByClient_Id(clientDbId).stream()
+                .filter(ApiKey::isActive)
+                .findFirst().orElse(null);
+    }
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/application/service/ApiKeyService.java
+package com.screenleads.backend.app.application.service;
+
+import com.screenleads.backend.app.domain.model.ApiKey;
+import java.util.List;
+
+public interface ApiKeyService {
+    ApiKey createApiKey(String clientId, String permissions, int daysValid);
+
+    void deactivateApiKey(Long id);
+
+    void activateApiKey(Long id);
+
+    void deleteApiKey(Long id);
+
+    ApiKey createApiKeyByDbId(Long clientDbId, String permissions, int daysValid);
+
+    List<ApiKey> getApiKeysByClientDbId(Long clientDbId);
+}
+
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/application/service/ApiKeyServiceImpl.java
+package com.screenleads.backend.app.application.service;
+
+import com.screenleads.backend.app.domain.model.ApiKey;
+import com.screenleads.backend.app.domain.model.Client;
+import com.screenleads.backend.app.domain.repositories.ClientRepository;
+import com.screenleads.backend.app.domain.repositories.ApiKeyRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@Transactional
+public class ApiKeyServiceImpl implements ApiKeyService {
+    private final ApiKeyRepository apiKeyRepository;
+    private final ClientRepository clientRepository;
+
+    public ApiKeyServiceImpl(ApiKeyRepository apiKeyRepository, ClientRepository clientRepository) {
+        this.apiKeyRepository = apiKeyRepository;
+        this.clientRepository = clientRepository;
+    }
+
+    @Override
+    public ApiKey createApiKey(String clientId, String permissions, int daysValid) {
+        Client client = clientRepository.findByClientIdAndActiveTrue(clientId)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado o inactivo"));
+        ApiKey key = new ApiKey();
+        key.setKey(UUID.randomUUID().toString().replace("-", ""));
+        key.setClient(client);
+        key.setPermissions(permissions);
+        key.setActive(true);
+        key.setCreatedAt(LocalDateTime.now());
+        key.setExpiresAt(LocalDateTime.now().plusDays(daysValid));
+        return apiKeyRepository.save(key);
+    }
+
+    @Override
+    public void deactivateApiKey(Long id) {
+        apiKeyRepository.findById(id).ifPresent(key -> {
+            key.setActive(false);
+            apiKeyRepository.save(key);
+        });
+    }
+
+    @Override
+    public void activateApiKey(Long id) {
+        apiKeyRepository.findById(id).ifPresent(key -> {
+            key.setActive(true);
+            apiKeyRepository.save(key);
+        });
+    }
+
+    @Override
+    public void deleteApiKey(Long id) {
+        apiKeyRepository.deleteById(id);
+    }
+
+    @Override
+    public ApiKey createApiKeyByDbId(Long clientDbId, String permissions, int daysValid) {
+        Client client = clientRepository.findById(clientDbId)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado por id"));
+        ApiKey key = new ApiKey();
+        key.setKey(UUID.randomUUID().toString().replace("-", ""));
+        key.setClient(client);
+        key.setPermissions(permissions);
+        key.setActive(true);
+        key.setCreatedAt(LocalDateTime.now());
+        key.setExpiresAt(LocalDateTime.now().plusDays(daysValid));
+        return apiKeyRepository.save(key);
+    }
+
+    @Override
+    public List<ApiKey> getApiKeysByClientDbId(Long clientDbId) {
+        // Usar el método del repositorio para evitar errores de tipo
+        return apiKeyRepository.findAllByClient_Id(clientDbId);
     }
 }
 
@@ -681,8 +913,12 @@ public class AppEntityServiceImpl implements AppEntityService {
             throw new IllegalArgumentException("resource obligatorio en AppEntityDTO");
         }
 
-        AppEntity e = repo.findByResource(dto.resource())
-                .orElseGet(() -> AppEntity.builder().resource(dto.resource()).build());
+        AppEntity e;
+        if (dto.id() != null) {
+            e = repo.findById(dto.id()).orElseGet(() -> AppEntity.builder().id(dto.id()).resource(dto.resource()).build());
+        } else {
+            e = repo.findByResource(dto.resource()).orElseGet(() -> AppEntity.builder().resource(dto.resource()).build());
+        }
 
         // Metadatos principales
         e.setEntityName(nullIfBlank(dto.entityName(), e.getEntityName()));
@@ -1266,7 +1502,11 @@ public class CompaniesServiceImpl implements CompaniesService {
                 devices,
                 advices,
                 company.getPrimaryColor(),
-                company.getSecondaryColor());
+                company.getSecondaryColor(),
+                company.getStripeCustomerId(),
+                company.getStripeSubscriptionId(),
+                company.getStripeSubscriptionItemId(),
+                company.getBillingStatus());
     }
 
     private MediaSlimDTO toMediaSlimDTO(Media m) {
@@ -1297,6 +1537,16 @@ public class CompaniesServiceImpl implements CompaniesService {
         c.setObservations(dto.observations());
         c.setPrimaryColor(dto.primaryColor());
         c.setSecondaryColor(dto.secondaryColor());
+
+        // Stripe & billing
+        c.setStripeCustomerId(dto.stripeCustomerId());
+        c.setStripeSubscriptionId(dto.stripeSubscriptionId());
+        c.setStripeSubscriptionItemId(dto.stripeSubscriptionItemId());
+        if (dto.billingStatus() != null) {
+            c.setBillingStatus(dto.billingStatus().toString());
+        } else {
+            c.setBillingStatus(Company.BillingStatus.INCOMPLETE.name());
+        }
 
         // Logo: si viene id en el DTO slim, enlazamos; si no, se creará en save/update
         if (dto.logo() != null && dto.logo().id() != null) {
@@ -1342,6 +1592,142 @@ public class CompaniesServiceImpl implements CompaniesService {
     }
 }
 
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/application/service/CompanyTokenService.java
+// ...eliminado método fuera de clase...
+package com.screenleads.backend.app.application.service;
+
+import com.screenleads.backend.app.domain.repositories.UserRepository;
+import com.screenleads.backend.app.domain.model.User;
+
+import com.screenleads.backend.app.domain.model.CompanyToken;
+import com.screenleads.backend.app.web.dto.CompanyTokenDTO;
+import com.screenleads.backend.app.domain.repositories.CompanyTokenRepository;
+import com.screenleads.backend.app.domain.repositories.UserRepository;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import com.screenleads.backend.app.application.security.jwt.JwtService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class CompanyTokenService {
+    @Transactional
+    public Optional<CompanyToken> updateToken(Long id, CompanyTokenDTO dto) {
+        Optional<CompanyToken> optToken = companyTokenRepository.findById(id);
+        if (optToken.isEmpty())
+            return Optional.empty();
+        CompanyToken token = optToken.get();
+        // Actualiza los campos permitidos
+        if (dto.getDescripcion() != null)
+            token.setDescripcion(dto.getDescripcion());
+        if (dto.getCompanyId() != null)
+            token.setCompanyId(dto.getCompanyId());
+        if (dto.getToken() != null)
+            token.setToken(dto.getToken());
+        if (dto.getRole() != null)
+            token.setRole(dto.getRole());
+        if (dto.getExpiresAt() != null)
+            token.setExpiresAt(dto.getExpiresAt());
+        // No se actualiza id ni createdAt
+        companyTokenRepository.save(token);
+        return Optional.of(token);
+    }
+
+    public Optional<CompanyToken> getTokenById(Long id) {
+        return companyTokenRepository.findById(id);
+    }
+
+    public List<CompanyToken> getTokensForAuthenticatedUser(String username) {
+        return userRepository.findByUsername(username)
+                .map(user -> getTokensByCompany(user.getCompany().getId()))
+                .orElse(List.of());
+    }
+
+    private final CompanyTokenRepository companyTokenRepository;
+    private final JwtService jwtService;
+    private final UserRepository userRepository;
+
+    public CompanyTokenService(CompanyTokenRepository companyTokenRepository, JwtService jwtService,
+            UserRepository userRepository) {
+        this.companyTokenRepository = companyTokenRepository;
+        this.jwtService = jwtService;
+        this.userRepository = userRepository;
+    }
+
+    public CompanyToken createTokenForUser(String username, String descripcion) {
+        return userRepository.findByUsername(username)
+                .map(user -> createToken(user, descripcion))
+                .orElseThrow(() -> new IllegalArgumentException("User not found or has no company"));
+    }
+
+    public CompanyToken createToken(User user, String descripcion) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiresAt = now.plusYears(1);
+        String role = "company_admin";
+        String token = Jwts.builder()
+                .setSubject(user.getUsername())
+                .claim("role", role)
+                .setIssuedAt(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()))
+                .setExpiration(Date.from(expiresAt.atZone(ZoneId.systemDefault()).toInstant()))
+                .signWith(jwtService.getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+        CompanyToken companyToken = new CompanyToken();
+        companyToken.setCompanyId(user.getCompany().getId());
+        companyToken.setToken(token);
+        companyToken.setRole(role);
+        companyToken.setCreatedAt(now);
+        companyToken.setExpiresAt(expiresAt);
+        companyToken.setDescripcion(descripcion);
+        return companyTokenRepository.save(companyToken);
+    }
+
+    public Optional<CompanyToken> updateDescription(String token, String descripcion) {
+        CompanyToken companyToken = companyTokenRepository.findByToken(token);
+        if (companyToken == null)
+            return Optional.empty();
+        companyToken.setDescripcion(descripcion);
+        companyTokenRepository.save(companyToken);
+        return Optional.of(companyToken);
+    }
+
+    public List<CompanyToken> getTokensByCompany(Long companyId) {
+        return companyTokenRepository.findByCompanyId(companyId);
+    }
+
+    @Transactional
+    public void deleteToken(Long id) {
+        companyTokenRepository.deleteById(id);
+    }
+
+    public Optional<CompanyToken> renewToken(String token) {
+        CompanyToken companyToken = companyTokenRepository.findByToken(token);
+        if (companyToken == null)
+            return Optional.empty();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiresAt = now.plusYears(1);
+        String newToken = Jwts.builder()
+                .setSubject(companyToken.getCompanyId().toString())
+                .claim("role", companyToken.getRole())
+                .setIssuedAt(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()))
+                .setExpiration(Date.from(expiresAt.atZone(ZoneId.systemDefault()).toInstant()))
+                .signWith(jwtService.getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+        companyToken.setToken(newToken);
+        companyToken.setCreatedAt(now);
+        companyToken.setExpiresAt(expiresAt);
+        companyTokenRepository.save(companyToken);
+        return Optional.of(companyToken);
+    }
+}
 ```
 
 ```java
@@ -1789,7 +2175,7 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public DeviceDTO saveDevice(DeviceDTO dto) {
         // Upsert idempotente por UUID
-            DeviceType type = deviceTypeRepository.findById(dto.type().id())
+        DeviceType type = deviceTypeRepository.findById(dto.type().id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device type not found"));
 
         Device device = deviceRepository.findOptionalByUuid(dto.uuid()).orElseGet(Device::new);
@@ -1802,8 +2188,8 @@ public class DeviceServiceImpl implements DeviceService {
         device.setHeight(height);
         device.setType(type);
 
-            if (dto.company() != null && dto.company().id() != null) {
-                Company company = companyRepository.findById(dto.company().id())
+        if (dto.company() != null && dto.company().id() != null) {
+            Company company = companyRepository.findById(dto.company().id())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found"));
             device.setCompany(company);
         } else {
@@ -1818,11 +2204,11 @@ public class DeviceServiceImpl implements DeviceService {
         Device device = deviceRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found"));
 
-            if (deviceDTO.type() == null || deviceDTO.type().id() == null) {
+        if (deviceDTO.type() == null || deviceDTO.type().id() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Device type is required");
         }
 
-            DeviceType type = deviceTypeRepository.findById(deviceDTO.type().id())
+        DeviceType type = deviceTypeRepository.findById(deviceDTO.type().id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device type not found"));
 
         device.setUuid(deviceDTO.uuid());
@@ -1833,13 +2219,13 @@ public class DeviceServiceImpl implements DeviceService {
         device.setHeight(height);
         device.setType(type);
 
-            if (deviceDTO.company() != null && deviceDTO.company().id() != null) {
-                Company company = companyRepository.findById(deviceDTO.company().id())
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found"));
-                device.setCompany(company);
-            } else {
-                device.setCompany(null);
-            }
+        if (deviceDTO.company() != null && deviceDTO.company().id() != null) {
+            Company company = companyRepository.findById(deviceDTO.company().id())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found"));
+            device.setCompany(company);
+        } else {
+            device.setCompany(null);
+        }
 
         Device updatedDevice = deviceRepository.save(device);
         return convertToDTO(updatedDevice);
@@ -2273,6 +2659,7 @@ import com.screenleads.backend.app.domain.model.AppEntity;
 import com.screenleads.backend.app.domain.model.User;
 import com.screenleads.backend.app.domain.repositories.AppEntityRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
+import com.screenleads.backend.app.application.service.SpringContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -2289,37 +2676,51 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public boolean can(String resource, String action) {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth == null || !auth.isAuthenticated())
+            try {
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                if (auth == null || !auth.isAuthenticated())
+                    return false;
+
+                // Si es API_CLIENT, delega en ApiKeyPermissionService
+                if (auth.getAuthorities().stream().anyMatch(a -> "API_CLIENT".equals(a.getAuthority()))) {
+                    // Puedes inyectar ApiKeyPermissionService con @Autowired si lo prefieres
+                    ApiKeyPermissionService apiKeyPerm = SpringContext.getBean(ApiKeyPermissionService.class);
+                    return apiKeyPerm.can(resource, action);
+                }
+
+                User u = userRepository.findByUsername(auth.getName()).orElse(null);
+                if (u == null || u.getRole() == null || u.getRole().getLevel() == null)
+                    return false;
+
+                int myLevel = u.getRole().getLevel();
+                AppEntity p = permissionRepository.findByResource(resource).orElse(null);
+                if (p == null)
+                    return false;
+                Integer required;
+                switch (action) {
+                    case "read":
+                        required = p.getReadLevel();
+                        break;
+                    case "create":
+                        required = p.getCreateLevel();
+                        break;
+                    case "update":
+                        required = p.getUpdateLevel();
+                        break;
+                    case "delete":
+                        required = p.getDeleteLevel();
+                        break;
+                    default:
+                        required = null;
+                        break;
+                }
+                if (required == null)
+                    return false;
+                return myLevel <= required;
+            } catch (Exception e) {
+                log.warn("perm.can({}, {}) falló", resource, action, e);
                 return false;
-
-            User u = userRepository.findByUsername(auth.getName()).orElse(null);
-            if (u == null || u.getRole() == null || u.getRole().getLevel() == null)
-                return false;
-
-            int myLevel = u.getRole().getLevel(); // 👈 rol único
-
-            AppEntity p = permissionRepository.findByResource(resource).orElse(null);
-            if (p == null)
-                return false;
-
-            Integer required = switch (action) {
-                case "read" -> p.getReadLevel();
-                case "create" -> p.getCreateLevel();
-                case "update" -> p.getUpdateLevel();
-                case "delete" -> p.getDeleteLevel();
-                default -> null;
-            };
-            if (required == null)
-                return false;
-
-            // Niveles: 1 (más alto) permite todo ≤ requerido
-            return myLevel <= required;
-        } catch (Exception e) {
-            log.warn("perm.can({}, {}) falló", resource, action, e);
-            return false; // nunca romper la evaluación SpEL
-        }
+            }
     }
 
     @Override
@@ -2418,6 +2819,7 @@ public class PromotionServiceImpl implements PromotionService {
     private final PromotionRepository promotionRepository;
     private final PromotionLeadRepository promotionLeadRepository;
     private final ObjectMapper objectMapper; // Autoconfigurado por Spring Boot
+    private final StripeBillingService billingService;
 
     // =========================================
     // CRUD Promotion
@@ -2490,6 +2892,17 @@ public class PromotionServiceImpl implements PromotionService {
 
         candidate.setPromotion(promo);
         PromotionLead saved = promotionLeadRepository.save(candidate);
+
+        // Reportar lead a Stripe si la promoción está asociada a una company con Stripe
+        if (promo.getCompany() != null) {
+            try {
+                billingService.reportLeadUsage(promo.getCompany(), 1L, java.time.Instant.now().getEpochSecond());
+            } catch (Exception e) {
+                // Loguear el error, pero no interrumpir el registro del lead
+                e.printStackTrace();
+            }
+        }
+
         return map(saved, PromotionLeadDTO.class);
     }
 
@@ -2723,6 +3136,152 @@ public class RoleServiceImpl implements RoleService {
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/application/service/SpringContext.java
+package com.screenleads.backend.app.application.service;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
+
+@Component
+public class SpringContext implements ApplicationContextAware {
+    private static ApplicationContext context;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        context = applicationContext;
+    }
+
+    public static <T> T getBean(Class<T> beanClass) {
+        return context.getBean(beanClass);
+    }
+}
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/application/service/StripeBillingService.java
+package com.screenleads.backend.app.application.service;
+
+import com.screenleads.backend.app.domain.model.Company;
+
+public interface StripeBillingService {
+    String ensureCustomer(Company c) throws Exception;
+
+    String createCheckoutSession(Company c) throws Exception;
+
+    String createBillingPortalSession(Company c) throws Exception;
+
+    void reportLeadUsage(Company c, long quantity, long unixTs) throws Exception;
+}
+```
+
+```java
+// src/main/java/com/screenleads/backend/app/application/service/StripeBillingServiceImpl.java
+package com.screenleads.backend.app.application.service;
+
+import com.screenleads.backend.app.domain.model.Company;
+import com.screenleads.backend.app.domain.repositories.CompanyRepository;
+import com.stripe.model.Customer;
+import com.stripe.param.CustomerCreateParams;
+import com.stripe.param.checkout.SessionCreateParams;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class StripeBillingServiceImpl implements StripeBillingService {
+    private final CompanyRepository companyRepo;
+
+    @Value("${stripe.priceId}")
+    private String priceId;
+
+    @Value("${app.frontendUrl}")
+    private String frontendUrl;
+
+    // 1) Crear (o recuperar) Customer para una Company
+    public String ensureCustomer(Company c) throws Exception {
+        if (c.getStripeCustomerId() != null)
+            return c.getStripeCustomerId();
+        CustomerCreateParams params = CustomerCreateParams.builder()
+                .setName(c.getName())
+                // .setEmail(c.getEmail()) // Descomenta si tienes email en Company
+                .putMetadata("companyId", String.valueOf(c.getId()))
+                .build();
+        Customer customer = Customer.create(params);
+        c.setStripeCustomerId(customer.getId());
+        companyRepo.save(c);
+        return customer.getId();
+    }
+
+    // 2) Checkout Session para suscripción metered
+    public String createCheckoutSession(Company c) throws Exception {
+        String customerId = ensureCustomer(c);
+        SessionCreateParams params = SessionCreateParams.builder()
+                .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
+                .setCustomer(customerId)
+                .setSuccessUrl(frontendUrl + "/billing/success?session_id={CHECKOUT_SESSION_ID}")
+                .setCancelUrl(frontendUrl + "/billing/cancel")
+                .addLineItem(
+                        SessionCreateParams.LineItem.builder()
+                                .setPrice(priceId)
+                                .setQuantity(1L)
+                                .build())
+                .build();
+        com.stripe.model.checkout.Session session = com.stripe.model.checkout.Session.create(params);
+        return session.getId();
+    }
+
+    // 3) Crear sesión del Billing Portal
+    public String createBillingPortalSession(Company c) throws Exception {
+        com.stripe.param.billingportal.SessionCreateParams params = com.stripe.param.billingportal.SessionCreateParams
+                .builder()
+                .setCustomer(c.getStripeCustomerId())
+                .setReturnUrl(frontendUrl + "/billing")
+                .build();
+        com.stripe.model.billingportal.Session portal = com.stripe.model.billingportal.Session.create(params);
+        return portal.getUrl();
+    }
+
+    // 4) Reportar uso (incrementar nº de leads) usando llamada HTTP estándar
+    public void reportLeadUsage(Company c, long quantity, long unixTs) throws Exception {
+        if (c.getStripeSubscriptionItemId() == null)
+            return;
+        String apiKey = System.getenv("STRIPE_SECRET_KEY");
+        if (apiKey == null)
+            throw new IllegalStateException("STRIPE_SECRET_KEY no configurada");
+        String endpoint = String.format("https://api.stripe.com/v1/subscription_items/%s/usage_records",
+                c.getStripeSubscriptionItemId());
+
+        StringBuilder postData = new StringBuilder();
+        postData.append("quantity=").append(URLEncoder.encode(String.valueOf(quantity), "UTF-8"));
+        postData.append("&timestamp=").append(URLEncoder.encode(String.valueOf(unixTs), "UTF-8"));
+        postData.append("&action=increment");
+
+        byte[] postDataBytes = postData.toString().getBytes("UTF-8");
+
+        URL url = new URL(endpoint);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Authorization", "Bearer " + apiKey);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn.setDoOutput(true);
+        try (OutputStream os = conn.getOutputStream()) {
+            os.write(postDataBytes);
+        }
+        int responseCode = conn.getResponseCode();
+        if (responseCode < 200 || responseCode >= 300) {
+            throw new RuntimeException("Stripe usage report failed: HTTP " + responseCode);
+        }
+    }
+}
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/application/service/UserService.java
 package com.screenleads.backend.app.application.service;
 
@@ -2748,6 +3307,9 @@ public interface UserService {
 ```java
 // src/main/java/com/screenleads/backend/app/application/service/UserServiceImpl.java
 package com.screenleads.backend.app.application.service;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Role;
@@ -2779,6 +3341,7 @@ import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserRepository repo;
     private final CompanyRepository companyRepo;
@@ -2817,7 +3380,8 @@ public class UserServiceImpl implements UserService {
         enableCompanyFilterIfNeeded();
         return repo.findAll().stream()
                 .peek(u -> {
-                    if (u.getProfileImage() != null) Hibernate.initialize(u.getProfileImage());
+                    if (u.getProfileImage() != null)
+                        Hibernate.initialize(u.getProfileImage());
                 })
                 .map(UserMapper::toDto)
                 .toList();
@@ -2829,7 +3393,8 @@ public class UserServiceImpl implements UserService {
         enableCompanyFilterIfNeeded();
         return repo.findById(id)
                 .map(u -> {
-                    if (u.getProfileImage() != null) Hibernate.initialize(u.getProfileImage());
+                    if (u.getProfileImage() != null)
+                        Hibernate.initialize(u.getProfileImage());
                     return UserMapper.toDto(u);
                 })
                 .orElse(null);
@@ -2908,28 +3473,21 @@ public class UserServiceImpl implements UserService {
             } else {
                 // Crear Media nueva
                 var mediaDto = dto.getProfileImage();
-                // Buscar o crear MediaType
+                // Buscar o crear MediaType solo por id, type o extension
                 var typeDto = mediaDto.type();
                 MediaType type = null;
                 String src = mediaDto.src();
-                final String extension;
+                String extension = null;
                 if (src != null && src.contains(".")) {
-                    extension = src.substring(src.lastIndexOf('.') + 1).toLowerCase();
-                } else {
-                    extension = null;
-                }
-                String detectedType = null;
-                if (extension != null) {
-                    switch (extension) {
-                        case "jpg": case "jpeg": case "png": case "gif": case "bmp":
-                            detectedType = "IMG"; break;
-                        case "mp4": case "avi": case "mov": case "wmv":
-                            detectedType = "VIDEO"; break;
-                        case "mp3": case "wav": case "ogg":
-                            detectedType = "AUDIO"; break;
-                        default: detectedType = null;
+                    String extCandidate = src.substring(src.lastIndexOf('.') + 1).toLowerCase();
+                    int qIdx = extCandidate.indexOf('?');
+                    if (qIdx > 0) {
+                        extension = extCandidate.substring(0, qIdx);
+                    } else {
+                        extension = extCandidate;
                     }
                 }
+                log.info("[MEDIA PROFILE] Extrayendo extensión de src: {} => {}", src, extension);
                 if (typeDto != null && typeDto.id() != null) {
                     type = mediaTypeRepository.findById(typeDto.id()).orElse(null);
                 } else if (typeDto != null && typeDto.type() != null) {
@@ -2937,11 +3495,11 @@ public class UserServiceImpl implements UserService {
                 } else if (extension != null) {
                     type = mediaTypeRepository.findByExtension(extension).orElse(null);
                 }
-                if (type == null && detectedType != null) {
-                    type = mediaTypeRepository.findByType(detectedType).orElse(null);
-                }
                 if (type == null) {
-                    throw new IllegalArgumentException("No se pudo determinar el tipo de media para la imagen de perfil");
+                    throw new IllegalArgumentException(
+                            "No se pudo determinar el tipo de media para la imagen de perfil"
+                                    + (extension != null ? " (extensión: " + extension + ")" : "")
+                                    + ". Asegúrate de que el MediaType existe.");
                 }
                 Media newMedia = Media.builder()
                         .src(mediaDto.src())
@@ -2965,9 +3523,8 @@ public class UserServiceImpl implements UserService {
 
         User saved = repo.save(u);
         return new com.screenleads.backend.app.web.dto.UserCreationResponse(
-            UserMapper.toDto(saved),
-            (dto.getPassword() != null && !dto.getPassword().isBlank()) ? null : rawPassword
-        );
+                UserMapper.toDto(saved),
+                (dto.getPassword() != null && !dto.getPassword().isBlank()) ? null : rawPassword);
     }
 
     @Override
@@ -3031,45 +3588,59 @@ public class UserServiceImpl implements UserService {
                     String detectedType = null;
                     if (extension != null) {
                         switch (extension) {
-                            case "jpg": case "jpeg": case "png": case "gif": case "bmp":
-                                detectedType = "IMG"; break;
-                            case "mp4": case "avi": case "mov": case "wmv":
-                                detectedType = "VIDEO"; break;
-                            case "mp3": case "wav": case "ogg":
-                                detectedType = "AUDIO"; break;
+                            case "jpg":
+                            case "jpeg":
+                            case "png":
+                            case "gif":
+                            case "bmp":
+                                detectedType = "IMG";
+                                break;
+                            case "mp4":
+                            case "avi":
+                            case "mov":
+                            case "wmv":
+                                detectedType = "VIDEO";
+                                break;
+                            case "mp3":
+                            case "wav":
+                            case "ogg":
+                                detectedType = "AUDIO";
+                                break;
                             default:
-                                detectedType = "FILE"; break;
+                                detectedType = "FILE";
+                                break;
                         }
                     }
                     if (typeDto != null) {
                         if (typeDto.type() != null && !typeDto.type().isBlank()) {
                             type = mediaTypeRepository.findByType(typeDto.type()).orElse(null);
                         }
-                        if (type == null && typeDto.extension() != null && !typeDto.extension().isBlank()) {
-                            type = mediaTypeRepository.findByExtension(typeDto.extension()).orElse(null);
+                        // Si type es vacío o nulo, buscar por extensión
+                        if ((type == null || typeDto.type() == null || typeDto.type().isBlank())
+                                && typeDto.extension() != null && !typeDto.extension().isBlank()) {
+                            type = mediaTypeRepository.findByExtensionIgnoreCase(extension).orElse(null);
                         }
                     }
-                    if (type == null && detectedType != null && extension != null) {
-                        type = mediaTypeRepository.findByType(detectedType)
-                                .filter(t -> t.getExtension().equalsIgnoreCase(extension))
-                                .orElse(null);
-                        if (type == null) {
-                            type = new MediaType();
-                            type.setType(detectedType);
-                            type.setExtension(extension);
-                            type.setEnabled(true);
-                            type = mediaTypeRepository.save(type);
-                        }
+                    // Si sigue sin encontrar, buscar por extensión deducida
+                    if (type == null && extension != null) {
+                        type = mediaTypeRepository.findByExtensionIgnoreCase(extension).orElse(null);
                     }
                     if (type == null) {
-                        // fallback seguro
-                        type = mediaTypeRepository.findByType("IMG").orElseGet(() -> {
-                            MediaType t = new MediaType();
-                            t.setType("IMG");
-                            t.setExtension("jpg");
-                            t.setEnabled(true);
-                            return mediaTypeRepository.save(t);
-                        });
+                        // Log avanzado: mostrar todos los MediaType y la extensión buscada
+                        var allMediaTypes = mediaTypeRepository.findAll();
+                        log.error("[MEDIA PROFILE] No se encontró MediaType con extensión: {}. Payload src: {}",
+                                extension, src);
+                        log.error("[MEDIA PROFILE] MediaTypes en BD:");
+                        for (MediaType mt : allMediaTypes) {
+                            log.error("  - id: {}, type: {}, extension: '{}', enabled: {}", mt.getId(), mt.getType(),
+                                    mt.getExtension(), mt.getEnabled());
+                        }
+                        log.error("[MEDIA PROFILE] Valor de extensión buscada (TRIM, lower): '{}', original: '{}'",
+                                extension != null ? extension.trim().toLowerCase() : null, extension);
+                        throw new IllegalArgumentException(
+                                "No se pudo determinar el tipo de media para la imagen de perfil (extensión: "
+                                        + extension
+                                        + "). Asegúrate de que el MediaType existe y la extensión está bien escrita en la base de datos.");
                     }
                     // Buscar compañía
                     Company company = existing.getCompany();
@@ -3082,12 +3653,12 @@ public class UserServiceImpl implements UserService {
                     if (company == null) {
                         throw new IllegalArgumentException("No se puede asociar media: compañía no encontrada");
                     }
-            var newMedia = Media.builder()
-                .src(mediaDto.src())
-                .type(type)
-                .company(company)
-                .build();
-            existing.setProfileImage(mediaRepository.save(newMedia));
+                    var newMedia = Media.builder()
+                            .src(mediaDto.src())
+                            .type(type)
+                            .company(company)
+                            .build();
+                    existing.setProfileImage(mediaRepository.save(newMedia));
                 }
             }
 
@@ -3152,15 +3723,18 @@ public class UserServiceImpl implements UserService {
     private Long resolveCompanyId(Authentication auth) {
         Object principal = auth.getPrincipal();
 
-        if (principal instanceof User u) {
+        if (principal instanceof User) {
+            User u = (User) principal;
             return (u.getCompany() != null) ? u.getCompany().getId() : null;
         }
-        if (principal instanceof UserDetails ud) {
+        if (principal instanceof UserDetails) {
+            UserDetails ud = (UserDetails) principal;
             return repo.findByUsername(ud.getUsername())
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
-        if (principal instanceof String username) {
+        if (principal instanceof String) {
+            String username = (String) principal;
             return repo.findByUsername(username)
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);

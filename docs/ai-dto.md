@@ -162,6 +162,72 @@ public record AdviceVisibilityRuleDTO(
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/web/dto/ApiKeyDTO.java
+package com.screenleads.backend.app.web.dto;
+
+import java.time.LocalDateTime;
+
+public class ApiKeyDTO {
+    private Long id;
+    private String key;
+    private boolean active;
+    private LocalDateTime createdAt;
+    private LocalDateTime expiresAt;
+    private String permissions;
+
+    // Getters y setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
+    public String getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(String permissions) {
+        this.permissions = permissions;
+    }
+}
+
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/web/dto/AppEntityAttributeDTO.java
 // src/main/java/com/screenleads/backend/app/web/dto/EntityAttributeDTO.java
 package com.screenleads.backend.app.web.dto;
@@ -276,6 +342,63 @@ public class AppVersionDTO {
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/web/dto/ClientDTO.java
+package com.screenleads.backend.app.web.dto;
+
+import java.util.List;
+
+public class ClientDTO {
+    private Long id;
+    private String clientId;
+    private String name;
+    private boolean active;
+    private List<ApiKeyDTO> apiKeys;
+
+    // Getters y setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public List<ApiKeyDTO> getApiKeys() {
+        return apiKeys;
+    }
+
+    public void setApiKeys(List<ApiKeyDTO> apiKeys) {
+        this.apiKeys = apiKeys;
+    }
+}
+
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/web/dto/CompanyDTO.java
 package com.screenleads.backend.app.web.dto;
 
@@ -284,8 +407,21 @@ import java.util.List;
 import com.screenleads.backend.app.domain.model.Advice;
 import com.screenleads.backend.app.domain.model.Device;
 
-public record CompanyDTO(Long id, String name, String observations, MediaSlimDTO logo, List<Device> devices,
-                List<Advice> advices, String primaryColor, String secondaryColor) {
+import com.screenleads.backend.app.domain.model.Company;
+
+public record CompanyDTO(
+        Long id,
+        String name,
+        String observations,
+        MediaSlimDTO logo,
+        List<Device> devices,
+        List<Advice> advices,
+        String primaryColor,
+        String secondaryColor,
+        String stripeCustomerId,
+        String stripeSubscriptionId,
+        String stripeSubscriptionItemId,
+        Company.BillingStatus billingStatus) {
 }
 
 ```
@@ -303,11 +439,35 @@ public record CompanyRefDTO(Long id, String name) {
 ```
 
 ```java
+// src/main/java/com/screenleads/backend/app/web/dto/CompanyTokenDTO.java
+package com.screenleads.backend.app.web.dto;
+
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CompanyTokenDTO {
+    private Long id;
+    private Long companyId;
+    private String token;
+    private String role;
+    private LocalDateTime createdAt;
+    private LocalDateTime expiresAt;
+    private String descripcion;
+}
+
+```
+
+```java
 // src/main/java/com/screenleads/backend/app/web/dto/DeviceDTO.java
 
 package com.screenleads.backend.app.web.dto;
 
-public record DeviceDTO(Long id, String uuid, String descriptionName, Number width, Number height, DeviceTypeDTO type, CompanyRefDTO company) {
+public record DeviceDTO(Long id, String uuid, String descriptionName, Number width, Number height, DeviceTypeDTO type,
+        CompanyRefDTO company) {
 }
 
 ```

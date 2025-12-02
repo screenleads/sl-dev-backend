@@ -113,32 +113,33 @@ public class DataInitializer implements CommandLineRunner {
                                 if (company != null && adviceRepository.count() == 0) {
                                         System.out.println("[MOCK] Creando anuncio de test por inicialización...");
                                         String mediaSrc = "https://storage.googleapis.com/screenleads-e7e0b.firebasestorage.app/media/videos/compressed-e69233c4-260a-4b3c-8ba6-876c34989725-tv_desayunos_1.mp4";
-                                        Long mediaId = mediaRepository.findBySrc(mediaSrc).map(m -> m.getId()).orElse(null);
+                                        Long mediaId = mediaRepository.findBySrc(mediaSrc).map(m -> m.getId())
+                                                        .orElse(null);
                                         AdviceDTO mockDto = new AdviceDTO(
-                                                null,
-                                                "Anuncio de test ",
-                                                false,
-                                                0,
-                                                new MediaUpsertDTO(mediaId, mediaSrc),
-                                                null,
-                                                new CompanyRefDTO(company.getId(), company.getName()),
-                                                Arrays.asList(
-                                                        new AdviceScheduleDTO(
-                                                                null,
-                                                                "2025-09-30T22:00:00.000Z",
-                                                                "2025-10-30T23:00:00.000Z",
-                                                                Arrays.asList(
-                                                                        new com.screenleads.backend.app.web.dto.AdviceTimeWindowDTO(
-                                                                                null, "MONDAY", "00:00", "23:59"
-                                                                        ),
-                                                                        new com.screenleads.backend.app.web.dto.AdviceTimeWindowDTO(
-                                                                                null, "SUNDAY", "00:00", "23:59"
-                                                                        )
-                                                                ),
-                                                                null
-                                                        )
-                                                )
-                                        );
+                                                        null,
+                                                        "Anuncio de test ",
+                                                        false,
+                                                        0,
+                                                        new MediaUpsertDTO(mediaId, mediaSrc),
+                                                        null,
+                                                        new CompanyRefDTO(company.getId(), company.getName()),
+                                                        Arrays.asList(
+                                                                        new AdviceScheduleDTO(
+                                                                                        null,
+                                                                                        "2025-09-30T22:00:00.000Z",
+                                                                                        "2025-10-30T23:00:00.000Z",
+                                                                                        Arrays.asList(
+                                                                                                        new com.screenleads.backend.app.web.dto.AdviceTimeWindowDTO(
+                                                                                                                        null,
+                                                                                                                        "MONDAY",
+                                                                                                                        "00:00",
+                                                                                                                        "23:59"),
+                                                                                                        new com.screenleads.backend.app.web.dto.AdviceTimeWindowDTO(
+                                                                                                                        null,
+                                                                                                                        "SUNDAY",
+                                                                                                                        "00:00",
+                                                                                                                        "23:59")),
+                                                                                        null)));
                                         adviceService.saveAdvice(mockDto);
                                 }
                         } catch (Exception e) {
@@ -170,7 +171,6 @@ public class DataInitializer implements CommandLineRunner {
                                 continue;
                         if (Boolean.TRUE.equals(e.getVisibleInMenu()) && e.getSortOrder() != null) {
                                 used.add(e.getSortOrder());
-                                max = Math.max(max, e.getSortOrder());
                         }
                 }
                 int n = (desired != null) ? desired : (max + 1);
@@ -181,6 +181,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // ========= SEED ENTIDADES (sólo esqueleto) =========
         private void seedAppEntitiesSkeleton() {
+                                // Eliminado: lógica de CompanyToken
                 // Para evitar choques, pasamos sortOrder deseado (o null) y dentro se normaliza
                 upsertAppEntity("company", "Company",
                                 "com.screenleads.backend.app.domain.model.Company", "company", "Long",
@@ -236,6 +237,11 @@ public class DataInitializer implements CommandLineRunner {
                                 "com.screenleads.backend.app.domain.model.AppVersion", "app_version", "Long",
                                 "/app-versions", 1, 1, 1, 1, true, null,
                                 "App Versions", "download-cloud", 11);
+
+                upsertAppEntity("api_key", "ApiKey",
+                                "com.screenleads.backend.app.domain.model.ApiKey", "api_key", "Long",
+                                "/api-keys", 1, 3, 2, 2, true, null,
+                                "API Keys", "vpn_key", 13);
 
                 // AppEntity (metamodelo) visible en el menú -> sortOrder único (pasa null o
                 // repetido, se corrige)
@@ -632,7 +638,15 @@ public class DataInitializer implements CommandLineRunner {
 
         private void createDefaultCompany(String name, String observations) {
                 if (!companyRepository.existsByName(name)) {
-                        companyRepository.save(Company.builder().name(name).observations(observations).build());
+                        companyRepository.save(
+                                        Company.builder()
+                                                        .name(name)
+                                                        .observations(observations)
+                                                        .stripeCustomerId(null)
+                                                        .stripeSubscriptionId(null)
+                                                        .stripeSubscriptionItemId(null)
+                                                        .billingStatus(Company.BillingStatus.INCOMPLETE)
+                                                        .build());
                 }
         }
 
