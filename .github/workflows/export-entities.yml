@@ -1,13 +1,13 @@
 name: Export entities snapshot
-
+ 
 on:
   push:
     branches: [ develop ]
   workflow_dispatch:
-
+ 
 permissions:
   contents: write
-
+ 
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,19 +16,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
+ 
       - name: Ensure script is present
         run: |
-          mkdir -p scripts
-          cat > scripts/export-entities.sh << 'EOF'
+          mkdir -p scripts/export
+          cat > scripts/export/export-entities.sh << 'EOF'
           #!/usr/bin/env bash
           set -euo pipefail
-
+ 
           OUT="docs/ai-entities.md"
           BRANCH="${GITHUB_REF_NAME:-develop}"
-
+ 
           mkdir -p docs
-
+ 
           {
             echo "# Entidades JPA — snapshot incrustado"
             echo
@@ -37,9 +37,9 @@ jobs:
             echo "---"
             echo
           } > "$OUT"
-
+ 
           mapfile -t FILES < <(git ls-files 'src/main/java/**/domain/model/*.java' | sort)
-
+ 
           for f in "${FILES[@]}"; do
             echo "\`\`\`java" >> "$OUT"
             echo "// $f" >> "$OUT"
@@ -47,14 +47,14 @@ jobs:
             echo "\`\`\`" >> "$OUT"
             echo >> "$OUT"
           done
-
+ 
           echo "Generado $OUT con ${#FILES[@]} archivo(s)."
           EOF
-          chmod +x scripts/export-entities.sh
-
+          chmod +x scripts/export/export-entities.sh
+ 
       - name: Generate ai-entities.md
-        run: scripts/export-entities.sh
-
+        run: scripts/export/export-entities.sh
+ 
       - name: Commit changes (if any)
         run: |
           if [[ -n "$(git status --porcelain docs/ai-entities.md)" ]]; then
