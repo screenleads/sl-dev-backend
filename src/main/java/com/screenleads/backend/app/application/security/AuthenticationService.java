@@ -87,7 +87,8 @@ public class AuthenticationService {
             throw new UsernameNotFoundException("No authenticated user");
         }
         User u;
-        if (auth.getPrincipal() instanceof User userPrincipal) {
+        if (auth.getPrincipal() instanceof User) {
+            User userPrincipal = (User) auth.getPrincipal();
             // Always reload from DB to ensure eager fetch
             u = userRepository.findWithCompanyAndProfileImageByUsername(userPrincipal.getUsername())
                     .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
@@ -105,8 +106,8 @@ public class AuthenticationService {
             throw new UsernameNotFoundException("No authenticated user");
         }
         User user;
-        if (auth.getPrincipal() instanceof User u) {
-            user = u;
+        if (auth.getPrincipal() instanceof User) {
+            user = (User) auth.getPrincipal();
         } else {
             String username = auth.getName();
             user = userRepository.findByUsername(username)

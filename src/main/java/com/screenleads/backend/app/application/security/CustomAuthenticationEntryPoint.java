@@ -13,9 +13,8 @@ public class CustomAuthenticationEntryPoint implements org.springframework.secur
             throws IOException {
         res.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
         res.setContentType("application/json;charset=UTF-8");
-        String body = """
-                {"error":"Unauthorized","message":"Invalid or missing token","path":"%s"}
-                """.formatted(req.getRequestURI());
+        String body = String.format("{\"error\":\"Unauthorized\",\"message\":\"Invalid or missing token\",\"path\":\"%s\"}", 
+                req.getRequestURI());
         res.getWriter().write(body);
     }
 }

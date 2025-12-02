@@ -81,19 +81,22 @@ public class CompanyFilterRequestEnabler extends OncePerRequestFilter {
         Object principal = auth.getPrincipal();
 
         // 1) Tu entidad de dominio como principal
-        if (principal instanceof com.screenleads.backend.app.domain.model.User u) {
+        if (principal instanceof com.screenleads.backend.app.domain.model.User) {
+            com.screenleads.backend.app.domain.model.User u = (com.screenleads.backend.app.domain.model.User) principal;
             return u.getCompany() != null ? u.getCompany().getId() : null;
         }
 
         // 2) UserDetails estándar
-        if (principal instanceof UserDetails ud) {
+        if (principal instanceof UserDetails) {
+            UserDetails ud = (UserDetails) principal;
             return userRepository.findByUsername(ud.getUsername())
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
 
         // 3) Principal como String (username), típico en JWT con claim "sub"
-        if (principal instanceof String username) {
+        if (principal instanceof String) {
+            String username = (String) principal;
             return userRepository.findByUsername(username)
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);

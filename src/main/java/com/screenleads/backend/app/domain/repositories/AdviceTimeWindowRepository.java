@@ -18,18 +18,16 @@ public interface AdviceTimeWindowRepository extends JpaRepository<AdviceTimeWind
      *  - que la fecha esté dentro del rango del schedule (startDate/endDate pueden ser null)
      *  - que la hora esté dentro de una ventana [fromTime, toTime) (fin exclusivo)
      */
-    @Query("""
-        SELECT (COUNT(w.id) > 0)
-          FROM Advice a
-          JOIN a.schedules s
-          JOIN s.windows w
-         WHERE a.id = :adviceId
-           AND w.weekday = :dow
-           AND (:date >= s.startDate OR s.startDate IS NULL)
-           AND (:date <= s.endDate   OR s.endDate   IS NULL)
-           AND :time >= w.fromTime
-           AND :time <  w.toTime
-        """)
+    @Query("SELECT (COUNT(w.id) > 0) " +
+           "FROM Advice a " +
+           "JOIN a.schedules s " +
+           "JOIN s.windows w " +
+           "WHERE a.id = :adviceId " +
+           "AND w.weekday = :dow " +
+           "AND (:date >= s.startDate OR s.startDate IS NULL) " +
+           "AND (:date <= s.endDate OR s.endDate IS NULL) " +
+           "AND :time >= w.fromTime " +
+           "AND :time < w.toTime")
     boolean existsActive(@Param("adviceId") Long adviceId,
                          @Param("dow") DayOfWeek dow,
                          @Param("date") LocalDate date,

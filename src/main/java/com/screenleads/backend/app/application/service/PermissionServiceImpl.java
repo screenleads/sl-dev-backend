@@ -41,13 +41,24 @@ public class PermissionServiceImpl implements PermissionService {
                 AppEntity p = permissionRepository.findByResource(resource).orElse(null);
                 if (p == null)
                     return false;
-                Integer required = switch (action) {
-                    case "read" -> p.getReadLevel();
-                    case "create" -> p.getCreateLevel();
-                    case "update" -> p.getUpdateLevel();
-                    case "delete" -> p.getDeleteLevel();
-                    default -> null;
-                };
+                Integer required;
+                switch (action) {
+                    case "read":
+                        required = p.getReadLevel();
+                        break;
+                    case "create":
+                        required = p.getCreateLevel();
+                        break;
+                    case "update":
+                        required = p.getUpdateLevel();
+                        break;
+                    case "delete":
+                        required = p.getDeleteLevel();
+                        break;
+                    default:
+                        required = null;
+                        break;
+                }
                 if (required == null)
                     return false;
                 return myLevel <= required;

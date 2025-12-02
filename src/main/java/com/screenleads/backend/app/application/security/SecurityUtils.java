@@ -13,7 +13,8 @@ public final class SecurityUtils {
 
     public static Optional<User> getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof User u) {
+        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof User) {
+            User u = (User) auth.getPrincipal();
             return Optional.of(u);
         }
         return Optional.empty();

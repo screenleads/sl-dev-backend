@@ -492,15 +492,18 @@ public class AdviceServiceImpl implements AdviceService {
     private Long resolveCompanyId(Authentication auth) {
         Object principal = auth.getPrincipal();
 
-        if (principal instanceof com.screenleads.backend.app.domain.model.User u) {
+        if (principal instanceof com.screenleads.backend.app.domain.model.User) {
+            com.screenleads.backend.app.domain.model.User u = (com.screenleads.backend.app.domain.model.User) principal;
             return (u.getCompany() != null) ? u.getCompany().getId() : null;
         }
-        if (principal instanceof org.springframework.security.core.userdetails.UserDetails ud) {
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+            org.springframework.security.core.userdetails.UserDetails ud = (org.springframework.security.core.userdetails.UserDetails) principal;
             return userRepository.findByUsername(ud.getUsername())
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
-        if (principal instanceof String username) {
+        if (principal instanceof String) {
+            String username = (String) principal;
             return userRepository.findByUsername(username)
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
