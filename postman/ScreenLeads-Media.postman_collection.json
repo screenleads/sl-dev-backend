@@ -24,300 +24,574 @@
 	],
 	"item": [
 		{
-			"name": "Media",
+			"name": "JWT Auth",
 			"item": [
 				{
-					"name": "Get All Media",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/medias",
-							"host": ["{{base_url}}"],
-							"path": ["medias"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Upload Media",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "file",
-									"type": "file",
-									"src": "/path/to/your/image.jpg"
+					"name": "Media",
+					"item": [
+						{
+							"name": "Get All Media",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
 								},
-								{
-									"key": "companyId",
-									"value": "{{company_id}}",
-									"type": "text"
-								},
-								{
-									"key": "mediaTypeId",
-									"value": "1",
-									"type": "text"
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/medias",
+									"host": ["{{base_url}}"],
+									"path": ["medias"]
 								}
-							]
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "{{base_url}}/medias/upload",
-							"host": ["{{base_url}}"],
-							"path": ["medias", "upload"]
+						{
+							"name": "Upload Media",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/path/to/your/image.jpg"
+										},
+										{
+											"key": "companyId",
+											"value": "{{company_id}}",
+											"type": "text"
+										},
+										{
+											"key": "mediaTypeId",
+											"value": "1",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/medias/upload",
+									"host": ["{{base_url}}"],
+									"path": ["medias", "upload"]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
+				},
+				{
+					"name": "Media Types",
+					"item": [
+						{
+							"name": "Get All Media Types",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/medias/types",
+									"host": ["{{base_url}}"],
+									"path": ["medias", "types"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Media Type by ID",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/medias/types/1",
+									"host": ["{{base_url}}"],
+									"path": ["medias", "types", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Media Type",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Video HD\",\n  \"description\": \"Vídeos en alta definición\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/medias/types",
+									"host": ["{{base_url}}"],
+									"path": ["medias", "types"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Media Type",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "PUT",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Video Full HD\",\n  \"description\": \"Vídeos 1080p\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/medias/types/1",
+									"host": ["{{base_url}}"],
+									"path": ["medias", "types", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Media Type",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/medias/types/1",
+									"host": ["{{base_url}}"],
+									"path": ["medias", "types", "1"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Advices",
+					"item": [
+						{
+							"name": "Get All Advices",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/advices",
+									"host": ["{{base_url}}"],
+									"path": ["advices"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Advice by ID",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/advices/1",
+									"host": ["{{base_url}}"],
+									"path": ["advices", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Advice",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Aviso Importante\",\n  \"content\": \"Contenido del aviso\",\n  \"companyId\": {{company_id}},\n  \"deviceId\": {{device_id}},\n  \"active\": true,\n  \"priority\": 1\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/advices",
+									"host": ["{{base_url}}"],
+									"path": ["advices"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Advice",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "PUT",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Aviso Actualizado\",\n  \"priority\": 2\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/advices/1",
+									"host": ["{{base_url}}"],
+									"path": ["advices", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Advice",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/advices/1",
+									"host": ["{{base_url}}"],
+									"path": ["advices", "1"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Device Types",
+					"item": [
+						{
+							"name": "Get All Device Types",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/devices/types",
+									"host": ["{{base_url}}"],
+									"path": ["devices", "types"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Device Type",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"LED 4K\",\n  \"description\": \"Pantalla LED 4K UHD\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/devices/types",
+									"host": ["{{base_url}}"],
+									"path": ["devices", "types"]
+								}
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		},
 		{
-			"name": "Media Types",
+			"name": "API Key Auth",
 			"item": [
 				{
-					"name": "Get All Media Types",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+					"name": "Media",
+					"item": [
+						{
+							"name": "Get All Media (API Key)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-API-KEY",
+										"value": "{{api_key}}",
+										"type": "text"
+									},
+									{
+										"key": "client-id",
+										"value": "{{client_id}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/medias",
+									"host": ["{{base_url}}"],
+									"path": ["medias"]
+								},
+								"description": "Con API Key que tenga permiso 'media:read'"
+							},
+							"response": []
 						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/medias/types",
-							"host": ["{{base_url}}"],
-							"path": ["medias", "types"]
+						{
+							"name": "Upload Media (API Key)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-API-KEY",
+										"value": "{{api_key}}",
+										"type": "text"
+									},
+									{
+										"key": "client-id",
+										"value": "{{client_id}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/path/to/your/image.jpg"
+										},
+										{
+											"key": "companyId",
+											"value": "{{company_id}}",
+											"type": "text"
+										},
+										{
+											"key": "mediaTypeId",
+											"value": "1",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/medias/upload",
+									"host": ["{{base_url}}"],
+									"path": ["medias", "upload"]
+								},
+								"description": "Con API Key que tenga permiso 'media:create'"
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "Get Media Type by ID",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+					"name": "Media Types",
+					"item": [
+						{
+							"name": "Get All Media Types (API Key)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-API-KEY",
+										"value": "{{api_key}}",
+										"type": "text"
+									},
+									{
+										"key": "client-id",
+										"value": "{{client_id}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/medias/types",
+									"host": ["{{base_url}}"],
+									"path": ["medias", "types"]
+								},
+								"description": "Con API Key que tenga permiso 'mediatype:read'"
+							},
+							"response": []
 						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/medias/types/1",
-							"host": ["{{base_url}}"],
-							"path": ["medias", "types", "1"]
+						{
+							"name": "Create Media Type (API Key)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-API-KEY",
+										"value": "{{api_key}}",
+										"type": "text"
+									},
+									{
+										"key": "client-id",
+										"value": "{{client_id}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Video 4K\",\n  \"description\": \"Vídeos en 4K Ultra HD\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/medias/types",
+									"host": ["{{base_url}}"],
+									"path": ["medias", "types"]
+								},
+								"description": "Con API Key que tenga permiso 'mediatype:create'"
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "Create Media Type",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+					"name": "Advices",
+					"item": [
+						{
+							"name": "Get All Advices (API Key)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-API-KEY",
+										"value": "{{api_key}}",
+										"type": "text"
+									},
+									{
+										"key": "client-id",
+										"value": "{{client_id}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/advices",
+									"host": ["{{base_url}}"],
+									"path": ["advices"]
+								},
+								"description": "Con API Key que tenga permiso 'advice:read'"
+							},
+							"response": []
 						},
-						"method": "POST",
-						"header": [{"key": "Content-Type", "value": "application/json"}],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Video HD\",\n  \"description\": \"Vídeos en alta definición\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/medias/types",
-							"host": ["{{base_url}}"],
-							"path": ["medias", "types"]
+						{
+							"name": "Create Advice (API Key)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-API-KEY",
+										"value": "{{api_key}}",
+										"type": "text"
+									},
+									{
+										"key": "client-id",
+										"value": "{{client_id}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Aviso API\",\n  \"content\": \"Creado via API Key\",\n  \"companyId\": {{company_id}},\n  \"deviceId\": {{device_id}},\n  \"active\": true,\n  \"priority\": 1\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/advices",
+									"host": ["{{base_url}}"],
+									"path": ["advices"]
+								},
+								"description": "Con API Key que tenga permiso 'advice:create'"
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "Update Media Type",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+					"name": "Device Types",
+					"item": [
+						{
+							"name": "Get All Device Types (API Key)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-API-KEY",
+										"value": "{{api_key}}",
+										"type": "text"
+									},
+									{
+										"key": "client-id",
+										"value": "{{client_id}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/devices/types",
+									"host": ["{{base_url}}"],
+									"path": ["devices", "types"]
+								},
+								"description": "Con API Key que tenga permiso 'devicetype:read'"
+							},
+							"response": []
 						},
-						"method": "PUT",
-						"header": [{"key": "Content-Type", "value": "application/json"}],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Video Full HD\",\n  \"description\": \"Vídeos 1080p\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/medias/types/1",
-							"host": ["{{base_url}}"],
-							"path": ["medias", "types", "1"]
+						{
+							"name": "Create Device Type (API Key)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-API-KEY",
+										"value": "{{api_key}}",
+										"type": "text"
+									},
+									{
+										"key": "client-id",
+										"value": "{{client_id}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"OLED 8K\",\n  \"description\": \"Pantalla OLED 8K\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/devices/types",
+									"host": ["{{base_url}}"],
+									"path": ["devices", "types"]
+								},
+								"description": "Con API Key que tenga permiso 'devicetype:create'"
+							},
+							"response": []
 						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Media Type",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/medias/types/1",
-							"host": ["{{base_url}}"],
-							"path": ["medias", "types", "1"]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Advices",
-			"item": [
-				{
-					"name": "Get All Advices",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/advices",
-							"host": ["{{base_url}}"],
-							"path": ["advices"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Advice by ID",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/advices/1",
-							"host": ["{{base_url}}"],
-							"path": ["advices", "1"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Advice",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "POST",
-						"header": [{"key": "Content-Type", "value": "application/json"}],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"title\": \"Aviso Importante\",\n  \"content\": \"Contenido del aviso\",\n  \"companyId\": {{company_id}},\n  \"deviceId\": {{device_id}},\n  \"active\": true,\n  \"priority\": 1\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/advices",
-							"host": ["{{base_url}}"],
-							"path": ["advices"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update Advice",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "PUT",
-						"header": [{"key": "Content-Type", "value": "application/json"}],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"title\": \"Aviso Actualizado\",\n  \"priority\": 2\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/advices/1",
-							"host": ["{{base_url}}"],
-							"path": ["advices", "1"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Advice",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/advices/1",
-							"host": ["{{base_url}}"],
-							"path": ["advices", "1"]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Device Types",
-			"item": [
-				{
-					"name": "Get All Device Types",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/devices/types",
-							"host": ["{{base_url}}"],
-							"path": ["devices", "types"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Device Type",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "POST",
-						"header": [{"key": "Content-Type", "value": "application/json"}],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"LED 4K\",\n  \"description\": \"Pantalla LED 4K UHD\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/devices/types",
-							"host": ["{{base_url}}"],
-							"path": ["devices", "types"]
-						}
-					},
-					"response": []
+					]
 				}
 			]
 		}

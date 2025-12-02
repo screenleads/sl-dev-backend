@@ -196,6 +196,119 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "API Key Auth",
+			"item": [
+				{
+					"name": "Get All Promotions (API Key)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "client-id",
+								"value": "{{client_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/promotions",
+							"host": ["{{base_url}}"],
+							"path": ["promotions"]
+						},
+						"description": "Con API Key que tenga permiso 'promotion:read'"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Promotion (API Key)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "client-id",
+								"value": "{{client_id}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Descuento 20% - API Key\",\n  \"description\": \"Promoción creada via API Key\",\n  \"companyId\": {{company_id}},\n  \"startDate\": \"2024-12-01T00:00:00Z\",\n  \"endDate\": \"2024-12-31T23:59:59Z\",\n  \"active\": true,\n  \"maxUses\": 100\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/promotions",
+							"host": ["{{base_url}}"],
+							"path": ["promotions"]
+						},
+						"description": "Con API Key que tenga permiso 'promotion:create'"
+					},
+					"response": []
+				},
+				{
+					"name": "Validate Coupon (API Key)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "client-id",
+								"value": "{{client_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/coupons/COUPON-CODE-123",
+							"host": ["{{base_url}}"],
+							"path": ["coupons", "COUPON-CODE-123"]
+						},
+						"description": "Con API Key que tenga permiso 'coupon:read'"
+					},
+					"response": []
+				},
+				{
+					"name": "Redeem Coupon (API Key)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "client-id",
+								"value": "{{client_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/coupons/COUPON-CODE-123/redeem",
+							"host": ["{{base_url}}"],
+							"path": ["coupons", "COUPON-CODE-123", "redeem"]
+						},
+						"description": "Con API Key que tenga permiso 'coupon:update'"
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }

@@ -24,238 +24,311 @@
 	],
 	"item": [
 		{
-			"name": "Users",
+			"name": "JWT Auth",
 			"item": [
 				{
-					"name": "Get All Users",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+					"name": "Users",
+					"item": [
+						{
+							"name": "Get All Users",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/users",
+									"host": ["{{base_url}}"],
+									"path": ["users"]
+								}
+							},
+							"response": []
 						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/users",
-							"host": ["{{base_url}}"],
-							"path": ["users"]
+						{
+							"name": "Get User by ID",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/users/{{user_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["users", "{{user_id}}"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create User",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"newadmin\",\n  \"password\": \"admin123\",\n  \"email\": \"admin@example.com\",\n  \"name\": \"Nuevo Administrador\",\n  \"roleId\": 1,\n  \"companyId\": {{company_id}}\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/users",
+									"host": ["{{base_url}}"],
+									"path": ["users"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update User",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "PUT",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Administrador Actualizado\",\n  \"email\": \"updated@example.com\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/users/{{user_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["users", "{{user_id}}"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete User",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/users/{{user_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["users", "{{user_id}}"]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "Get User by ID",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+					"name": "Roles",
+					"item": [
+						{
+							"name": "Get All Roles",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/roles",
+									"host": ["{{base_url}}"],
+									"path": ["roles"]
+								}
+							},
+							"response": []
 						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/users/{{user_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["users", "{{user_id}}"]
+						{
+							"name": "Get Assignable Roles",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/roles/assignable",
+									"host": ["{{base_url}}"],
+									"path": ["roles", "assignable"]
+								},
+								"description": "Roles que el usuario actual puede asignar"
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "Create User",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+					"name": "Companies",
+					"item": [
+						{
+							"name": "Get All Companies",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/companies",
+									"host": ["{{base_url}}"],
+									"path": ["companies"]
+								}
+							},
+							"response": []
 						},
-						"method": "POST",
-						"header": [{"key": "Content-Type", "value": "application/json"}],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"username\": \"newadmin\",\n  \"password\": \"admin123\",\n  \"email\": \"admin@example.com\",\n  \"name\": \"Nuevo Administrador\",\n  \"roleId\": 1,\n  \"companyId\": {{company_id}}\n}"
+						{
+							"name": "Get Company by ID",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/companies/{{company_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["companies", "{{company_id}}"]
+								}
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "{{base_url}}/users",
-							"host": ["{{base_url}}"],
-							"path": ["users"]
+						{
+							"name": "Create Company",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Nueva Empresa SL\",\n  \"cif\": \"B12345678\",\n  \"email\": \"contacto@nuevaempresa.com\",\n  \"phone\": \"+34910000000\",\n  \"active\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/companies",
+									"host": ["{{base_url}}"],
+									"path": ["companies"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Company",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "PUT",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Empresa Actualizada SL\",\n  \"phone\": \"+34910111111\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/companies/{{company_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["companies", "{{company_id}}"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Company",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/companies/{{company_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["companies", "{{company_id}}"]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update User",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "PUT",
-						"header": [{"key": "Content-Type", "value": "application/json"}],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Administrador Actualizado\",\n  \"email\": \"updated@example.com\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/users/{{user_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["users", "{{user_id}}"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete User",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/users/{{user_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["users", "{{user_id}}"]
-						}
-					},
-					"response": []
+					]
 				}
 			]
 		},
 		{
-			"name": "Roles",
+			"name": "API Key Auth",
 			"item": [
 				{
-					"name": "Get All Roles",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+					"name": "Companies",
+					"item": [
+						{
+							"name": "Get All Companies (API Key)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-API-KEY",
+										"value": "{{api_key}}",
+										"type": "text"
+									},
+									{
+										"key": "client-id",
+										"value": "{{client_id}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/companies",
+									"host": ["{{base_url}}"],
+									"path": ["companies"]
+								},
+								"description": "Con API Key que tenga permiso 'company:read'"
+							},
+							"response": []
 						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/roles",
-							"host": ["{{base_url}}"],
-							"path": ["roles"]
+						{
+							"name": "Create Company (API Key)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-API-KEY",
+										"value": "{{api_key}}",
+										"type": "text"
+									},
+									{
+										"key": "client-id",
+										"value": "{{client_id}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Empresa API Key SL\",\n  \"cif\": \"B99887766\",\n  \"email\": \"api@empresa.com\",\n  \"phone\": \"+34920000000\",\n  \"active\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/companies",
+									"host": ["{{base_url}}"],
+									"path": ["companies"]
+								},
+								"description": "Con API Key que tenga permiso 'company:create'"
+							},
+							"response": []
 						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Assignable Roles",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/roles/assignable",
-							"host": ["{{base_url}}"],
-							"path": ["roles", "assignable"]
-						},
-						"description": "Roles que el usuario actual puede asignar"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Companies",
-			"item": [
-				{
-					"name": "Get All Companies",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/companies",
-							"host": ["{{base_url}}"],
-							"path": ["companies"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Company by ID",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/companies/{{company_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["companies", "{{company_id}}"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Company",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "POST",
-						"header": [{"key": "Content-Type", "value": "application/json"}],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Nueva Empresa SL\",\n  \"cif\": \"B12345678\",\n  \"email\": \"contacto@nuevaempresa.com\",\n  \"phone\": \"+34910000000\",\n  \"active\": true\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/companies",
-							"host": ["{{base_url}}"],
-							"path": ["companies"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update Company",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "PUT",
-						"header": [{"key": "Content-Type", "value": "application/json"}],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Empresa Actualizada SL\",\n  \"phone\": \"+34910111111\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/companies/{{company_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["companies", "{{company_id}}"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Company",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/companies/{{company_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["companies", "{{company_id}}"]
-						}
-					},
-					"response": []
+					]
 				}
 			]
 		}

@@ -31,7 +31,6 @@ public class SecurityConfig {
 
         private final JwtAuthenticationFilter jwtAuthFilter;
         private final ApiKeyAuthenticationFilter apiKeyAuthFilter;
-        private final ApiKeyCompanyFilterEnabler apiKeyCompanyFilterEnabler;
         private final UserDetailsService userDetailsService;
 
         // Respuestas JSON limpias para 401 / 403
@@ -81,8 +80,7 @@ public class SecurityConfig {
 
                                 // ✅ IMPORTANTE: anclar SIEMPRE a un filtro estándar (no a filtros custom)
                                 .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                                .addFilterAfter(apiKeyCompanyFilterEnabler, ApiKeyAuthenticationFilter.class);
+                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();
         }
@@ -140,8 +138,8 @@ public class SecurityConfig {
                                 "X-Timezone-Offset",
                                 "Accept-Language",
                                 "X-API-KEY",
-                                        "client_id",
-                                        "client-id"));
+                                "client_id",
+                                "client-id"));
 
                 // (Opcional) Headers expuestos al frontend si necesitas leerlos
                 config.setExposedHeaders(List.of(

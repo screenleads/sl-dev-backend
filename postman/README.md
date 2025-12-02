@@ -9,7 +9,7 @@ Esta carpeta contiene todas las colecciones de Postman para probar la API de Scr
 Las colecciones funcionan con **3 entornos** independientes:
 
 1. **`ScreenLeads-Environment-Dev.postman_environment.json`** 
-   - 🏠 **DEV (Local)** - `http://localhost:8080`
+   - 🏠 **DEV (Local)** - `http://localhost:3000`
    - Para desarrollo local
    - Base de datos local
 
@@ -110,7 +110,7 @@ Las colecciones funcionan con **3 entornos** independientes:
    
    **DEV:**
    ```
-   base_url: http://localhost:8080
+   base_url: http://localhost:3000
    environment: dev
    ```
    
@@ -199,7 +199,7 @@ Company Scope: NULL
 
 | Variable | Descripción | Auto-guardada | Entorno |
 |----------|-------------|---------------|---------|
-| `base_url` | URL base de la API | No | DEV: `http://localhost:8080`<br>PRE: `https://pre-api.screenleads.com`<br>PRO: `https://api.screenleads.com` |
+| `base_url` | URL base de la API | No | DEV: `http://localhost:3000`<br>PRE: `https://pre-api.screenleads.com`<br>PRO: `https://api.screenleads.com` |
 | `environment` | Identificador del entorno | No | dev / pre / pro |
 | `jwt_token` | Token JWT del usuario | ✅ Sí (en Login) | Todos |
 | `api_key` | API Key activa | ✅ Sí (en Create API Key) | Todos |
@@ -309,8 +309,8 @@ Cuando creas recursos en un entorno:
 
 ```bash
 # DEV (Local)
-http://localhost:8080/devices
-http://localhost:8080/auth/login
+http://localhost:3000/devices
+http://localhost:3000/auth/login
 
 # PRE (Preproducción)
 https://pre-api.screenleads.com/devices

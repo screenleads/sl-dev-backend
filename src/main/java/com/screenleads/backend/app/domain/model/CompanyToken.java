@@ -16,7 +16,6 @@ public class CompanyToken {
     @Column(nullable = false, unique = true, length = 512)
     private String token;
 
-
     @Column(nullable = false)
     private String role;
 
@@ -33,9 +32,11 @@ public class CompanyToken {
     public String getDescripcion() {
         return descripcion;
     }
+
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
+
     public Long getId() {
         return id;
     }

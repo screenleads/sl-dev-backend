@@ -60,7 +60,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     @Override
     public ApiKey createApiKeyByDbId(Long clientDbId, String permissions, int daysValid) {
         Client client = clientRepository.findById(clientDbId)
-            .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado por id"));
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado por id"));
         ApiKey key = new ApiKey();
         key.setKey(UUID.randomUUID().toString().replace("-", ""));
         key.setClient(client);
