@@ -1,9 +1,7 @@
-
 package com.screenleads.backend.app.application.security.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,20 +13,20 @@ import com.screenleads.backend.app.domain.model.User;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.function.Function;
 
 @Service
 public class JwtService {
-    public Key getSigningKey() {
+    public SecretKey getSigningKey() {
         return signingKey;
     }
 
     @Value("${application.security.jwt.secret-key}")
     private String secretKey;
 
-    private Key signingKey;
+    private SecretKey signingKey;
 
     @PostConstruct
     public void init() {
@@ -51,11 +49,11 @@ public class JwtService {
 
     private Claims extractAllClaims(String token) {
         return Jwts
-                .parserBuilder()
-                .setSigningKey(signingKey)
+                .parser()
+                .verifyWith(signingKey)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     private boolean isTokenExpired(String token) {
@@ -65,13 +63,13 @@ public class JwtService {
     public String generateToken(User user) {
         return Jwts
                 .builder()
-                .setSubject(user.getUsername())
+                .subject(user.getUsername())
                 .claim("roles", user.getAuthorities().stream()
                         .map(Object::toString)
                         .toList())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24h
-                .signWith(signingKey, SignatureAlgorithm.HS256)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24h
+                .signWith(signingKey, Jwts.SIG.HS256)
                 .compact();
     }
 

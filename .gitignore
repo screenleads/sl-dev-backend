@@ -37,6 +37,38 @@ build/
 /.m2/
 /.gradle/
 
-**/clave-firebase.json
+### Environment Files ###
+.env
+.env.local
+.env.development
+.env.test
+.env.production
 
+### Secrets ###
+secrets/
+**/clave-firebase.json
+**/serviceAccountKey.json
+**/firebase-adminsdk-*.json
 keystore.p12
+
+### Credential Rotation Files ###
+NUEVAS_CREDENCIALES.md
+firebase-screenleads-*.json
+firebase-base64.txt
+update-heroku-credentials.ps1
+convert-firebase-to-base64.ps1
+*-backup-*/
+real-filter.ps1
+filter-replace.ps1
+clean-*.ps1
+clean-*.sh
+setup-environment.ps1
+
+### Logs ###
+logs/
+*.log
+
+### Temporary Files ###
+tmp/
+temp/
+*.tmp
