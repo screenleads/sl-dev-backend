@@ -1,8 +1,0 @@
-﻿52866617jJ@==>***PASSWORD_REMOVED***
-test_secret==>***SECRET_REMOVED***
-U0hKQkNGR0hJSktMTU5PUFFSU1RVVldYWVo3ODkwQUJDREVGRw====>***BASE64_REMOVED***
-dummy_base64_value==>***BASE64_REMOVED***
-sk_test_51QKyPU06CPkCtQPvnH3Hk9SajR==>sk_test_***REMOVED***
-sk_test_==>sk_test_***REMOVED***
-rk_test_==>rk_test_***REMOVED***
-whsec_==>whsec_***REMOVED***
