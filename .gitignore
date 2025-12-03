@@ -51,6 +51,15 @@ secrets/
 **/firebase-adminsdk-*.json
 keystore.p12
 
+### Credential Rotation Files ###
+NUEVAS_CREDENCIALES.md
+firebase-screenleads-*.json
+firebase-base64.txt
+update-heroku-credentials.ps1
+*-backup-*/
+real-filter.ps1
+filter-replace.ps1
+
 ### Logs ###
 logs/
 *.log
