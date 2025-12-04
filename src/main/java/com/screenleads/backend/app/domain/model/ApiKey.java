@@ -9,7 +9,7 @@ public class ApiKey {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, name = "api_key")
     private String key;
 
     @ManyToOne(fetch = FetchType.LAZY)

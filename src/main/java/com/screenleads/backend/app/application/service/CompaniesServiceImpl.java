@@ -119,6 +119,12 @@ public class CompaniesServiceImpl implements CompaniesService {
         company.setObservations(companyDTO.observations());
         company.setPrimaryColor(companyDTO.primaryColor());
         company.setSecondaryColor(companyDTO.secondaryColor());
+        
+        // Update billing-related fields
+        company.setBillingStatus(companyDTO.billingStatus());
+        company.setStripeCustomerId(companyDTO.stripeCustomerId());
+        company.setStripeSubscriptionId(companyDTO.stripeSubscriptionId());
+        company.setStripeSubscriptionItemId(companyDTO.stripeSubscriptionItemId());
 
         if (companyDTO.logo() != null) {
             if (companyDTO.logo().id() != null) {

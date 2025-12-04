@@ -77,4 +77,8 @@ public class Company extends Auditable {
     public void setBillingStatus(String status) {
         this.billingStatus = BillingStatus.valueOf(status);
     }
+    
+    public void setBillingStatus(BillingStatus status) {
+        this.billingStatus = status;
+    }
 }

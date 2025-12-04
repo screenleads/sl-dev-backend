@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +42,7 @@ import com.screenleads.backend.app.web.dto.AdviceScheduleDTO;
 import com.screenleads.backend.app.web.dto.AdviceTimeWindowDTO;
 
 @Component
+@ConditionalOnProperty(name = "app.init.enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
@@ -171,7 +173,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // ========= SEED ENTIDADES (sólo esqueleto) =========
         private void seedAppEntitiesSkeleton() {
-                                // Eliminado: lógica de CompanyToken
+                // Eliminado: lógica de CompanyToken
                 // Para evitar choques, pasamos sortOrder deseado (o null) y dentro se normaliza
                 upsertAppEntity("company", "Company",
                                 "com.screenleads.backend.app.domain.model.Company", "company", "Long",
