@@ -1,10 +1,15 @@
 # ScreenLeads Backend
 
+![CI Tests](https://github.com/screenleads/sl-dev-backend/workflows/CI%20-%20Tests%20%26%20Coverage/badge.svg)
+![Coverage](https://img.shields.io/badge/coverage-35.87%25-yellow)
+![Tests](https://img.shields.io/badge/tests-224%20passing-success)
+![Build](https://img.shields.io/badge/build-passing-success)
+
 Backend API para la plataforma ScreenLeads - Sistema de gestión de pantallas digitales y engagement.
 
 ## 🚀 Características
 
-- API REST con Spring Boot 3.5
+- API REST con Spring Boot 3.4
 - Autenticación JWT y API Keys
 - Integración con Stripe para pagos
 - Firebase Storage para archivos multimedia
@@ -12,6 +17,19 @@ Backend API para la plataforma ScreenLeads - Sistema de gestión de pantallas di
 - WebSocket para comunicación en tiempo real
 - Documentación OpenAPI/Swagger
 - Actuator para monitoring
+- **CI/CD automatizado con GitHub Actions**
+- **SonarQube para análisis de calidad**
+- **Dependabot para actualizaciones automáticas**
+
+## 📊 Estado del Proyecto
+
+- ✅ **224 tests unitarios** pasando al 100%
+- ✅ **35.87% cobertura de código** (objetivo: 60%)
+- ✅ **Build automático** en cada push/PR
+- ✅ **Análisis de calidad** con SonarQube
+- ✅ **Dependencias actualizadas** automáticamente
+
+Ver detalles completos en [`TEST_COVERAGE_SUMMARY.md`](./TEST_COVERAGE_SUMMARY.md)
 
 ## 📋 Requisitos
 
@@ -171,9 +189,57 @@ mvn test
 # Tests con coverage
 mvn clean test jacoco:report
 
-# Análisis de vulnerabilidades
-mvn org.owasp:dependency-check-maven:check
+# Ver reporte de cobertura
+start target/site/jacoco/index.html
+
+# Tests específicos
+mvn test -Dtest=*ServiceImplTest
+mvn test -Dtest=*MapperTest
 ```
+
+### 📊 Cobertura Actual
+
+- **224 tests unitarios** pasando al 100%
+- **35.87% cobertura de instrucciones** (6,053 / 16,868)
+- **Threshold mínimo:** 35%
+- **Objetivo:** 60%
+
+Ver detalles en [`TEST_COVERAGE_SUMMARY.md`](./TEST_COVERAGE_SUMMARY.md)
+
+## 🔄 CI/CD
+
+### GitHub Actions
+
+El proyecto incluye workflows automáticos:
+
+- ✅ **CI Tests** - Ejecuta tests en cada push/PR
+- ✅ **SonarQube** - Análisis de calidad de código
+- ✅ **Dependabot** - Actualizaciones automáticas de dependencias
+
+```bash
+# Ver workflows en:
+# .github/workflows/ci-tests.yml
+# .github/workflows/sonarqube.yml
+
+# Configuración:
+# .github/dependabot.yml
+```
+
+### Scripts Locales
+
+```powershell
+# Verificación pre-commit
+.\scripts\pre-commit-check.ps1
+
+# Análisis SonarQube local
+$env:SONAR_TOKEN = "tu-token"
+.\scripts\sonar-scan.ps1
+
+# Verificar setup CI/CD
+.\scripts\verify-cicd-setup.ps1
+```
+
+Ver guía completa en [`CI_CD_GUIDE.md`](./CI_CD_GUIDE.md)
 
 ## 📁 Estructura del Proyecto
 

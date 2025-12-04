@@ -1,0 +1,15 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Ejecutar tests solo para archivos modificados
+echo "🧪 Running affected tests..."
+mvn test -Dtest=$(git diff --cached --name-only --diff-filter=ACMR | grep 'Test\.java$' | sed 's|src/test/java/||g' | sed 's|\.java||g' | tr '/' '.' | tr '\n' ',')
+
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed. Commit aborted."
+  exit 1
+fi
+
+echo "✅ All tests passed!"
