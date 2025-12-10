@@ -26,14 +26,24 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/promotions",
-							"host": ["{{base_url}}"],
-							"path": ["promotions"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"promotions"
+							]
 						}
 					},
 					"response": []
@@ -43,14 +53,25 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/promotions/{{promotion_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["promotions", "{{promotion_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"promotions",
+								"{{promotion_id}}"
+							]
 						}
 					},
 					"response": []
@@ -60,18 +81,33 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
-						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"title\": \"Descuento 20% en Navidad\",\n  \"description\": \"Promoción especial de fin de año\",\n  \"companyId\": {{company_id}},\n  \"startDate\": \"2024-12-01T00:00:00Z\",\n  \"endDate\": \"2024-12-31T23:59:59Z\",\n  \"active\": true,\n  \"maxUses\": 100\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/promotions",
-							"host": ["{{base_url}}"],
-							"path": ["promotions"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"promotions"
+							]
 						}
 					},
 					"response": []
@@ -81,18 +117,34 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "PUT",
-						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"title\": \"Descuento 25% en Navidad - ACTUALIZADO\",\n  \"active\": true\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/promotions/{{promotion_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["promotions", "{{promotion_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"promotions",
+								"{{promotion_id}}"
+							]
 						}
 					},
 					"response": []
@@ -102,14 +154,25 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "DELETE",
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/promotions/{{promotion_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["promotions", "{{promotion_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"promotions",
+								"{{promotion_id}}"
+							]
 						}
 					},
 					"response": []
@@ -124,14 +187,25 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/coupons/COUPON-CODE-123",
-							"host": ["{{base_url}}"],
-							"path": ["coupons", "COUPON-CODE-123"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"coupons",
+								"COUPON-CODE-123"
+							]
 						},
 						"description": "Valida si el cupón es válido sin canjearlo"
 					},
@@ -142,14 +216,26 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/coupons/COUPON-CODE-123/redeem",
-							"host": ["{{base_url}}"],
-							"path": ["coupons", "COUPON-CODE-123", "redeem"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"coupons",
+								"COUPON-CODE-123",
+								"redeem"
+							]
 						},
 						"description": "Canjea el cupón marcándolo como usado"
 					},
@@ -160,14 +246,26 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/coupons/COUPON-CODE-123/expire",
-							"host": ["{{base_url}}"],
-							"path": ["coupons", "COUPON-CODE-123", "expire"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"coupons",
+								"COUPON-CODE-123",
+								"expire"
+							]
 						},
 						"description": "Marca el cupón como caducado manualmente"
 					},
@@ -178,17 +276,34 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/coupons/issue?promotionId={{promotion_id}}&customerId={{customer_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["coupons", "issue"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"coupons",
+								"issue"
+							],
 							"query": [
-								{"key": "promotionId", "value": "{{promotion_id}}"},
-								{"key": "customerId", "value": "{{customer_id}}"}
+								{
+									"key": "promotionId",
+									"value": "{{promotion_id}}"
+								},
+								{
+									"key": "customerId",
+									"value": "{{customer_id}}"
+								}
 							]
 						},
 						"description": "Genera un nuevo cupón para un cliente y promoción"
@@ -218,8 +333,12 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/promotions",
-							"host": ["{{base_url}}"],
-							"path": ["promotions"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"promotions"
+							]
 						},
 						"description": "Con API Key que tenga permiso 'promotion:read'"
 					},
@@ -251,8 +370,12 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/promotions",
-							"host": ["{{base_url}}"],
-							"path": ["promotions"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"promotions"
+							]
 						},
 						"description": "Con API Key que tenga permiso 'promotion:create'"
 					},
@@ -276,8 +399,13 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/coupons/COUPON-CODE-123",
-							"host": ["{{base_url}}"],
-							"path": ["coupons", "COUPON-CODE-123"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"coupons",
+								"COUPON-CODE-123"
+							]
 						},
 						"description": "Con API Key que tenga permiso 'coupon:read'"
 					},
@@ -301,8 +429,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/coupons/COUPON-CODE-123/redeem",
-							"host": ["{{base_url}}"],
-							"path": ["coupons", "COUPON-CODE-123", "redeem"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"coupons",
+								"COUPON-CODE-123",
+								"redeem"
+							]
 						},
 						"description": "Con API Key que tenga permiso 'coupon:update'"
 					},

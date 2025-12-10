@@ -76,4 +76,28 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         // Usar el método del repositorio para evitar errores de tipo
         return apiKeyRepository.findAllByClient_Id(clientDbId);
     }
+
+    @Override
+    public ApiKey updatePermissions(Long id, String permissions) {
+        ApiKey key = apiKeyRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("API Key no encontrada con id: " + id));
+        key.setPermissions(permissions);
+        return apiKeyRepository.save(key);
+    }
+
+    @Override
+    public ApiKey updateDescription(Long id, String description) {
+        ApiKey key = apiKeyRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("API Key no encontrada con id: " + id));
+        key.setDescription(description);
+        return apiKeyRepository.save(key);
+    }
+
+    @Override
+    public ApiKey updateCompanyScope(Long id, Long companyScope) {
+        ApiKey key = apiKeyRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("API Key no encontrada con id: " + id));
+        key.setCompanyScope(companyScope);
+        return apiKeyRepository.save(key);
+    }
 }

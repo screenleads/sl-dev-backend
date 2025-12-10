@@ -23,10 +23,10 @@ public class ApiKey {
     private LocalDateTime expiresAt;
 
     private String permissions; // Puedes usar un Set<String> o relación si lo prefieres
-    
+
     @Column(name = "company_scope")
     private Long companyScope; // NULL = acceso global, ID = compañía específica
-    
+
     private String description; // Descripción de la API Key
 
     // Getters y setters

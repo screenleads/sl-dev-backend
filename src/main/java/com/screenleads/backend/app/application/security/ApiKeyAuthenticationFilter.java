@@ -8,6 +8,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +21,7 @@ import java.util.Collections;
 import java.util.Optional;
 
 @Component
+@Slf4j
 public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     private final ApiKeyRepository apiKeyRepository;
@@ -48,22 +50,37 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
             clientId = request.getHeader("client-id");
         }
 
+        log.info("🔐 ApiKeyAuthenticationFilter - Path: {}, API-KEY: {}, client-id: {}", 
+                request.getRequestURI(), 
+                apiKey != null ? "***" + apiKey.substring(Math.max(0, apiKey.length() - 4)) : "null", 
+                clientId);
+
         if (apiKey != null && clientId != null) {
             Optional<Client> clientOpt = clientRepository.findByClientIdAndActiveTrue(clientId);
             if (clientOpt.isPresent()) {
                 Client client = clientOpt.get();
+                log.info("✅ Cliente encontrado: ID={}, clientId={}", client.getId(), client.getClientId());
+                
                 Optional<ApiKey> keyOpt = apiKeyRepository.findByKeyAndClientAndActiveTrue(apiKey, client);
                 if (keyOpt.isPresent()) {
                     ApiKey key = keyOpt.get();
-                    // Acceder a clientId aquí para evitar LazyInitializationException
-                    String safeClientId = client.getClientId();
+                    // Usar el ID de la API key como principal para identificar exactamente qué API key se está usando
+                    Long apiKeyId = key.getId();
+                    log.info("✅ API Key válida encontrada - ID: {}, ClientDbId: {}, Permissions: {}", 
+                            apiKeyId, client.getId(), key.getPermissions());
+                    
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            safeClientId,
+                            apiKeyId,
                             null,
                             Collections.singletonList(new SimpleGrantedAuthority("API_CLIENT")));
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    log.info("✅ Autenticación establecida para apiKeyId: {}", apiKeyId);
+                } else {
+                    log.warn("❌ API Key no encontrada o inactiva");
                 }
+            } else {
+                log.warn("❌ Cliente no encontrado o inactivo con clientId: {}", clientId);
             }
         }
 

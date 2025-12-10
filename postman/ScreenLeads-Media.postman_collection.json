@@ -34,14 +34,24 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
 								},
 								"method": "GET",
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/medias",
-									"host": ["{{base_url}}"],
-									"path": ["medias"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"medias"
+									]
 								}
 							},
 							"response": []
@@ -51,7 +61,13 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
 								},
 								"method": "POST",
 								"header": [],
@@ -77,8 +93,13 @@
 								},
 								"url": {
 									"raw": "{{base_url}}/medias/upload",
-									"host": ["{{base_url}}"],
-									"path": ["medias", "upload"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"medias",
+										"upload"
+									]
 								}
 							},
 							"response": []
@@ -93,14 +114,25 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
 								},
 								"method": "GET",
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/medias/types",
-									"host": ["{{base_url}}"],
-									"path": ["medias", "types"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"medias",
+										"types"
+									]
 								}
 							},
 							"response": []
@@ -110,14 +142,26 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
 								},
 								"method": "GET",
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/medias/types/1",
-									"host": ["{{base_url}}"],
-									"path": ["medias", "types", "1"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"medias",
+										"types",
+										"1"
+									]
 								}
 							},
 							"response": []
@@ -127,18 +171,34 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
 								},
 								"method": "POST",
-								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
 								"body": {
 									"mode": "raw",
 									"raw": "{\n  \"name\": \"Video HD\",\n  \"description\": \"Vídeos en alta definición\"\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/medias/types",
-									"host": ["{{base_url}}"],
-									"path": ["medias", "types"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"medias",
+										"types"
+									]
 								}
 							},
 							"response": []
@@ -148,18 +208,35 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
 								},
 								"method": "PUT",
-								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
 								"body": {
 									"mode": "raw",
 									"raw": "{\n  \"name\": \"Video Full HD\",\n  \"description\": \"Vídeos 1080p\"\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/medias/types/1",
-									"host": ["{{base_url}}"],
-									"path": ["medias", "types", "1"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"medias",
+										"types",
+										"1"
+									]
 								}
 							},
 							"response": []
@@ -169,14 +246,26 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
 								},
 								"method": "DELETE",
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/medias/types/1",
-									"host": ["{{base_url}}"],
-									"path": ["medias", "types", "1"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"medias",
+										"types",
+										"1"
+									]
 								}
 							},
 							"response": []
@@ -191,14 +280,24 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
 								},
 								"method": "GET",
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/advices",
-									"host": ["{{base_url}}"],
-									"path": ["advices"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"advices"
+									]
 								}
 							},
 							"response": []
@@ -208,14 +307,25 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
 								},
 								"method": "GET",
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/advices/1",
-									"host": ["{{base_url}}"],
-									"path": ["advices", "1"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"advices",
+										"1"
+									]
 								}
 							},
 							"response": []
@@ -225,18 +335,33 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
 								},
 								"method": "POST",
-								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
 								"body": {
 									"mode": "raw",
 									"raw": "{\n  \"title\": \"Aviso Importante\",\n  \"content\": \"Contenido del aviso\",\n  \"companyId\": {{company_id}},\n  \"deviceId\": {{device_id}},\n  \"active\": true,\n  \"priority\": 1\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/advices",
-									"host": ["{{base_url}}"],
-									"path": ["advices"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"advices"
+									]
 								}
 							},
 							"response": []
@@ -246,18 +371,34 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
 								},
 								"method": "PUT",
-								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
 								"body": {
 									"mode": "raw",
 									"raw": "{\n  \"title\": \"Aviso Actualizado\",\n  \"priority\": 2\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/advices/1",
-									"host": ["{{base_url}}"],
-									"path": ["advices", "1"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"advices",
+										"1"
+									]
 								}
 							},
 							"response": []
@@ -267,14 +408,25 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
 								},
 								"method": "DELETE",
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/advices/1",
-									"host": ["{{base_url}}"],
-									"path": ["advices", "1"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"advices",
+										"1"
+									]
 								}
 							},
 							"response": []
@@ -289,14 +441,25 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
 								},
 								"method": "GET",
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/devices/types",
-									"host": ["{{base_url}}"],
-									"path": ["devices", "types"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"devices",
+										"types"
+									]
 								}
 							},
 							"response": []
@@ -306,18 +469,34 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwt_token}}",
+											"type": "string"
+										}
+									]
 								},
 								"method": "POST",
-								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
 								"body": {
 									"mode": "raw",
 									"raw": "{\n  \"name\": \"LED 4K\",\n  \"description\": \"Pantalla LED 4K UHD\"\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/devices/types",
-									"host": ["{{base_url}}"],
-									"path": ["devices", "types"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"devices",
+										"types"
+									]
 								}
 							},
 							"response": []
@@ -350,8 +529,12 @@
 								],
 								"url": {
 									"raw": "{{base_url}}/medias",
-									"host": ["{{base_url}}"],
-									"path": ["medias"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"medias"
+									]
 								},
 								"description": "Con API Key que tenga permiso 'media:read'"
 							},
@@ -395,8 +578,13 @@
 								},
 								"url": {
 									"raw": "{{base_url}}/medias/upload",
-									"host": ["{{base_url}}"],
-									"path": ["medias", "upload"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"medias",
+										"upload"
+									]
 								},
 								"description": "Con API Key que tenga permiso 'media:create'"
 							},
@@ -425,8 +613,13 @@
 								],
 								"url": {
 									"raw": "{{base_url}}/medias/types",
-									"host": ["{{base_url}}"],
-									"path": ["medias", "types"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"medias",
+										"types"
+									]
 								},
 								"description": "Con API Key que tenga permiso 'mediatype:read'"
 							},
@@ -458,8 +651,13 @@
 								},
 								"url": {
 									"raw": "{{base_url}}/medias/types",
-									"host": ["{{base_url}}"],
-									"path": ["medias", "types"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"medias",
+										"types"
+									]
 								},
 								"description": "Con API Key que tenga permiso 'mediatype:create'"
 							},
@@ -488,8 +686,12 @@
 								],
 								"url": {
 									"raw": "{{base_url}}/advices",
-									"host": ["{{base_url}}"],
-									"path": ["advices"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"advices"
+									]
 								},
 								"description": "Con API Key que tenga permiso 'advice:read'"
 							},
@@ -521,8 +723,12 @@
 								},
 								"url": {
 									"raw": "{{base_url}}/advices",
-									"host": ["{{base_url}}"],
-									"path": ["advices"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"advices"
+									]
 								},
 								"description": "Con API Key que tenga permiso 'advice:create'"
 							},
@@ -551,8 +757,13 @@
 								],
 								"url": {
 									"raw": "{{base_url}}/devices/types",
-									"host": ["{{base_url}}"],
-									"path": ["devices", "types"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"devices",
+										"types"
+									]
 								},
 								"description": "Con API Key que tenga permiso 'devicetype:read'"
 							},
@@ -584,8 +795,13 @@
 								},
 								"url": {
 									"raw": "{{base_url}}/devices/types",
-									"host": ["{{base_url}}"],
-									"path": ["devices", "types"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"devices",
+										"types"
+									]
 								},
 								"description": "Con API Key que tenga permiso 'devicetype:create'"
 							},

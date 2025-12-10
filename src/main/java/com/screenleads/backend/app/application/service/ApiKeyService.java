@@ -15,4 +15,10 @@ public interface ApiKeyService {
     ApiKey createApiKeyByDbId(Long clientDbId, String permissions, int daysValid);
 
     List<ApiKey> getApiKeysByClientDbId(Long clientDbId);
+
+    ApiKey updatePermissions(Long id, String permissions);
+
+    ApiKey updateDescription(Long id, String description);
+
+    ApiKey updateCompanyScope(Long id, Long companyScope);
 }
