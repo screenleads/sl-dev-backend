@@ -1,8 +1,6 @@
 # Entidades JPA — snapshot incrustado
 
-> Clases de dominio (model/entity).
-
-> Snapshot generado desde la rama `develop`. Contiene el **código completo** de cada archivo.
+> Snapshot generado desde la rama `develop`. Contiene el **código completo** de cada entidad para revisión.
 
 ---
 
@@ -82,8 +80,7 @@ private List<AdviceSchedule> schedules;
 @ManyToMany(mappedBy = "advices")
 @JsonIgnore
 private Set<Device> devices;
-}
-```
+}```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/AdviceSchedule.java
@@ -132,8 +129,7 @@ private Advice advice;
 
 @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
 private List<AdviceTimeWindow> windows;
-}
-```
+}```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/AdviceTimeWindow.java
@@ -181,8 +177,7 @@ private LocalTime toTime;
 foreignKey = @ForeignKey(name = "fk_advicetimewindow_schedule"))
 @JsonIgnore
 private AdviceSchedule schedule;
-}
-```
+}```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/ApiKey.java
@@ -211,10 +206,10 @@ public class ApiKey {
     private LocalDateTime expiresAt;
 
     private String permissions; // Puedes usar un Set<String> o relación si lo prefieres
-    
+
     @Column(name = "company_scope")
     private Long companyScope; // NULL = acceso global, ID = compañía específica
-    
+
     private String description; // Descripción de la API Key
 
     // Getters y setters
@@ -290,7 +285,6 @@ public class ApiKey {
         this.description = description;
     }
 }
-
 ```
 
 ```java
@@ -386,7 +380,6 @@ public class AppEntity {
         private java.util.List<AppEntityAttribute> attributes = new java.util.ArrayList<>();
 
 }
-
 ```
 
 ```java
@@ -512,7 +505,6 @@ public class AppEntityAttribute {
     @Column(name = "options_endpoint", length = 200)
     private String optionsEndpoint;
 }
-
 ```
 
 ```java
@@ -560,8 +552,7 @@ private String url;
 
 @Column(name = "force_update", nullable = false)
 private boolean forceUpdate;
-}
-```
+}```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/Auditable.java
@@ -589,8 +580,7 @@ private Instant createdAt;
 @UpdateTimestamp
 @Column(name = "updated_at")
 private Instant updatedAt;
-}
-```
+}```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/ChatMessage.java
@@ -620,8 +610,7 @@ private String roomId;
 private Instant timestamp;
 private Map<String, Object> metadata;
 private boolean systemGenerated;
-}
-```
+}```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/Client.java
@@ -689,7 +678,6 @@ public class Client {
         this.apiKeys = apiKeys;
     }
 }
-
 ```
 
 ```java
@@ -773,8 +761,7 @@ public class Company extends Auditable {
     public void setBillingStatus(String status) {
         this.billingStatus = BillingStatus.valueOf(status);
     }
-}
-```
+}```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/CompanyToken.java
@@ -865,7 +852,6 @@ public class CompanyToken {
         this.expiresAt = expiresAt;
     }
 }
-
 ```
 
 ```java
@@ -879,7 +865,6 @@ public enum CouponStatus {
     EXPIRED,    // caducado por fecha o manualmente
     CANCELLED   // invalidado manualmente / antifraude
 }
-
 ```
 
 ```java
@@ -938,7 +923,6 @@ public class Customer extends Auditable {
     @OneToMany(mappedBy = "customer")
     private Set<PromotionLead> leads;
 }
-
 ```
 
 ```java
@@ -988,8 +972,7 @@ public class Device extends Auditable {
     @ManyToMany
     @JoinTable(name = "device_advice", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "advice_id"))
     private Set<Advice> advices;
-}
-```
+}```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/DeviceType.java
@@ -1022,8 +1005,7 @@ private String type;
 @Column(nullable = false)
 @Builder.Default
 private Boolean enabled = Boolean.TRUE;
-}
-```
+}```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/DurationToLongConverter.java
@@ -1045,8 +1027,7 @@ return attribute == null ? null : attribute.getSeconds();
 public Duration convertToEntityAttribute(Long dbData) {
 return dbData == null ? null : Duration.ofSeconds(dbData);
 }
-}
-```
+}```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/LeadIdentifierType.java
@@ -1058,8 +1039,7 @@ EMAIL,
 PHONE,
 DOCUMENT,
 OTHER
-}
-```
+}```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/LeadLimitType.java
@@ -1070,8 +1050,7 @@ public enum LeadLimitType {
     ONE_PER_PERSON,
     ONE_PER_24H,
     CUSTOM_TIME
-}
-```
+}```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/Media.java
@@ -1106,8 +1085,7 @@ public class Media extends Auditable {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "company_id", nullable = false, foreignKey = @ForeignKey(name = "fk_media_company"))
     private Company company;
-}
-```
+}```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/MediaType.java
@@ -1148,8 +1126,7 @@ public class MediaType {
 
     @Column(nullable = false, length = 10)
     private String extension; // e.g., jpg, mp4
-}
-```
+}```
 
 ```java
 // src/main/java/com/screenleads/backend/app/domain/model/Promotion.java
@@ -1229,7 +1206,6 @@ public class Promotion extends Auditable {
     @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PromotionLead> leads;
 }
-
 ```
 
 ```java
@@ -1336,7 +1312,6 @@ public class PromotionLead extends Auditable {
     @Column(name = "redeemed_at")
     private Instant redeemedAt;
 }
-
 ```
 
 ```java
@@ -1372,7 +1347,6 @@ public class Role {
   @Column(nullable = false)
   private Integer level;
 }
-
 ```
 
 ```java
@@ -1467,7 +1441,6 @@ public class User extends Auditable implements UserDetails {
         return true;
     }
 }
-
 ```
 
 ```java
@@ -1477,6 +1450,5 @@ public class User extends Auditable implements UserDetails {
 package com.screenleads.backend.app.domain.model;
 
 import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
-```
+import org.hibernate.annotations.ParamDef;```
 
