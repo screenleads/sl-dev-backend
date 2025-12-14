@@ -1,23 +1,16 @@
 ﻿{
     "info":  {
-                 "_postman_id":  "customers-collection-004",
-                 "name":  "ScreenLeads - 04. Customers",
-                 "description":  "GestiÃ³n de clientes/leads capturados",
+                 "_postman_id":  "companies-collection-001",
+                 "name":  "ScreenLeads - 08. Companies (CompaÃ±Ã­as)",
+                 "description":  "CRUD completo de compaÃ±Ã­as con autenticaciÃ³n JWT y API Key",
                  "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
              },
-    "variable":  [
-                     {
-                         "key":  "base_path",
-                         "value":  "/customers",
-                         "type":  "string"
-                     }
-                 ],
     "item":  [
                  {
-                     "name":  "JWT Auth",
+                     "name":  "JWT Authentication",
                      "item":  [
                                   {
-                                      "name":  "Get All Customers",
+                                      "name":  "Get All Companies",
                                       "request":  {
                                                       "auth":  {
                                                                    "type":  "bearer",
@@ -34,21 +27,22 @@
 
                                                                  ],
                                                       "url":  {
-                                                                  "raw":  "{{base_url}}/customers",
+                                                                  "raw":  "{{base_url}}/companies",
                                                                   "host":  [
                                                                                "{{base_url}}"
                                                                            ],
                                                                   "path":  [
-                                                                               "customers"
+                                                                               "companies"
                                                                            ]
-                                                              }
+                                                              },
+                                                      "description":  "Lista todas las compaÃ±Ã­as. Requiere ROLE_ADMIN o permiso company:read"
                                                   },
                                       "response":  [
 
                                                    ]
                                   },
                                   {
-                                      "name":  "Get Customer by ID",
+                                      "name":  "Get Company by ID",
                                       "request":  {
                                                       "auth":  {
                                                                    "type":  "bearer",
@@ -65,22 +59,23 @@
 
                                                                  ],
                                                       "url":  {
-                                                                  "raw":  "{{base_url}}/customers/{{customer_id}}",
+                                                                  "raw":  "{{base_url}}/companies/1",
                                                                   "host":  [
                                                                                "{{base_url}}"
                                                                            ],
                                                                   "path":  [
-                                                                               "customers",
-                                                                               "{{customer_id}}"
+                                                                               "companies",
+                                                                               "1"
                                                                            ]
-                                                              }
+                                                              },
+                                                      "description":  "Obtiene una compaÃ±Ã­a especÃ­fica por ID. Requiere ROLE_ADMIN o permiso company:read"
                                                   },
                                       "response":  [
 
                                                    ]
                                   },
                                   {
-                                      "name":  "Create Customer",
+                                      "name":  "Create Company",
                                       "request":  {
                                                       "auth":  {
                                                                    "type":  "bearer",
@@ -101,24 +96,25 @@
                                                                  ],
                                                       "body":  {
                                                                    "mode":  "raw",
-                                                                   "raw":  "{\n  \"name\": \"Juan PÃ©rez\",\n  \"email\": \"juan.perez@example.com\",\n  \"phone\": \"+34600123456\",\n  \"companyId\": {{company_id}},\n  \"deviceId\": {{device_id}}\n}"
+                                                                   "raw":  "{\n  \"name\": \"Nueva CompaÃ±Ã­a S.L.\",\n  \"email\": \"contacto@nuevacompania.com\",\n  \"phone\": \"+34 912 345 678\",\n  \"address\": \"Calle Mayor 123, Madrid\",\n  \"cif\": \"B12345678\",\n  \"active\": true\n}"
                                                                },
                                                       "url":  {
-                                                                  "raw":  "{{base_url}}/customers",
+                                                                  "raw":  "{{base_url}}/companies",
                                                                   "host":  [
                                                                                "{{base_url}}"
                                                                            ],
                                                                   "path":  [
-                                                                               "customers"
+                                                                               "companies"
                                                                            ]
-                                                              }
+                                                              },
+                                                      "description":  "Crea una nueva compaÃ±Ã­a. Requiere ROLE_ADMIN o permiso company:create"
                                                   },
                                       "response":  [
 
                                                    ]
                                   },
                                   {
-                                      "name":  "Update Customer",
+                                      "name":  "Update Company",
                                       "request":  {
                                                       "auth":  {
                                                                    "type":  "bearer",
@@ -139,25 +135,26 @@
                                                                  ],
                                                       "body":  {
                                                                    "mode":  "raw",
-                                                                   "raw":  "{\n  \"name\": \"Juan PÃ©rez GarcÃ­a\",\n  \"phone\": \"+34600999888\"\n}"
+                                                                   "raw":  "{\n  \"name\": \"CompaÃ±Ã­a Actualizada S.L.\",\n  \"email\": \"nuevo@nuevacompania.com\",\n  \"phone\": \"+34 912 999 888\",\n  \"address\": \"Calle Nueva 456, Barcelona\",\n  \"cif\": \"B12345678\",\n  \"active\": true\n}"
                                                                },
                                                       "url":  {
-                                                                  "raw":  "{{base_url}}/customers/{{customer_id}}",
+                                                                  "raw":  "{{base_url}}/companies/1",
                                                                   "host":  [
                                                                                "{{base_url}}"
                                                                            ],
                                                                   "path":  [
-                                                                               "customers",
-                                                                               "{{customer_id}}"
+                                                                               "companies",
+                                                                               "1"
                                                                            ]
-                                                              }
+                                                              },
+                                                      "description":  "Actualiza una compaÃ±Ã­a existente. Requiere ROLE_ADMIN o permiso company:update"
                                                   },
                                       "response":  [
 
                                                    ]
                                   },
                                   {
-                                      "name":  "Delete Customer",
+                                      "name":  "Delete Company",
                                       "request":  {
                                                       "auth":  {
                                                                    "type":  "bearer",
@@ -174,15 +171,16 @@
 
                                                                  ],
                                                       "url":  {
-                                                                  "raw":  "{{base_url}}/customers/{{customer_id}}",
+                                                                  "raw":  "{{base_url}}/companies/1",
                                                                   "host":  [
                                                                                "{{base_url}}"
                                                                            ],
                                                                   "path":  [
-                                                                               "customers",
-                                                                               "{{customer_id}}"
+                                                                               "companies",
+                                                                               "1"
                                                                            ]
-                                                              }
+                                                              },
+                                                      "description":  "Elimina una compaÃ±Ã­a. Requiere ROLE_ADMIN o permiso company:delete"
                                                   },
                                       "response":  [
 
@@ -191,10 +189,10 @@
                               ]
                  },
                  {
-                     "name":  "API Key Auth",
+                     "name":  "API Key Authentication",
                      "item":  [
                                   {
-                                      "name":  "Get All Customers (API Key)",
+                                      "name":  "Get All Companies",
                                       "request":  {
                                                       "method":  "GET",
                                                       "header":  [
@@ -210,22 +208,22 @@
                                                                      }
                                                                  ],
                                                       "url":  {
-                                                                  "raw":  "{{base_url}}/customers",
+                                                                  "raw":  "{{base_url}}/companies",
                                                                   "host":  [
                                                                                "{{base_url}}"
                                                                            ],
                                                                   "path":  [
-                                                                               "customers"
+                                                                               "companies"
                                                                            ]
                                                               },
-                                                      "description":  "Con API Key que tenga permiso \u0027customer:read\u0027"
+                                                      "description":  "Lista todas las compaÃ±Ã­as usando API Key. Requiere permiso company:read"
                                                   },
                                       "response":  [
 
                                                    ]
                                   },
                                   {
-                                      "name":  "Get Customer by ID (API Key)",
+                                      "name":  "Get Company by ID",
                                       "request":  {
                                                       "method":  "GET",
                                                       "header":  [
@@ -241,23 +239,23 @@
                                                                      }
                                                                  ],
                                                       "url":  {
-                                                                  "raw":  "{{base_url}}/customers/{{customer_id}}",
+                                                                  "raw":  "{{base_url}}/companies/1",
                                                                   "host":  [
                                                                                "{{base_url}}"
                                                                            ],
                                                                   "path":  [
-                                                                               "customers",
-                                                                               "{{customer_id}}"
+                                                                               "companies",
+                                                                               "1"
                                                                            ]
                                                               },
-                                                      "description":  "Con API Key que tenga permiso \u0027customer:read\u0027"
+                                                      "description":  "Obtiene una compaÃ±Ã­a por ID usando API Key. Requiere permiso company:read"
                                                   },
                                       "response":  [
 
                                                    ]
                                   },
                                   {
-                                      "name":  "Create Customer (API Key)",
+                                      "name":  "Create Company",
                                       "request":  {
                                                       "method":  "POST",
                                                       "header":  [
@@ -278,25 +276,25 @@
                                                                  ],
                                                       "body":  {
                                                                    "mode":  "raw",
-                                                                   "raw":  "{\n  \"name\": \"MarÃ­a LÃ³pez\",\n  \"email\": \"maria.lopez@example.com\",\n  \"phone\": \"+34611222333\",\n  \"companyId\": {{company_id}},\n  \"deviceId\": {{device_id}}\n}"
+                                                                   "raw":  "{\n  \"name\": \"CompaÃ±Ã­a via API Key\",\n  \"email\": \"api@compania.com\",\n  \"phone\": \"+34 900 123 456\",\n  \"address\": \"Avenida TecnologÃ­a 1\",\n  \"cif\": \"B99887766\",\n  \"active\": true\n}"
                                                                },
                                                       "url":  {
-                                                                  "raw":  "{{base_url}}/customers",
+                                                                  "raw":  "{{base_url}}/companies",
                                                                   "host":  [
                                                                                "{{base_url}}"
                                                                            ],
                                                                   "path":  [
-                                                                               "customers"
+                                                                               "companies"
                                                                            ]
                                                               },
-                                                      "description":  "Con API Key que tenga permiso \u0027customer:create\u0027"
+                                                      "description":  "Crea una compaÃ±Ã­a usando API Key. Requiere permiso company:create"
                                                   },
                                       "response":  [
 
                                                    ]
                                   },
                                   {
-                                      "name":  "Update Customer (API Key)",
+                                      "name":  "Update Company",
                                       "request":  {
                                                       "method":  "PUT",
                                                       "header":  [
@@ -317,26 +315,26 @@
                                                                  ],
                                                       "body":  {
                                                                    "mode":  "raw",
-                                                                   "raw":  "{\n  \"name\": \"MarÃ­a LÃ³pez FernÃ¡ndez\",\n  \"phone\": \"+34611888999\"\n}"
+                                                                   "raw":  "{\n  \"name\": \"CompaÃ±Ã­a Modificada\",\n  \"email\": \"modificado@compania.com\",\n  \"phone\": \"+34 900 999 999\",\n  \"address\": \"Nueva DirecciÃ³n\",\n  \"cif\": \"B99887766\",\n  \"active\": false\n}"
                                                                },
                                                       "url":  {
-                                                                  "raw":  "{{base_url}}/customers/{{customer_id}}",
+                                                                  "raw":  "{{base_url}}/companies/1",
                                                                   "host":  [
                                                                                "{{base_url}}"
                                                                            ],
                                                                   "path":  [
-                                                                               "customers",
-                                                                               "{{customer_id}}"
+                                                                               "companies",
+                                                                               "1"
                                                                            ]
                                                               },
-                                                      "description":  "Con API Key que tenga permiso \u0027customer:update\u0027"
+                                                      "description":  "Actualiza una compaÃ±Ã­a usando API Key. Requiere permiso company:update"
                                                   },
                                       "response":  [
 
                                                    ]
                                   },
                                   {
-                                      "name":  "Delete Customer (API Key)",
+                                      "name":  "Delete Company",
                                       "request":  {
                                                       "method":  "DELETE",
                                                       "header":  [
@@ -352,16 +350,16 @@
                                                                      }
                                                                  ],
                                                       "url":  {
-                                                                  "raw":  "{{base_url}}/customers/{{customer_id}}",
+                                                                  "raw":  "{{base_url}}/companies/1",
                                                                   "host":  [
                                                                                "{{base_url}}"
                                                                            ],
                                                                   "path":  [
-                                                                               "customers",
-                                                                               "{{customer_id}}"
+                                                                               "companies",
+                                                                               "1"
                                                                            ]
                                                               },
-                                                      "description":  "Con API Key que tenga permiso \u0027customer:delete\u0027"
+                                                      "description":  "Elimina una compaÃ±Ã­a usando API Key. Requiere permiso company:delete"
                                                   },
                                       "response":  [
 

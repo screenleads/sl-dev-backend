@@ -1,0 +1,301 @@
+{
+    "info": {
+        "_postman_id": "mediatypes-collection-013",
+        "name": "ScreenLeads - 13. Media Types",
+        "description": "Gestión de tipos de archivos multimedia",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "media_path",
+            "value": "/medias",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "JWT Auth",
+            "item": [
+                {
+                    "name": "Get All Media Types",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/medias/types",
+                            "host": ["{{base_url}}"],
+                            "path": ["medias", "types"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Media Type by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/medias/types/1",
+                            "host": ["{{base_url}}"],
+                            "path": ["medias", "types", "1"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Media Type",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Video HD\",\n  \"description\": \"Vídeos en alta definición\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/medias/types",
+                            "host": ["{{base_url}}"],
+                            "path": ["medias", "types"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Media Type",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Video Full HD\",\n  \"description\": \"Vídeos 1080p\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/medias/types/1",
+                            "host": ["{{base_url}}"],
+                            "path": ["medias", "types", "1"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Media Type",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/medias/types/1",
+                            "host": ["{{base_url}}"],
+                            "path": ["medias", "types", "1"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "API Key Auth",
+            "item": [
+                {
+                    "name": "Get All Media Types (API Key)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/medias/types",
+                            "host": ["{{base_url}}"],
+                            "path": ["medias", "types"]
+                        },
+                        "description": "Con API Key que tenga permiso 'mediatype:read'"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Media Type by ID (API Key)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/medias/types/1",
+                            "host": ["{{base_url}}"],
+                            "path": ["medias", "types", "1"]
+                        },
+                        "description": "Con API Key que tenga permiso 'mediatype:read'"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Media Type (API Key)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Video 4K\",\n  \"description\": \"Vídeos en 4K Ultra HD\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/medias/types",
+                            "host": ["{{base_url}}"],
+                            "path": ["medias", "types"]
+                        },
+                        "description": "Con API Key que tenga permiso 'mediatype:create'"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Media Type (API Key)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Video Full HD\",\n  \"description\": \"Vídeos 1080p\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/medias/types/1",
+                            "host": ["{{base_url}}"],
+                            "path": ["medias", "types", "1"]
+                        },
+                        "description": "Con API Key que tenga permiso 'mediatype:update'"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Media Type (API Key)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/medias/types/1",
+                            "host": ["{{base_url}}"],
+                            "path": ["medias", "types", "1"]
+                        },
+                        "description": "Con API Key que tenga permiso 'mediatype:delete'"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
+}

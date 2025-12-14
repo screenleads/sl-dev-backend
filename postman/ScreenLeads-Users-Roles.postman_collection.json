@@ -1,0 +1,840 @@
+﻿{
+    "info":  {
+                 "_postman_id":  "users-roles-collection-001",
+                 "name":  "ScreenLeads - 10. Users \u0026 Roles",
+                 "description":  "GestiÃ³n completa de usuarios y roles del sistema",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+             },
+    "item":  [
+                 {
+                     "name":  "JWT Authentication",
+                     "item":  [
+                                  {
+                                      "name":  "Users",
+                                      "item":  [
+                                  {
+                                      "name":  "Get All Users",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/users",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "users"
+                                                                           ]
+                                                              },
+                                                      "description":  "Lista todos los usuarios. Requiere permiso: user:read"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Get User by ID",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/users/1",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "users",
+                                                                               "1"
+                                                                           ]
+                                                              },
+                                                      "description":  "Obtiene un usuario especÃ­fico por ID. Requiere permiso: user:read"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Create User",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\",\n  \"name\": \"Nuevo\",\n  \"lastName\": \"Usuario\",\n  \"companyId\": 1,\n  \"roleId\": 2\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/users",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "users"
+                                                                           ]
+                                                              },
+                                                      "description":  "Crea un nuevo usuario. Devuelve el usuario creado y una contraseÃ±a temporal. Requiere permiso: user:create"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Update User",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"username\": \"updateduser\",\n  \"email\": \"updated@example.com\",\n  \"name\": \"Usuario\",\n  \"lastName\": \"Actualizado\",\n  \"companyId\": 1,\n  \"roleId\": 3\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/users/1",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "users",
+                                                                               "1"
+                                                                           ]
+                                                              },
+                                                      "description":  "Actualiza un usuario existente. Requiere permiso: user:update"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Delete User",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "DELETE",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/users/1",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "users",
+                                                                               "1"
+                                                                           ]
+                                                              },
+                                                      "description":  "Elimina un usuario. Requiere permiso: user:delete"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                                  },
+                                  {
+                                      "name":  "Roles",
+                                      "item":  [
+                                  {
+                                      "name":  "Get All Roles",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/roles",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "roles"
+                                                                           ]
+                                                              },
+                                                      "description":  "Lista todos los roles. Requiere permiso: user:read"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Get Role by ID",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/roles/1",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "roles",
+                                                                               "1"
+                                                                           ]
+                                                              },
+                                                      "description":  "Obtiene un rol especÃ­fico por ID. Requiere permiso: user:read"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Get Assignable Roles",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/roles/assignable",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "roles",
+                                                                               "assignable"
+                                                                           ]
+                                                              },
+                                                      "description":  "Devuelve los roles que el usuario actual puede asignar segÃºn su nivel. Requiere permiso: user:create o user:update"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Create Role",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"role\": \"ROLE_MANAGER\",\n  \"description\": \"Manager con permisos intermedios\",\n  \"level\": 50\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/roles",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "roles"
+                                                                           ]
+                                                              },
+                                                      "description":  "Crea un nuevo rol. Requiere permiso: user:update"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Update Role",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"role\": \"ROLE_MANAGER\",\n  \"description\": \"Manager actualizado\",\n  \"level\": 60\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/roles/1",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "roles",
+                                                                               "1"
+                                                                           ]
+                                                              },
+                                                      "description":  "Actualiza un rol existente. Requiere permiso: user:update"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Delete Role",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "DELETE",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/roles/1",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "roles",
+                                                                               "1"
+                                                                           ]
+                                                              },
+                                                      "description":  "Elimina un rol. Requiere permiso: user:delete"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "API Key Authentication",
+                     "item":  [
+                                  {
+                                      "name":  "Users",
+                                      "item":  [
+                                                  {
+                                                      "name":  "Get All Users",
+                                                      "request":  {
+                                                                      "auth":  {
+                                                                                   "type":  "noauth"
+                                                                               },
+                                                                      "method":  "GET",
+                                                                      "header":  [
+                                                                                     {
+                                                                                         "key":  "X-API-KEY",
+                                                                                         "value":  "{{api_key}}",
+                                                                                         "type":  "text"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "client-id",
+                                                                                         "value":  "{{client_id}}",
+                                                                                         "type":  "text"
+                                                                                     }
+                                                                                 ],
+                                                                      "url":  {
+                                                                                  "raw":  "{{base_url}}/users",
+                                                                                  "host":  [
+                                                                                               "{{base_url}}"
+                                                                                           ],
+                                                                                  "path":  [
+                                                                                               "users"
+                                                                                           ]
+                                                                              },
+                                                                      "description":  "Lista todos los usuarios. Requiere permiso: user:read"
+                                                                  },
+                                                      "response":  [
+
+                                                                   ]
+                                                  },
+                                                  {
+                                                      "name":  "Get User by ID",
+                                                      "request":  {
+                                                                      "auth":  {
+                                                                                   "type":  "noauth"
+                                                                               },
+                                                                      "method":  "GET",
+                                                                      "header":  [
+                                                                                     {
+                                                                                         "key":  "X-API-KEY",
+                                                                                         "value":  "{{api_key}}",
+                                                                                         "type":  "text"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "client-id",
+                                                                                         "value":  "{{client_id}}",
+                                                                                         "type":  "text"
+                                                                                     }
+                                                                                 ],
+                                                                      "url":  {
+                                                                                  "raw":  "{{base_url}}/users/1",
+                                                                                  "host":  [
+                                                                                               "{{base_url}}"
+                                                                                           ],
+                                                                                  "path":  [
+                                                                                               "users",
+                                                                                               "1"
+                                                                                           ]
+                                                                              },
+                                                                      "description":  "Obtiene un usuario especÃ­fico por ID. Requiere permiso: user:read"
+                                                                  },
+                                                      "response":  [
+
+                                                                   ]
+                                                  },
+                                                  {
+                                                      "name":  "Create User",
+                                                      "request":  {
+                                                                      "auth":  {
+                                                                                   "type":  "noauth"
+                                                                               },
+                                                                      "method":  "POST",
+                                                                      "header":  [
+                                                                                     {
+                                                                                         "key":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "X-API-KEY",
+                                                                                         "value":  "{{api_key}}",
+                                                                                         "type":  "text"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "client-id",
+                                                                                         "value":  "{{client_id}}",
+                                                                                         "type":  "text"
+                                                                                     }
+                                                                                 ],
+                                                                      "body":  {
+                                                                                   "mode":  "raw",
+                                                                                   "raw":  "{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\",\n  \"name\": \"Nuevo\",\n  \"lastName\": \"Usuario\",\n  \"companyId\": 1,\n  \"roleId\": 2\n}"
+                                                                               },
+                                                                      "url":  {
+                                                                                  "raw":  "{{base_url}}/users",
+                                                                                  "host":  [
+                                                                                               "{{base_url}}"
+                                                                                           ],
+                                                                                  "path":  [
+                                                                                               "users"
+                                                                                           ]
+                                                                              },
+                                                                      "description":  "Crea un nuevo usuario. Devuelve el usuario creado y una contraseÃ±a temporal. Requiere permiso: user:create"
+                                                                  },
+                                                      "response":  [
+
+                                                                   ]
+                                                  },
+                                                  {
+                                                      "name":  "Update User",
+                                                      "request":  {
+                                                                      "auth":  {
+                                                                                   "type":  "noauth"
+                                                                               },
+                                                                      "method":  "PUT",
+                                                                      "header":  [
+                                                                                     {
+                                                                                         "key":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "X-API-KEY",
+                                                                                         "value":  "{{api_key}}",
+                                                                                         "type":  "text"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "client-id",
+                                                                                         "value":  "{{client_id}}",
+                                                                                         "type":  "text"
+                                                                                     }
+                                                                                 ],
+                                                                      "body":  {
+                                                                                   "mode":  "raw",
+                                                                                   "raw":  "{\n  \"username\": \"updateduser\",\n  \"email\": \"updated@example.com\",\n  \"name\": \"Usuario\",\n  \"lastName\": \"Actualizado\",\n  \"companyId\": 1,\n  \"roleId\": 3\n}"
+                                                                               },
+                                                                      "url":  {
+                                                                                  "raw":  "{{base_url}}/users/1",
+                                                                                  "host":  [
+                                                                                               "{{base_url}}"
+                                                                                           ],
+                                                                                  "path":  [
+                                                                                               "users",
+                                                                                               "1"
+                                                                                           ]
+                                                                              },
+                                                                      "description":  "Actualiza un usuario existente. Requiere permiso: user:update"
+                                                                  },
+                                                      "response":  [
+
+                                                                   ]
+                                                  },
+                                                  {
+                                                      "name":  "Delete User",
+                                                      "request":  {
+                                                                      "auth":  {
+                                                                                   "type":  "noauth"
+                                                                               },
+                                                                      "method":  "DELETE",
+                                                                      "header":  [
+                                                                                     {
+                                                                                         "key":  "X-API-KEY",
+                                                                                         "value":  "{{api_key}}",
+                                                                                         "type":  "text"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "client-id",
+                                                                                         "value":  "{{client_id}}",
+                                                                                         "type":  "text"
+                                                                                     }
+                                                                                 ],
+                                                                      "url":  {
+                                                                                  "raw":  "{{base_url}}/users/1",
+                                                                                  "host":  [
+                                                                                               "{{base_url}}"
+                                                                                           ],
+                                                                                  "path":  [
+                                                                                               "users",
+                                                                                               "1"
+                                                                                           ]
+                                                                              },
+                                                                      "description":  "Elimina un usuario. Requiere permiso: user:delete"
+                                                                  },
+                                                      "response":  [
+
+                                                                   ]
+                                                  }
+                                              ]
+                                  },
+                                  {
+                                      "name":  "Roles",
+                                      "item":  [
+                                                  {
+                                                      "name":  "Get All Roles",
+                                                      "request":  {
+                                                                      "auth":  {
+                                                                                   "type":  "noauth"
+                                                                               },
+                                                                      "method":  "GET",
+                                                                      "header":  [
+                                                                                     {
+                                                                                         "key":  "X-API-KEY",
+                                                                                         "value":  "{{api_key}}",
+                                                                                         "type":  "text"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "client-id",
+                                                                                         "value":  "{{client_id}}",
+                                                                                         "type":  "text"
+                                                                                     }
+                                                                                 ],
+                                                                      "url":  {
+                                                                                  "raw":  "{{base_url}}/roles",
+                                                                                  "host":  [
+                                                                                               "{{base_url}}"
+                                                                                           ],
+                                                                                  "path":  [
+                                                                                               "roles"
+                                                                                           ]
+                                                                              },
+                                                                      "description":  "Lista todos los roles. Requiere permiso: user:read"
+                                                                  },
+                                                      "response":  [
+
+                                                                   ]
+                                                  },
+                                                  {
+                                                      "name":  "Get Role by ID",
+                                                      "request":  {
+                                                                      "auth":  {
+                                                                                   "type":  "noauth"
+                                                                               },
+                                                                      "method":  "GET",
+                                                                      "header":  [
+                                                                                     {
+                                                                                         "key":  "X-API-KEY",
+                                                                                         "value":  "{{api_key}}",
+                                                                                         "type":  "text"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "client-id",
+                                                                                         "value":  "{{client_id}}",
+                                                                                         "type":  "text"
+                                                                                     }
+                                                                                 ],
+                                                                      "url":  {
+                                                                                  "raw":  "{{base_url}}/roles/1",
+                                                                                  "host":  [
+                                                                                               "{{base_url}}"
+                                                                                           ],
+                                                                                  "path":  [
+                                                                                               "roles",
+                                                                                               "1"
+                                                                                           ]
+                                                                              },
+                                                                      "description":  "Obtiene un rol especÃ­fico por ID. Requiere permiso: user:read"
+                                                                  },
+                                                      "response":  [
+
+                                                                   ]
+                                                  },
+                                                  {
+                                                      "name":  "Get Assignable Roles",
+                                                      "request":  {
+                                                                      "auth":  {
+                                                                                   "type":  "noauth"
+                                                                               },
+                                                                      "method":  "GET",
+                                                                      "header":  [
+                                                                                     {
+                                                                                         "key":  "X-API-KEY",
+                                                                                         "value":  "{{api_key}}",
+                                                                                         "type":  "text"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "client-id",
+                                                                                         "value":  "{{client_id}}",
+                                                                                         "type":  "text"
+                                                                                     }
+                                                                                 ],
+                                                                      "url":  {
+                                                                                  "raw":  "{{base_url}}/roles/assignable",
+                                                                                  "host":  [
+                                                                                               "{{base_url}}"
+                                                                                           ],
+                                                                                  "path":  [
+                                                                                               "roles",
+                                                                                               "assignable"
+                                                                                           ]
+                                                                              },
+                                                                      "description":  "Devuelve los roles que el usuario actual puede asignar segÃºn su nivel. Requiere permiso: user:create o user:update"
+                                                                  },
+                                                      "response":  [
+
+                                                                   ]
+                                                  },
+                                                  {
+                                                      "name":  "Create Role",
+                                                      "request":  {
+                                                                      "auth":  {
+                                                                                   "type":  "noauth"
+                                                                               },
+                                                                      "method":  "POST",
+                                                                      "header":  [
+                                                                                     {
+                                                                                         "key":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "X-API-KEY",
+                                                                                         "value":  "{{api_key}}",
+                                                                                         "type":  "text"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "client-id",
+                                                                                         "value":  "{{client_id}}",
+                                                                                         "type":  "text"
+                                                                                     }
+                                                                                 ],
+                                                                      "body":  {
+                                                                                   "mode":  "raw",
+                                                                                   "raw":  "{\n  \"role\": \"ROLE_MANAGER\",\n  \"description\": \"Manager con permisos intermedios\",\n  \"level\": 50\n}"
+                                                                               },
+                                                                      "url":  {
+                                                                                  "raw":  "{{base_url}}/roles",
+                                                                                  "host":  [
+                                                                                               "{{base_url}}"
+                                                                                           ],
+                                                                                  "path":  [
+                                                                                               "roles"
+                                                                                           ]
+                                                                              },
+                                                                      "description":  "Crea un nuevo rol. Requiere permiso: user:update"
+                                                                  },
+                                                      "response":  [
+
+                                                                   ]
+                                                  },
+                                                  {
+                                                      "name":  "Update Role",
+                                                      "request":  {
+                                                                      "auth":  {
+                                                                                   "type":  "noauth"
+                                                                               },
+                                                                      "method":  "PUT",
+                                                                      "header":  [
+                                                                                     {
+                                                                                         "key":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "X-API-KEY",
+                                                                                         "value":  "{{api_key}}",
+                                                                                         "type":  "text"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "client-id",
+                                                                                         "value":  "{{client_id}}",
+                                                                                         "type":  "text"
+                                                                                     }
+                                                                                 ],
+                                                                      "body":  {
+                                                                                   "mode":  "raw",
+                                                                                   "raw":  "{\n  \"role\": \"ROLE_MANAGER\",\n  \"description\": \"Manager actualizado\",\n  \"level\": 60\n}"
+                                                                               },
+                                                                      "url":  {
+                                                                                  "raw":  "{{base_url}}/roles/1",
+                                                                                  "host":  [
+                                                                                               "{{base_url}}"
+                                                                                           ],
+                                                                                  "path":  [
+                                                                                               "roles",
+                                                                                               "1"
+                                                                                           ]
+                                                                              },
+                                                                      "description":  "Actualiza un rol existente. Requiere permiso: user:update"
+                                                                  },
+                                                      "response":  [
+
+                                                                   ]
+                                                  },
+                                                  {
+                                                      "name":  "Delete Role",
+                                                      "request":  {
+                                                                      "auth":  {
+                                                                                   "type":  "noauth"
+                                                                               },
+                                                                      "method":  "DELETE",
+                                                                      "header":  [
+                                                                                     {
+                                                                                         "key":  "X-API-KEY",
+                                                                                         "value":  "{{api_key}}",
+                                                                                         "type":  "text"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "client-id",
+                                                                                         "value":  "{{client_id}}",
+                                                                                         "type":  "text"
+                                                                                     }
+                                                                                 ],
+                                                                      "url":  {
+                                                                                  "raw":  "{{base_url}}/roles/1",
+                                                                                  "host":  [
+                                                                                               "{{base_url}}"
+                                                                                           ],
+                                                                                  "path":  [
+                                                                                               "roles",
+                                                                                               "1"
+                                                                                           ]
+                                                                              },
+                                                                      "description":  "Elimina un rol. Requiere permiso: user:delete"
+                                                                  },
+                                                      "response":  [
+
+                                                                   ]
+                                                  }
+                                              ]
+                                  }
+                              ]
+                 }
+             ]
+}

@@ -1,378 +1,662 @@
-{
-	"info": {
-		"_postman_id": "apikeys-collection-006",
-		"name": "ScreenLeads - 06. API Keys & Clients",
-		"description": "Gestión de API Keys y Clients para autenticación programática",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"variable": [
-		{
-			"key": "clients_path",
-			"value": "/clients",
-			"type": "string"
-		},
-		{
-			"key": "apikeys_path",
-			"value": "/api-keys",
-			"type": "string"
-		},
-		{
-			"key": "test_path",
-			"value": "/test",
-			"type": "string"
-		}
-	],
-	"item": [
-		{
-			"name": "Clients",
-			"item": [
-				{
-					"name": "Get All Clients",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/clients",
-							"host": ["{{base_url}}"],
-							"path": ["clients"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Client by ID",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/clients/1",
-							"host": ["{{base_url}}"],
-							"path": ["clients", "1"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Client",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    var client = pm.response.json();",
-									"    pm.environment.set('client_id', client.clientId);",
-									"    console.log('Client ID saved:', client.clientId);",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "POST",
-						"header": [{"key": "Content-Type", "value": "application/json"}],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Mi Aplicación Cliente\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/clients",
-							"host": ["{{base_url}}"],
-							"path": ["clients"]
-						},
-						"description": "Crea un nuevo client y genera automáticamente su primera API Key"
-					},
-					"response": []
-				},
-				{
-					"name": "Activate Client",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/clients/1/activate",
-							"host": ["{{base_url}}"],
-							"path": ["clients", "1", "activate"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Deactivate Client",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/clients/1/deactivate",
-							"host": ["{{base_url}}"],
-							"path": ["clients", "1", "deactivate"]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "API Keys",
-			"item": [
-				{
-					"name": "Create API Key",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    var apiKey = pm.response.json();",
-									"    pm.environment.set('api_key', apiKey.key);",
-									"    console.log('API Key saved to environment');",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api-keys?clientDbId=1&permissions=device:read,device:create,customer:read,promotion:read&daysValid=365",
-							"host": ["{{base_url}}"],
-							"path": ["api-keys"],
-							"query": [
-								{"key": "clientDbId", "value": "1", "description": "ID del client en BD"},
-								{"key": "permissions", "value": "device:read,device:create,customer:read,promotion:read"},
-								{"key": "daysValid", "value": "365"}
-							]
-						},
-						"description": "Permisos formato: 'resource:action,resource:action' o '*:*' para acceso total"
-					},
-					"response": []
-				},
-				{
-					"name": "Create API Key - Global Access",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api-keys?clientDbId=1&permissions=*:*&daysValid=365",
-							"host": ["{{base_url}}"],
-							"path": ["api-keys"],
-							"query": [
-								{"key": "clientDbId", "value": "1"},
-								{"key": "permissions", "value": "*:*", "description": "Acceso total"},
-								{"key": "daysValid", "value": "365"}
-							]
-						},
-						"description": "API Key con acceso total a todos los recursos"
-					},
-					"response": []
-				},
-				{
-					"name": "Get API Keys by Client",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api-keys/client/1",
-							"host": ["{{base_url}}"],
-							"path": ["api-keys", "client", "1"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Activate API Key",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api-keys/1/activate",
-							"host": ["{{base_url}}"],
-							"path": ["api-keys", "1", "activate"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Deactivate API Key",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api-keys/1/deactivate",
-							"host": ["{{base_url}}"],
-							"path": ["api-keys", "1", "deactivate"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete API Key",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api-keys/1",
-							"host": ["{{base_url}}"],
-							"path": ["api-keys", "1"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update Permissions",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "PATCH",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api-keys/1/permissions?permissions=device:read,device:create,device:update,customer:read,promotion:read",
-							"host": ["{{base_url}}"],
-							"path": ["api-keys", "1", "permissions"],
-							"query": [
-								{"key": "permissions", "value": "device:read,device:create,device:update,customer:read,promotion:read"}
-							]
-						},
-						"description": "Actualiza los permisos de una API key existente"
-					},
-					"response": []
-				},
-				{
-					"name": "Update Description",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "PATCH",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api-keys/1/description?description=Production API key with full device access",
-							"host": ["{{base_url}}"],
-							"path": ["api-keys", "1", "description"],
-							"query": [
-								{"key": "description", "value": "Production API key with full device access"}
-							]
-						},
-						"description": "Actualiza la descripción de una API key"
-					},
-					"response": []
-				},
-				{
-					"name": "Update Company Scope - Specific Company",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "PATCH",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api-keys/1/company-scope?companyScope=5",
-							"host": ["{{base_url}}"],
-							"path": ["api-keys", "1", "company-scope"],
-							"query": [
-								{"key": "companyScope", "value": "5", "description": "ID de la compañía específica"}
-							]
-						},
-						"description": "Restringe la API key a una compañía específica"
-					},
-					"response": []
-				},
-				{
-					"name": "Update Company Scope - Global Access",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
-						},
-						"method": "PATCH",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api-keys/1/company-scope",
-							"host": ["{{base_url}}"],
-							"path": ["api-keys", "1", "company-scope"]
-						},
-						"description": "Establece acceso global (todas las compañías) removiendo la restricción de company scope"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Test API Key Permission",
-			"item": [
-				{
-					"name": "Test - Has Permission",
-					"request": {
-						"method": "GET",
-						"header": [
-							{"key": "X-API-KEY", "value": "{{api_key}}", "type": "text"},
-							{"key": "client-id", "value": "{{client_id}}", "type": "text"}
-						],
-						"url": {
-							"raw": "{{base_url}}/test/has-permission?resource=device&action=read",
-							"host": ["{{base_url}}"],
-							"path": ["test", "has-permission"],
-							"query": [
-								{"key": "resource", "value": "device"},
-								{"key": "action", "value": "read"}
-							]
-						},
-						"description": "Endpoint de test para verificar permisos"
-					},
-					"response": []
-				}
-			]
-		}
-	]
+﻿{
+    "info":  {
+                 "_postman_id":  "apikeys-collection-006",
+                 "name":  "ScreenLeads - 06. API Keys \u0026 Clients",
+                 "description":  "GestiÃ³n de API Keys y Clients para autenticaciÃ³n programÃ¡tica",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+             },
+    "variable":  [
+                     {
+                         "key":  "clients_path",
+                         "value":  "/clients",
+                         "type":  "string"
+                     },
+                     {
+                         "key":  "apikeys_path",
+                         "value":  "/api-keys",
+                         "type":  "string"
+                     },
+                     {
+                         "key":  "test_path",
+                         "value":  "/test",
+                         "type":  "string"
+                     }
+                 ],
+    "item":  [
+                 {
+                     "name":  "Clients",
+                     "item":  [
+                                  {
+                                      "name":  "Get All Clients",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/clients",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "clients"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Get Client by ID",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/clients/1",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "clients",
+                                                                               "1"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Create Client",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 200) {",
+                                                                                    "    var client = pm.response.json();",
+                                                                                    "    pm.environment.set(\u0027client_id\u0027, client.clientId);",
+                                                                                    "    console.log(\u0027Client ID saved:\u0027, client.clientId);",
+                                                                                    "}"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"name\": \"Mi AplicaciÃ³n Cliente\"\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/clients",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "clients"
+                                                                           ]
+                                                              },
+                                                      "description":  "Crea un nuevo client y genera automÃ¡ticamente su primera API Key"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Activate Client",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "POST",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/clients/1/activate",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "clients",
+                                                                               "1",
+                                                                               "activate"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Deactivate Client",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "POST",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/clients/1/deactivate",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "clients",
+                                                                               "1",
+                                                                               "deactivate"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "API Keys",
+                     "item":  [
+                                  {
+                                      "name":  "Create API Key",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 200) {",
+                                                                                    "    var apiKey = pm.response.json();",
+                                                                                    "    pm.environment.set(\u0027api_key\u0027, apiKey.key);",
+                                                                                    "    console.log(\u0027API Key saved to environment\u0027);",
+                                                                                    "}"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "POST",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/api-keys?clientDbId=1\u0026permissions=device:read,device:create,customer:read,promotion:read\u0026daysValid=365",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api-keys"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "clientDbId",
+                                                                                    "value":  "1",
+                                                                                    "description":  "ID del client en BD"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "permissions",
+                                                                                    "value":  "device:read,device:create,customer:read,promotion:read"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "daysValid",
+                                                                                    "value":  "365"
+                                                                                }
+                                                                            ]
+                                                              },
+                                                      "description":  "Permisos formato: \u0027resource:action,resource:action\u0027 o \u0027*:*\u0027 para acceso total"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Create API Key - Global Access",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "POST",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/api-keys?clientDbId=1\u0026permissions=*:*\u0026daysValid=365",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api-keys"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "clientDbId",
+                                                                                    "value":  "1"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "permissions",
+                                                                                    "value":  "*:*",
+                                                                                    "description":  "Acceso total"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "daysValid",
+                                                                                    "value":  "365"
+                                                                                }
+                                                                            ]
+                                                              },
+                                                      "description":  "API Key con acceso total a todos los recursos"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Get API Keys by Client",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/api-keys/client/1",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api-keys",
+                                                                               "client",
+                                                                               "1"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Activate API Key",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "POST",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/api-keys/1/activate",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api-keys",
+                                                                               "1",
+                                                                               "activate"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Deactivate API Key",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "POST",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/api-keys/1/deactivate",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api-keys",
+                                                                               "1",
+                                                                               "deactivate"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Delete API Key",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "DELETE",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/api-keys/1",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api-keys",
+                                                                               "1"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Update Permissions",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "PATCH",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/api-keys/1/permissions?permissions=device:read,device:create,device:update,customer:read,promotion:read",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api-keys",
+                                                                               "1",
+                                                                               "permissions"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "permissions",
+                                                                                    "value":  "device:read,device:create,device:update,customer:read,promotion:read"
+                                                                                }
+                                                                            ]
+                                                              },
+                                                      "description":  "Actualiza los permisos de una API key existente"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Update Description",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "PATCH",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/api-keys/1/description?description=Production API key with full device access",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api-keys",
+                                                                               "1",
+                                                                               "description"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "description",
+                                                                                    "value":  "Production API key with full device access"
+                                                                                }
+                                                                            ]
+                                                              },
+                                                      "description":  "Actualiza la descripciÃ³n de una API key"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Update Company Scope - Specific Company",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "PATCH",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/api-keys/1/company-scope?companyScope=5",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api-keys",
+                                                                               "1",
+                                                                               "company-scope"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "companyScope",
+                                                                                    "value":  "5",
+                                                                                    "description":  "ID de la compaÃ±Ã­a especÃ­fica"
+                                                                                }
+                                                                            ]
+                                                              },
+                                                      "description":  "Restringe la API key a una compaÃ±Ã­a especÃ­fica"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Update Company Scope - Global Access",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{jwt_token}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "method":  "PATCH",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/api-keys/1/company-scope",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api-keys",
+                                                                               "1",
+                                                                               "company-scope"
+                                                                           ]
+                                                              },
+                                                      "description":  "Establece acceso global (todas las compaÃ±Ã­as) removiendo la restricciÃ³n de company scope"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Test API Key Permission",
+                     "item":  [
+                                  {
+                                      "name":  "Test - Has Permission",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-API-KEY",
+                                                                         "value":  "{{api_key}}",
+                                                                         "type":  "text"
+                                                                     },
+                                                                     {
+                                                                         "key":  "client-id",
+                                                                         "value":  "{{client_id}}",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/test/has-permission?resource=device\u0026action=read",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "test",
+                                                                               "has-permission"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "resource",
+                                                                                    "value":  "device"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "action",
+                                                                                    "value":  "read"
+                                                                                }
+                                                                            ]
+                                                              },
+                                                      "description":  "Endpoint de test para verificar permisos"
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 }
+             ]
 }

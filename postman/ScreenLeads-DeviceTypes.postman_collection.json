@@ -1,0 +1,140 @@
+{
+    "info": {
+        "_postman_id": "devicetypes-collection-014",
+        "name": "ScreenLeads - 14. Device Types",
+        "description": "Gestión de tipos de dispositivos",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "devices_path",
+            "value": "/devices",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "JWT Auth",
+            "item": [
+                {
+                    "name": "Get All Device Types",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/devices/types",
+                            "host": ["{{base_url}}"],
+                            "path": ["devices", "types"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Device Type",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"LED 4K\",\n  \"description\": \"Pantalla LED 4K UHD\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/devices/types",
+                            "host": ["{{base_url}}"],
+                            "path": ["devices", "types"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "API Key Auth",
+            "item": [
+                {
+                    "name": "Get All Device Types (API Key)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/devices/types",
+                            "host": ["{{base_url}}"],
+                            "path": ["devices", "types"]
+                        },
+                        "description": "Con API Key que tenga permiso 'devicetype:read'"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Device Type (API Key)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"OLED 8K\",\n  \"description\": \"Pantalla OLED 8K\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/devices/types",
+                            "host": ["{{base_url}}"],
+                            "path": ["devices", "types"]
+                        },
+                        "description": "Con API Key que tenga permiso 'devicetype:create'"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
+}

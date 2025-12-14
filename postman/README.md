@@ -1,335 +1,440 @@
-# 📦 Colecciones de Postman - ScreenLeads API
+# 📬 ScreenLeads - Colecciones Postman
 
-Esta carpeta contiene todas las colecciones de Postman para probar la API de ScreenLeads, incluyendo el nuevo sistema de autenticación híbrida (JWT + API Keys).
+Colecciones completas y exhaustivas de Postman para todos los endpoints de la API de ScreenLeads.
 
-## 📋 Contenido
+## 📋 Índice de Colecciones
 
-### 🌍 Entornos (3)
+### 🔐 Autenticación y Seguridad
+1. **ScreenLeads-Auth.postman_collection.json** - Autenticación JWT
+2. **ScreenLeads-APIKeys.postman_collection.json** - API Keys y Clients
 
-Las colecciones funcionan con **3 entornos** independientes:
+### 📊 Gestión de Contenido
+3. **ScreenLeads-Advices.postman_collection.json** - Anuncios (Advices) ⭐ NUEVO
+4. **ScreenLeads-Media.postman_collection.json** - Multimedia
+5. **ScreenLeads-Promotions.postman_collection.json** - Promociones y Leads
 
-1. **`ScreenLeads-Environment-Dev.postman_environment.json`** 
-   - 🏠 **DEV (Local)** - `http://localhost:3000`
-   - Para desarrollo local
-   - Base de datos local
+### 🏢 Gestión Empresarial
+6. **ScreenLeads-Companies.postman_collection.json** - Compañías ⭐ NUEVO
+7. **ScreenLeads-Customers.postman_collection.json** - Clientes
 
-2. **`ScreenLeads-Environment-Pre.postman_environment.json`**
-   - 🚧 **PRE (Preproducción)** - `https://pre-api.screenleads.com`
-   - Entorno de staging/testing
-   - Datos de prueba
+### 🖥️ Dispositivos
+8. **ScreenLeads-Devices.postman_collection.json** - Dispositivos (pantallas LED)
 
-3. **`ScreenLeads-Environment-Pro.postman_environment.json`**
-   - 🚀 **PRO (Producción)** - `https://api.screenleads.com`
-   - Entorno de producción
-   - ⚠️ **¡Usar con precaución!**
+### 🎟️ Cupones
+9. **ScreenLeads-Coupons.postman_collection.json** - Validación y canje de cupones ⭐ NUEVO
 
-**Cada entorno incluye:**
-- `base_url` - URL del servidor
-- `environment` - Identificador (dev/pre/pro)
-- Variables auto-guardadas: `jwt_token`, `api_key`, `client_id`
-- Variables de referencia: `company_id`, `device_id`, etc.
+### 👥 Administración
+10. **ScreenLeads-Users-Roles.postman_collection.json** - Usuarios y Roles ⭐ NUEVO
+11. **ScreenLeads-Admin.postman_collection.json** - Administración general
+12. **ScreenLeads-AppVersions-Entities.postman_collection.json** - Versiones y Entidades ⭐ NUEVO
 
-### 📚 Colecciones
+### 💳 Facturación
+13. **ScreenLeads-Billing.postman_collection.json** - Integración con Stripe ⭐ NUEVO
 
-1. **`ScreenLeads-Auth.postman_collection.json`**
-   - ✅ Login
-   - ✅ Register
-   - ✅ Get Current User
-   - ✅ Change Password
-   - ✅ Refresh Token
-   - 📌 Variables: `base_path=/auth`
+## 🌍 Entornos
 
-2. **`ScreenLeads-Devices.postman_collection.json`**
-   - ✅ CRUD de Dispositivos (JWT Auth)
-   - ✅ CRUD de Dispositivos (API Key Auth)
-   - Ejemplos de ambos métodos de autenticación
-   - 📌 Variables: `base_path=/devices`
+Disponemos de 3 entornos preconfigurados:
 
-3. **`ScreenLeads-Promotions.postman_collection.json`**
-   - ✅ CRUD de Promociones
-   - ✅ Validación de Cupones
-   - ✅ Canje de Cupones
-   - ✅ Emisión de Cupones
-   - 📌 Variables: `promotions_path=/promotions`, `coupons_path=/coupons`
+- **ScreenLeads-Environment-Dev.postman_environment.json** - Desarrollo local (`http://localhost:8080`)
+- **ScreenLeads-Environment-Pre.postman_environment.json** - Pre-producción (`https://api.pre.screenleads.com`)
+- **ScreenLeads-Environment-Pro.postman_environment.json** - Producción (`https://api.screenleads.com`)
 
-4. **`ScreenLeads-Customers.postman_collection.json`**
-   - ✅ CRUD de Clientes/Leads
-   - 📌 Variables: `base_path=/customers`
+## 🚀 Configuración Inicial
 
-5. **`ScreenLeads-Admin.postman_collection.json`**
-   - ✅ Gestión de Usuarios
-   - ✅ Gestión de Roles
-   - ✅ Gestión de Compañías
-   - Requiere `ROLE_ADMIN` o permisos específicos
-   - 📌 Variables: `users_path=/users`, `roles_path=/roles`, `companies_path=/companies`
+### 1. Importar Colecciones y Entornos
 
-6. **`ScreenLeads-APIKeys.postman_collection.json`**
-   - ✅ Gestión de Clients
-   - ✅ Creación de API Keys con permisos granulares
-   - ✅ Activación/Desactivación de API Keys
-   - ✅ Endpoint de test de permisos
-   - 📌 Variables: `clients_path=/clients`, `apikeys_path=/api-keys`, `test_path=/test`
-
-7. **`ScreenLeads-Media.postman_collection.json`**
-   - ✅ Gestión de Archivos Multimedia
-   - ✅ Upload de archivos
-   - ✅ Media Types
-   - ✅ Avisos (Advices)
-   - ✅ Device Types
-   - 📌 Variables: `media_path=/medias`, `advices_path=/advices`, `devices_path=/devices`
-
-**Todas las colecciones incluyen:**
-- ✅ Variables a nivel de colección para paths
-- ✅ Uso de variables de entorno para URLs y tokens
-- ✅ Scripts de auto-guardado en requests clave
-
-## 🚀 Cómo Usar
-
-### 1. Importar en Postman
-
-**Opción A: Importar todo**
 1. Abre Postman
-2. Click en `Import`
-3. Arrastra toda la carpeta `postman/` o selecciona todos los archivos `.json`
-4. Click en `Import`
+2. Click en **Import**
+3. Arrastra todos los archivos `.json` de esta carpeta
+4. Selecciona el entorno apropiado (Dev/Pre/Pro) en el selector superior derecho
 
-**Opción B: Importar uno a uno**
-1. Abre Postman
-2. Click en `Import`
-3. Selecciona un archivo `.json`
-4. Repite para cada colección
+### 2. Variables de Entorno Necesarias
 
-### 2. Configurar el Entorno
+Cada entorno debe configurar las siguientes variables:
 
-1. En Postman, selecciona el entorno adecuado en el dropdown superior derecho:
-   - **ScreenLeads - DEV (Local)** - Para desarrollo local
-   - **ScreenLeads - PRE (Preproducción)** - Para testing en servidor de staging
-   - **ScreenLeads - PRO (Producción)** - Para producción (⚠️ cuidado)
-
-2. Verifica/Edita las URLs según tu configuración:
-   
-   **DEV:**
-   ```
-   base_url: http://localhost:3000
-   environment: dev
-   ```
-   
-   **PRE:**
-   ```
-   base_url: https://pre-api.screenleads.com
-   environment: pre
-   ```
-   
-   **PRO:**
-   ```
-   base_url: https://api.screenleads.com
-   environment: pro
-   ```
-
-3. Ajusta IDs de referencia según el entorno:
-   ```
-   company_id: 1 (o el ID apropiado para cada entorno)
-   ```
-
-### 3. Autenticarse
-
-**Método 1: Con JWT (Usuario)**
-1. Ve a la colección **"01. Authentication"**
-2. Ejecuta **"Login"** con tus credenciales
-3. El script guardará automáticamente el `jwt_token` en las variables de entorno
-4. Todas las requests con `Bearer Token` usarán automáticamente este token
-
-**Método 2: Con API Key**
-1. Ve a la colección **"06. API Keys & Clients"**
-2. Ejecuta **"Create Client"** para crear un nuevo client
-3. Ejecuta **"Create API Key"** con los permisos deseados
-4. El script guardará automáticamente el `api_key` en las variables de entorno
-5. Usa las requests en la carpeta "API Key Auth" que incluyen headers:
-   - `X-API-KEY: {{api_key}}`
-   - `client-id: {{client_id}}`
-
-### 4. Flujo Típico de Pruebas
-
-**Para cada entorno (DEV, PRE, PRO):**
-
-```
-1. Seleccionar entorno en Postman
-2. Login → Guarda JWT Token automáticamente
-3. Create Client → Guarda Client ID automáticamente
-4. Create API Key → Guarda API Key automáticamente
-5. Probar endpoints con JWT (carpetas normales)
-6. Probar endpoints con API Key (carpetas "API Key Auth")
+```javascript
+base_url         // URL base del API (ej: http://localhost:8080 o https://api.screenleads.com)
+jwt_token        // Se autocompleta al hacer login
+api_key          // Tu API Key (se obtiene desde /clients)
+client_id        // Tu Client ID (se obtiene al crear un client)
+company_id       // ID de la compañía (ej: 1)
 ```
 
-**⚠️ Recomendaciones por Entorno:**
+### 3. Flujo de Trabajo Recomendado
 
-- **DEV**: Experimenta libremente, crea/borra datos de prueba
-- **PRE**: Testing controlado, valida cambios antes de producción
-- **PRO**: Solo operaciones validadas, evita DELETE en datos importantes
+#### Opción A: Autenticación con JWT
 
-## 🔐 Ejemplos de Permisos de API Keys
+1. **Login** → Colección: `01. Authentication` → `Login`
+   - El token JWT se guarda automáticamente en `{{jwt_token}}`
+   - Todas las demás llamadas con JWT Auth usarán este token
 
-### API Key con Acceso Total
+2. **Usar cualquier endpoint** con autenticación Bearer Token
+
+#### Opción B: Autenticación con API Key
+
+1. **Crear Client** → Colección: `06. API Keys & Clients` → `Clients` → `Create Client`
+   - Guarda el `clientId` y `apiKey` devueltos
+
+2. **Configurar permisos** → Colección: `06. API Keys & Clients` → `API Keys` → `Update API Key Permissions`
+
+3. **Usar endpoints con API Key** → Todas las colecciones tienen carpetas "API Key Authentication"
+
+## 📚 Detalles de las Colecciones
+
+### 🔐 01. Authentication (JWT)
+
+Endpoints de autenticación con tokens JWT:
+
+- ✅ **POST** `/auth/login` - Iniciar sesión
+- ✅ **POST** `/auth/register` - Registro de usuarios
+- ✅ **GET** `/auth/me` - Usuario actual
+- ✅ **POST** `/auth/change-password` - Cambiar contraseña
+- ✅ **POST** `/auth/refresh` - Renovar token
+
+### 🔑 06. API Keys & Clients
+
+Gestión de clientes y API Keys para autenticación programática:
+
+**Clients:**
+- ✅ **GET** `/clients` - Listar clients
+- ✅ **GET** `/clients/{id}` - Obtener client por ID
+- ✅ **POST** `/clients` - Crear client (genera API Key automáticamente)
+- ✅ **DELETE** `/clients/{id}` - Eliminar client
+
+**API Keys:**
+- ✅ **GET** `/api-keys/client/{clientId}` - Listar API Keys de un client
+- ✅ **POST** `/api-keys/client/{clientId}` - Generar nueva API Key
+- ✅ **PUT** `/api-keys/{apiKeyId}/permissions` - Actualizar permisos
+- ✅ **DELETE** `/api-keys/{apiKeyId}` - Revocar API Key
+
+### 📢 07. Advices (Anuncios) ⭐ NUEVO
+
+Gestión completa de anuncios con horarios y programación:
+
+**JWT Authentication:**
+- ✅ **GET** `/advices` - Listar todos los advices
+- ✅ **GET** `/advices/visibles` - Advices visibles ahora (con zona horaria)
+- ✅ **GET** `/advices/{id}` - Obtener advice por ID
+- ✅ **POST** `/advices` - Crear advice con schedules
+- ✅ **PUT** `/advices/{id}` - Actualizar advice
+- ✅ **DELETE** `/advices/{id}` - Eliminar advice
+
+**API Key Authentication:**
+- ✅ Todos los endpoints anteriores también con API Key
+
+**Headers especiales para `/advices/visibles`:**
+- `X-Timezone`: Zona horaria IANA (ej: "Europe/Madrid")
+- `X-Timezone-Offset`: Offset en minutos (ej: "120")
+
+### 🏢 08. Companies ⭐ NUEVO
+
+CRUD completo de compañías:
+
+**JWT + API Key Auth:**
+- ✅ **GET** `/companies` - Listar compañías
+- ✅ **GET** `/companies/{id}` - Obtener por ID
+- ✅ **POST** `/companies` - Crear compañía
+- ✅ **PUT** `/companies/{id}` - Actualizar
+- ✅ **DELETE** `/companies/{id}` - Eliminar
+
+**Permisos requeridos:** `ROLE_ADMIN` o `company:read/create/update/delete`
+
+### 🎟️ 09. Coupons (Cupones) ⭐ NUEVO
+
+Validación, canje y emisión de cupones:
+
+**JWT + API Key Auth:**
+- ✅ **GET** `/coupons/{code}` - Validar cupón
+- ✅ **POST** `/coupons/{code}/redeem` - Canjear cupón
+- ✅ **POST** `/coupons/{code}/expire` - Caducar cupón
+- ✅ **POST** `/coupons/issue?promotionId=&customerId=` - Emitir cupón
+
+### 👥 10. Users & Roles ⭐ NUEVO
+
+Gestión de usuarios y roles del sistema:
+
+**Users:**
+- ✅ **GET** `/users` - Listar usuarios
+- ✅ **GET** `/users/{id}` - Obtener usuario por ID
+- ✅ **POST** `/users` - Crear usuario (devuelve contraseña temporal)
+- ✅ **PUT** `/users/{id}` - Actualizar usuario
+- ✅ **DELETE** `/users/{id}` - Eliminar usuario
+
+**Roles:**
+- ✅ **GET** `/roles` - Listar roles
+- ✅ **GET** `/roles/{id}` - Obtener rol por ID
+- ✅ **GET** `/roles/assignable` - Roles asignables según nivel del usuario
+- ✅ **POST** `/roles` - Crear rol
+- ✅ **PUT** `/roles/{id}` - Actualizar rol
+- ✅ **DELETE** `/roles/{id}` - Eliminar rol
+
+### 🖥️ 02. Devices (Actualizado)
+
+Gestión de dispositivos (pantallas LED):
+
+**CRUD Básico (JWT + API Key):**
+- ✅ **GET** `/devices` - Listar dispositivos
+- ✅ **GET** `/devices/{id}` - Obtener por ID
+- ✅ **GET** `/devices/uuid/{uuid}` - Obtener por UUID
+- ✅ **HEAD** `/devices/uuid/{uuid}` - Comprobar existencia ⭐ NUEVO
+- ✅ **POST** `/devices` - Crear dispositivo
+- ✅ **PUT** `/devices/{id}` - Actualizar
+- ✅ **DELETE** `/devices/{id}` - Eliminar
+
+**Gestión de Advices por Dispositivo:** ⭐ NUEVO
+- ✅ **GET** `/devices/{deviceId}/advices` - Listar advices del dispositivo
+- ✅ **POST** `/devices/{deviceId}/advices/{adviceId}` - Asignar advice
+- ✅ **DELETE** `/devices/{deviceId}/advices/{adviceId}` - Quitar advice
+
+### 📺 03. Promotions & Leads (Actualizado)
+
+Gestión de promociones y leads (captación de clientes):
+
+**Promotions (JWT):**
+- ✅ **GET** `/promotions` - Listar promociones
+- ✅ **GET** `/promotions/{id}` - Obtener por ID
+- ✅ **POST** `/promotions` - Crear promoción
+- ✅ **PUT** `/promotions/{id}` - Actualizar
+- ✅ **DELETE** `/promotions/{id}` - Eliminar
+
+**Leads:** ⭐ NUEVO
+- ✅ **POST** `/promotions/{id}/leads` - Registrar lead
+- ✅ **GET** `/promotions/{id}/leads` - Listar leads
+- ✅ **POST** `/promotions/{id}/leads/test` - Crear lead de prueba
+- ✅ **GET** `/promotions/{id}/leads/export.csv?from=&to=` - Exportar CSV
+- ✅ **GET** `/promotions/{id}/leads/summary?from=&to=` - Resumen estadístico
+
+### 👤 04. Customers
+
+Gestión de clientes que participan en promociones:
+
+- ✅ **GET** `/customers` - Listar clientes
+- ✅ **GET** `/customers/{id}` - Obtener por ID
+- ✅ **POST** `/customers` - Crear cliente
+- ✅ **PUT** `/customers/{id}` - Actualizar
+- ✅ **DELETE** `/customers/{id}` - Eliminar
+
+### 📱 11. App Versions & Entities ⭐ NUEVO
+
+**App Versions:**
+- ✅ **GET** `/app-versions` - Listar versiones
+- ✅ **GET** `/app-versions/{id}` - Obtener por ID
+- ✅ **GET** `/app-versions/latest/{platform}` - Última versión (android/ios)
+- ✅ **POST** `/app-versions` - Crear versión
+- ✅ **PUT** `/app-versions/{id}` - Actualizar
+- ✅ **DELETE** `/app-versions/{id}` - Eliminar
+
+**App Entities:**
+- ✅ **GET** `/entities?withCount=true` - Listar entidades
+- ✅ **GET** `/entities/{id}?withCount=true` - Obtener por ID
+- ✅ **GET** `/entities/by-resource/{resource}?withCount=true` - Por nombre
+- ✅ **PUT** `/entities` - Crear/Actualizar (upsert)
+- ✅ **PUT** `/entities/{id}` - Actualizar por ID
+- ✅ **DELETE** `/entities/{id}` - Eliminar
+- ✅ **PUT** `/entities/reorder` - Reordenar entidades
+- ✅ **PUT** `/entities/{id}/attributes/reorder` - Reordenar atributos
+
+### 💳 12. Billing (Stripe) ⭐ NUEVO
+
+Integración con Stripe para facturación:
+
+- ✅ **POST** `/api/billing/checkout-session/{companyId}` - Crear sesión de pago
+- ✅ **POST** `/api/billing/portal-session/{companyId}` - Portal de facturación
+
+**Requiere:** `ROLE_ADMIN` o `ROLE_COMPANY_ADMIN`
+
+### 📸 05. Media
+
+Gestión de archivos multimedia:
+
+- **GET** `/medias` - Listar media
+- **GET** `/medias/{id}` - Obtener por ID
+- **POST** `/medias` - Crear media
+- **PUT** `/medias/{id}` - Actualizar
+- **DELETE** `/medias/{id}` - Eliminar
+- **GET** `/medias/types` - Tipos de media
+- **POST** `/medias/types` - Crear tipo
+
+### 🔧 05. Admin
+
+Endpoints administrativos del sistema:
+
+- **GET** `/admin/health` - Estado del sistema
+- Otros endpoints de administración
+
+## 🔒 Sistema de Permisos
+
+### Permisos disponibles por recurso
+
+Cada recurso tiene 4 operaciones básicas: `read`, `create`, `update`, `delete`
+
+**Recursos disponibles:**
+- `advice` - Anuncios
+- `company` - Compañías
+- `device` - Dispositivos
+- `devicetype` - Tipos de dispositivo
+- `media` - Multimedia
+- `mediatype` - Tipos de media
+- `promotion` - Promociones
+- `lead` - Leads de promociones
+- `coupon` - Cupones
+- `customer` - Clientes
+- `user` - Usuarios
+- `appversion` - Versiones de app
+- `appentity` - Entidades del sistema
+
+### Roles especiales
+
+- `ROLE_ADMIN` - Acceso total al sistema
+- `ROLE_COMPANY_ADMIN` - Administrador de compañía
+- `ROLE_USER` - Usuario estándar
+
+### Configuración de permisos en API Keys
+
+Para configurar permisos en una API Key:
+
+```json
+{
+  "permissions": [
+    {
+      "resource": "device",
+      "actions": ["read", "create", "update"]
+    },
+    {
+      "resource": "advice",
+      "actions": ["read"]
+    }
+  ],
+  "companyScope": [1, 2, 3],  // IDs de compañías permitidas
+  "globalAccess": false        // true = acceso a todas las compañías
+}
 ```
-Permissions: *:*
-Company Scope: NULL (global)
+
+## 📝 Ejemplos de Uso
+
+### Ejemplo 1: Crear un Advice con Horarios
+
+```json
+POST /advices
+{
+  "company": {"id": 1},
+  "customInterval": false,
+  "description": "Promoción de fin de semana",
+  "interval": "",
+  "media": {"id": 1},
+  "promotion": null,
+  "schedules": [
+    {
+      "startDate": "2025-12-01T00:00:00.000Z",
+      "endDate": "2025-12-31T23:59:59.999Z",
+      "dayWindows": [
+        {
+          "weekday": "SATURDAY",
+          "ranges": [{"fromTime": "10:00", "toTime": "22:00"}]
+        },
+        {
+          "weekday": "SUNDAY",
+          "ranges": [{"fromTime": "10:00", "toTime": "22:00"}]
+        }
+      ]
+    }
+  ]
+}
 ```
 
-### API Key para Gestión de Dispositivos
-```
-Permissions: device:read,device:create,device:update,device:delete
-Company Scope: NULL (todas las compañías) o ID específico
-```
+### Ejemplo 2: Obtener Advices Visibles Ahora
 
-### API Key para Dashboard de Cliente
-```
-Permissions: customer:read,advice:read,promotion:read,device:read
-Company Scope: 123 (solo datos de compañía 123)
-```
-
-### API Key para Integración Externa
-```
-Permissions: device:read,customer:create,promotion:read
-Company Scope: NULL
-```
-
-## 📝 Variables de Entorno Disponibles
-
-### Variables Globales (en todos los entornos)
-
-| Variable | Descripción | Auto-guardada | Entorno |
-|----------|-------------|---------------|---------|
-| `base_url` | URL base de la API | No | DEV: `http://localhost:3000`<br>PRE: `https://pre-api.screenleads.com`<br>PRO: `https://api.screenleads.com` |
-| `environment` | Identificador del entorno | No | dev / pre / pro |
-| `jwt_token` | Token JWT del usuario | ✅ Sí (en Login) | Todos |
-| `api_key` | API Key activa | ✅ Sí (en Create API Key) | Todos |
-| `client_id` | ID del Client | ✅ Sí (en Create Client) | Todos |
-| `company_id` | ID de Compañía de prueba | No | Configurar según entorno |
-| `device_id` | ID de Dispositivo | ✅ Sí (en Get Devices) | Todos |
-| `customer_id` | ID de Cliente | No | Manual |
-| `promotion_id` | ID de Promoción | No | Manual |
-| `user_id` | ID de Usuario | No | Manual |
-
-### Variables a Nivel de Colección
-
-Cada colección incluye variables para sus paths base:
-
-| Colección | Variables |
-|-----------|-----------|
-| Auth | `base_path=/auth` |
-| Devices | `base_path=/devices` |
-| Promotions | `promotions_path=/promotions`, `coupons_path=/coupons` |
-| Customers | `base_path=/customers` |
-| Admin | `users_path=/users`, `roles_path=/roles`, `companies_path=/companies` |
-| API Keys | `clients_path=/clients`, `apikeys_path=/api-keys`, `test_path=/test` |
-| Media | `media_path=/medias`, `advices_path=/advices`, `devices_path=/devices` |
-
-## 🎯 Endpoints con Autenticación Híbrida
-
-Los siguientes endpoints aceptan **ambos** tipos de autenticación:
-
-### Solo Permisos (`@perm.can()`)
-- `/devices` - Requiere `device:read/create/update/delete`
-- `/customers` - Requiere `customer:read/create/update/delete`
-- `/promotions` - Requiere `promotion:read/create/update/delete`
-- `/advices` - Requiere `advice:read/create/update/delete`
-- `/coupons` - Requiere `coupon:read/create/update`
-- `/medias` - Requiere `media:read/create`
-- `/devices/types` - Requiere `devicetype:read/create/update/delete`
-- `/medias/types` - Requiere `mediatype:read/create/update/delete`
-
-### Híbrido (`ROLE_ADMIN or @perm.can()`)
-- `/companies` - Requiere `ROLE_ADMIN` o `company:read/create/update/delete`
-- `/users` - Requiere `ROLE_ADMIN` o `user:read/create/update/delete`
-- `/roles` - Requiere `ROLE_ADMIN` o `user:read/update/delete`
-- `/clients` - Requiere `ROLE_ADMIN` o `client:read/create/update/delete`
-- `/api-keys` - Requiere `ROLE_ADMIN` o `apikey:read/create/update/delete`
-- `/app-versions` - Requiere `ROLE_ADMIN` o `appversion:read/create/update/delete`
-- `/company-tokens` - Requiere `ROLE_ADMIN` o `companytoken:read/create/update/delete`
-- `/entities` - Requiere `ROLE_ADMIN` o `appentity:read/create/update/delete`
-
-## 🧪 Testing de Permisos
-
-Usa el endpoint de test incluido en la colección **API Keys**:
-
-```http
-GET /test/has-permission?resource=device&action=read
+```bash
+GET /advices/visibles
 Headers:
-  X-API-KEY: {{api_key}}
-  client-id: {{client_id}}
+  Authorization: Bearer {{jwt_token}}
+  X-Timezone: Europe/Madrid
+  X-Timezone-Offset: 120
 ```
 
-Respuestas:
-- ✅ `200 OK` - Permiso concedido
-- ❌ `403 Forbidden` - Permiso denegado
+### Ejemplo 3: Validar y Canjear un Cupón
 
-## 📖 Recursos Disponibles
+```bash
+# 1. Validar
+GET /coupons/PROMO2025ABC
 
-```
-advice, promotion, lead, customer, company, device, media,
-user, role, client, apikey, coupon, devicetype, mediatype,
-appversion, companytoken, appentity
+# 2. Canjear si es válido
+POST /coupons/PROMO2025ABC/redeem
 ```
 
-## 🎬 Acciones Disponibles
+### Ejemplo 4: Exportar Leads de una Promoción
 
+```bash
+GET /promotions/1/leads/export.csv?from=2025-12-01&to=2025-12-31
+
+Headers:
+  Authorization: Bearer {{jwt_token}}
 ```
-read, create, update, delete
-```
 
-## 🌟 Wildcards
+## 🐛 Troubleshooting
 
-- `*:read` - Leer cualquier recurso
-- `device:*` - Cualquier acción sobre devices
-- `*:*` - Acceso total
+### Error 401 Unauthorized
+
+**JWT:**
+- Verifica que el token esté guardado en `{{jwt_token}}`
+- Ejecuta `Login` de nuevo para obtener un token fresco
+- Los tokens JWT expiran después de cierto tiempo
+
+**API Key:**
+- Verifica que los headers `X-API-KEY` y `client-id` estén configurados
+- Comprueba que la API Key tenga los permisos necesarios
+- Verifica que la API Key no haya sido revocada
+
+### Error 403 Forbidden
+
+- Tu usuario/API Key no tiene permisos para este recurso
+- Para API Keys: actualiza permisos en `/api-keys/{id}/permissions`
+- Para JWT: contacta con un administrador para ajustar roles
+
+### Error 404 Not Found
+
+- Verifica que el ID del recurso existe
+- Comprueba que estás usando el entorno correcto (Dev/Pre/Pro)
+- Algunos recursos pueden estar filtrados por `companyScope`
+
+### Error 400 Bad Request
+
+- Revisa el JSON del body (sintaxis correcta)
+- Verifica que todos los campos requeridos estén presentes
+- Comprueba que los tipos de datos sean correctos
+
+## 🆕 Novedades en esta versión
+
+### Colecciones Nuevas
+- ✨ **Advices** - Gestión completa de anuncios con horarios
+- ✨ **Companies** - CRUD completo de compañías
+- ✨ **Coupons** - Sistema de cupones separado de Promotions
+- ✨ **Users & Roles** - Administración de usuarios y permisos
+- ✨ **App Versions & Entities** - Versionado y entidades del sistema
+- ✨ **Billing** - Integración con Stripe
+
+### Mejoras en Colecciones Existentes
+- ✅ **Devices** - Añadidos endpoints de gestión de advices por dispositivo
+- ✅ **Promotions** - Añadidos endpoints de leads (registro, listado, export, summary)
+- ✅ **Auth** - Añadido endpoint de cambio de contraseña
+- ✅ **API Keys** - Reestructurada con separación clara de Clients y API Keys
+
+### Estructura Mejorada
+- 📁 Todas las colecciones tienen carpetas "JWT Authentication" y "API Key Authentication"
+- 📝 Descripciones detalladas en cada endpoint
+- 🔄 Scripts de test para autocompletar variables de entorno
+- 🎯 Ejemplos de request body más completos y realistas
 
 ## 📞 Soporte
 
-Para más información consulta:
-- `docs/API_KEY_QUICK_START.md` - Guía rápida de API Keys
-- `docs/API_KEY_PERMISSIONS.md` - Sistema de permisos detallado
-- `docs/HYBRID_AUTHENTICATION.md` - Arquitectura del sistema híbrido
+Para cualquier duda o problema con las colecciones:
 
-## 🔄 Gestión de Entornos
-
-### Cambiar entre Entornos
-
-1. Click en el dropdown de entornos (esquina superior derecha)
-2. Selecciona el entorno deseado
-3. Las requests usarán automáticamente la URL correcta
-
-### Sincronizar Variables entre Entornos
-
-Cuando creas recursos en un entorno:
-1. Los IDs se guardan automáticamente en las variables del entorno activo
-2. Al cambiar de entorno, necesitarás crear/obtener nuevos recursos
-3. Cada entorno mantiene sus propias variables independientes
-
-### URLs por Entorno
-
-```bash
-# DEV (Local)
-http://localhost:3000/devices
-http://localhost:3000/auth/login
-
-# PRE (Preproducción)
-https://pre-api.screenleads.com/devices
-https://pre-api.screenleads.com/auth/login
-
-# PRO (Producción)
-https://api.screenleads.com/devices
-https://api.screenleads.com/auth/login
-```
-
-### Configuración de CORS
-
-Asegúrate de que tu backend permite CORS desde:
-- **DEV**: `http://localhost:*` (cualquier puerto)
-- **PRE**: Dominios de staging autorizados
-- **PRO**: Solo dominios de producción autorizados
+1. Revisa la sección de Troubleshooting
+2. Consulta la documentación Swagger en `/swagger-ui/index.html`
+3. Contacta al equipo de desarrollo
 
 ---
 
-**Última actualización**: Diciembre 2024
-**Versión**: 1.1 - Multi-entorno (DEV/PRE/PRO)
-
+**Última actualización:** Diciembre 2025  
+**Versión de las colecciones:** 2.0.0  
+**Total de endpoints:** 100+
