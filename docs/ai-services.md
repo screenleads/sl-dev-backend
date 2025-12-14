@@ -557,11 +557,13 @@ package com.screenleads.backend.app.application.service;
 
 import com.screenleads.backend.app.domain.model.ApiKey;
 import com.screenleads.backend.app.domain.repositories.ApiKeyRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service("apiKeyPerm")
+@Slf4j
 public class ApiKeyPermissionService {
     private final ApiKeyRepository apiKeyRepository;
 
@@ -570,31 +572,57 @@ public class ApiKeyPermissionService {
     }
 
     public boolean can(String resource, String action) {
+        log.info("🔑 ApiKeyPermissionService.can({}, {})", resource, action);
+        
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated())
+        if (auth == null || !auth.isAuthenticated()) {
+            log.warn("❌ No hay autenticación o no está autenticado");
             return false;
-        if (!"API_CLIENT".equals(auth.getAuthorities().stream().findFirst().map(Object::toString).orElse(null)))
+        }
+        
+        String authority = auth.getAuthorities().stream().findFirst().map(Object::toString).orElse(null);
+        log.info("Authority: {}", authority);
+        if (!"API_CLIENT".equals(authority)) {
+            log.warn("❌ Authority no es API_CLIENT: {}", authority);
             return false;
+        }
+        
         Object principal = auth.getPrincipal();
-        Long clientDbId = null;
+        log.info("Principal: {} (type: {})", principal, principal != null ? principal.getClass().getName() : "null");
+        
+        Long apiKeyId = null;
         if (principal instanceof Long) {
-            clientDbId = (Long) principal;
+            apiKeyId = (Long) principal;
         } else if (principal instanceof String) {
             try {
-                clientDbId = Long.valueOf((String) principal);
+                apiKeyId = Long.valueOf((String) principal);
             } catch (NumberFormatException e) {
+                log.error("❌ Error convirtiendo principal a Long: {}", principal, e);
                 return false;
             }
         }
-        if (clientDbId == null)
+        
+        if (apiKeyId == null) {
+            log.warn("❌ apiKeyId es null");
             return false;
-        ApiKey apiKey = apiKeyRepository.findAllByClient_Id(clientDbId).stream()
+        }
+        
+        log.info("Buscando API key por ID: {}", apiKeyId);
+        ApiKey apiKey = apiKeyRepository.findById(apiKeyId)
                 .filter(ApiKey::isActive)
-                .findFirst().orElse(null);
-        if (apiKey == null)
+                .orElse(null);
+        
+        if (apiKey == null) {
+            log.warn("❌ No se encontró API key activa con ID: {}", apiKeyId);
             return false;
-        // Permisos: puedes usar lógica más avanzada si lo necesitas
-        return apiKey.getPermissions() != null && apiKey.getPermissions().contains(resource + ":" + action);
+        }
+        
+        log.info("✅ API key encontrada - ID: {}, Permissions: {}", apiKey.getId(), apiKey.getPermissions());
+        String requiredPermission = resource + ":" + action;
+        boolean hasPermission = apiKey.getPermissions() != null && apiKey.getPermissions().contains(requiredPermission);
+        log.info("Buscando permiso '{}' en '{}': {}", requiredPermission, apiKey.getPermissions(), hasPermission);
+        
+        return hasPermission;
     }
 
     /**
@@ -609,7 +637,8 @@ public class ApiKeyPermissionService {
     }
 
     /**
-     * Verifica si la API Key autenticada tiene acceso global (sin restricción de compañía).
+     * Verifica si la API Key autenticada tiene acceso global (sin restricción de
+     * compañía).
      */
     public boolean hasGlobalAccess() {
         ApiKey apiKey = getAuthenticatedApiKey();
@@ -624,49 +653,50 @@ public class ApiKeyPermissionService {
     public boolean canAccessCompany(Long companyId) {
         if (companyId == null)
             return false;
-        
+
         ApiKey apiKey = getAuthenticatedApiKey();
         if (apiKey == null)
             return false;
-        
+
         // Si tiene acceso global, puede acceder a cualquier compañía
         if (apiKey.getCompanyScope() == null)
             return true;
-        
+
         // Si tiene scope de compañía, solo puede acceder a esa compañía
         return companyId.equals(apiKey.getCompanyScope());
     }
 
     /**
-     * Método auxiliar para obtener la API Key autenticada del contexto de seguridad.
+     * Método auxiliar para obtener la API Key autenticada del contexto de
+     * seguridad.
      */
     private ApiKey getAuthenticatedApiKey() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated())
             return null;
-        
+
         if (!"API_CLIENT".equals(auth.getAuthorities().stream().findFirst().map(Object::toString).orElse(null)))
             return null;
-        
+
         Object principal = auth.getPrincipal();
-        Long clientDbId = null;
-        
+        Long apiKeyId = null;
+
         if (principal instanceof Long) {
-            clientDbId = (Long) principal;
+            apiKeyId = (Long) principal;
         } else if (principal instanceof String) {
             try {
-                clientDbId = Long.valueOf((String) principal);
+                apiKeyId = Long.valueOf((String) principal);
             } catch (NumberFormatException e) {
                 return null;
             }
         }
-        
-        if (clientDbId == null)
+
+        if (apiKeyId == null)
             return null;
-        
-        return apiKeyRepository.findAllByClient_Id(clientDbId).stream()
+
+        return apiKeyRepository.findById(apiKeyId)
                 .filter(ApiKey::isActive)
-                .findFirst().orElse(null);
+                .orElse(null);
     }
 }
 
@@ -691,6 +721,12 @@ public interface ApiKeyService {
     ApiKey createApiKeyByDbId(Long clientDbId, String permissions, int daysValid);
 
     List<ApiKey> getApiKeysByClientDbId(Long clientDbId);
+
+    ApiKey updatePermissions(Long id, String permissions);
+
+    ApiKey updateDescription(Long id, String description);
+
+    ApiKey updateCompanyScope(Long id, Long companyScope);
 }
 
 ```
@@ -774,6 +810,30 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     public List<ApiKey> getApiKeysByClientDbId(Long clientDbId) {
         // Usar el método del repositorio para evitar errores de tipo
         return apiKeyRepository.findAllByClient_Id(clientDbId);
+    }
+
+    @Override
+    public ApiKey updatePermissions(Long id, String permissions) {
+        ApiKey key = apiKeyRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("API Key no encontrada con id: " + id));
+        key.setPermissions(permissions);
+        return apiKeyRepository.save(key);
+    }
+
+    @Override
+    public ApiKey updateDescription(Long id, String description) {
+        ApiKey key = apiKeyRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("API Key no encontrada con id: " + id));
+        key.setDescription(description);
+        return apiKeyRepository.save(key);
+    }
+
+    @Override
+    public ApiKey updateCompanyScope(Long id, Long companyScope) {
+        ApiKey key = apiKeyRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("API Key no encontrada con id: " + id));
+        key.setCompanyScope(companyScope);
+        return apiKeyRepository.save(key);
     }
 }
 
