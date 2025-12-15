@@ -913,10 +913,10 @@ public class CouponController {
     public ResponseEntity<CouponValidationResponse> validate(@PathVariable String code) {
         try {
             PromotionLead lead = couponService.validate(code);
-            return ResponseEntity.ok(CouponValidationResponse.from(lead, true, null));
+            return ResponseEntity.status(HttpStatus.OK).body(CouponValidationResponse.from(lead, true, null));
         } catch (Exception ex) {
             // No filtramos tipos para simplificar: el mensaje explica la causa
-            return ResponseEntity.ok(new CouponValidationResponse(code, false, null, null, null, ex.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new CouponValidationResponse(code, false, null, null, null, ex.getMessage()));
         }
     }
 
@@ -1547,6 +1547,9 @@ public class MediaController {
     @GetMapping("/medias/render/{id}")
     public ResponseEntity<Resource> getImage(@PathVariable Long id) throws Exception {
         Optional<MediaDTO> mediaaux = mediaService.getMediaById(id);
+        if (!mediaaux.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
         Path filePath = Paths.get("src/main/resources/static/medias/").resolve(mediaaux.get().src()).normalize();
         Resource resource = new UrlResource(filePath.toUri());
         if (!resource.exists()) return ResponseEntity.notFound().build();
@@ -1911,7 +1914,7 @@ public class UserController {
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('user','delete')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
 
