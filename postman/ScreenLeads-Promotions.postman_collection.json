@@ -1,1101 +1,1025 @@
 ﻿{
-    "info":  {
-                 "_postman_id":  "promotions-collection-003",
-                 "name":  "ScreenLeads - 03. Promotions \u0026 Coupons",
-                 "description":  "GestiÃ³n de promociones y validaciÃ³n de cupones",
-                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-             },
-    "variable":  [
-                     {
-                         "key":  "promotions_path",
-                         "value":  "/promotions",
-                         "type":  "string"
-                     },
-                     {
-                         "key":  "coupons_path",
-                         "value":  "/coupons",
-                         "type":  "string"
-                     }
-                 ],
-    "item":  [
-                 {
-                     "name":  "JWT Authentication",
-                     "item":  [
-                                  {
-                                      "name":  "Promotions",
-                                      "item":  [
-                                  {
-                                      "name":  "Get All Promotions",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/promotions",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "promotions"
-                                                                           ]
-                                                              }
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Get Promotion by ID",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/promotions/{{promotion_id}}",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "promotions",
-                                                                               "{{promotion_id}}"
-                                                                           ]
-                                                              }
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Create Promotion",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "POST",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"title\": \"Descuento 20% en Navidad\",\n  \"description\": \"PromociÃ³n especial de fin de aÃ±o\",\n  \"companyId\": {{company_id}},\n  \"startDate\": \"2024-12-01T00:00:00Z\",\n  \"endDate\": \"2024-12-31T23:59:59Z\",\n  \"active\": true,\n  \"maxUses\": 100\n}"
-                                                               },
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/promotions",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "promotions"
-                                                                           ]
-                                                              }
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Update Promotion",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "PUT",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"title\": \"Descuento 25% en Navidad - ACTUALIZADO\",\n  \"active\": true\n}"
-                                                               },
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/promotions/{{promotion_id}}",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "promotions",
-                                                                               "{{promotion_id}}"
-                                                                           ]
-                                                              }
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Delete Promotion",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "DELETE",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/promotions/{{promotion_id}}",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "promotions",
-                                                                               "{{promotion_id}}"
-                                                                           ]
-                                                              }
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Register Lead",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "POST",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"customerId\": 1,\n  \"metadata\": \"Datos adicionales del lead\"\n}"
-                                                               },
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/promotions/{{promotion_id}}/leads",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "promotions",
-                                                                               "{{promotion_id}}",
-                                                                               "leads"
-                                                                           ]
-                                                              },
-                                                      "description":  "Registra un nuevo lead para la promociÃ³n. Requiere permiso: lead:create"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "List Leads",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/promotions/{{promotion_id}}/leads",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "promotions",
-                                                                               "{{promotion_id}}",
-                                                                               "leads"
-                                                                           ]
-                                                              },
-                                                      "description":  "Lista todos los leads de una promociÃ³n. Requiere permiso: lead:read"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Create Test Lead",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "POST",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"customerId\": 1\n}"
-                                                               },
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/promotions/{{promotion_id}}/leads/test",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "promotions",
-                                                                               "{{promotion_id}}",
-                                                                               "leads",
-                                                                               "test"
-                                                                           ]
-                                                              },
-                                                      "description":  "Crea un lead de prueba para testing. Requiere permiso: lead:create"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Export Leads CSV",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/promotions/{{promotion_id}}/leads/export.csv?from=2025-12-01\u0026to=2025-12-31",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "promotions",
-                                                                               "{{promotion_id}}",
-                                                                               "leads",
-                                                                               "export.csv"
-                                                                           ],
-                                                                  "query":  [
-                                                                                {
-                                                                                    "key":  "from",
-                                                                                    "value":  "2025-12-01",
-                                                                                    "description":  "Fecha inicio (YYYY-MM-DD)"
-                                                                                },
-                                                                                {
-                                                                                    "key":  "to",
-                                                                                    "value":  "2025-12-31",
-                                                                                    "description":  "Fecha fin (YYYY-MM-DD)"
-                                                                                }
-                                                                            ]
-                                                              },
-                                                      "description":  "Exporta los leads en formato CSV. Requiere permiso: lead:read"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Get Leads Summary",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/promotions/{{promotion_id}}/leads/summary?from=2025-12-01\u0026to=2025-12-31",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "promotions",
-                                                                               "{{promotion_id}}",
-                                                                               "leads",
-                                                                               "summary"
-                                                                           ],
-                                                                  "query":  [
-                                                                                {
-                                                                                    "key":  "from",
-                                                                                    "value":  "2025-12-01",
-                                                                                    "description":  "Fecha inicio (YYYY-MM-DD)"
-                                                                                },
-                                                                                {
-                                                                                    "key":  "to",
-                                                                                    "value":  "2025-12-31",
-                                                                                    "description":  "Fecha fin (YYYY-MM-DD)"
-                                                                                }
-                                                                            ]
-                                                              },
-                                                      "description":  "Obtiene resumen estadÃ­stico de leads"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  }
-                                  ]
-                                  },
-                                  {
-                                      "name":  "Coupons",
-                                      "item":  [
-                                  {
-                                      "name":  "Validate Coupon",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/coupons/COUPON-CODE-123",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "coupons",
-                                                                               "COUPON-CODE-123"
-                                                                           ]
-                                                              },
-                                                      "description":  "Valida si el cupÃ³n es vÃ¡lido sin canjearlo"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Redeem Coupon",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "POST",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/coupons/COUPON-CODE-123/redeem",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "coupons",
-                                                                               "COUPON-CODE-123",
-                                                                               "redeem"
-                                                                           ]
-                                                              },
-                                                      "description":  "Canjea el cupÃ³n marcÃ¡ndolo como usado"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Expire Coupon",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "POST",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/coupons/COUPON-CODE-123/expire",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "coupons",
-                                                                               "COUPON-CODE-123",
-                                                                               "expire"
-                                                                           ]
-                                                              },
-                                                      "description":  "Marca el cupÃ³n como caducado manualmente"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Issue Coupon",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "POST",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/coupons/issue?promotionId={{promotion_id}}\u0026customerId={{customer_id}}",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "coupons",
-                                                                               "issue"
-                                                                           ],
-                                                                  "query":  [
-                                                                                {
-                                                                                    "key":  "promotionId",
-                                                                                    "value":  "{{promotion_id}}"
-                                                                                },
-                                                                                {
-                                                                                    "key":  "customerId",
-                                                                                    "value":  "{{customer_id}}"
-                                                                                }
-                                                                            ]
-                                                              },
-                                                      "description":  "Genera un nuevo cupÃ³n para un cliente y promociÃ³n"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  }
-                                  ]
-                                  }
-                              ]
-                 },
-                 {
-                     "name":  "API Key Authentication",
-                     "item":  [
-                                  {
-                                      "name":  "Promotions",
-                                      "item":  [
-                                                   {
-                                                       "name":  "Get All Promotions",
-                                                       "request":  {
-                                                                       "method":  "GET",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "X-API-KEY",
-                                                                                          "value":  "{{api_key}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "client-id",
-                                                                                          "value":  "{{client_id}}",
-                                                                                          "type":  "text"
-                                                                                      }
-                                                                                  ],
-                                                                       "url":  {
-                                                                                   "raw":  "{{base_url}}/promotions",
-                                                                                   "host":  [
-                                                                                                "{{base_url}}"
-                                                                                            ],
-                                                                                   "path":  [
-                                                                                                "promotions"
-                                                                                            ]
-                                                                               },
-                                                                       "description":  "Con API Key que tenga permiso 'promotion:read'"
-                                                                   },
-                                                       "response":  [
-
-                                                                    ]
-                                                   },
-                                                   {
-                                                       "name":  "Get Promotion by ID",
-                                                       "request":  {
-                                                                       "method":  "GET",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "X-API-KEY",
-                                                                                          "value":  "{{api_key}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "client-id",
-                                                                                          "value":  "{{client_id}}",
-                                                                                          "type":  "text"
-                                                                                      }
-                                                                                  ],
-                                                                       "url":  {
-                                                                                   "raw":  "{{base_url}}/promotions/{{promotion_id}}",
-                                                                                   "host":  [
-                                                                                                "{{base_url}}"
-                                                                                            ],
-                                                                                   "path":  [
-                                                                                                "promotions",
-                                                                                                "{{promotion_id}}"
-                                                                                            ]
-                                                                               },
-                                                                       "description":  "Con API Key que tenga permiso 'promotion:read'"
-                                                                   },
-                                                       "response":  [
-
-                                                                    ]
-                                                   },
-                                                   {
-                                                       "name":  "Create Promotion",
-                                                       "request":  {
-                                                                       "method":  "POST",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "X-API-KEY",
-                                                                                          "value":  "{{api_key}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "client-id",
-                                                                                          "value":  "{{client_id}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "Content-Type",
-                                                                                          "value":  "application/json"
-                                                                                      }
-                                                                                  ],
-                                                                       "body":  {
-                                                                                    "mode":  "raw",
-                                                                                    "raw":  "{\n  \"title\": \"Descuento 20% en Navidad\",\n  \"description\": \"PromociÃ³n especial de fin de aÃ±o\",\n  \"companyId\": {{company_id}},\n  \"startDate\": \"2024-12-01T00:00:00Z\",\n  \"endDate\": \"2024-12-31T23:59:59Z\",\n  \"active\": true,\n  \"maxUses\": 100\n}"
-                                                                                },
-                                                                       "url":  {
-                                                                                   "raw":  "{{base_url}}/promotions",
-                                                                                   "host":  [
-                                                                                                "{{base_url}}"
-                                                                                            ],
-                                                                                   "path":  [
-                                                                                                "promotions"
-                                                                                            ]
-                                                                               },
-                                                                       "description":  "Con API Key que tenga permiso 'promotion:create'"
-                                                                   },
-                                                       "response":  [
-
-                                                                    ]
-                                                   },
-                                                   {
-                                                       "name":  "Update Promotion",
-                                                       "request":  {
-                                                                       "method":  "PUT",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "X-API-KEY",
-                                                                                          "value":  "{{api_key}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "client-id",
-                                                                                          "value":  "{{client_id}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "Content-Type",
-                                                                                          "value":  "application/json"
-                                                                                      }
-                                                                                  ],
-                                                                       "body":  {
-                                                                                    "mode":  "raw",
-                                                                                    "raw":  "{\n  \"title\": \"Descuento 25% en Navidad - ACTUALIZADO\",\n  \"active\": true\n}"
-                                                                                },
-                                                                       "url":  {
-                                                                                   "raw":  "{{base_url}}/promotions/{{promotion_id}}",
-                                                                                   "host":  [
-                                                                                                "{{base_url}}"
-                                                                                            ],
-                                                                                   "path":  [
-                                                                                                "promotions",
-                                                                                                "{{promotion_id}}"
-                                                                                            ]
-                                                                               },
-                                                                       "description":  "Con API Key que tenga permiso 'promotion:update'"
-                                                                   },
-                                                       "response":  [
-
-                                                                    ]
-                                                   },
-                                                   {
-                                                       "name":  "Delete Promotion",
-                                                       "request":  {
-                                                                       "method":  "DELETE",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "X-API-KEY",
-                                                                                          "value":  "{{api_key}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "client-id",
-                                                                                          "value":  "{{client_id}}",
-                                                                                          "type":  "text"
-                                                                                      }
-                                                                                  ],
-                                                                       "url":  {
-                                                                                   "raw":  "{{base_url}}/promotions/{{promotion_id}}",
-                                                                                   "host":  [
-                                                                                                "{{base_url}}"
-                                                                                            ],
-                                                                                   "path":  [
-                                                                                                "promotions",
-                                                                                                "{{promotion_id}}"
-                                                                                            ]
-                                                                               },
-                                                                       "description":  "Con API Key que tenga permiso 'promotion:delete'"
-                                                                   },
-                                                       "response":  [
-
-                                                                    ]
-                                                   },
-                                                   {
-                                                       "name":  "Register Lead",
-                                                       "request":  {
-                                                                       "method":  "POST",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "X-API-KEY",
-                                                                                          "value":  "{{api_key}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "client-id",
-                                                                                          "value":  "{{client_id}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "Content-Type",
-                                                                                          "value":  "application/json"
-                                                                                      }
-                                                                                  ],
-                                                                       "body":  {
-                                                                                    "mode":  "raw",
-                                                                                    "raw":  "{\n  \"customerId\": 1,\n  \"metadata\": \"Datos adicionales del lead\"\n}"
-                                                                                },
-                                                                       "url":  {
-                                                                                   "raw":  "{{base_url}}/promotions/{{promotion_id}}/leads",
-                                                                                   "host":  [
-                                                                                                "{{base_url}}"
-                                                                                            ],
-                                                                                   "path":  [
-                                                                                                "promotions",
-                                                                                                "{{promotion_id}}",
-                                                                                                "leads"
-                                                                                            ]
-                                                                               },
-                                                                       "description":  "Registra un nuevo lead para la promociÃ³n. Requiere permiso: lead:create"
-                                                                   },
-                                                       "response":  [
-
-                                                                    ]
-                                                   },
-                                                   {
-                                                       "name":  "List Leads",
-                                                       "request":  {
-                                                                       "method":  "GET",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "X-API-KEY",
-                                                                                          "value":  "{{api_key}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "client-id",
-                                                                                          "value":  "{{client_id}}",
-                                                                                          "type":  "text"
-                                                                                      }
-                                                                                  ],
-                                                                       "url":  {
-                                                                                   "raw":  "{{base_url}}/promotions/{{promotion_id}}/leads",
-                                                                                   "host":  [
-                                                                                                "{{base_url}}"
-                                                                                            ],
-                                                                                   "path":  [
-                                                                                                "promotions",
-                                                                                                "{{promotion_id}}",
-                                                                                                "leads"
-                                                                                            ]
-                                                                               },
-                                                                       "description":  "Lista todos los leads de una promociÃ³n. Requiere permiso: lead:read"
-                                                                   },
-                                                       "response":  [
-
-                                                                    ]
-                                                   },
-                                                   {
-                                                       "name":  "Create Test Lead",
-                                                       "request":  {
-                                                                       "method":  "POST",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "X-API-KEY",
-                                                                                          "value":  "{{api_key}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "client-id",
-                                                                                          "value":  "{{client_id}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "Content-Type",
-                                                                                          "value":  "application/json"
-                                                                                      }
-                                                                                  ],
-                                                                       "body":  {
-                                                                                    "mode":  "raw",
-                                                                                    "raw":  "{\n  \"customerId\": 1\n}"
-                                                                                },
-                                                                       "url":  {
-                                                                                   "raw":  "{{base_url}}/promotions/{{promotion_id}}/leads/test",
-                                                                                   "host":  [
-                                                                                                "{{base_url}}"
-                                                                                            ],
-                                                                                   "path":  [
-                                                                                                "promotions",
-                                                                                                "{{promotion_id}}",
-                                                                                                "leads",
-                                                                                                "test"
-                                                                                            ]
-                                                                               },
-                                                                       "description":  "Crea un lead de prueba para testing. Requiere permiso: lead:create"
-                                                                   },
-                                                       "response":  [
-
-                                                                    ]
-                                                   },
-                                                   {
-                                                       "name":  "Export Leads CSV",
-                                                       "request":  {
-                                                                       "method":  "GET",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "X-API-KEY",
-                                                                                          "value":  "{{api_key}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "client-id",
-                                                                                          "value":  "{{client_id}}",
-                                                                                          "type":  "text"
-                                                                                      }
-                                                                                  ],
-                                                                       "url":  {
-                                                                                   "raw":  "{{base_url}}/promotions/{{promotion_id}}/leads/export.csv?from=2025-12-01\u0026to=2025-12-31",
-                                                                                   "host":  [
-                                                                                                "{{base_url}}"
-                                                                                            ],
-                                                                                   "path":  [
-                                                                                                "promotions",
-                                                                                                "{{promotion_id}}",
-                                                                                                "leads",
-                                                                                                "export.csv"
-                                                                                            ],
-                                                                                   "query":  [
-                                                                                                 {
-                                                                                                     "key":  "from",
-                                                                                                     "value":  "2025-12-01",
-                                                                                                     "description":  "Fecha inicio (YYYY-MM-DD)"
-                                                                                                 },
-                                                                                                 {
-                                                                                                     "key":  "to",
-                                                                                                     "value":  "2025-12-31",
-                                                                                                     "description":  "Fecha fin (YYYY-MM-DD)"
-                                                                                                 }
-                                                                                             ]
-                                                                               },
-                                                                       "description":  "Exporta los leads en formato CSV. Requiere permiso: lead:read"
-                                                                   },
-                                                       "response":  [
-
-                                                                    ]
-                                                   },
-                                                   {
-                                                       "name":  "Get Leads Summary",
-                                                       "request":  {
-                                                                       "method":  "GET",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "X-API-KEY",
-                                                                                          "value":  "{{api_key}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "client-id",
-                                                                                          "value":  "{{client_id}}",
-                                                                                          "type":  "text"
-                                                                                      }
-                                                                                  ],
-                                                                       "url":  {
-                                                                                   "raw":  "{{base_url}}/promotions/{{promotion_id}}/leads/summary?from=2025-12-01\u0026to=2025-12-31",
-                                                                                   "host":  [
-                                                                                                "{{base_url}}"
-                                                                                            ],
-                                                                                   "path":  [
-                                                                                                "promotions",
-                                                                                                "{{promotion_id}}",
-                                                                                                "leads",
-                                                                                                "summary"
-                                                                                            ],
-                                                                                   "query":  [
-                                                                                                 {
-                                                                                                     "key":  "from",
-                                                                                                     "value":  "2025-12-01",
-                                                                                                     "description":  "Fecha inicio (YYYY-MM-DD)"
-                                                                                                 },
-                                                                                                 {
-                                                                                                     "key":  "to",
-                                                                                                     "value":  "2025-12-31",
-                                                                                                     "description":  "Fecha fin (YYYY-MM-DD)"
-                                                                                                 }
-                                                                                             ]
-                                                                               },
-                                                                       "description":  "Obtiene resumen estadÃ­stico de leads"
-                                                                   },
-                                                       "response":  [
-
-                                                                    ]
-                                                   }
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Coupons",
-                                      "item":  [
-                                                   {
-                                                       "name":  "Validate Coupon",
-                                                       "request":  {
-                                                                       "method":  "GET",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "X-API-KEY",
-                                                                                          "value":  "{{api_key}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "client-id",
-                                                                                          "value":  "{{client_id}}",
-                                                                                          "type":  "text"
-                                                                                      }
-                                                                                  ],
-                                                                       "url":  {
-                                                                                   "raw":  "{{base_url}}/coupons/COUPON-CODE-123",
-                                                                                   "host":  [
-                                                                                                "{{base_url}}"
-                                                                                            ],
-                                                                                   "path":  [
-                                                                                                "coupons",
-                                                                                                "COUPON-CODE-123"
-                                                                                            ]
-                                                                               },
-                                                                       "description":  "Valida si el cupÃ³n es vÃ¡lido sin canjearlo. Requiere permiso: coupon:read"
-                                                                   },
-                                                       "response":  [
-
-                                                                    ]
-                                                   },
-                                                   {
-                                                       "name":  "Redeem Coupon",
-                                                       "request":  {
-                                                                       "method":  "POST",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "X-API-KEY",
-                                                                                          "value":  "{{api_key}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "client-id",
-                                                                                          "value":  "{{client_id}}",
-                                                                                          "type":  "text"
-                                                                                      }
-                                                                                  ],
-                                                                       "url":  {
-                                                                                   "raw":  "{{base_url}}/coupons/COUPON-CODE-123/redeem",
-                                                                                   "host":  [
-                                                                                                "{{base_url}}"
-                                                                                            ],
-                                                                                   "path":  [
-                                                                                                "coupons",
-                                                                                                "COUPON-CODE-123",
-                                                                                                "redeem"
-                                                                                            ]
-                                                                               },
-                                                                       "description":  "Canjea el cupÃ³n marcÃ¡ndolo como usado. Requiere permiso: coupon:update"
-                                                                   },
-                                                       "response":  [
-
-                                                                    ]
-                                                   },
-                                                   {
-                                                       "name":  "Expire Coupon",
-                                                       "request":  {
-                                                                       "method":  "POST",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "X-API-KEY",
-                                                                                          "value":  "{{api_key}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "client-id",
-                                                                                          "value":  "{{client_id}}",
-                                                                                          "type":  "text"
-                                                                                      }
-                                                                                  ],
-                                                                       "url":  {
-                                                                                   "raw":  "{{base_url}}/coupons/COUPON-CODE-123/expire",
-                                                                                   "host":  [
-                                                                                                "{{base_url}}"
-                                                                                            ],
-                                                                                   "path":  [
-                                                                                                "coupons",
-                                                                                                "COUPON-CODE-123",
-                                                                                                "expire"
-                                                                                            ]
-                                                                               },
-                                                                       "description":  "Marca el cupÃ³n como caducado manualmente. Requiere permiso: coupon:update"
-                                                                   },
-                                                       "response":  [
-
-                                                                    ]
-                                                   },
-                                                   {
-                                                       "name":  "Issue Coupon",
-                                                       "request":  {
-                                                                       "method":  "POST",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "X-API-KEY",
-                                                                                          "value":  "{{api_key}}",
-                                                                                          "type":  "text"
-                                                                                      },
-                                                                                      {
-                                                                                          "key":  "client-id",
-                                                                                          "value":  "{{client_id}}",
-                                                                                          "type":  "text"
-                                                                                      }
-                                                                                  ],
-                                                                       "url":  {
-                                                                                   "raw":  "{{base_url}}/coupons/issue?promotionId={{promotion_id}}\u0026customerId={{customer_id}}",
-                                                                                   "host":  [
-                                                                                                "{{base_url}}"
-                                                                                            ],
-                                                                                   "path":  [
-                                                                                                "coupons",
-                                                                                                "issue"
-                                                                                            ],
-                                                                                   "query":  [
-                                                                                                 {
-                                                                                                     "key":  "promotionId",
-                                                                                                     "value":  "{{promotion_id}}"
-                                                                                                 },
-                                                                                                 {
-                                                                                                     "key":  "customerId",
-                                                                                                     "value":  "{{customer_id}}"
-                                                                                                 }
-                                                                                             ]
-                                                                               },
-                                                                       "description":  "Genera un nuevo cupÃ³n para un cliente y promociÃ³n. Requiere permiso: coupon:create"
-                                                                   },
-                                                       "response":  [
-
-                                                                    ]
-                                                   }
-                                                   ]
-                                  }
-                              ]
-                 }
-             ]
+    "info": {
+        "_postman_id": "promotions-collection-003",
+        "name": "ScreenLeads - 03. Promotions \u0026 Coupons",
+        "description": "GestiÃ³n de promociones y validaciÃ³n de cupones",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "promotions_path",
+            "value": "/promotions",
+            "type": "string"
+        },
+        {
+            "key": "coupons_path",
+            "value": "/coupons",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "JWT Authentication",
+            "item": [
+                {
+                    "name": "Promotions",
+                    "item": [
+                        {
+                            "name": "Get All Promotions",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/promotions",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Get Promotion by ID",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Create Promotion",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"title\": \"Descuento 20% en Navidad\",\n  \"description\": \"PromociÃ³n especial de fin de aÃ±o\",\n  \"companyId\": {{company_id}},\n  \"startDate\": \"2024-12-01T00:00:00Z\",\n  \"endDate\": \"2024-12-31T23:59:59Z\",\n  \"active\": true,\n  \"maxUses\": 100\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/promotions",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Update Promotion",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"title\": \"Descuento 25% en Navidad - ACTUALIZADO\",\n  \"active\": true\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Delete Promotion",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "DELETE",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Register Lead",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"customerId\": 1,\n  \"metadata\": \"Datos adicionales del lead\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}/leads",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}",
+                                        "leads"
+                                    ]
+                                },
+                                "description": "Registra un nuevo lead para la promociÃ³n. Requiere permiso: lead:create"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "List Leads",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}/leads",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}",
+                                        "leads"
+                                    ]
+                                },
+                                "description": "Lista todos los leads de una promociÃ³n. Requiere permiso: lead:read"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Create Test Lead",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"customerId\": 1\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}/leads/test",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}",
+                                        "leads",
+                                        "test"
+                                    ]
+                                },
+                                "description": "Crea un lead de prueba para testing. Requiere permiso: lead:create"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Export Leads CSV",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}/leads/export.csv?from=2025-12-01\u0026to=2025-12-31",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}",
+                                        "leads",
+                                        "export.csv"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "from",
+                                            "value": "2025-12-01",
+                                            "description": "Fecha inicio (YYYY-MM-DD)"
+                                        },
+                                        {
+                                            "key": "to",
+                                            "value": "2025-12-31",
+                                            "description": "Fecha fin (YYYY-MM-DD)"
+                                        }
+                                    ]
+                                },
+                                "description": "Exporta los leads en formato CSV. Requiere permiso: lead:read"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Get Leads Summary",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}/leads/summary?from=2025-12-01\u0026to=2025-12-31",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}",
+                                        "leads",
+                                        "summary"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "from",
+                                            "value": "2025-12-01",
+                                            "description": "Fecha inicio (YYYY-MM-DD)"
+                                        },
+                                        {
+                                            "key": "to",
+                                            "value": "2025-12-31",
+                                            "description": "Fecha fin (YYYY-MM-DD)"
+                                        }
+                                    ]
+                                },
+                                "description": "Obtiene resumen estadÃ­stico de leads"
+                            },
+                            "response": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Coupons",
+                    "item": [
+                        {
+                            "name": "Validate Coupon",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/coupons/COUPON-CODE-123",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "coupons",
+                                        "COUPON-CODE-123"
+                                    ]
+                                },
+                                "description": "Valida si el cupÃ³n es vÃ¡lido sin canjearlo"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Redeem Coupon",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/coupons/COUPON-CODE-123/redeem",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "coupons",
+                                        "COUPON-CODE-123",
+                                        "redeem"
+                                    ]
+                                },
+                                "description": "Canjea el cupÃ³n marcÃ¡ndolo como usado"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Expire Coupon",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/coupons/COUPON-CODE-123/expire",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "coupons",
+                                        "COUPON-CODE-123",
+                                        "expire"
+                                    ]
+                                },
+                                "description": "Marca el cupÃ³n como caducado manualmente"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Issue Coupon",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/coupons/issue?promotionId={{promotion_id}}\u0026customerId={{customer_id}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "coupons",
+                                        "issue"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "promotionId",
+                                            "value": "{{promotion_id}}"
+                                        },
+                                        {
+                                            "key": "customerId",
+                                            "value": "{{customer_id}}"
+                                        }
+                                    ]
+                                },
+                                "description": "Genera un nuevo cupÃ³n para un cliente y promociÃ³n"
+                            },
+                            "response": []
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "API Key Authentication",
+            "item": [
+                {
+                    "name": "Promotions",
+                    "item": [
+                        {
+                            "name": "Get All Promotions",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/promotions",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions"
+                                    ]
+                                },
+                                "description": "Con API Key que tenga permiso 'promotion:read'"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Get Promotion by ID",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}"
+                                    ]
+                                },
+                                "description": "Con API Key que tenga permiso 'promotion:read'"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Create Promotion",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"title\": \"Descuento 20% en Navidad\",\n  \"description\": \"PromociÃ³n especial de fin de aÃ±o\",\n  \"companyId\": {{company_id}},\n  \"startDate\": \"2024-12-01T00:00:00Z\",\n  \"endDate\": \"2024-12-31T23:59:59Z\",\n  \"active\": true,\n  \"maxUses\": 100\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/promotions",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions"
+                                    ]
+                                },
+                                "description": "Con API Key que tenga permiso 'promotion:create'"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Update Promotion",
+                            "request": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"title\": \"Descuento 25% en Navidad - ACTUALIZADO\",\n  \"active\": true\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}"
+                                    ]
+                                },
+                                "description": "Con API Key que tenga permiso 'promotion:update'"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Delete Promotion",
+                            "request": {
+                                "method": "DELETE",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}"
+                                    ]
+                                },
+                                "description": "Con API Key que tenga permiso 'promotion:delete'"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Register Lead",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"customerId\": 1,\n  \"metadata\": \"Datos adicionales del lead\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}/leads",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}",
+                                        "leads"
+                                    ]
+                                },
+                                "description": "Registra un nuevo lead para la promociÃ³n. Requiere permiso: lead:create"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "List Leads",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}/leads",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}",
+                                        "leads"
+                                    ]
+                                },
+                                "description": "Lista todos los leads de una promociÃ³n. Requiere permiso: lead:read"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Create Test Lead",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"customerId\": 1\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}/leads/test",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}",
+                                        "leads",
+                                        "test"
+                                    ]
+                                },
+                                "description": "Crea un lead de prueba para testing. Requiere permiso: lead:create"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Export Leads CSV",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}/leads/export.csv?from=2025-12-01\u0026to=2025-12-31",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}",
+                                        "leads",
+                                        "export.csv"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "from",
+                                            "value": "2025-12-01",
+                                            "description": "Fecha inicio (YYYY-MM-DD)"
+                                        },
+                                        {
+                                            "key": "to",
+                                            "value": "2025-12-31",
+                                            "description": "Fecha fin (YYYY-MM-DD)"
+                                        }
+                                    ]
+                                },
+                                "description": "Exporta los leads en formato CSV. Requiere permiso: lead:read"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Get Leads Summary",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/promotions/{{promotion_id}}/leads/summary?from=2025-12-01\u0026to=2025-12-31",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "promotions",
+                                        "{{promotion_id}}",
+                                        "leads",
+                                        "summary"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "from",
+                                            "value": "2025-12-01",
+                                            "description": "Fecha inicio (YYYY-MM-DD)"
+                                        },
+                                        {
+                                            "key": "to",
+                                            "value": "2025-12-31",
+                                            "description": "Fecha fin (YYYY-MM-DD)"
+                                        }
+                                    ]
+                                },
+                                "description": "Obtiene resumen estadÃ­stico de leads"
+                            },
+                            "response": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Coupons",
+                    "item": [
+                        {
+                            "name": "Validate Coupon",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/coupons/COUPON-CODE-123",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "coupons",
+                                        "COUPON-CODE-123"
+                                    ]
+                                },
+                                "description": "Valida si el cupÃ³n es vÃ¡lido sin canjearlo. Requiere permiso: coupon:read"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Redeem Coupon",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/coupons/COUPON-CODE-123/redeem",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "coupons",
+                                        "COUPON-CODE-123",
+                                        "redeem"
+                                    ]
+                                },
+                                "description": "Canjea el cupÃ³n marcÃ¡ndolo como usado. Requiere permiso: coupon:update"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Expire Coupon",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/coupons/COUPON-CODE-123/expire",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "coupons",
+                                        "COUPON-CODE-123",
+                                        "expire"
+                                    ]
+                                },
+                                "description": "Marca el cupÃ³n como caducado manualmente. Requiere permiso: coupon:update"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Issue Coupon",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/coupons/issue?promotionId={{promotion_id}}\u0026customerId={{customer_id}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "coupons",
+                                        "issue"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "promotionId",
+                                            "value": "{{promotion_id}}"
+                                        },
+                                        {
+                                            "key": "customerId",
+                                            "value": "{{customer_id}}"
+                                        }
+                                    ]
+                                },
+                                "description": "Genera un nuevo cupÃ³n para un cliente y promociÃ³n. Requiere permiso: coupon:create"
+                            },
+                            "response": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
 }

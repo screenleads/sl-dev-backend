@@ -29,8 +29,12 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/app-versions",
-                  "host": ["{{base_url}}"],
-                  "path": ["app-versions"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "app-versions"
+                  ]
                 },
                 "description": "Lista todas las versiones de la app. Requiere permiso: appversion:read"
               },
@@ -53,8 +57,13 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/app-versions/1",
-                  "host": ["{{base_url}}"],
-                  "path": ["app-versions", "1"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "app-versions",
+                    "1"
+                  ]
                 },
                 "description": "Obtiene una versión específica por ID. Requiere permiso: appversion:read"
               },
@@ -77,8 +86,14 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/app-versions/latest/ANDROID",
-                  "host": ["{{base_url}}"],
-                  "path": ["app-versions", "latest", "ANDROID"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "app-versions",
+                    "latest",
+                    "ANDROID"
+                  ]
                 },
                 "description": "Obtiene la última versión publicada para una plataforma. Requiere permiso: appversion:read"
               },
@@ -110,8 +125,12 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/app-versions",
-                  "host": ["{{base_url}}"],
-                  "path": ["app-versions"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "app-versions"
+                  ]
                 },
                 "description": "Crea una nueva versión de la app. Requiere permiso: appversion:write"
               },
@@ -143,8 +162,13 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/app-versions/1",
-                  "host": ["{{base_url}}"],
-                  "path": ["app-versions", "1"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "app-versions",
+                    "1"
+                  ]
                 },
                 "description": "Actualiza una versión existente. Requiere permiso: appversion:write"
               },
@@ -167,8 +191,13 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/app-versions/1",
-                  "host": ["{{base_url}}"],
-                  "path": ["app-versions", "1"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "app-versions",
+                    "1"
+                  ]
                 },
                 "description": "Elimina una versión. Requiere permiso: appversion:delete"
               },
@@ -196,8 +225,12 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/entities?includeDisabled=false&sortBy=displayOrder&sortDirection=ASC",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities"
+                  ],
                   "query": [
                     {
                       "key": "includeDisabled",
@@ -234,8 +267,13 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/entities/1",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities", "1"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "1"
+                  ]
                 },
                 "description": "Obtiene una entidad específica por ID. Requiere permiso: entity:read"
               },
@@ -258,8 +296,14 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/entities/by-resource/customers",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities", "by-resource", "customers"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "by-resource",
+                    "customers"
+                  ]
                 },
                 "description": "Obtiene una entidad por su nombre de recurso. Requiere permiso: entity:read"
               },
@@ -291,8 +335,12 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/entities",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities"
+                  ]
                 },
                 "description": "Crea o actualiza una entidad (upsert por resourceName). Requiere permiso: entity:write"
               },
@@ -324,8 +372,13 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/entities/1",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities", "1"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "1"
+                  ]
                 },
                 "description": "Actualiza una entidad existente por ID. Requiere permiso: entity:write"
               },
@@ -348,8 +401,13 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/entities/1",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities", "1"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "1"
+                  ]
                 },
                 "description": "Elimina una entidad. Requiere permiso: entity:delete"
               },
@@ -381,8 +439,13 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/entities/reorder",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities", "reorder"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "reorder"
+                  ]
                 },
                 "description": "Reordena múltiples entidades. Requiere permiso: entity:write"
               },
@@ -414,8 +477,15 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/entities/1/attributes/reorder",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities", "1", "attributes", "reorder"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "1",
+                    "attributes",
+                    "reorder"
+                  ]
                 },
                 "description": "Reordena los atributos de una entidad. Requiere permiso: entity:write"
               },
@@ -452,8 +522,12 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/app-versions",
-                  "host": ["{{base_url}}"],
-                  "path": ["app-versions"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "app-versions"
+                  ]
                 },
                 "description": "Lista todas las versiones de la app. Requiere scope: appversion:read"
               },
@@ -480,8 +554,13 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/app-versions/1",
-                  "host": ["{{base_url}}"],
-                  "path": ["app-versions", "1"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "app-versions",
+                    "1"
+                  ]
                 },
                 "description": "Obtiene una versión específica por ID. Requiere scope: appversion:read"
               },
@@ -508,8 +587,14 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/app-versions/latest/ANDROID",
-                  "host": ["{{base_url}}"],
-                  "path": ["app-versions", "latest", "ANDROID"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "app-versions",
+                    "latest",
+                    "ANDROID"
+                  ]
                 },
                 "description": "Obtiene la última versión publicada para una plataforma. Requiere scope: appversion:read"
               },
@@ -544,8 +629,12 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/app-versions",
-                  "host": ["{{base_url}}"],
-                  "path": ["app-versions"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "app-versions"
+                  ]
                 },
                 "description": "Crea una nueva versión de la app. Requiere scope: appversion:write"
               },
@@ -580,8 +669,13 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/app-versions/1",
-                  "host": ["{{base_url}}"],
-                  "path": ["app-versions", "1"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "app-versions",
+                    "1"
+                  ]
                 },
                 "description": "Actualiza una versión existente. Requiere scope: appversion:write"
               },
@@ -608,8 +702,13 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/app-versions/1",
-                  "host": ["{{base_url}}"],
-                  "path": ["app-versions", "1"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "app-versions",
+                    "1"
+                  ]
                 },
                 "description": "Elimina una versión. Requiere scope: appversion:delete"
               },
@@ -641,8 +740,12 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/entities?includeDisabled=false&sortBy=displayOrder&sortDirection=ASC",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities"
+                  ],
                   "query": [
                     {
                       "key": "includeDisabled",
@@ -683,8 +786,13 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/entities/1",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities", "1"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "1"
+                  ]
                 },
                 "description": "Obtiene una entidad específica por ID. Requiere scope: entity:read"
               },
@@ -711,8 +819,14 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/entities/by-resource/customers",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities", "by-resource", "customers"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "by-resource",
+                    "customers"
+                  ]
                 },
                 "description": "Obtiene una entidad por su nombre de recurso. Requiere scope: entity:read"
               },
@@ -747,8 +861,12 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/entities",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities"
+                  ]
                 },
                 "description": "Crea o actualiza una entidad (upsert por resourceName). Requiere scope: entity:write"
               },
@@ -783,8 +901,13 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/entities/1",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities", "1"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "1"
+                  ]
                 },
                 "description": "Actualiza una entidad existente por ID. Requiere scope: entity:write"
               },
@@ -811,8 +934,13 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/entities/1",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities", "1"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "1"
+                  ]
                 },
                 "description": "Elimina una entidad. Requiere scope: entity:delete"
               },
@@ -847,8 +975,13 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/entities/reorder",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities", "reorder"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "reorder"
+                  ]
                 },
                 "description": "Reordena múltiples entidades. Requiere scope: entity:write"
               },
@@ -883,8 +1016,15 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/entities/1/attributes/reorder",
-                  "host": ["{{base_url}}"],
-                  "path": ["entities", "1", "attributes", "reorder"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "1",
+                    "attributes",
+                    "reorder"
+                  ]
                 },
                 "description": "Reordena los atributos de una entidad. Requiere scope: entity:write"
               },

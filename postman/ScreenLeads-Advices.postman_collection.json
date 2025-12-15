@@ -14,14 +14,24 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/advices",
-							"host": ["{{base_url}}"],
-							"path": ["advices"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"advices"
+							]
 						},
 						"description": "Lista todos los advices (anuncios). Requiere permiso: advice:read"
 					},
@@ -32,7 +42,13 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [
@@ -52,8 +68,13 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/advices/visibles",
-							"host": ["{{base_url}}"],
-							"path": ["advices", "visibles"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"advices",
+								"visibles"
+							]
 						},
 						"description": "Devuelve los advices visibles AHORA según la zona horaria especificada. Requiere permiso: advice:read"
 					},
@@ -64,14 +85,25 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/advices/1",
-							"host": ["{{base_url}}"],
-							"path": ["advices", "1"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"advices",
+								"1"
+							]
 						},
 						"description": "Obtiene un advice específico por ID. Requiere permiso: advice:read"
 					},
@@ -82,10 +114,21 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
-						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"company\": {\n    \"id\": 1\n  },\n  \"customInterval\": false,\n  \"description\": \"Anuncio de prueba\",\n  \"interval\": \"\",\n  \"media\": {\n    \"id\": 1\n  },\n  \"promotion\": null,\n  \"schedules\": [\n    {\n      \"startDate\": \"2025-12-01T00:00:00.000Z\",\n      \"endDate\": \"2025-12-31T23:59:59.999Z\",\n      \"dayWindows\": [\n        {\n          \"weekday\": \"MONDAY\",\n          \"ranges\": [\n            {\n              \"fromTime\": \"09:00\",\n              \"toTime\": \"18:00\"\n            }\n          ]\n        },\n        {\n          \"weekday\": \"TUESDAY\",\n          \"ranges\": [\n            {\n              \"fromTime\": \"09:00\",\n              \"toTime\": \"18:00\"\n            }\n          ]\n        },\n        {\n          \"weekday\": \"WEDNESDAY\",\n          \"ranges\": [\n            {\n              \"fromTime\": \"09:00\",\n              \"toTime\": \"18:00\"\n            }\n          ]\n        },\n        {\n          \"weekday\": \"THURSDAY\",\n          \"ranges\": [\n            {\n              \"fromTime\": \"09:00\",\n              \"toTime\": \"18:00\"\n            }\n          ]\n        },\n        {\n          \"weekday\": \"FRIDAY\",\n          \"ranges\": [\n            {\n              \"fromTime\": \"09:00\",\n              \"toTime\": \"18:00\"\n            }\n          ]\n        },\n        {\n          \"weekday\": \"SATURDAY\",\n          \"ranges\": []\n        },\n        {\n          \"weekday\": \"SUNDAY\",\n          \"ranges\": []\n        }\n      ]\n    }\n  ]\n}",
@@ -97,8 +140,12 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/advices",
-							"host": ["{{base_url}}"],
-							"path": ["advices"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"advices"
+							]
 						},
 						"description": "Crea un nuevo advice. Requiere permiso: advice:create"
 					},
@@ -109,10 +156,21 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "PUT",
-						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"company\": {\n    \"id\": 1\n  },\n  \"customInterval\": false,\n  \"description\": \"Anuncio actualizado\",\n  \"interval\": \"\",\n  \"media\": {\n    \"id\": 1\n  },\n  \"promotion\": null,\n  \"schedules\": [\n    {\n      \"startDate\": \"2025-12-01T00:00:00.000Z\",\n      \"endDate\": \"2025-12-31T23:59:59.999Z\",\n      \"dayWindows\": [\n        {\n          \"weekday\": \"MONDAY\",\n          \"ranges\": [\n            {\n              \"fromTime\": \"00:00\",\n              \"toTime\": \"23:59\"\n            }\n          ]\n        },\n        {\n          \"weekday\": \"TUESDAY\",\n          \"ranges\": [\n            {\n              \"fromTime\": \"00:00\",\n              \"toTime\": \"23:59\"\n            }\n          ]\n        },\n        {\n          \"weekday\": \"WEDNESDAY\",\n          \"ranges\": []\n        },\n        {\n          \"weekday\": \"THURSDAY\",\n          \"ranges\": [\n            {\n              \"fromTime\": \"00:00\",\n              \"toTime\": \"23:59\"\n            }\n          ]\n        },\n        {\n          \"weekday\": \"FRIDAY\",\n          \"ranges\": []\n        },\n        {\n          \"weekday\": \"SATURDAY\",\n          \"ranges\": []\n        },\n        {\n          \"weekday\": \"SUNDAY\",\n          \"ranges\": []\n        }\n      ]\n    }\n  ]\n}",
@@ -124,8 +182,13 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/advices/1",
-							"host": ["{{base_url}}"],
-							"path": ["advices", "1"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"advices",
+								"1"
+							]
 						},
 						"description": "Actualiza un advice existente. Requiere permiso: advice:update"
 					},
@@ -136,14 +199,25 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
 						},
 						"method": "DELETE",
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/advices/1",
-							"host": ["{{base_url}}"],
-							"path": ["advices", "1"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"advices",
+								"1"
+							]
 						},
 						"description": "Elimina un advice. Requiere permiso: advice:delete"
 					},
@@ -159,13 +233,25 @@
 					"request": {
 						"method": "GET",
 						"header": [
-							{"key": "X-API-KEY", "value": "{{api_key}}", "type": "text"},
-							{"key": "client-id", "value": "{{client_id}}", "type": "text"}
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "client-id",
+								"value": "{{client_id}}",
+								"type": "text"
+							}
 						],
 						"url": {
 							"raw": "{{base_url}}/advices",
-							"host": ["{{base_url}}"],
-							"path": ["advices"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"advices"
+							]
 						},
 						"description": "Lista todos los advices usando API Key. Requiere permiso: advice:read"
 					},
@@ -176,8 +262,16 @@
 					"request": {
 						"method": "GET",
 						"header": [
-							{"key": "X-API-KEY", "value": "{{api_key}}", "type": "text"},
-							{"key": "client-id", "value": "{{client_id}}", "type": "text"},
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "client-id",
+								"value": "{{client_id}}",
+								"type": "text"
+							},
 							{
 								"key": "X-Timezone",
 								"value": "Europe/Madrid",
@@ -187,8 +281,13 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/advices/visibles",
-							"host": ["{{base_url}}"],
-							"path": ["advices", "visibles"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"advices",
+								"visibles"
+							]
 						},
 						"description": "Devuelve advices visibles ahora usando API Key. Requiere permiso: advice:read"
 					},
@@ -199,13 +298,26 @@
 					"request": {
 						"method": "GET",
 						"header": [
-							{"key": "X-API-KEY", "value": "{{api_key}}", "type": "text"},
-							{"key": "client-id", "value": "{{client_id}}", "type": "text"}
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "client-id",
+								"value": "{{client_id}}",
+								"type": "text"
+							}
 						],
 						"url": {
 							"raw": "{{base_url}}/advices/1",
-							"host": ["{{base_url}}"],
-							"path": ["advices", "1"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"advices",
+								"1"
+							]
 						},
 						"description": "Obtiene un advice por ID usando API Key. Requiere permiso: advice:read"
 					},
@@ -216,9 +328,20 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{"key": "X-API-KEY", "value": "{{api_key}}", "type": "text"},
-							{"key": "client-id", "value": "{{client_id}}", "type": "text"},
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "client-id",
+								"value": "{{client_id}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -231,8 +354,12 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/advices",
-							"host": ["{{base_url}}"],
-							"path": ["advices"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"advices"
+							]
 						},
 						"description": "Crea un advice usando API Key. Requiere permiso: advice:create"
 					},
@@ -243,9 +370,20 @@
 					"request": {
 						"method": "PUT",
 						"header": [
-							{"key": "X-API-KEY", "value": "{{api_key}}", "type": "text"},
-							{"key": "client-id", "value": "{{client_id}}", "type": "text"},
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "client-id",
+								"value": "{{client_id}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -258,8 +396,13 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/advices/1",
-							"host": ["{{base_url}}"],
-							"path": ["advices", "1"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"advices",
+								"1"
+							]
 						},
 						"description": "Actualiza un advice usando API Key. Requiere permiso: advice:update"
 					},
@@ -270,13 +413,26 @@
 					"request": {
 						"method": "DELETE",
 						"header": [
-							{"key": "X-API-KEY", "value": "{{api_key}}", "type": "text"},
-							{"key": "client-id", "value": "{{client_id}}", "type": "text"}
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "client-id",
+								"value": "{{client_id}}",
+								"type": "text"
+							}
 						],
 						"url": {
 							"raw": "{{base_url}}/advices/1",
-							"host": ["{{base_url}}"],
-							"path": ["advices", "1"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"advices",
+								"1"
+							]
 						},
 						"description": "Elimina un advice usando API Key. Requiere permiso: advice:delete"
 					},

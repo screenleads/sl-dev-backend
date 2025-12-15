@@ -1,373 +1,347 @@
 ﻿{
-    "info":  {
-                 "_postman_id":  "customers-collection-004",
-                 "name":  "ScreenLeads - 04. Customers",
-                 "description":  "GestiÃ³n de clientes/leads capturados",
-                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-             },
-    "variable":  [
-                     {
-                         "key":  "base_path",
-                         "value":  "/customers",
-                         "type":  "string"
-                     }
-                 ],
-    "item":  [
-                 {
-                     "name":  "JWT Auth",
-                     "item":  [
-                                  {
-                                      "name":  "Get All Customers",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/customers",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "customers"
-                                                                           ]
-                                                              }
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Get Customer by ID",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/customers/{{customer_id}}",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "customers",
-                                                                               "{{customer_id}}"
-                                                                           ]
-                                                              }
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Create Customer",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "POST",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"name\": \"Juan PÃ©rez\",\n  \"email\": \"juan.perez@example.com\",\n  \"phone\": \"+34600123456\",\n  \"companyId\": {{company_id}},\n  \"deviceId\": {{device_id}}\n}"
-                                                               },
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/customers",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "customers"
-                                                                           ]
-                                                              }
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Update Customer",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "PUT",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"name\": \"Juan PÃ©rez GarcÃ­a\",\n  \"phone\": \"+34600999888\"\n}"
-                                                               },
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/customers/{{customer_id}}",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "customers",
-                                                                               "{{customer_id}}"
-                                                                           ]
-                                                              }
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Delete Customer",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "DELETE",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/customers/{{customer_id}}",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "customers",
-                                                                               "{{customer_id}}"
-                                                                           ]
-                                                              }
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  }
-                              ]
-                 },
-                 {
-                     "name":  "API Key Auth",
-                     "item":  [
-                                  {
-                                      "name":  "Get All Customers (API Key)",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-API-KEY",
-                                                                         "value":  "{{api_key}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "client-id",
-                                                                         "value":  "{{client_id}}",
-                                                                         "type":  "text"
-                                                                     }
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/customers",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "customers"
-                                                                           ]
-                                                              },
-                                                      "description":  "Con API Key que tenga permiso \u0027customer:read\u0027"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Get Customer by ID (API Key)",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-API-KEY",
-                                                                         "value":  "{{api_key}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "client-id",
-                                                                         "value":  "{{client_id}}",
-                                                                         "type":  "text"
-                                                                     }
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/customers/{{customer_id}}",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "customers",
-                                                                               "{{customer_id}}"
-                                                                           ]
-                                                              },
-                                                      "description":  "Con API Key que tenga permiso \u0027customer:read\u0027"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Create Customer (API Key)",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-API-KEY",
-                                                                         "value":  "{{api_key}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "client-id",
-                                                                         "value":  "{{client_id}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"name\": \"MarÃ­a LÃ³pez\",\n  \"email\": \"maria.lopez@example.com\",\n  \"phone\": \"+34611222333\",\n  \"companyId\": {{company_id}},\n  \"deviceId\": {{device_id}}\n}"
-                                                               },
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/customers",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "customers"
-                                                                           ]
-                                                              },
-                                                      "description":  "Con API Key que tenga permiso \u0027customer:create\u0027"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Update Customer (API Key)",
-                                      "request":  {
-                                                      "method":  "PUT",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-API-KEY",
-                                                                         "value":  "{{api_key}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "client-id",
-                                                                         "value":  "{{client_id}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"name\": \"MarÃ­a LÃ³pez FernÃ¡ndez\",\n  \"phone\": \"+34611888999\"\n}"
-                                                               },
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/customers/{{customer_id}}",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "customers",
-                                                                               "{{customer_id}}"
-                                                                           ]
-                                                              },
-                                                      "description":  "Con API Key que tenga permiso \u0027customer:update\u0027"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Delete Customer (API Key)",
-                                      "request":  {
-                                                      "method":  "DELETE",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-API-KEY",
-                                                                         "value":  "{{api_key}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "client-id",
-                                                                         "value":  "{{client_id}}",
-                                                                         "type":  "text"
-                                                                     }
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/customers/{{customer_id}}",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "customers",
-                                                                               "{{customer_id}}"
-                                                                           ]
-                                                              },
-                                                      "description":  "Con API Key que tenga permiso \u0027customer:delete\u0027"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  }
-                              ]
-                 }
-             ]
+    "info": {
+        "_postman_id": "customers-collection-004",
+        "name": "ScreenLeads - 04. Customers",
+        "description": "GestiÃ³n de clientes/leads capturados",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_path",
+            "value": "/customers",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "JWT Auth",
+            "item": [
+                {
+                    "name": "Get All Customers",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/customers",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "customers"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Customer by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/customers/{{customer_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "customers",
+                                "{{customer_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Customer",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Juan PÃ©rez\",\n  \"email\": \"juan.perez@example.com\",\n  \"phone\": \"+34600123456\",\n  \"companyId\": {{company_id}},\n  \"deviceId\": {{device_id}}\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/customers",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "customers"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Customer",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Juan PÃ©rez GarcÃ­a\",\n  \"phone\": \"+34600999888\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/customers/{{customer_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "customers",
+                                "{{customer_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Customer",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/customers/{{customer_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "customers",
+                                "{{customer_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "API Key Auth",
+            "item": [
+                {
+                    "name": "Get All Customers (API Key)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/customers",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "customers"
+                            ]
+                        },
+                        "description": "Con API Key que tenga permiso \u0027customer:read\u0027"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Customer by ID (API Key)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/customers/{{customer_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "customers",
+                                "{{customer_id}}"
+                            ]
+                        },
+                        "description": "Con API Key que tenga permiso \u0027customer:read\u0027"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Customer (API Key)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"MarÃ­a LÃ³pez\",\n  \"email\": \"maria.lopez@example.com\",\n  \"phone\": \"+34611222333\",\n  \"companyId\": {{company_id}},\n  \"deviceId\": {{device_id}}\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/customers",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "customers"
+                            ]
+                        },
+                        "description": "Con API Key que tenga permiso \u0027customer:create\u0027"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Customer (API Key)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"MarÃ­a LÃ³pez FernÃ¡ndez\",\n  \"phone\": \"+34611888999\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/customers/{{customer_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "customers",
+                                "{{customer_id}}"
+                            ]
+                        },
+                        "description": "Con API Key que tenga permiso \u0027customer:update\u0027"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Customer (API Key)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/customers/{{customer_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "customers",
+                                "{{customer_id}}"
+                            ]
+                        },
+                        "description": "Con API Key que tenga permiso \u0027customer:delete\u0027"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
 }

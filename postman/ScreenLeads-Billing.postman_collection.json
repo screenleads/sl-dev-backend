@@ -1,80 +1,72 @@
 ﻿{
-    "info":  {
-                 "_postman_id":  "billing-collection-001",
-                 "name":  "ScreenLeads - 12. Billing (Stripe)",
-                 "description":  "IntegraciÃ³n con Stripe para facturaciÃ³n y suscripciones",
-                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-             },
-    "item":  [
-                 {
-                     "name":  "Create Checkout Session",
-                     "request":  {
-                                     "auth":  {
-                                                  "type":  "bearer",
-                                                  "bearer":  [
-                                                                 {
-                                                                     "key":  "token",
-                                                                     "value":  "{{jwt_token}}",
-                                                                     "type":  "string"
-                                                                 }
-                                                             ]
-                                              },
-                                     "method":  "POST",
-                                     "header":  [
-
-                                                ],
-                                     "url":  {
-                                                 "raw":  "{{base_url}}/api/billing/checkout-session/1",
-                                                 "host":  [
-                                                              "{{base_url}}"
-                                                          ],
-                                                 "path":  [
-                                                              "api",
-                                                              "billing",
-                                                              "checkout-session",
-                                                              "1"
-                                                          ]
-                                             },
-                                     "description":  "Crea una sesiÃ³n de checkout de Stripe para una compaÃ±Ã­a. Devuelve el sessionId para redirigir al usuario. Requiere ROLE_ADMIN o ROLE_COMPANY_ADMIN"
-                                 },
-                     "response":  [
-
-                                  ]
-                 },
-                 {
-                     "name":  "Create Billing Portal Session",
-                     "request":  {
-                                     "auth":  {
-                                                  "type":  "bearer",
-                                                  "bearer":  [
-                                                                 {
-                                                                     "key":  "token",
-                                                                     "value":  "{{jwt_token}}",
-                                                                     "type":  "string"
-                                                                 }
-                                                             ]
-                                              },
-                                     "method":  "POST",
-                                     "header":  [
-
-                                                ],
-                                     "url":  {
-                                                 "raw":  "{{base_url}}/api/billing/portal-session/1",
-                                                 "host":  [
-                                                              "{{base_url}}"
-                                                          ],
-                                                 "path":  [
-                                                              "api",
-                                                              "billing",
-                                                              "portal-session",
-                                                              "1"
-                                                          ]
-                                             },
-                                     "description":  "Crea una sesiÃ³n del portal de facturaciÃ³n de Stripe para gestionar suscripciones. Devuelve la URL del portal. Requiere ROLE_ADMIN o ROLE_COMPANY_ADMIN"
-                                 },
-                     "response":  [
-
-                                  ]
-                 }
-             ]
+    "info": {
+        "_postman_id": "billing-collection-001",
+        "name": "ScreenLeads - 12. Billing (Stripe)",
+        "description": "IntegraciÃ³n con Stripe para facturaciÃ³n y suscripciones",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Create Checkout Session",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{jwt_token}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "POST",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/billing/checkout-session/1",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "billing",
+                        "checkout-session",
+                        "1"
+                    ]
+                },
+                "description": "Crea una sesiÃ³n de checkout de Stripe para una compaÃ±Ã­a. Devuelve el sessionId para redirigir al usuario. Requiere ROLE_ADMIN o ROLE_COMPANY_ADMIN"
+            },
+            "response": []
+        },
+        {
+            "name": "Create Billing Portal Session",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{jwt_token}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "POST",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/billing/portal-session/1",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "billing",
+                        "portal-session",
+                        "1"
+                    ]
+                },
+                "description": "Crea una sesiÃ³n del portal de facturaciÃ³n de Stripe para gestionar suscripciones. Devuelve la URL del portal. Requiere ROLE_ADMIN o ROLE_COMPANY_ADMIN"
+            },
+            "response": []
+        }
+    ]
 }

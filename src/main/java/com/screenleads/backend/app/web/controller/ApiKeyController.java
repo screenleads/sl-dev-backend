@@ -65,7 +65,8 @@ public class ApiKeyController {
     }
 
     @PatchMapping("/{id}/company-scope")
-    public ResponseEntity<ApiKeyDTO> updateCompanyScope(@PathVariable Long id, @RequestParam(required = false) Long companyScope) {
+    public ResponseEntity<ApiKeyDTO> updateCompanyScope(@PathVariable Long id,
+            @RequestParam(required = false) Long companyScope) {
         ApiKey updated = apiKeyService.updateCompanyScope(id, companyScope);
         return ResponseEntity.ok(ApiKeyMapper.toDto(updated));
     }

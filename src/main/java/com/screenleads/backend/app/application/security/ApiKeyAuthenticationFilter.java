@@ -50,9 +50,9 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
             clientId = request.getHeader("client-id");
         }
 
-        log.info("🔐 ApiKeyAuthenticationFilter - Path: {}, API-KEY: {}, client-id: {}", 
-                request.getRequestURI(), 
-                apiKey != null ? "***" + apiKey.substring(Math.max(0, apiKey.length() - 4)) : "null", 
+        log.info("🔐 ApiKeyAuthenticationFilter - Path: {}, API-KEY: {}, client-id: {}",
+                request.getRequestURI(),
+                apiKey != null ? "***" + apiKey.substring(Math.max(0, apiKey.length() - 4)) : "null",
                 clientId);
 
         if (apiKey != null && clientId != null) {
@@ -60,15 +60,16 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
             if (clientOpt.isPresent()) {
                 Client client = clientOpt.get();
                 log.info("✅ Cliente encontrado: ID={}, clientId={}", client.getId(), client.getClientId());
-                
+
                 Optional<ApiKey> keyOpt = apiKeyRepository.findByKeyAndClientAndActiveTrue(apiKey, client);
                 if (keyOpt.isPresent()) {
                     ApiKey key = keyOpt.get();
-                    // Usar el ID de la API key como principal para identificar exactamente qué API key se está usando
+                    // Usar el ID de la API key como principal para identificar exactamente qué API
+                    // key se está usando
                     Long apiKeyId = key.getId();
-                    log.info("✅ API Key válida encontrada - ID: {}, ClientDbId: {}, Permissions: {}", 
+                    log.info("✅ API Key válida encontrada - ID: {}, ClientDbId: {}, Permissions: {}",
                             apiKeyId, client.getId(), key.getPermissions());
-                    
+
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             apiKeyId,
                             null,

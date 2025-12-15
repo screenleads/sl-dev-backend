@@ -1,371 +1,345 @@
 ﻿{
-    "info":  {
-                 "_postman_id":  "companies-collection-001",
-                 "name":  "ScreenLeads - 08. Companies (CompaÃ±Ã­as)",
-                 "description":  "CRUD completo de compaÃ±Ã­as con autenticaciÃ³n JWT y API Key",
-                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-             },
-    "item":  [
-                 {
-                     "name":  "JWT Authentication",
-                     "item":  [
-                                  {
-                                      "name":  "Get All Companies",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/companies",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "companies"
-                                                                           ]
-                                                              },
-                                                      "description":  "Lista todas las compaÃ±Ã­as. Requiere ROLE_ADMIN o permiso company:read"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Get Company by ID",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/companies/1",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "companies",
-                                                                               "1"
-                                                                           ]
-                                                              },
-                                                      "description":  "Obtiene una compaÃ±Ã­a especÃ­fica por ID. Requiere ROLE_ADMIN o permiso company:read"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Create Company",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "POST",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"name\": \"Nueva CompaÃ±Ã­a S.L.\",\n  \"email\": \"contacto@nuevacompania.com\",\n  \"phone\": \"+34 912 345 678\",\n  \"address\": \"Calle Mayor 123, Madrid\",\n  \"cif\": \"B12345678\",\n  \"active\": true\n}"
-                                                               },
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/companies",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "companies"
-                                                                           ]
-                                                              },
-                                                      "description":  "Crea una nueva compaÃ±Ã­a. Requiere ROLE_ADMIN o permiso company:create"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Update Company",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "PUT",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"name\": \"CompaÃ±Ã­a Actualizada S.L.\",\n  \"email\": \"nuevo@nuevacompania.com\",\n  \"phone\": \"+34 912 999 888\",\n  \"address\": \"Calle Nueva 456, Barcelona\",\n  \"cif\": \"B12345678\",\n  \"active\": true\n}"
-                                                               },
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/companies/1",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "companies",
-                                                                               "1"
-                                                                           ]
-                                                              },
-                                                      "description":  "Actualiza una compaÃ±Ã­a existente. Requiere ROLE_ADMIN o permiso company:update"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Delete Company",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "DELETE",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/companies/1",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "companies",
-                                                                               "1"
-                                                                           ]
-                                                              },
-                                                      "description":  "Elimina una compaÃ±Ã­a. Requiere ROLE_ADMIN o permiso company:delete"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  }
-                              ]
-                 },
-                 {
-                     "name":  "API Key Authentication",
-                     "item":  [
-                                  {
-                                      "name":  "Get All Companies",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-API-KEY",
-                                                                         "value":  "{{api_key}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "client-id",
-                                                                         "value":  "{{client_id}}",
-                                                                         "type":  "text"
-                                                                     }
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/companies",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "companies"
-                                                                           ]
-                                                              },
-                                                      "description":  "Lista todas las compaÃ±Ã­as usando API Key. Requiere permiso company:read"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Get Company by ID",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-API-KEY",
-                                                                         "value":  "{{api_key}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "client-id",
-                                                                         "value":  "{{client_id}}",
-                                                                         "type":  "text"
-                                                                     }
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/companies/1",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "companies",
-                                                                               "1"
-                                                                           ]
-                                                              },
-                                                      "description":  "Obtiene una compaÃ±Ã­a por ID usando API Key. Requiere permiso company:read"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Create Company",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-API-KEY",
-                                                                         "value":  "{{api_key}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "client-id",
-                                                                         "value":  "{{client_id}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"name\": \"CompaÃ±Ã­a via API Key\",\n  \"email\": \"api@compania.com\",\n  \"phone\": \"+34 900 123 456\",\n  \"address\": \"Avenida TecnologÃ­a 1\",\n  \"cif\": \"B99887766\",\n  \"active\": true\n}"
-                                                               },
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/companies",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "companies"
-                                                                           ]
-                                                              },
-                                                      "description":  "Crea una compaÃ±Ã­a usando API Key. Requiere permiso company:create"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Update Company",
-                                      "request":  {
-                                                      "method":  "PUT",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-API-KEY",
-                                                                         "value":  "{{api_key}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "client-id",
-                                                                         "value":  "{{client_id}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"name\": \"CompaÃ±Ã­a Modificada\",\n  \"email\": \"modificado@compania.com\",\n  \"phone\": \"+34 900 999 999\",\n  \"address\": \"Nueva DirecciÃ³n\",\n  \"cif\": \"B99887766\",\n  \"active\": false\n}"
-                                                               },
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/companies/1",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "companies",
-                                                                               "1"
-                                                                           ]
-                                                              },
-                                                      "description":  "Actualiza una compaÃ±Ã­a usando API Key. Requiere permiso company:update"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Delete Company",
-                                      "request":  {
-                                                      "method":  "DELETE",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-API-KEY",
-                                                                         "value":  "{{api_key}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "client-id",
-                                                                         "value":  "{{client_id}}",
-                                                                         "type":  "text"
-                                                                     }
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/companies/1",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "companies",
-                                                                               "1"
-                                                                           ]
-                                                              },
-                                                      "description":  "Elimina una compaÃ±Ã­a usando API Key. Requiere permiso company:delete"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  }
-                              ]
-                 }
-             ]
+    "info": {
+        "_postman_id": "companies-collection-001",
+        "name": "ScreenLeads - 08. Companies (CompaÃ±Ã­as)",
+        "description": "CRUD completo de compaÃ±Ã­as con autenticaciÃ³n JWT y API Key",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "JWT Authentication",
+            "item": [
+                {
+                    "name": "Get All Companies",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/companies",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "companies"
+                            ]
+                        },
+                        "description": "Lista todas las compaÃ±Ã­as. Requiere ROLE_ADMIN o permiso company:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Company by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/companies/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "companies",
+                                "1"
+                            ]
+                        },
+                        "description": "Obtiene una compaÃ±Ã­a especÃ­fica por ID. Requiere ROLE_ADMIN o permiso company:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Company",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Nueva CompaÃ±Ã­a S.L.\",\n  \"email\": \"contacto@nuevacompania.com\",\n  \"phone\": \"+34 912 345 678\",\n  \"address\": \"Calle Mayor 123, Madrid\",\n  \"cif\": \"B12345678\",\n  \"active\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/companies",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "companies"
+                            ]
+                        },
+                        "description": "Crea una nueva compaÃ±Ã­a. Requiere ROLE_ADMIN o permiso company:create"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Company",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"CompaÃ±Ã­a Actualizada S.L.\",\n  \"email\": \"nuevo@nuevacompania.com\",\n  \"phone\": \"+34 912 999 888\",\n  \"address\": \"Calle Nueva 456, Barcelona\",\n  \"cif\": \"B12345678\",\n  \"active\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/companies/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "companies",
+                                "1"
+                            ]
+                        },
+                        "description": "Actualiza una compaÃ±Ã­a existente. Requiere ROLE_ADMIN o permiso company:update"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Company",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/companies/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "companies",
+                                "1"
+                            ]
+                        },
+                        "description": "Elimina una compaÃ±Ã­a. Requiere ROLE_ADMIN o permiso company:delete"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "API Key Authentication",
+            "item": [
+                {
+                    "name": "Get All Companies",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/companies",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "companies"
+                            ]
+                        },
+                        "description": "Lista todas las compaÃ±Ã­as usando API Key. Requiere permiso company:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Company by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/companies/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "companies",
+                                "1"
+                            ]
+                        },
+                        "description": "Obtiene una compaÃ±Ã­a por ID usando API Key. Requiere permiso company:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Company",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"CompaÃ±Ã­a via API Key\",\n  \"email\": \"api@compania.com\",\n  \"phone\": \"+34 900 123 456\",\n  \"address\": \"Avenida TecnologÃ­a 1\",\n  \"cif\": \"B99887766\",\n  \"active\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/companies",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "companies"
+                            ]
+                        },
+                        "description": "Crea una compaÃ±Ã­a usando API Key. Requiere permiso company:create"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Company",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"CompaÃ±Ã­a Modificada\",\n  \"email\": \"modificado@compania.com\",\n  \"phone\": \"+34 900 999 999\",\n  \"address\": \"Nueva DirecciÃ³n\",\n  \"cif\": \"B99887766\",\n  \"active\": false\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/companies/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "companies",
+                                "1"
+                            ]
+                        },
+                        "description": "Actualiza una compaÃ±Ã­a usando API Key. Requiere permiso company:update"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Company",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/companies/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "companies",
+                                "1"
+                            ]
+                        },
+                        "description": "Elimina una compaÃ±Ã­a usando API Key. Requiere permiso company:delete"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
 }
