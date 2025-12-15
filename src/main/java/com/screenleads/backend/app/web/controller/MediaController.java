@@ -216,6 +216,9 @@ public class MediaController {
     @GetMapping("/medias/render/{id}")
     public ResponseEntity<Resource> getImage(@PathVariable Long id) throws Exception {
         Optional<MediaDTO> mediaaux = mediaService.getMediaById(id);
+        if (!mediaaux.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
         Path filePath = Paths.get("src/main/resources/static/medias/").resolve(mediaaux.get().src()).normalize();
         Resource resource = new UrlResource(filePath.toUri());
         if (!resource.exists()) return ResponseEntity.notFound().build();

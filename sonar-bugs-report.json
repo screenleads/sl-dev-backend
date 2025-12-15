@@ -1,0 +1,234 @@
+﻿[
+    {
+        "key":  "AZsi9yTf8qHMgNkIRz94",
+        "rule":  "javabugs:S2259",
+        "severity":  "MAJOR",
+        "component":  "screenleads_sl-dev-backend:src/main/java/com/screenleads/backend/app/application/security/websocket/AuthChannelInterceptor.java",
+        "project":  "screenleads_sl-dev-backend",
+        "line":  32,
+        "hash":  "d91827aaadb07f2957690cd4ee4083b0",
+        "textRange":  {
+                          "startLine":  32,
+                          "endLine":  32,
+                          "startOffset":  32,
+                          "endOffset":  40
+                      },
+        "flows":  [
+                      {
+                          "locations":  [
+                                            {
+                                                "component":  "screenleads_sl-dev-backend:src/main/java/com/screenleads/backend/app/application/security/websocket/AuthChannelInterceptor.java",
+                                                "textRange":  "@{startLine=32; endLine=32; startOffset=32; endOffset=40}",
+                                                "msg":  "The access on a value that can be null"
+                                            },
+                                            {
+                                                "component":  "screenleads_sl-dev-backend:src/main/java/com/screenleads/backend/app/application/security/websocket/AuthChannelInterceptor.java",
+                                                "textRange":  "@{startLine=31; endLine=31; startOffset=12; endOffset=88}",
+                                                "msg":  "Assuming this condition to be true"
+                                            },
+                                            {
+                                                "component":  "screenleads_sl-dev-backend:src/main/java/com/screenleads/backend/app/application/security/websocket/AuthChannelInterceptor.java",
+                                                "textRange":  "@{startLine=31; endLine=31; startOffset=40; endOffset=56}",
+                                                "msg":  "Assuming this condition to be false"
+                                            },
+                                            {
+                                                "component":  "screenleads_sl-dev-backend:src/main/java/com/screenleads/backend/app/application/security/websocket/AuthChannelInterceptor.java",
+                                                "textRange":  "@{startLine=29; endLine=29; startOffset=8; endOffset=109}",
+                                                "msg":  "Value is assigned to `accessor`."
+                                            }
+                                        ]
+                      }
+                  ],
+        "status":  "OPEN",
+        "message":  "Fix this access on a value that can be null.",
+        "effort":  "10min",
+        "debt":  "10min",
+        "author":  "jatod@segurcaixaadeslas.es",
+        "tags":  [
+                     "cert",
+                     "cwe",
+                     "symbolic-execution"
+                 ],
+        "creationDate":  "2025-12-15T17:02:16+0000",
+        "updateDate":  "2025-12-15T17:02:16+0000",
+        "type":  "BUG",
+        "organization":  "screenleads",
+        "cleanCodeAttribute":  "LOGICAL",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "RELIABILITY",
+                            "severity":  "MEDIUM"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "ScreenLeads Backend"
+    },
+    {
+        "key":  "AZsi9ybZ8qHMgNkIRz-H",
+        "rule":  "java:S2095",
+        "severity":  "BLOCKER",
+        "component":  "screenleads_sl-dev-backend:src/main/java/com/screenleads/backend/app/application/service/FirebaseStorageService.java",
+        "project":  "screenleads_sl-dev-backend",
+        "line":  19,
+        "hash":  "098973a80cc62f9fdf42cd5c6ed82585",
+        "textRange":  {
+                          "startLine":  19,
+                          "endLine":  19,
+                          "startOffset":  47,
+                          "endOffset":  72
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Use try-with-resources or close this \"FileInputStream\" in a \"finally\" clause.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "author":  "jatod@segurcaixaadeslas.es",
+        "tags":  [
+                     "cert",
+                     "cwe",
+                     "denial-of-service",
+                     "leak",
+                     "symbolic-execution"
+                 ],
+        "creationDate":  "2025-12-15T17:02:16+0000",
+        "updateDate":  "2025-12-15T17:02:16+0000",
+        "type":  "BUG",
+        "organization":  "screenleads",
+        "cleanCodeAttribute":  "COMPLETE",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "RELIABILITY",
+                            "severity":  "BLOCKER"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "ScreenLeads Backend"
+    },
+    {
+        "key":  "AZsi9ygP8qHMgNkIRz-b",
+        "rule":  "java:S3655",
+        "severity":  "MAJOR",
+        "component":  "screenleads_sl-dev-backend:src/main/java/com/screenleads/backend/app/web/controller/MediaController.java",
+        "project":  "screenleads_sl-dev-backend",
+        "line":  219,
+        "hash":  "d007522cb0d9d691dae06569f3d9c70a",
+        "textRange":  {
+                          "startLine":  219,
+                          "endLine":  219,
+                          "startOffset":  79,
+                          "endOffset":  87
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Call \"mediaaux.isPresent()\" or \"!mediaaux.isEmpty()\" before accessing the value.",
+        "effort":  "10min",
+        "debt":  "10min",
+        "author":  "jatod@segurcaixaadeslas.es",
+        "tags":  [
+                     "cwe",
+                     "symbolic-execution"
+                 ],
+        "creationDate":  "2025-12-15T17:02:16+0000",
+        "updateDate":  "2025-12-15T17:02:16+0000",
+        "type":  "BUG",
+        "organization":  "screenleads",
+        "cleanCodeAttribute":  "COMPLETE",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "RELIABILITY",
+                            "severity":  "MEDIUM"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "ScreenLeads Backend"
+    },
+    {
+        "key":  "AZrv43ICJwJDfqohd0Bs",
+        "rule":  "java:S6863",
+        "severity":  "MAJOR",
+        "component":  "screenleads_sl-dev-backend:src/main/java/com/screenleads/backend/app/web/controller/CouponController.java",
+        "project":  "screenleads_sl-dev-backend",
+        "line":  38,
+        "hash":  "9854b4b596a4124bec280dcfd31d0dea",
+        "textRange":  {
+                          "startLine":  38,
+                          "endLine":  38,
+                          "startOffset":  19,
+                          "endOffset":  114
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Set a HttpStatus code reflective of the operation.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "author":  "jatod@segurcaixaadeslas.es",
+        "tags":  [
+                     "best-practice",
+                     "spring"
+                 ],
+        "creationDate":  "2025-09-23T13:53:15+0000",
+        "updateDate":  "2025-12-05T19:00:22+0000",
+        "type":  "BUG",
+        "organization":  "screenleads",
+        "cleanCodeAttribute":  "DISTINCT",
+        "cleanCodeAttributeCategory":  "ADAPTABLE",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "RELIABILITY",
+                            "severity":  "MEDIUM"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "ScreenLeads Backend"
+    },
+    {
+        "key":  "AZrv43IwJwJDfqohd0CA",
+        "rule":  "java:S6863",
+        "severity":  "MAJOR",
+        "component":  "screenleads_sl-dev-backend:src/main/java/com/screenleads/backend/app/web/controller/UserController.java",
+        "project":  "screenleads_sl-dev-backend",
+        "line":  59,
+        "hash":  "efb488f4ef1157937bf683c85a210f94",
+        "textRange":  {
+                          "startLine":  59,
+                          "endLine":  59,
+                          "startOffset":  66,
+                          "endOffset":  91
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Set a HttpStatus code reflective of the operation.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "author":  "jatod@segurcaixaadeslas.es",
+        "tags":  [
+                     "best-practice",
+                     "spring"
+                 ],
+        "creationDate":  "2025-08-21T11:26:51+0000",
+        "updateDate":  "2025-12-05T19:00:22+0000",
+        "type":  "BUG",
+        "organization":  "screenleads",
+        "cleanCodeAttribute":  "DISTINCT",
+        "cleanCodeAttributeCategory":  "ADAPTABLE",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "RELIABILITY",
+                            "severity":  "MEDIUM"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "ScreenLeads Backend"
+    }
+]

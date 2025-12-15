@@ -32,10 +32,10 @@ public class CouponController {
     public ResponseEntity<CouponValidationResponse> validate(@PathVariable String code) {
         try {
             PromotionLead lead = couponService.validate(code);
-            return ResponseEntity.ok(CouponValidationResponse.from(lead, true, null));
+            return ResponseEntity.status(HttpStatus.OK).body(CouponValidationResponse.from(lead, true, null));
         } catch (Exception ex) {
             // No filtramos tipos para simplificar: el mensaje explica la causa
-            return ResponseEntity.ok(new CouponValidationResponse(code, false, null, null, null, ex.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new CouponValidationResponse(code, false, null, null, null, ex.getMessage()));
         }
     }
 

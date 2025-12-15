@@ -72,6 +72,6 @@ public class UserController {
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('user','delete')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
