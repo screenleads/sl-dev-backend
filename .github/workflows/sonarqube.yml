@@ -41,10 +41,12 @@ jobs:
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} # normalmente https://sonarcloud.io
         run: |
-          mvn clean verify sonar:sonar \
-            -Dsonar.projectKey=sl-dev-backend ^
-            -Dsonar.organization=screenleads ^
-            -Dsonar.projectName="ScreenLeads Backend" ^
+          mvn clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
+            -Dsonar.projectKey=screenleads_sl-dev-backend \
+            -Dsonar.organization=screenleads \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.token=$SONAR_TOKEN \
+            -Dsonar.projectName="ScreenLeads Backend" \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
