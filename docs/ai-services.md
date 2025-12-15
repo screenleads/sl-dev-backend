@@ -573,23 +573,23 @@ public class ApiKeyPermissionService {
 
     public boolean can(String resource, String action) {
         log.info("🔑 ApiKeyPermissionService.can({}, {})", resource, action);
-        
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             log.warn("❌ No hay autenticación o no está autenticado");
             return false;
         }
-        
+
         String authority = auth.getAuthorities().stream().findFirst().map(Object::toString).orElse(null);
         log.info("Authority: {}", authority);
         if (!"API_CLIENT".equals(authority)) {
             log.warn("❌ Authority no es API_CLIENT: {}", authority);
             return false;
         }
-        
+
         Object principal = auth.getPrincipal();
         log.info("Principal: {} (type: {})", principal, principal != null ? principal.getClass().getName() : "null");
-        
+
         Long apiKeyId = null;
         if (principal instanceof Long) {
             apiKeyId = (Long) principal;
@@ -601,27 +601,27 @@ public class ApiKeyPermissionService {
                 return false;
             }
         }
-        
+
         if (apiKeyId == null) {
             log.warn("❌ apiKeyId es null");
             return false;
         }
-        
+
         log.info("Buscando API key por ID: {}", apiKeyId);
         ApiKey apiKey = apiKeyRepository.findById(apiKeyId)
                 .filter(ApiKey::isActive)
                 .orElse(null);
-        
+
         if (apiKey == null) {
             log.warn("❌ No se encontró API key activa con ID: {}", apiKeyId);
             return false;
         }
-        
+
         log.info("✅ API key encontrada - ID: {}, Permissions: {}", apiKey.getId(), apiKey.getPermissions());
         String requiredPermission = resource + ":" + action;
         boolean hasPermission = apiKey.getPermissions() != null && apiKey.getPermissions().contains(requiredPermission);
         log.info("Buscando permiso '{}' en '{}': {}", requiredPermission, apiKey.getPermissions(), hasPermission);
-        
+
         return hasPermission;
     }
 
