@@ -1,306 +1,282 @@
 ﻿{
-    "info":  {
-                 "_postman_id":  "coupons-collection-001",
-                 "name":  "ScreenLeads - 09. Coupons (Cupones)",
-                 "description":  "ValidaciÃ³n, canje y gestiÃ³n de cupones de promociones",
-                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-             },
-    "item":  [
-                 {
-                     "name":  "JWT Authentication",
-                     "item":  [
-                                  {
-                                      "name":  "Validate Coupon",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/coupons/PROMO2025ABC",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "coupons",
-                                                                               "PROMO2025ABC"
-                                                                           ]
-                                                              },
-                                                      "description":  "Valida un cupÃ³n por su cÃ³digo. Devuelve el estado y si es vÃ¡lido en este momento. Requiere permiso: coupon:read"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Redeem Coupon (Canjear)",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "POST",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/coupons/PROMO2025ABC/redeem",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "coupons",
-                                                                               "PROMO2025ABC",
-                                                                               "redeem"
-                                                                           ]
-                                                              },
-                                                      "description":  "Canjea un cupÃ³n, marcÃ¡ndolo como REDEEMED si es vÃ¡lido. Requiere permiso: coupon:update"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Expire Coupon (Caducar)",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "POST",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/coupons/PROMO2025ABC/expire",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "coupons",
-                                                                               "PROMO2025ABC",
-                                                                               "expire"
-                                                                           ]
-                                                              },
-                                                      "description":  "Marca un cupÃ³n como EXPIRED manualmente si aÃºn no ha sido canjeado. Requiere permiso: coupon:update"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Issue Coupon (Emitir)",
-                                      "request":  {
-                                                      "auth":  {
-                                                                   "type":  "bearer",
-                                                                   "bearer":  [
-                                                                                  {
-                                                                                      "key":  "token",
-                                                                                      "value":  "{{jwt_token}}",
-                                                                                      "type":  "string"
-                                                                                  }
-                                                                              ]
-                                                               },
-                                                      "method":  "POST",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/coupons/issue?promotionId=1\u0026customerId=1",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "coupons",
-                                                                               "issue"
-                                                                           ],
-                                                                  "query":  [
-                                                                                {
-                                                                                    "key":  "promotionId",
-                                                                                    "value":  "1",
-                                                                                    "description":  "ID de la promociÃ³n"
-                                                                                },
-                                                                                {
-                                                                                    "key":  "customerId",
-                                                                                    "value":  "1",
-                                                                                    "description":  "ID del cliente"
-                                                                                }
-                                                                            ]
-                                                              },
-                                                      "description":  "Emite un nuevo cupÃ³n para un cliente y promociÃ³n especÃ­ficos. Genera un nuevo lead histÃ³rico respetando lÃ­mites. Requiere permiso: coupon:create"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  }
-                              ]
-                 },
-                 {
-                     "name":  "API Key Authentication",
-                     "item":  [
-                                  {
-                                      "name":  "Validate Coupon",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-API-KEY",
-                                                                         "value":  "{{api_key}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "client-id",
-                                                                         "value":  "{{client_id}}",
-                                                                         "type":  "text"
-                                                                     }
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/coupons/PROMO2025ABC",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "coupons",
-                                                                               "PROMO2025ABC"
-                                                                           ]
-                                                              },
-                                                      "description":  "Valida un cupÃ³n usando API Key. Requiere permiso: coupon:read"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Redeem Coupon (Canjear)",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-API-KEY",
-                                                                         "value":  "{{api_key}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "client-id",
-                                                                         "value":  "{{client_id}}",
-                                                                         "type":  "text"
-                                                                     }
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/coupons/PROMO2025ABC/redeem",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "coupons",
-                                                                               "PROMO2025ABC",
-                                                                               "redeem"
-                                                                           ]
-                                                              },
-                                                      "description":  "Canjea un cupÃ³n usando API Key. Requiere permiso: coupon:update"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Expire Coupon (Caducar)",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-API-KEY",
-                                                                         "value":  "{{api_key}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "client-id",
-                                                                         "value":  "{{client_id}}",
-                                                                         "type":  "text"
-                                                                     }
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/coupons/PROMO2025ABC/expire",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "coupons",
-                                                                               "PROMO2025ABC",
-                                                                               "expire"
-                                                                           ]
-                                                              },
-                                                      "description":  "Caduca un cupÃ³n usando API Key. Requiere permiso: coupon:update"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  },
-                                  {
-                                      "name":  "Issue Coupon (Emitir)",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-API-KEY",
-                                                                         "value":  "{{api_key}}",
-                                                                         "type":  "text"
-                                                                     },
-                                                                     {
-                                                                         "key":  "client-id",
-                                                                         "value":  "{{client_id}}",
-                                                                         "type":  "text"
-                                                                     }
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{base_url}}/coupons/issue?promotionId=1\u0026customerId=1",
-                                                                  "host":  [
-                                                                               "{{base_url}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "coupons",
-                                                                               "issue"
-                                                                           ],
-                                                                  "query":  [
-                                                                                {
-                                                                                    "key":  "promotionId",
-                                                                                    "value":  "1"
-                                                                                },
-                                                                                {
-                                                                                    "key":  "customerId",
-                                                                                    "value":  "1"
-                                                                                }
-                                                                            ]
-                                                              },
-                                                      "description":  "Emite un cupÃ³n usando API Key. Requiere permiso: coupon:create"
-                                                  },
-                                      "response":  [
-
-                                                   ]
-                                  }
-                              ]
-                 }
-             ]
+    "info": {
+        "_postman_id": "coupons-collection-001",
+        "name": "ScreenLeads - 09. Coupons (Cupones)",
+        "description": "ValidaciÃ³n, canje y gestiÃ³n de cupones de promociones",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "JWT Authentication",
+            "item": [
+                {
+                    "name": "Validate Coupon",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/coupons/PROMO2025ABC",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "PROMO2025ABC"
+                            ]
+                        },
+                        "description": "Valida un cupÃ³n por su cÃ³digo. Devuelve el estado y si es vÃ¡lido en este momento. Requiere permiso: coupon:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Redeem Coupon (Canjear)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/coupons/PROMO2025ABC/redeem",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "PROMO2025ABC",
+                                "redeem"
+                            ]
+                        },
+                        "description": "Canjea un cupÃ³n, marcÃ¡ndolo como REDEEMED si es vÃ¡lido. Requiere permiso: coupon:update"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Expire Coupon (Caducar)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/coupons/PROMO2025ABC/expire",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "PROMO2025ABC",
+                                "expire"
+                            ]
+                        },
+                        "description": "Marca un cupÃ³n como EXPIRED manualmente si aÃºn no ha sido canjeado. Requiere permiso: coupon:update"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Issue Coupon (Emitir)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/coupons/issue?promotionId=1\u0026customerId=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "issue"
+                            ],
+                            "query": [
+                                {
+                                    "key": "promotionId",
+                                    "value": "1",
+                                    "description": "ID de la promociÃ³n"
+                                },
+                                {
+                                    "key": "customerId",
+                                    "value": "1",
+                                    "description": "ID del cliente"
+                                }
+                            ]
+                        },
+                        "description": "Emite un nuevo cupÃ³n para un cliente y promociÃ³n especÃ­ficos. Genera un nuevo lead histÃ³rico respetando lÃ­mites. Requiere permiso: coupon:create"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "API Key Authentication",
+            "item": [
+                {
+                    "name": "Validate Coupon",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/coupons/PROMO2025ABC",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "PROMO2025ABC"
+                            ]
+                        },
+                        "description": "Valida un cupÃ³n usando API Key. Requiere permiso: coupon:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Redeem Coupon (Canjear)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/coupons/PROMO2025ABC/redeem",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "PROMO2025ABC",
+                                "redeem"
+                            ]
+                        },
+                        "description": "Canjea un cupÃ³n usando API Key. Requiere permiso: coupon:update"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Expire Coupon (Caducar)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/coupons/PROMO2025ABC/expire",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "PROMO2025ABC",
+                                "expire"
+                            ]
+                        },
+                        "description": "Caduca un cupÃ³n usando API Key. Requiere permiso: coupon:update"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Issue Coupon (Emitir)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "client-id",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/coupons/issue?promotionId=1\u0026customerId=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "issue"
+                            ],
+                            "query": [
+                                {
+                                    "key": "promotionId",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "customerId",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Emite un cupÃ³n usando API Key. Requiere permiso: coupon:create"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
 }

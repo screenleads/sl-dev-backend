@@ -33,8 +33,13 @@
                         "header": [],
                         "url": {
                             "raw": "{{base_url}}/medias/types",
-                            "host": ["{{base_url}}"],
-                            "path": ["medias", "types"]
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "medias",
+                                "types"
+                            ]
                         }
                     },
                     "response": []
@@ -56,8 +61,14 @@
                         "header": [],
                         "url": {
                             "raw": "{{base_url}}/medias/types/1",
-                            "host": ["{{base_url}}"],
-                            "path": ["medias", "types", "1"]
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "medias",
+                                "types",
+                                "1"
+                            ]
                         }
                     },
                     "response": []
@@ -88,8 +99,13 @@
                         },
                         "url": {
                             "raw": "{{base_url}}/medias/types",
-                            "host": ["{{base_url}}"],
-                            "path": ["medias", "types"]
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "medias",
+                                "types"
+                            ]
                         }
                     },
                     "response": []
@@ -120,8 +136,14 @@
                         },
                         "url": {
                             "raw": "{{base_url}}/medias/types/1",
-                            "host": ["{{base_url}}"],
-                            "path": ["medias", "types", "1"]
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "medias",
+                                "types",
+                                "1"
+                            ]
                         }
                     },
                     "response": []
@@ -143,8 +165,14 @@
                         "header": [],
                         "url": {
                             "raw": "{{base_url}}/medias/types/1",
-                            "host": ["{{base_url}}"],
-                            "path": ["medias", "types", "1"]
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "medias",
+                                "types",
+                                "1"
+                            ]
                         }
                     },
                     "response": []
@@ -172,8 +200,13 @@
                         ],
                         "url": {
                             "raw": "{{base_url}}/medias/types",
-                            "host": ["{{base_url}}"],
-                            "path": ["medias", "types"]
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "medias",
+                                "types"
+                            ]
                         },
                         "description": "Con API Key que tenga permiso 'mediatype:read'"
                     },
@@ -197,8 +230,14 @@
                         ],
                         "url": {
                             "raw": "{{base_url}}/medias/types/1",
-                            "host": ["{{base_url}}"],
-                            "path": ["medias", "types", "1"]
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "medias",
+                                "types",
+                                "1"
+                            ]
                         },
                         "description": "Con API Key que tenga permiso 'mediatype:read'"
                     },
@@ -230,8 +269,13 @@
                         },
                         "url": {
                             "raw": "{{base_url}}/medias/types",
-                            "host": ["{{base_url}}"],
-                            "path": ["medias", "types"]
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "medias",
+                                "types"
+                            ]
                         },
                         "description": "Con API Key que tenga permiso 'mediatype:create'"
                     },
@@ -263,8 +307,14 @@
                         },
                         "url": {
                             "raw": "{{base_url}}/medias/types/1",
-                            "host": ["{{base_url}}"],
-                            "path": ["medias", "types", "1"]
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "medias",
+                                "types",
+                                "1"
+                            ]
                         },
                         "description": "Con API Key que tenga permiso 'mediatype:update'"
                     },
@@ -288,8 +338,14 @@
                         ],
                         "url": {
                             "raw": "{{base_url}}/medias/types/1",
-                            "host": ["{{base_url}}"],
-                            "path": ["medias", "types", "1"]
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "medias",
+                                "types",
+                                "1"
+                            ]
                         },
                         "description": "Con API Key que tenga permiso 'mediatype:delete'"
                     },

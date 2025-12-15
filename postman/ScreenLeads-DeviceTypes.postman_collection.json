@@ -33,8 +33,13 @@
                         "header": [],
                         "url": {
                             "raw": "{{base_url}}/devices/types",
-                            "host": ["{{base_url}}"],
-                            "path": ["devices", "types"]
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "devices",
+                                "types"
+                            ]
                         }
                     },
                     "response": []
@@ -65,8 +70,13 @@
                         },
                         "url": {
                             "raw": "{{base_url}}/devices/types",
-                            "host": ["{{base_url}}"],
-                            "path": ["devices", "types"]
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "devices",
+                                "types"
+                            ]
                         }
                     },
                     "response": []
@@ -94,8 +104,13 @@
                         ],
                         "url": {
                             "raw": "{{base_url}}/devices/types",
-                            "host": ["{{base_url}}"],
-                            "path": ["devices", "types"]
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "devices",
+                                "types"
+                            ]
                         },
                         "description": "Con API Key que tenga permiso 'devicetype:read'"
                     },
@@ -127,8 +142,13 @@
                         },
                         "url": {
                             "raw": "{{base_url}}/devices/types",
-                            "host": ["{{base_url}}"],
-                            "path": ["devices", "types"]
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "devices",
+                                "types"
+                            ]
                         },
                         "description": "Con API Key que tenga permiso 'devicetype:create'"
                     },

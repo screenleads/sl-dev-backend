@@ -36,8 +36,12 @@
                                 "header": [],
                                 "url": {
                                     "raw": "{{base_url}}/medias",
-                                    "host": ["{{base_url}}"],
-                                    "path": ["medias"]
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "medias"
+                                    ]
                                 }
                             },
                             "response": []
@@ -79,8 +83,13 @@
                                 },
                                 "url": {
                                     "raw": "{{base_url}}/medias/upload",
-                                    "host": ["{{base_url}}"],
-                                    "path": ["medias", "upload"]
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "medias",
+                                        "upload"
+                                    ]
                                 }
                             },
                             "response": []
@@ -113,8 +122,12 @@
                                 ],
                                 "url": {
                                     "raw": "{{base_url}}/medias",
-                                    "host": ["{{base_url}}"],
-                                    "path": ["medias"]
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "medias"
+                                    ]
                                 },
                                 "description": "Con API Key que tenga permiso 'media:read'"
                             },
@@ -158,8 +171,13 @@
                                 },
                                 "url": {
                                     "raw": "{{base_url}}/medias/upload",
-                                    "host": ["{{base_url}}"],
-                                    "path": ["medias", "upload"]
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "medias",
+                                        "upload"
+                                    ]
                                 },
                                 "description": "Con API Key que tenga permiso 'media:create'"
                             },
