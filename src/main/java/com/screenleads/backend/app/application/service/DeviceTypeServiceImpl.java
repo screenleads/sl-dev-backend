@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.screenleads.backend.app.domain.model.DeviceType;
 import com.screenleads.backend.app.domain.repositories.DeviceTypeRepository;
-import com.screenleads.backend.app.web.dto.AdviceDTO;
+
 import com.screenleads.backend.app.web.dto.DeviceTypeDTO;
 
 @Service

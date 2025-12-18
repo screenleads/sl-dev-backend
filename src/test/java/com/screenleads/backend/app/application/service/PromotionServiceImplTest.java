@@ -23,7 +23,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.screenleads.backend.app.web.dto.LeadSummaryDTO;
 import com.screenleads.backend.app.web.dto.PromotionDTO;
 import com.screenleads.backend.app.web.dto.PromotionLeadDTO;
 import com.screenleads.backend.app.domain.model.*;
