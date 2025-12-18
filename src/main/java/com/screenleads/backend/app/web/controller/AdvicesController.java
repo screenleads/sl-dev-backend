@@ -6,8 +6,6 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,13 +16,14 @@ import com.screenleads.backend.app.web.dto.AdviceDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/advices")
 @Tag(name = "Advices", description = "Gestión y consulta de anuncios (advices)")
 public class AdvicesController {
 
-    private static final Logger logger = LoggerFactory.getLogger(AdvicesController.class);
     private final AdviceService adviceService;
 
     public AdvicesController(AdviceService adviceService) {
@@ -59,7 +58,7 @@ public class AdvicesController {
             String offsetMinutesStr) {
 
         ZoneId zone = resolveZoneId(tz, offsetMinutesStr);
-        logger.debug("Resolviendo visibles con zona: {}", zone);
+        log.debug("Resolviendo visibles con zona: {}", zone);
         return ResponseEntity.ok(adviceService.getVisibleAdvicesNow(zone));
     }
 
@@ -82,7 +81,7 @@ public class AdvicesController {
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar un advice")
     public ResponseEntity<AdviceDTO> updateAdvice(@PathVariable Long id, @RequestBody AdviceDTO adviceDTO) {
-        logger.info("adviceDTO object: {}", adviceDTO);
+        log.info("adviceDTO object: {}", adviceDTO);
         AdviceDTO updatedAdvice = adviceService.updateAdvice(id, adviceDTO);
         return ResponseEntity.ok(updatedAdvice);
     }
@@ -101,7 +100,7 @@ public class AdvicesController {
             try {
                 return ZoneId.of(tz.trim());
             } catch (Exception e) {
-                logger.warn("X-Timezone inválida '{}': {}", tz, e.getMessage());
+                log.warn("X-Timezone inválida '{}': {}", tz, e.getMessage());
             }
         }
         if (offsetMinutesStr != null && !offsetMinutesStr.isBlank()) {
@@ -109,7 +108,7 @@ public class AdvicesController {
                 int minutes = Integer.parseInt(offsetMinutesStr.trim());
                 return ZoneOffset.ofTotalSeconds(minutes * 60);
             } catch (Exception e) {
-                logger.warn("X-Timezone-Offset inválido '{}': {}", offsetMinutesStr, e.getMessage());
+                log.warn("X-Timezone-Offset inválido '{}': {}", offsetMinutesStr, e.getMessage());
             }
         }
         return ZoneId.systemDefault();

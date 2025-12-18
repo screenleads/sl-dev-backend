@@ -15,6 +15,10 @@ import java.util.Map;
 // @PreAuthorize("hasAnyRole('admin','company_admin')")
 public class UserController {
 
+    private static final String ERROR_INTEGRITY = "Violación de integridad (¿username/email único?)";
+    private static final String ERROR_CREATE_USER = "No se pudo crear el usuario";
+    private static final String ERROR_UPDATE_USER = "No se pudo actualizar el usuario";
+
     private final UserService service;
 
     public UserController(UserService service) {
@@ -44,10 +48,10 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         } catch (DataIntegrityViolationException ex) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "Violación de integridad (¿username/email único?)"));
+                    .body(Map.of("error", ERROR_INTEGRITY));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "No se pudo crear el usuario"));
+                    .body(Map.of("error", ERROR_CREATE_USER));
         }
     }
 
@@ -65,10 +69,10 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         } catch (DataIntegrityViolationException ex) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "Violación de integridad (¿username/email único?)"));
+                    .body(Map.of("error", ERROR_INTEGRITY));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "No se pudo actualizar el usuario"));
+                    .body(Map.of("error", ERROR_UPDATE_USER));
         }
     }
 

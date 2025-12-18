@@ -1,8 +1,5 @@
 package com.screenleads.backend.app.application.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Role;
 import com.screenleads.backend.app.domain.model.User;
@@ -26,14 +23,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class UserServiceImpl implements UserService {
-    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserRepository repo;
     private final CompanyRepository companyRepo;
