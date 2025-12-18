@@ -61,7 +61,6 @@ class MediaServiceImplTest {
         testMedia.setType(testMediaType);
 
         // Setup test MediaDTO
-        testMediaDTO = new MediaDTO(1L, "https://example.com/image.jpg", testMediaType);
     }
 
     @Test
@@ -90,7 +89,7 @@ class MediaServiceImplTest {
     @DisplayName("getAllMedias should return empty list when repository is empty")
     void whenGetAllMediasOnEmptyRepo_thenReturnsEmptyList() {
         // Arrange
-        when(mediaRepository.findAll()).thenReturn(Collections.emptyList());
+        when(mediaRepository.findAll()).thenReturn(List.of());
 
         // Act
         List<MediaDTO> result = mediaService.getAllMedias();
@@ -162,7 +161,7 @@ class MediaServiceImplTest {
     void whenSaveMedia_thenSavesSuccessfully() {
         // Arrange
         MediaDTO inputDTO = new MediaDTO(null, "https://example.com/new-image.jpg", testMediaType);
-        
+
         Media savedMedia = new Media();
         savedMedia.setId(10L);
         savedMedia.setSrc("https://example.com/new-image.jpg");
@@ -236,7 +235,7 @@ class MediaServiceImplTest {
     void whenUpdateMediaExists_thenUpdatesSuccessfully() {
         // Arrange
         MediaDTO updateDTO = new MediaDTO(1L, "https://example.com/updated-image.jpg", testMediaType);
-        
+
         Media updatedMedia = new Media();
         updatedMedia.setId(1L);
         updatedMedia.setSrc("https://example.com/updated-image.jpg");

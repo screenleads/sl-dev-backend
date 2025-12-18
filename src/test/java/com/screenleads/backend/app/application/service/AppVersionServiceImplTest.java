@@ -47,14 +47,6 @@ class AppVersionServiceImplTest {
                 .forceUpdate(false)
                 .build();
 
-        testAppVersionDTO = AppVersionDTO.builder()
-                .id(1L)
-                .platform("Android")
-                .version("1.2.3")
-                .message("Update available")
-                .url("https://example.com/update")
-                .forceUpdate(false)
-                .build();
     }
 
     @Test
@@ -121,7 +113,7 @@ class AppVersionServiceImplTest {
     @DisplayName("findAll should return empty list when no versions exist")
     void whenFindAllEmpty_thenReturnsEmptyList() {
         // Arrange
-        when(repository.findAll()).thenReturn(Collections.emptyList());
+        when(repository.findAll()).thenReturn(List.of());
 
         // Act
         List<AppVersionDTO> result = appVersionService.findAll();

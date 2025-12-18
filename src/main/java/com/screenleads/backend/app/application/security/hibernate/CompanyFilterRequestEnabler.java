@@ -18,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -49,7 +50,7 @@ public class CompanyFilterRequestEnabler extends OncePerRequestFilter {
 
                 boolean isAdmin = auth.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
-                        .anyMatch(a -> "ROLE_ADMIN".equals(a) || "ADMIN".equals(a));
+                        .anyMatch(Set.of("ROLE_ADMIN", "ADMIN")::contains);
 
                 Long companyId = resolveCompanyId(auth);
                 log.debug("Resolved companyId={} (isAdmin={})", companyId, isAdmin);

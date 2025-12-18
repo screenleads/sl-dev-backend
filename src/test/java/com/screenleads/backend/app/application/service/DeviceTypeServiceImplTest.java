@@ -45,7 +45,6 @@ class DeviceTypeServiceImplTest {
         testDeviceType.setType("TABLET");
         testDeviceType.setEnabled(true);
 
-        testDeviceTypeDTO = new DeviceTypeDTO(1L, "TABLET", true);
     }
 
     @Test
@@ -79,7 +78,7 @@ class DeviceTypeServiceImplTest {
     @DisplayName("getAllDeviceTypes should return empty list when no types exist")
     void whenGetAllDeviceTypesEmpty_thenReturnsEmptyList() {
         // Arrange
-        when(deviceTypeRepository.findAll()).thenReturn(Collections.emptyList());
+        when(deviceTypeRepository.findAll()).thenReturn(List.of());
 
         // Act
         List<DeviceTypeDTO> result = deviceTypeService.getAllDeviceTypes();

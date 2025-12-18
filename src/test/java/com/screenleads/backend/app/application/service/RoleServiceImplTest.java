@@ -45,8 +45,6 @@ class RoleServiceImplTest {
         testRole.setRole("ADMIN");
         testRole.setDescription("Administrator role");
         testRole.setLevel(1);
-
-        testRoleDTO = new RoleDTO(1L, "ADMIN", "Administrator role", 1);
     }
 
     @Test
@@ -75,7 +73,7 @@ class RoleServiceImplTest {
     @DisplayName("getAll should return empty list when no roles exist")
     void whenGetAllEmpty_thenReturnsEmptyList() {
         // Arrange
-        when(roleRepository.findAll()).thenReturn(Collections.emptyList());
+        when(roleRepository.findAll()).thenReturn(List.of());
 
         // Act
         List<RoleDTO> result = roleService.getAll();

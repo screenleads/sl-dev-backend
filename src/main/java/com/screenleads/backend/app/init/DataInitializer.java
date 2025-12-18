@@ -98,7 +98,7 @@ public class DataInitializer implements CommandLineRunner {
 
                 // === CREAR ANUNCIO MOCK SI NO EXISTEN Y ESTAMOS EN DESARROLLO ===
                 String activeProfile = System.getProperty("spring.profiles.active", "dev");
-                if ("dev".equalsIgnoreCase(activeProfile) || "development".equalsIgnoreCase(activeProfile)) {
+                if (Set.of("dev", "development").contains(activeProfile.toLowerCase())) {
                         try {
                                 Company company = companyRepository.findByName("ScreenLeads").orElse(null);
                                 if (company != null && adviceRepository.count() == 0) {
@@ -413,7 +413,7 @@ public class DataInitializer implements CommandLineRunner {
 
                                         // Por defecto, los campos createdAt y updatedAt no deben ser visibles en
                                         // formularios
-                                        if (name.equalsIgnoreCase("createdAt") || name.equalsIgnoreCase("updatedAt")) {
+                                        if (Set.of("createdat", "updatedat").contains(name.toLowerCase())) {
                                                 attr.setFormVisible(Boolean.FALSE);
                                         } else {
                                                 attr.setFormVisible(Boolean.TRUE);
@@ -456,8 +456,7 @@ public class DataInitializer implements CommandLineRunner {
                         return true;
 
                 String n = name.toLowerCase(Locale.ROOT);
-                if (n.equals("password") || n.equals("devices") || n.equals("advices")
-                                || n.equals("users") || n.equals("roles"))
+                if (Set.of("password", "devices", "advices", "users", "roles").contains(n))
                         return true;
 
                 return false;
@@ -502,7 +501,7 @@ public class DataInitializer implements CommandLineRunner {
                 String n = name.toLowerCase(Locale.ROOT);
                 if (n.equals("id"))
                         return false;
-                if (n.equals("createdat") || n.equals("updatedat"))
+                if (Set.of("createdat", "updatedat").contains(n))
                         return false;
                 if (a instanceof PluralAttribute<?, ?, ?>)
                         return false;
@@ -518,16 +517,13 @@ public class DataInitializer implements CommandLineRunner {
                 String t = (a.getDataType() == null ? "" : a.getDataType()).toLowerCase(Locale.ROOT);
                 if ("boolean".equals(t))
                         return "switch";
-                if ("integer".equals(t) || "int".equals(t) || "long".equals(t) ||
-                                "double".equals(t) || "float".equals(t) || "number".equals(t) ||
-                                "bigdecimal".equals(t))
+                if (Set.of("integer", "int", "long", "double", "float", "number", "bigdecimal").contains(t))
                         return "number";
-                if ("localdate".equals(t) || "date".equals(t))
+                if (Set.of("localdate", "date").contains(t))
                         return "date";
-                if ("localtime".equals(t) || "time".equals(t))
+                if (Set.of("localtime", "time").contains(t))
                         return "time";
-                if ("localdatetime".equals(t) || "offsetdatetime".equals(t) ||
-                                "instant".equals(t) || "datetime".equals(t))
+                if (Set.of("localdatetime", "offsetdatetime", "instant", "datetime").contains(t))
                         return "datetime";
 
                 String n = a.getName() == null ? "" : a.getName().toLowerCase(Locale.ROOT);

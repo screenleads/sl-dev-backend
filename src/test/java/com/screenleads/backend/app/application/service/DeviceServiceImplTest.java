@@ -117,7 +117,7 @@ class DeviceServiceImplTest {
         @DisplayName("getAllDevices should return empty list when no devices exist")
         void whenGetAllDevicesEmpty_thenReturnsEmptyList() {
             // Arrange
-            when(deviceRepository.findAll()).thenReturn(Collections.emptyList());
+            when(deviceRepository.findAll()).thenReturn(List.of());
 
             // Act
             List<DeviceDTO> result = deviceService.getAllDevices();

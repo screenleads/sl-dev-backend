@@ -46,7 +46,6 @@ class MediaTypeServiceImplTest {
         testMediaType.setExtension("jpg");
         testMediaType.setEnabled(true);
 
-        testMediaTypeDTO = new MediaTypeDTO(1L, "jpg", "IMAGE", true);
     }
 
     @Test
@@ -82,7 +81,7 @@ class MediaTypeServiceImplTest {
     @DisplayName("getAllMediaTypes should return empty list when no types exist")
     void whenGetAllMediaTypesEmpty_thenReturnsEmptyList() {
         // Arrange
-        when(mediaTypeRepository.findAll()).thenReturn(Collections.emptyList());
+        when(mediaTypeRepository.findAll()).thenReturn(List.of());
 
         // Act
         List<MediaTypeDTO> result = mediaTypeService.getAllMediaTypes();

@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -275,31 +276,7 @@ public class UserServiceImpl implements UserService {
                     } else {
                         extension = null;
                     }
-                    if (extension != null) {
-                        switch (extension) {
-                            case "jpg":
-                            case "jpeg":
-                            case "png":
-                            case "gif":
-                            case "bmp":
-                                detectedType = "IMG";
-                                break;
-                            case "mp4":
-                            case "avi":
-                            case "mov":
-                            case "wmv":
-                                detectedType = "VIDEO";
-                                break;
-                            case "mp3":
-                            case "wav":
-                            case "ogg":
-                                detectedType = "AUDIO";
-                                break;
-                            default:
-                                detectedType = "FILE";
-                                break;
-                        }
-                    }
+
                     if (typeDto != null) {
                         if (typeDto.type() != null && !typeDto.type().isBlank()) {
                             type = mediaTypeRepository.findByType(typeDto.type()).orElse(null);
@@ -376,7 +353,7 @@ public class UserServiceImpl implements UserService {
 
         boolean isAdmin = auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(a -> "ROLE_ADMIN".equals(a) || "ADMIN".equals(a));
+                .anyMatch(Set.of("ROLE_ADMIN", "ADMIN")::contains);
         if (isAdmin)
             return;
 
@@ -399,7 +376,7 @@ public class UserServiceImpl implements UserService {
             return false;
         return auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(a -> "ROLE_ADMIN".equals(a) || "ADMIN".equals(a));
+                .anyMatch(Set.of("ROLE_ADMIN", "ADMIN")::contains);
     }
 
     private Long currentCompanyId() {

@@ -155,17 +155,17 @@ public class PromotionServiceImpl implements PromotionService {
                 "id,promotionId,identifierType,identifier,firstName,lastName,email,phone,birthDate,acceptedPrivacyAt,acceptedTermsAt,createdAt\n");
         for (PromotionLead l : leads) {
             sb.append(Optional.ofNullable(l.getId()).orElse(0L)).append(',')
-                    .append(Optional.ofNullable(l.getPromotion()).map(Promotion::getId).orElse(null)).append(',')
+                    .append(l.getPromotion() != null ? l.getPromotion().getId() : null).append(',')
                     .append(Optional.ofNullable(l.getIdentifierType()).map(Enum::name).orElse("")).append(',')
                     .append(csv(l.getIdentifier())).append(',')
                     .append(csv(l.getFirstName())).append(',')
                     .append(csv(l.getLastName())).append(',')
                     .append(csv(l.getEmail())).append(',')
                     .append(csv(l.getPhone())).append(',')
-                    .append(Optional.ofNullable(l.getBirthDate()).orElse(null)).append(',')
-                    .append(Optional.ofNullable(l.getAcceptedPrivacyAt()).orElse(null)).append(',')
-                    .append(Optional.ofNullable(l.getAcceptedTermsAt()).orElse(null)).append(',')
-                    .append(Optional.ofNullable(l.getCreatedAt()).orElse(null))
+                    .append(l.getBirthDate()).append(',')
+                    .append(l.getAcceptedPrivacyAt()).append(',')
+                    .append(l.getAcceptedTermsAt()).append(',')
+                    .append(l.getCreatedAt())
                     .append('\n');
         }
         return sb.toString();

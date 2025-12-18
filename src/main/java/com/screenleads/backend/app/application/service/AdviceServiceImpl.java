@@ -457,7 +457,7 @@ public class AdviceServiceImpl implements AdviceService {
 
         boolean isAdmin = auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(a -> "ROLE_ADMIN".equals(a) || "ADMIN".equals(a));
+                .anyMatch(Set.of("ROLE_ADMIN", "ADMIN")::contains);
         if (isAdmin)
             return;
 
@@ -480,7 +480,7 @@ public class AdviceServiceImpl implements AdviceService {
             return false;
         return auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(a -> "ROLE_ADMIN".equals(a) || "ADMIN".equals(a));
+                .anyMatch(Set.of("ROLE_ADMIN", "ADMIN")::contains);
     }
 
     private Long currentCompanyId() {
