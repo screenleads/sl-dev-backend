@@ -4,7 +4,6 @@ package com.screenleads.backend.app.web.controller;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -14,17 +13,14 @@ import com.screenleads.backend.app.web.dto.DeviceTypeDTO;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 @RestController // <-- era @Controller; @RestController no cambia las rutas existentes
 @Tag(name = "Device Types", description = "CRUD de tipos de dispositivo")
+@RequiredArgsConstructor
 public class DeviceTypesController {
 
-    @Autowired
-    private DeviceTypeService deviceTypeService;
-
-    public DeviceTypesController(DeviceTypeService deviceTypeService) {
-        this.deviceTypeService = deviceTypeService;
-    }
+    private final DeviceTypeService deviceTypeService;
 
     @CrossOrigin
     @GetMapping("/devices/types")

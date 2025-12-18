@@ -23,10 +23,11 @@ import java.util.*;
 @Slf4j
 public class MediaController {
 
-    @Autowired private FirebaseStorageService firebaseService;
-    @Autowired private MediaService mediaService;
+    private final FirebaseStorageService firebaseService;
+    private final MediaService mediaService;
 
-    public MediaController(MediaService mediaService) {
+    public MediaController(FirebaseStorageService firebaseService, MediaService mediaService) {
+        this.firebaseService = firebaseService;
         this.mediaService = mediaService;
     }
 

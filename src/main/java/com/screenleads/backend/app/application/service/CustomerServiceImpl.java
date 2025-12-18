@@ -21,6 +21,8 @@ public class CustomerServiceImpl implements CustomerService {
 
     private static final String CUSTOMER_NOT_FOUND = "Customer not found: ";
     private static final String COMPANY_NOT_FOUND = "Company not found: ";
+    private static final String CUSTOMER_ALREADY_EXISTS = "Customer already exists for this identifier";
+    private static final String IDENTIFIER_IN_USE = "Another customer already uses this identifier";
 
     private final CompanyRepository companyRepository;
     private final CustomerRepository customerRepository;
@@ -39,7 +41,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         // Enforce unicidad (company, type, identifier)
         customerRepository.findByCompanyIdAndIdentifierTypeAndIdentifier(companyId, identifierType, normalized)
-            .ifPresent(c -> { throw new IllegalStateException("Customer already exists for this identifier"); });
+            .ifPresent(c -> { throw new IllegalStateException(CUSTOMER_ALREADY_EXISTS); });
 
         Customer c = Customer.builder()
                 .company(company)
@@ -73,7 +75,7 @@ public class CustomerServiceImpl implements CustomerService {
                     existing.getCompany().getId(), identifierType, normalized)
                 .ifPresent(other -> {
                     if (!other.getId().equals(existing.getId())) {
-                        throw new IllegalStateException("Another customer already uses this identifier");
+                        throw new IllegalStateException(IDENTIFIER_IN_USE);
                     }
                 });
         }

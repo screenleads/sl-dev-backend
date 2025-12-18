@@ -3,7 +3,6 @@ package com.screenleads.backend.app.web.controller;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -14,18 +13,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import lombok.RequiredArgsConstructor;
 
 import com.screenleads.backend.app.application.service.MediaTypeService;
 import com.screenleads.backend.app.web.dto.MediaTypeDTO;
 
 @Controller
+@RequiredArgsConstructor
 public class MediaTypesController {
-    @Autowired
-    private MediaTypeService deviceTypeService;
 
-    public MediaTypesController(MediaTypeService deviceTypeService) {
-        this.deviceTypeService = deviceTypeService;
-    }
+    private final MediaTypeService deviceTypeService;
 
     @CrossOrigin
     @GetMapping("/medias/types")

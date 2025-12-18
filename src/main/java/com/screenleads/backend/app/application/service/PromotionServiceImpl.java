@@ -32,6 +32,7 @@ import java.util.*;
 public class PromotionServiceImpl implements PromotionService {
 
     private static final String PROMOTION_NOT_FOUND = "Promotion not found: ";
+    private static final String LEAD_ALREADY_EXISTS = "Lead already exists for identifier: ";
 
     private final PromotionRepository promotionRepository;
     private final PromotionLeadRepository promotionLeadRepository;
@@ -104,7 +105,7 @@ public class PromotionServiceImpl implements PromotionService {
         // Si tienes unique (promotion_id + identifier), prevenimos duplicados
         if (candidate.getIdentifier() != null &&
                 promotionLeadRepository.existsByPromotionIdAndIdentifier(promotionId, candidate.getIdentifier())) {
-            throw new IllegalArgumentException("Lead already exists for identifier: " + candidate.getIdentifier());
+            throw new IllegalArgumentException(LEAD_ALREADY_EXISTS + candidate.getIdentifier());
         }
 
         candidate.setPromotion(promo);

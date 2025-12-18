@@ -14,6 +14,9 @@ import com.screenleads.backend.app.web.dto.MediaDTO;
 @Service
 public class MediaServiceImpl implements MediaService {
 
+    private static final String MEDIA_TYPE_REQUIRED = "Media type requerido";
+    private static final String MEDIA_TYPE_NOT_FOUND = "Media type no encontrado";
+
     private final MediaRepository mediaRepository;
     private final MediaTypeRepository mediaTypeRepository;
 
@@ -67,10 +70,10 @@ public class MediaServiceImpl implements MediaService {
         media.setId(mediaDTO.id());
         media.setSrc(mediaDTO.src());
         if (mediaDTO.type() == null || mediaDTO.type().getId() == null) {
-            throw new IllegalArgumentException("Media type requerido");
+            throw new IllegalArgumentException(MEDIA_TYPE_REQUIRED);
         }
         media.setType(mediaTypeRepository.findById(mediaDTO.type().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Media type no encontrado")));
+                .orElseThrow(() -> new IllegalArgumentException(MEDIA_TYPE_NOT_FOUND)));
         // TODO: recibir o inferir companyId; sin eso, se caerá el save si es NOT NULL
         return media;
     }

@@ -2,7 +2,7 @@ package com.screenleads.backend.app.web.controller;
 
 import com.screenleads.backend.app.application.service.PromotionService;
 import com.screenleads.backend.app.web.dto.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -15,10 +15,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/promotions")
+@RequiredArgsConstructor
 public class PromotionsController {
 
-    @Autowired
-    private PromotionService promotionService;
+    private final PromotionService promotionService;
 
     // ===== CRUD =====
     @PreAuthorize("@perm.can('promotion', 'read')")

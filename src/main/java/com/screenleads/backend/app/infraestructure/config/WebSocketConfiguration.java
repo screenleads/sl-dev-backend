@@ -5,21 +5,19 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.config.ChannelRegistration;
+import lombok.RequiredArgsConstructor;
+
 import com.screenleads.backend.app.infraestructure.websocket.PresenceChannelInterceptor;
 import com.screenleads.backend.app.application.security.websocket.AuthChannelInterceptor;
 
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer {
 
-    @Autowired
-    private PresenceChannelInterceptor presenceChannelInterceptor;
-
-    @Autowired
-    private AuthChannelInterceptor authChannelInterceptor;
+    private final PresenceChannelInterceptor presenceChannelInterceptor;
+    private final AuthChannelInterceptor authChannelInterceptor;
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
