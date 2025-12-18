@@ -281,19 +281,9 @@ public class UserServiceImpl implements UserService {
         String src = mediaDto.src();
         String extension = extractExtension(src);
 
-        MediaType type = null;
-        if (typeDto != null) {
-            if (typeDto.type() != null && !typeDto.type().isBlank()) {
-                type = mediaTypeRepository.findByType(typeDto.type()).orElse(null);
-            }
-            if ((type == null || typeDto.type() == null || typeDto.type().isBlank())
-                    && typeDto.extension() != null && !typeDto.extension().isBlank()) {
-                type = mediaTypeRepository.findByExtensionIgnoreCase(extension).orElse(null);
-            }
-        }
-        if (type == null && extension != null) {
-            type = mediaTypeRepository.findByExtensionIgnoreCase(extension).orElse(null);
-        }
+        MediaType type = findMediaTypeByDto(typeDto, extension)
+                .or(() -> findMediaTypeByExtension(extension))
+                .orElse(null);
 
         if (type == null) {
             logMediaTypeError(extension, src);
@@ -302,6 +292,25 @@ public class UserServiceImpl implements UserService {
                             + extension + "). Asegúrate de que el MediaType existe.");
         }
         return type;
+    }
+
+    private Optional<MediaType> findMediaTypeByDto(com.screenleads.backend.app.web.dto.MediaTypeDto typeDto, String extension) {
+        if (typeDto == null)
+            return Optional.empty();
+
+        if (typeDto.type() != null && !typeDto.type().isBlank()) {
+            return mediaTypeRepository.findByType(typeDto.type());
+        }
+        if (typeDto.extension() != null && !typeDto.extension().isBlank()) {
+            return mediaTypeRepository.findByExtensionIgnoreCase(extension);
+        }
+        return Optional.empty();
+    }
+
+    private Optional<MediaType> findMediaTypeByExtension(String extension) {
+        if (extension == null)
+            return Optional.empty();
+        return mediaTypeRepository.findByExtensionIgnoreCase(extension);
     }
 
     private String extractExtension(String src) {
@@ -326,17 +335,16 @@ public class UserServiceImpl implements UserService {
     }
 
     private Company resolveCompanyForMedia(Company userCompany, UserDto dto) {
-        Company company = userCompany;
-        if (company == null && dto.getCompanyId() != null) {
-            company = companyRepo.findById(dto.getCompanyId()).orElse(null);
+        if (userCompany != null)
+            return userCompany;
+
+        Long companyId = extractCompanyId(dto);
+        if (companyId != null) {
+            return companyRepo.findById(companyId)
+                    .orElseThrow(() -> new IllegalArgumentException("No se puede asociar media: compañía no encontrada"));
         }
-        if (company == null && dto.getCompany() != null && dto.getCompany().id() != null) {
-            company = companyRepo.findById(dto.getCompany().id()).orElse(null);
-        }
-        if (company == null) {
-            throw new IllegalArgumentException("No se puede asociar media: compañía no encontrada");
-        }
-        return company;
+        
+        throw new IllegalArgumentException("No se puede asociar media: compañía no encontrada");
     }
 
     private void enableCompanyFilterIfNeeded() {
@@ -383,18 +391,26 @@ public class UserServiceImpl implements UserService {
         Object principal = auth.getPrincipal();
 
         if (principal instanceof User u) {
-            return (u.getCompany() != null) ? u.getCompany().getId() : null;
-        }
-        if (principal instanceof UserDetails ud) {
-            return repo.findByUsername(ud.getUsername())
-                    .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
+            return Optional.ofNullable(u.getCompany())
+                    .map(Company::getId)
                     .orElse(null);
         }
-        if (principal instanceof String username) {
-            return repo.findByUsername(username)
-                    .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
-                    .orElse(null);
-        }
+        
+        String username = extractUsername(principal);
+        if (username == null)
+            return null;
+            
+        return repo.findByUsername(username)
+                .map(User::getCompany)
+                .map(Company::getId)
+                .orElse(null);
+    }
+
+    private String extractUsername(Object principal) {
+        if (principal instanceof UserDetails ud)
+            return ud.getUsername();
+        if (principal instanceof String username)
+            return username;
         return null;
     }
 
