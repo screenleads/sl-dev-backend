@@ -1,6 +1,8 @@
 package com.screenleads.backend.app.web.mapper;
 
+import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.User;
+import com.screenleads.backend.app.web.dto.CompanyRefDTO;
 import com.screenleads.backend.app.web.dto.UserDto;
 
 
@@ -15,7 +17,7 @@ public class UserMapper {
         .name(u.getName())
         .lastName(u.getLastName())
         .companyId(u.getCompany() != null ? u.getCompany().getId() : null)
-        .company(u.getCompany() != null ? new com.screenleads.backend.app.web.dto.CompanyRefDTO(u.getCompany().getId(), u.getCompany().getName()) : null)
+        .company(toCompanyRefDTO(u.getCompany()))
         .profileImage(u.getProfileImage() != null ? new com.screenleads.backend.app.web.dto.MediaSlimDTO(
             u.getProfileImage().getId(),
             u.getProfileImage().getSrc(),
@@ -35,5 +37,12 @@ public class UserMapper {
             u.getRole().getLevel()
         ) : null)
         .build();
+    }
+
+    private static CompanyRefDTO toCompanyRefDTO(Company company) {
+        if (company == null) {
+            return null;
+        }
+        return new CompanyRefDTO(company.getId(), company.getName());
     }
 }
