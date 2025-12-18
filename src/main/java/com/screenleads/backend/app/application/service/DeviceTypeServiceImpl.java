@@ -2,6 +2,7 @@ package com.screenleads.backend.app.application.service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -48,7 +49,7 @@ public class DeviceTypeServiceImpl implements DeviceTypeService {
     @Override
     public DeviceTypeDTO updateDeviceType(Long id, DeviceTypeDTO deviceTypeDTO) {
         DeviceType deviceType = deviceTypeRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(DEVICE_TYPE_NOT_FOUND_WITH_ID + id));
+                .orElseThrow(() -> new NoSuchElementException(DEVICE_TYPE_NOT_FOUND_WITH_ID + id));
         deviceType.setType(deviceTypeDTO.type());
         deviceType.setEnabled(deviceTypeDTO.enabled());
 

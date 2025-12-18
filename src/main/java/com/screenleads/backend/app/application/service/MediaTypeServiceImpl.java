@@ -2,6 +2,7 @@ package com.screenleads.backend.app.application.service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -50,7 +51,7 @@ public class MediaTypeServiceImpl implements MediaTypeService {
     @Override
     public MediaTypeDTO updateMediaType(Long id, MediaTypeDTO mediaTypeDTO) {
         MediaType mediaType = mediaTypeRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(MEDIA_TYPE_NOT_FOUND_WITH_ID + id));
+                .orElseThrow(() -> new NoSuchElementException(MEDIA_TYPE_NOT_FOUND_WITH_ID + id));
         mediaType.setEnabled(mediaTypeDTO.enabled());
         mediaType.setExtension(mediaTypeDTO.extension());
         mediaType.setType(mediaTypeDTO.type());

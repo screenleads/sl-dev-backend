@@ -2,6 +2,7 @@ package com.screenleads.backend.app.application.service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -49,7 +50,7 @@ public class MediaServiceImpl implements MediaService {
     @Override
     public MediaDTO updateMedia(Long id, MediaDTO mediaDTO) {
         Media media = mediaRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(MEDIA_NOT_FOUND_WITH_ID + id));
+                .orElseThrow(() -> new NoSuchElementException(MEDIA_NOT_FOUND_WITH_ID + id));
         media.setSrc(mediaDTO.src());
         media.setType(mediaDTO.type());
         Media updatedMedia = mediaRepository.save(media);
