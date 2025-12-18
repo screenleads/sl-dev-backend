@@ -12,7 +12,6 @@ import com.stripe.model.checkout.Session;
 import com.stripe.model.Subscription;
 import com.stripe.StripeClient;
 import com.stripe.model.Invoice;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/stripe")

@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import com.screenleads.backend.app.domain.model.Media;
 import com.screenleads.backend.app.domain.repositories.MediaRepository;
 import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
-import com.screenleads.backend.app.web.dto.AdviceDTO;
 import com.screenleads.backend.app.web.dto.MediaDTO;
 
 @Service

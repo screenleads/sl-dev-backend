@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import com.screenleads.backend.app.domain.model.User;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import javax.crypto.SecretKey;
 import java.util.Date;

@@ -1,7 +1,6 @@
 package com.screenleads.backend.app.application.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.screenleads.backend.app.application.service.PromotionService;
 import com.screenleads.backend.app.domain.model.LeadIdentifierType;
 import com.screenleads.backend.app.domain.model.Promotion;
 import com.screenleads.backend.app.domain.model.PromotionLead;

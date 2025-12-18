@@ -4,7 +4,6 @@ import com.screenleads.backend.app.domain.model.AppEntity;
 import com.screenleads.backend.app.domain.model.User;
 import com.screenleads.backend.app.domain.repositories.AppEntityRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
-import com.screenleads.backend.app.application.service.SpringContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;

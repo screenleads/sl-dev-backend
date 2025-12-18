@@ -38,7 +38,6 @@ import com.screenleads.backend.app.web.dto.AdviceDTO;
 import com.screenleads.backend.app.web.dto.CompanyRefDTO;
 import com.screenleads.backend.app.web.dto.MediaUpsertDTO;
 import com.screenleads.backend.app.web.dto.AdviceScheduleDTO;
-import com.screenleads.backend.app.web.dto.AdviceTimeWindowDTO;
 
 @Component
 @RequiredArgsConstructor
