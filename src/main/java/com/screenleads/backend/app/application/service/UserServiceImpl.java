@@ -431,8 +431,8 @@ public class UserServiceImpl implements UserService {
     private void assertCanCreateUser() {
         if (!perm.can("user", "create"))
             throw new IllegalArgumentException("No autorizado a crear usuarios");
-        int L = currentEffectiveLevel();
-        if (L > 2) // sólo niveles 1 o 2 pueden crear
+        int currentLevel = currentEffectiveLevel();
+        if (currentLevel > 2) // sólo niveles 1 o 2 pueden crear
             throw new IllegalArgumentException("Solo roles de nivel 1 o 2 pueden crear usuarios");
     }
 

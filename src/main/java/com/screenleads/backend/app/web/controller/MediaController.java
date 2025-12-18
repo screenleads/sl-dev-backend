@@ -138,21 +138,21 @@ public class MediaController {
     private CandidatePaths buildCandidatePaths(String base, MediaKind kind) {
         final String IMG_DEST = "media/images";
         final String VID_DEST = "media/videos";
-        final int[] IMAGE_THUMBS = { 320, 640 };
-        final int[] VIDEO_THUMBS = { 320, 640 };
+        final int[] imageThumbs = { 320, 640 };
+        final int[] videoThumbs = { 320, 640 };
 
         List<String> mainCandidates = new ArrayList<>();
         List<String> thumbCandidates = new ArrayList<>();
 
         if (kind == MediaKind.VIDEO) {
             mainCandidates.add(VID_DEST + COMPRESSED_PREFIX + base + ".mp4");
-            for (int s : VIDEO_THUMBS) {
+            for (int s : videoThumbs) {
                 thumbCandidates.add(VID_DEST + THUMBNAILS_PATH + s + THUMB_PREFIX + s + "-" + base + ".jpg");
             }
         } else if (kind == MediaKind.IMAGE) {
             mainCandidates.add(IMG_DEST + COMPRESSED_PREFIX + base + ".jpg");
             mainCandidates.add(IMG_DEST + COMPRESSED_PREFIX + base + ".png");
-            for (int s : IMAGE_THUMBS) {
+            for (int s : imageThumbs) {
                 thumbCandidates.add(IMG_DEST + THUMBNAILS_PATH + s + THUMB_PREFIX + s + "-" + base + ".jpg");
                 thumbCandidates.add(IMG_DEST + THUMBNAILS_PATH + s + THUMB_PREFIX + s + "-" + base + ".png");
             }
