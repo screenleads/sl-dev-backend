@@ -105,7 +105,8 @@ public class CompaniesServiceImpl implements CompaniesService {
     @Override
     @Transactional
     public CompanyDTO updateCompany(Long id, CompanyDTO companyDTO) {
-        Company company = companyRepository.findById(id).orElseThrow();
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Company not found with id: " + id));
         company.setName(companyDTO.name());
         company.setObservations(companyDTO.observations());
         company.setPrimaryColor(companyDTO.primaryColor());

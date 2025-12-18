@@ -36,7 +36,8 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public RoleDTO update(Long id, RoleDTO dto) {
-        Role existing = repo.findById(id).orElseThrow();
+        Role existing = repo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + id));
         existing.setRole(dto.role());
         existing.setDescription(dto.description());
         existing.setLevel(dto.level());

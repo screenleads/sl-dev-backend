@@ -47,7 +47,8 @@ public class MediaServiceImpl implements MediaService {
 
     @Override
     public MediaDTO updateMedia(Long id, MediaDTO mediaDTO) {
-        Media media = mediaRepository.findById(id).orElseThrow();
+        Media media = mediaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Media not found with id: " + id));
         media.setSrc(mediaDTO.src());
         media.setType(mediaDTO.type());
         Media updatedMedia = mediaRepository.save(media);

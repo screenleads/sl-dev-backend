@@ -45,7 +45,8 @@ public class DeviceTypeServiceImpl implements DeviceTypeService {
 
     @Override
     public DeviceTypeDTO updateDeviceType(Long id, DeviceTypeDTO deviceTypeDTO) {
-        DeviceType deviceType = deviceTypeRepository.findById(id).orElseThrow();
+        DeviceType deviceType = deviceTypeRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("DeviceType not found with id: " + id));
         deviceType.setType(deviceTypeDTO.type());
         deviceType.setEnabled(deviceTypeDTO.enabled());
 

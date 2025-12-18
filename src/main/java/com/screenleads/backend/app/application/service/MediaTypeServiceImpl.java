@@ -47,7 +47,8 @@ public class MediaTypeServiceImpl implements MediaTypeService {
 
     @Override
     public MediaTypeDTO updateMediaType(Long id, MediaTypeDTO mediaTypeDTO) {
-        MediaType mediaType = mediaTypeRepository.findById(id).orElseThrow();
+        MediaType mediaType = mediaTypeRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("MediaType not found with id: " + id));
         mediaType.setEnabled(mediaTypeDTO.enabled());
         mediaType.setExtension(mediaTypeDTO.extension());
         mediaType.setType(mediaTypeDTO.type());
