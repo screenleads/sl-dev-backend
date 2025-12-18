@@ -76,9 +76,7 @@ public class JwtService {
         try {
             final String tokenUsername = extractUsername(token);
             return (tokenUsername.equals(username)) && !isTokenExpired(token);
-        } catch (io.jsonwebtoken.ExpiredJwtException e) {
-            return false;
-        } catch (Exception e) {
+        } catch (io.jsonwebtoken.ExpiredJwtException | Exception e) {
             return false;
         }
     }

@@ -4,10 +4,8 @@ import com.screenleads.backend.app.domain.model.Role;
 import com.screenleads.backend.app.domain.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.crypto.SecretKey;
@@ -15,7 +13,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -56,7 +53,7 @@ class JwtServiceTest {
         // Then
         assertNotNull(token);
         assertFalse(token.isEmpty());
-        assertTrue(token.split("\\.").length == 3); // JWT has 3 parts
+        assertEquals(3, token.split("\\.").length); // JWT has 3 parts
     }
 
     @Test
@@ -162,7 +159,6 @@ class JwtServiceTest {
         // Given
         long before = System.currentTimeMillis();
         String token = jwtService.generateToken(testUser);
-        long after = System.currentTimeMillis();
         
         // When
         Date expiration = jwtService.extractExpiration(token);
