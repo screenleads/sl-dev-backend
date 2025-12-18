@@ -154,10 +154,10 @@ public class MediaController {
         }
 
         if (foundMain != null) {
-            List<String> thumbs = new ArrayList<>();
-            for (String t : thumbCandidates) {
-                if (firebaseService.exists(t)) thumbs.add(firebaseService.getPublicUrl(t));
-            }
+            List<String> thumbs = thumbCandidates.stream()
+                    .filter(firebaseService::exists)
+                    .map(firebaseService::getPublicUrl)
+                    .toList();
             String type = foundMain.startsWith(VID_DEST) ? "video"
                         : foundMain.startsWith(IMG_DEST) ? "image" : "unknown";
 

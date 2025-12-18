@@ -7,7 +7,6 @@ import com.screenleads.backend.app.web.dto.CompanyTokenDTO;
 import com.screenleads.backend.app.domain.repositories.CompanyTokenRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import com.screenleads.backend.app.application.security.jwt.JwtService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,11 +73,11 @@ public class CompanyTokenService {
         LocalDateTime expiresAt = now.plusYears(1);
         String role = "company_admin";
         String token = Jwts.builder()
-                .setSubject(user.getUsername())
+                .subject(user.getUsername())
                 .claim("role", role)
-                .setIssuedAt(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()))
-                .setExpiration(Date.from(expiresAt.atZone(ZoneId.systemDefault()).toInstant()))
-                .signWith(jwtService.getSigningKey(), SignatureAlgorithm.HS256)
+                .issuedAt(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()))
+                .expiration(Date.from(expiresAt.atZone(ZoneId.systemDefault()).toInstant()))
+                .signWith(jwtService.getSigningKey(), Jwts.SIG.HS256)
                 .compact();
         CompanyToken companyToken = new CompanyToken();
         companyToken.setCompanyId(user.getCompany().getId());
@@ -115,11 +114,11 @@ public class CompanyTokenService {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiresAt = now.plusYears(1);
         String newToken = Jwts.builder()
-                .setSubject(companyToken.getCompanyId().toString())
+                .subject(companyToken.getCompanyId().toString())
                 .claim("role", companyToken.getRole())
-                .setIssuedAt(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()))
-                .setExpiration(Date.from(expiresAt.atZone(ZoneId.systemDefault()).toInstant()))
-                .signWith(jwtService.getSigningKey(), SignatureAlgorithm.HS256)
+                .issuedAt(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()))
+                .expiration(Date.from(expiresAt.atZone(ZoneId.systemDefault()).toInstant()))
+                .signWith(jwtService.getSigningKey(), Jwts.SIG.HS256)
                 .compact();
         companyToken.setToken(newToken);
         companyToken.setCreatedAt(now);
