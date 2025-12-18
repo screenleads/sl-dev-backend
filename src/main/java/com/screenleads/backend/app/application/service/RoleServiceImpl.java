@@ -7,6 +7,7 @@ import com.screenleads.backend.app.web.mapper.RoleMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 public class RoleServiceImpl implements RoleService {
@@ -39,7 +40,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public RoleDTO update(Long id, RoleDTO dto) {
         Role existing = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(ROLE_NOT_FOUND_WITH_ID + id));
+                .orElseThrow(() -> new NoSuchElementException(ROLE_NOT_FOUND_WITH_ID + id));
         existing.setRole(dto.role());
         existing.setDescription(dto.description());
         existing.setLevel(dto.level());
