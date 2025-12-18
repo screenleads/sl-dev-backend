@@ -52,6 +52,11 @@ public class DataInitializer implements CommandLineRunner {
                         String icon, Integer sortOrder) {
         }
 
+        private static final String SCREENLEADS = "ScreenLeads";
+        private static final String PASSWORD = "password";
+        private static final String EMAIL = "email";
+        private static final String REGEX_CAMEL_TO_KEBAB = "([a-z0-9])([A-Z])";
+
         private final RoleRepository roleRepository;
         private final MediaTypeRepository mediaTypeRepository;
         private final DeviceTypeRepository deviceTypeRepository;
@@ -427,10 +432,7 @@ public class DataInitializer implements CommandLineRunner {
                         return true;
 
                 String n = name.toLowerCase(Locale.ROOT);
-                if (Set.of(PASSWORD, "devices", "advices", "users", "roles").contains(n))
-                        return true;
-
-                return false;
+                return Set.of(PASSWORD, "devices", "advices", "users", "roles").contains(n);
         }
 
         private String resolveIdType(jakarta.persistence.metamodel.EntityType<?> et) {
