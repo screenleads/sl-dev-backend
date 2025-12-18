@@ -14,6 +14,8 @@ import com.screenleads.backend.app.web.dto.DeviceTypeDTO;
 @Service
 public class DeviceTypeServiceImpl implements DeviceTypeService {
 
+    private static final String DEVICE_TYPE_NOT_FOUND_WITH_ID = "DeviceType not found with id: ";
+
     private final DeviceTypeRepository deviceTypeRepository;
 
     public DeviceTypeServiceImpl(DeviceTypeRepository deviceTypeRepository) {
@@ -46,7 +48,7 @@ public class DeviceTypeServiceImpl implements DeviceTypeService {
     @Override
     public DeviceTypeDTO updateDeviceType(Long id, DeviceTypeDTO deviceTypeDTO) {
         DeviceType deviceType = deviceTypeRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("DeviceType not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(DEVICE_TYPE_NOT_FOUND_WITH_ID + id));
         deviceType.setType(deviceTypeDTO.type());
         deviceType.setEnabled(deviceTypeDTO.enabled());
 

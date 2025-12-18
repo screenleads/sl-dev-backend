@@ -16,6 +16,7 @@ public class MediaServiceImpl implements MediaService {
 
     private static final String MEDIA_TYPE_REQUIRED = "Media type requerido";
     private static final String MEDIA_TYPE_NOT_FOUND = "Media type no encontrado";
+    private static final String MEDIA_NOT_FOUND_WITH_ID = "Media not found with id: ";
 
     private final MediaRepository mediaRepository;
     private final MediaTypeRepository mediaTypeRepository;
@@ -48,7 +49,7 @@ public class MediaServiceImpl implements MediaService {
     @Override
     public MediaDTO updateMedia(Long id, MediaDTO mediaDTO) {
         Media media = mediaRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Media not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(MEDIA_NOT_FOUND_WITH_ID + id));
         media.setSrc(mediaDTO.src());
         media.setType(mediaDTO.type());
         Media updatedMedia = mediaRepository.save(media);

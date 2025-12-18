@@ -11,6 +11,8 @@ import java.util.List;
 @Service
 public class RoleServiceImpl implements RoleService {
 
+    private static final String ROLE_NOT_FOUND_WITH_ID = "Role not found with id: ";
+
     private final RoleRepository repo;
 
     public RoleServiceImpl(RoleRepository repo) {
@@ -37,7 +39,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public RoleDTO update(Long id, RoleDTO dto) {
         Role existing = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(ROLE_NOT_FOUND_WITH_ID + id));
         existing.setRole(dto.role());
         existing.setDescription(dto.description());
         existing.setLevel(dto.level());

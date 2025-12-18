@@ -24,6 +24,9 @@ import com.screenleads.backend.app.web.dto.MediaTypeDTO;
 @Service
 public class CompaniesServiceImpl implements CompaniesService {
 
+    private static final String MEDIA_NOT_FOUND_WITH_ID = "Media no encontrado con id: ";
+    private static final String COMPANY_NOT_FOUND_WITH_ID = "Company not found with id: ";
+
     private final MediaTypeRepository mediaTypeRepository;
     private final CompanyRepository companyRepository;
     private final MediaRepository mediaRepository;
@@ -76,7 +79,7 @@ public class CompaniesServiceImpl implements CompaniesService {
             if (companyDTO.logo().id() != null) {
                 Media media = mediaRepository.findById(companyDTO.logo().id())
                         .orElseThrow(
-                                () -> new RuntimeException("Media no encontrado con id: " + companyDTO.logo().id()));
+                                () -> new RuntimeException(MEDIA_NOT_FOUND_WITH_ID + companyDTO.logo().id()));
                 if (media.getCompany() == null) {
                     media.setCompany(savedCompany);
                     mediaRepository.save(media);
@@ -107,7 +110,7 @@ public class CompaniesServiceImpl implements CompaniesService {
     @Transactional
     public CompanyDTO updateCompany(Long id, CompanyDTO companyDTO) {
         Company company = companyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Company not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(COMPANY_NOT_FOUND_WITH_ID + id));
         company.setName(companyDTO.name());
         company.setObservations(companyDTO.observations());
         company.setPrimaryColor(companyDTO.primaryColor());
@@ -117,7 +120,7 @@ public class CompaniesServiceImpl implements CompaniesService {
             if (companyDTO.logo().id() != null) {
                 Media media = mediaRepository.findById(companyDTO.logo().id())
                         .orElseThrow(
-                                () -> new RuntimeException("Media no encontrado con id: " + companyDTO.logo().id()));
+                                () -> new RuntimeException(MEDIA_NOT_FOUND_WITH_ID + companyDTO.logo().id()));
 
                 String newSrc = companyDTO.logo().src();
                 if (newSrc != null && !newSrc.isBlank() && !java.util.Objects.equals(media.getSrc(), newSrc)) {

@@ -27,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class AdviceServiceImpl implements AdviceService {
 
+    private static final String ADVICE_NOT_FOUND = "Advice not found: ";
+
     private final AdviceRepository adviceRepository;
     private final MediaRepository mediaRepository;
     private final UserRepository userRepository;
@@ -140,7 +142,7 @@ public class AdviceServiceImpl implements AdviceService {
         enableCompanyFilterIfNeeded();
 
         Advice advice = adviceRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Advice not found: " + id));
+                .orElseThrow(() -> new NoSuchElementException(ADVICE_NOT_FOUND + id));
 
         advice.setDescription(dto.getDescription());
         advice.setCustomInterval(Boolean.TRUE.equals(dto.getCustomInterval()));

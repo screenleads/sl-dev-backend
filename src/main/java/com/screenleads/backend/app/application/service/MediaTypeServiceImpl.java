@@ -13,6 +13,8 @@ import com.screenleads.backend.app.web.dto.MediaTypeDTO;
 @Service
 public class MediaTypeServiceImpl implements MediaTypeService {
 
+    private static final String MEDIA_TYPE_NOT_FOUND_WITH_ID = "MediaType not found with id: ";
+
     private final MediaTypeRepository mediaTypeRepository;
 
     public MediaTypeServiceImpl(MediaTypeRepository mediaTypeRepository) {
@@ -48,7 +50,7 @@ public class MediaTypeServiceImpl implements MediaTypeService {
     @Override
     public MediaTypeDTO updateMediaType(Long id, MediaTypeDTO mediaTypeDTO) {
         MediaType mediaType = mediaTypeRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("MediaType not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(MEDIA_TYPE_NOT_FOUND_WITH_ID + id));
         mediaType.setEnabled(mediaTypeDTO.enabled());
         mediaType.setExtension(mediaTypeDTO.extension());
         mediaType.setType(mediaTypeDTO.type());
