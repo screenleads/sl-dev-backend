@@ -11,7 +11,6 @@ import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
 import com.screenleads.backend.app.domain.model.MediaType;
 import com.screenleads.backend.app.domain.model.Media;
 import com.screenleads.backend.app.web.dto.MediaDTO;
-import com.screenleads.backend.app.web.dto.MediaTypeDTO;
 import com.screenleads.backend.app.web.dto.UserDto;
 import com.screenleads.backend.app.web.mapper.UserMapper;
 import jakarta.persistence.EntityManager;
@@ -280,14 +279,16 @@ public class UserServiceImpl implements UserService {
     }
 
     private MediaType resolveMediaType(MediaDTO mediaDto) {
-        var typeDto = mediaDto.type();
+        MediaType typeFromDto = mediaDto.type();
+        if (typeFromDto != null) {
+            return typeFromDto;
+        }
+
         String src = mediaDto.src();
         String extension = extractExtension(src);
-
-        MediaType type = findMediaTypeByDto(typeDto, extension)
-                .or(() -> findMediaTypeByExtension(extension))
-                .orElse(null);
-
+        
+        MediaType type = findMediaTypeByExtension(extension).orElse(null);
+        
         if (type == null) {
             logMediaTypeError(extension, src);
             throw new IllegalArgumentException(
@@ -295,19 +296,6 @@ public class UserServiceImpl implements UserService {
                             + extension + "). Asegúrate de que el MediaType existe.");
         }
         return type;
-    }
-
-    private Optional<MediaType> findMediaTypeByDto(MediaTypeDTO typeDto, String extension) {
-        if (typeDto == null)
-            return Optional.empty();
-
-        if (typeDto.type() != null && !typeDto.type().isBlank()) {
-            return mediaTypeRepository.findByType(typeDto.type());
-        }
-        if (typeDto.extension() != null && !typeDto.extension().isBlank()) {
-            return mediaTypeRepository.findByExtensionIgnoreCase(extension);
-        }
-        return Optional.empty();
     }
 
     private Optional<MediaType> findMediaTypeByExtension(String extension) {

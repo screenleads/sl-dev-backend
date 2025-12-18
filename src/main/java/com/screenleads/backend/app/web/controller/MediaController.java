@@ -43,11 +43,7 @@ public class MediaController {
 
     @PreAuthorize("@perm.can('media', 'create')")
     @CrossOrigin
-    @PostMapping(
-        value = "/medias/upload",
-        consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-        produces = MediaType.APPLICATION_JSON_VALUE
-    )
+    @PostMapping(value = "/medias/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> upload(@RequestPart("file") MultipartFile file) {
         try {
             if (file == null || file.isEmpty()) {
@@ -56,8 +52,8 @@ public class MediaController {
 
             final String original = Optional.ofNullable(file.getOriginalFilename()).orElse("upload.bin");
             final String safeName = original.replaceAll("[^A-Za-z0-9._-]", "_");
-            final String fileName  = UUID.randomUUID() + "-" + safeName;
-            final String rawPath   = "raw/" + fileName;
+            final String fileName = UUID.randomUUID() + "-" + safeName;
+            final String rawPath = "raw/" + fileName;
 
             // /tmp es el disco efímero de Heroku
             Path tmpDir = Paths.get(Optional.ofNullable(System.getProperty("java.io.tmpdir")).orElse("/tmp"));
@@ -77,8 +73,8 @@ public class MediaController {
             log.info("📤 Subido a Firebase RAW: {}", rawPath);
 
             // opcional: borrar temporal
-            try { 
-                Files.deleteIfExists(tmp); 
+            try {
+                Files.deleteIfExists(tmp);
             } catch (Exception e) {
                 log.warn("No se pudo eliminar archivo temporal {}: {}", tmp, e.getMessage());
             }
@@ -91,9 +87,8 @@ public class MediaController {
         } catch (Exception ex) {
             log.error("❌ Error subiendo archivo", ex);
             return ResponseEntity.status(500).body(Map.of(
-                "error", "Fallo subiendo archivo",
-                "detail", ex.getMessage()
-            ));
+                    "error", "Fallo subiendo archivo",
+                    "detail", ex.getMessage()));
         }
     }
 
@@ -118,7 +113,7 @@ public class MediaController {
         if (foundMain != null) {
             return buildSuccessResponse(foundMain, paths.thumbCandidates);
         }
-        
+
         return ResponseEntity.status(202).body(Map.of("status", "processing"));
     }
 
@@ -126,11 +121,10 @@ public class MediaController {
         String legacyPath = "media/compressed-" + filename;
         if (firebaseService.exists(legacyPath)) {
             return ResponseEntity.ok(Map.of(
-                "status", "ready",
-                "type", "legacy",
-                "url", firebaseService.getPublicUrl(legacyPath),
-                "thumbnails", List.of()
-            ));
+                    "status", "ready",
+                    "type", "legacy",
+                    "url", firebaseService.getPublicUrl(legacyPath),
+                    "thumbnails", List.of()));
         }
         return null;
     }
@@ -138,8 +132,8 @@ public class MediaController {
     private CandidatePaths buildCandidatePaths(String base, MediaKind kind) {
         final String IMG_DEST = "media/images";
         final String VID_DEST = "media/videos";
-        final int[] IMAGE_THUMBS = {320, 640};
-        final int[] VIDEO_THUMBS = {320, 640};
+        final int[] IMAGE_THUMBS = { 320, 640 };
+        final int[] VIDEO_THUMBS = { 320, 640 };
 
         List<String> mainCandidates = new ArrayList<>();
         List<String> thumbCandidates = new ArrayList<>();
@@ -160,7 +154,7 @@ public class MediaController {
             mainCandidates.add(VID_DEST + "/compressed-" + base + ".mp4");
             mainCandidates.add(IMG_DEST + "/compressed-" + base + ".jpg");
             mainCandidates.add(IMG_DEST + "/compressed-" + base + ".png");
-            for (int s : new int[]{320, 640}) {
+            for (int s : new int[] { 320, 640 }) {
                 thumbCandidates.add(VID_DEST + "/thumbnails/" + s + "/thumb-" + s + "-" + base + ".jpg");
                 thumbCandidates.add(IMG_DEST + "/thumbnails/" + s + "/thumb-" + s + "-" + base + ".jpg");
                 thumbCandidates.add(IMG_DEST + "/thumbnails/" + s + "/thumb-" + s + "-" + base + ".png");
@@ -184,30 +178,35 @@ public class MediaController {
                 .filter(firebaseService::exists)
                 .map(firebaseService::getPublicUrl)
                 .toList();
-        
+
         String type = foundMain.startsWith("media/videos") ? "video"
-                    : foundMain.startsWith("media/images") ? "image" : "unknown";
+                : foundMain.startsWith("media/images") ? "image" : "unknown";
 
         return ResponseEntity.ok(Map.of(
-            "status", "ready",
-            "type", type,
-            "url", firebaseService.getPublicUrl(foundMain),
-            "thumbnails", thumbs
-        ));
+                "status", "ready",
+                "type", type,
+                "url", firebaseService.getPublicUrl(foundMain),
+                "thumbnails", thumbs));
     }
 
-    private record CandidatePaths(List<String> mainCandidates, List<String> thumbCandidates) {}
+    private record CandidatePaths(List<String> mainCandidates, List<String> thumbCandidates) {
+    }
 
-    private enum MediaKind { VIDEO, IMAGE, UNKNOWN }
+    private enum MediaKind {
+        VIDEO, IMAGE, UNKNOWN
+    }
 
     private MediaKind detectKind(String filename) {
         String f = filename.toLowerCase();
-        if (f.endsWith(".mp4") || f.endsWith(".mov") || f.endsWith(".webm")) return MediaKind.VIDEO;
+        if (f.endsWith(".mp4") || f.endsWith(".mov") || f.endsWith(".webm"))
+            return MediaKind.VIDEO;
         if (f.endsWith(".jpg") || f.endsWith(".jpeg") || f.endsWith(".png")
-         || f.endsWith(".webp") || f.endsWith(".avif") || f.endsWith(".heic")
-         || f.endsWith(".heif") || f.endsWith(".gif")) return MediaKind.IMAGE;
+                || f.endsWith(".webp") || f.endsWith(".avif") || f.endsWith(".heic")
+                || f.endsWith(".heif") || f.endsWith(".gif"))
+            return MediaKind.IMAGE;
         return MediaKind.UNKNOWN;
     }
+
     private String stripExtension(String filename) {
         int i = filename.lastIndexOf('.');
         return (i > 0) ? filename.substring(0, i) : filename;
@@ -251,10 +250,11 @@ public class MediaController {
         }
         Path filePath = Paths.get("src/main/resources/static/medias/").resolve(mediaaux.get().src()).normalize();
         Resource resource = new UrlResource(filePath.toUri());
-        if (!resource.exists()) return ResponseEntity.notFound().build();
+        if (!resource.exists())
+            return ResponseEntity.notFound().build();
         return ResponseEntity.ok()
-            .contentType(MediaType.parseMediaType("application/octet-stream"))
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-            .body(resource);
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
     }
 }

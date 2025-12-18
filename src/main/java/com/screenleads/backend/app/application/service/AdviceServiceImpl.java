@@ -167,7 +167,7 @@ public class AdviceServiceImpl implements AdviceService {
         if (dto.getSchedules() != null) {
             for (AdviceScheduleDTO sDto : dto.getSchedules()) {
                 AdviceSchedule mappedSchedule = mapScheduleDTO(sDto, advice);
-                log.debug("[AdviceServiceImpl] Schedule mapeado: startDate={}, endDate={}", 
+                log.debug("[AdviceServiceImpl] Schedule mapeado: startDate={}, endDate={}",
                         mappedSchedule.getStartDate(), mappedSchedule.getEndDate());
                 if (mappedSchedule.getWindows() != null) {
                     for (AdviceTimeWindow win : mappedSchedule.getWindows()) {

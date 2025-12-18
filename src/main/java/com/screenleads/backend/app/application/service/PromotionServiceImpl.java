@@ -116,8 +116,8 @@ public class PromotionServiceImpl implements PromotionService {
             try {
                 billingService.reportLeadUsage(promo.getCompany(), 1L, java.time.Instant.now().getEpochSecond());
             } catch (Exception e) {
-                log.warn("Error reportando uso de lead a Stripe para company {}: {}", 
-                    promo.getCompany().getId(), e.getMessage());
+                log.warn("Error reportando uso de lead a Stripe para company {}: {}",
+                        promo.getCompany().getId(), e.getMessage());
             }
         }
 

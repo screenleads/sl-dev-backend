@@ -220,7 +220,8 @@ class DeviceServiceImplTest {
             // Arrange
             DeviceTypeDTO typeDTO = new DeviceTypeDTO(1L, "TABLET", true);
             CompanyRefDTO companyDTO = new CompanyRefDTO(100L, "Test Company");
-            DeviceDTO inputDTO = new DeviceDTO(null, "device-uuid-123", "Updated Device", 2560.0, 1440.0, typeDTO, companyDTO);
+            DeviceDTO inputDTO = new DeviceDTO(null, "device-uuid-123", "Updated Device", 2560.0, 1440.0, typeDTO,
+                    companyDTO);
 
             when(deviceRepository.findOptionalByUuid("device-uuid-123")).thenReturn(Optional.of(testDevice));
             when(deviceTypeRepository.findById(1L)).thenReturn(Optional.of(testDeviceType));
@@ -305,7 +306,8 @@ class DeviceServiceImplTest {
             // Arrange
             DeviceTypeDTO typeDTO = new DeviceTypeDTO(1L, "TABLET", true);
             CompanyRefDTO companyDTO = new CompanyRefDTO(100L, "Updated Company");
-            DeviceDTO updateDTO = new DeviceDTO(1L, "updated-uuid", "Updated Device", 2560.0, 1440.0, typeDTO, companyDTO);
+            DeviceDTO updateDTO = new DeviceDTO(1L, "updated-uuid", "Updated Device", 2560.0, 1440.0, typeDTO,
+                    companyDTO);
 
             when(deviceRepository.findById(1L)).thenReturn(Optional.of(testDevice));
             when(deviceTypeRepository.findById(1L)).thenReturn(Optional.of(testDeviceType));
@@ -429,7 +431,7 @@ class DeviceServiceImplTest {
             advice1.setId(1L);
             Advice advice2 = new Advice();
             advice2.setId(2L);
-            
+
             testDevice.getAdvices().add(advice1);
             testDevice.getAdvices().add(advice2);
 

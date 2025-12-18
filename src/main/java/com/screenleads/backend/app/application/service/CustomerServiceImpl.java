@@ -29,19 +29,21 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Customer create(Long companyId,
-                           LeadIdentifierType identifierType,
-                           String identifier,
-                           String firstName,
-                           String lastName) {
+            LeadIdentifierType identifierType,
+            String identifier,
+            String firstName,
+            String lastName) {
 
         Company company = companyRepository.findById(companyId)
-            .orElseThrow(() -> new IllegalArgumentException(COMPANY_NOT_FOUND + companyId));
+                .orElseThrow(() -> new IllegalArgumentException(COMPANY_NOT_FOUND + companyId));
 
         String normalized = IdentifierNormalizer.normalize(identifierType, identifier);
 
         // Enforce unicidad (company, type, identifier)
         customerRepository.findByCompanyIdAndIdentifierTypeAndIdentifier(companyId, identifierType, normalized)
-            .ifPresent(c -> { throw new IllegalStateException(CUSTOMER_ALREADY_EXISTS); });
+                .ifPresent(c -> {
+                    throw new IllegalStateException(CUSTOMER_ALREADY_EXISTS);
+                });
 
         Customer c = Customer.builder()
                 .company(company)
@@ -56,13 +58,13 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Customer update(Long id,
-                           LeadIdentifierType identifierType,
-                           String identifier,
-                           String firstName,
-                           String lastName) {
+            LeadIdentifierType identifierType,
+            String identifier,
+            String firstName,
+            String lastName) {
 
         Customer existing = customerRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException(CUSTOMER_NOT_FOUND + id));
+                .orElseThrow(() -> new IllegalArgumentException(CUSTOMER_NOT_FOUND + id));
 
         String normalized = IdentifierNormalizer.normalize(identifierType, identifier);
 
@@ -73,11 +75,11 @@ public class CustomerServiceImpl implements CustomerService {
         if (keyChanged) {
             customerRepository.findByCompanyIdAndIdentifierTypeAndIdentifier(
                     existing.getCompany().getId(), identifierType, normalized)
-                .ifPresent(other -> {
-                    if (!other.getId().equals(existing.getId())) {
-                        throw new IllegalStateException(IDENTIFIER_IN_USE);
-                    }
-                });
+                    .ifPresent(other -> {
+                        if (!other.getId().equals(existing.getId())) {
+                            throw new IllegalStateException(IDENTIFIER_IN_USE);
+                        }
+                    });
         }
 
         existing.setIdentifierType(identifierType);
@@ -92,14 +94,15 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional(readOnly = true)
     public Customer get(Long id) {
         return customerRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException(CUSTOMER_NOT_FOUND + id));
+                .orElseThrow(() -> new IllegalArgumentException(CUSTOMER_NOT_FOUND + id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Customer> list(Long companyId, String search) {
         if (companyId == null) {
-            // Por simplicidad devolvemos todo; si prefieres obligar companyId, lanza excepción
+            // Por simplicidad devolvemos todo; si prefieres obligar companyId, lanza
+            // excepción
             return customerRepository.findAll();
         }
         if (search == null || search.isBlank()) {
@@ -111,7 +114,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public void delete(Long id) {
         Customer existing = customerRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException(CUSTOMER_NOT_FOUND + id));
+                .orElseThrow(() -> new IllegalArgumentException(CUSTOMER_NOT_FOUND + id));
 
         // Si quieres proteger borrado cuando tiene leads, compruébalo aquí:
         // if (existing.getLeads() != null && !existing.getLeads().isEmpty()) { ... }

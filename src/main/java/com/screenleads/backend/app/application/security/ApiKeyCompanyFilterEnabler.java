@@ -35,17 +35,17 @@ public class ApiKeyCompanyFilterEnabler extends OncePerRequestFilter {
 
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            
+
             if (auth != null && auth.isAuthenticated()) {
                 // Verificar si es una autenticación de API_CLIENT
                 boolean isApiClient = auth.getAuthorities().stream()
-                    .anyMatch(a -> "API_CLIENT".equals(a.getAuthority()));
+                        .anyMatch(a -> "API_CLIENT".equals(a.getAuthority()));
 
                 if (isApiClient) {
                     Object principal = auth.getPrincipal();
-                    
+
                     if (principal instanceof ApiKeyPrincipal apiKeyPrincipal) {
-                        
+
                         // Si tiene alcance restringido a una compañía, habilitar el filtro
                         if (apiKeyPrincipal.hasRestrictedAccess()) {
                             Long companyId = apiKeyPrincipal.getCompanyScope();
@@ -59,7 +59,7 @@ public class ApiKeyCompanyFilterEnabler extends OncePerRequestFilter {
             }
 
             filterChain.doFilter(request, response);
-            
+
         } finally {
             // Limpiar filtros de Hibernate al terminar la petición
             disableCompanyFilter();

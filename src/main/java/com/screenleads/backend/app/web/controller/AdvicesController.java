@@ -45,17 +45,10 @@ public class AdvicesController {
      */
     @PreAuthorize("@perm.can('advice', 'read')")
     @GetMapping("/visibles")
-    @Operation(
-        summary = "Advices visibles ahora",
-        description = "Filtra por la zona horaria indicada por cabeceras X-Timezone o X-Timezone-Offset"
-    )
+    @Operation(summary = "Advices visibles ahora", description = "Filtra por la zona horaria indicada por cabeceras X-Timezone o X-Timezone-Offset")
     public ResponseEntity<List<AdviceDTO>> getVisibleAdvicesNow(
-            @RequestHeader(value = "X-Timezone", required = false)
-            @Parameter(description = "Zona horaria IANA, p.ej. Europe/Madrid")
-            String tz,
-            @RequestHeader(value = "X-Timezone-Offset", required = false)
-            @Parameter(description = "Minutos al ESTE de UTC, p.ej. 120")
-            String offsetMinutesStr) {
+            @RequestHeader(value = "X-Timezone", required = false) @Parameter(description = "Zona horaria IANA, p.ej. Europe/Madrid") String tz,
+            @RequestHeader(value = "X-Timezone-Offset", required = false) @Parameter(description = "Minutos al ESTE de UTC, p.ej. 120") String offsetMinutesStr) {
 
         ZoneId zone = resolveZoneId(tz, offsetMinutesStr);
         log.debug("Resolviendo visibles con zona: {}", zone);

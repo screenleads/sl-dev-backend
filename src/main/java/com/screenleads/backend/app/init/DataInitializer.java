@@ -46,10 +46,10 @@ import lombok.extern.slf4j.Slf4j;
 public class DataInitializer implements CommandLineRunner {
 
         record AppEntityConfig(
-                String resource, String entityName, String className, String tableName, String idType,
-                String endpointBase, Integer createLevel, Integer readLevel, Integer updateLevel, 
-                Integer deleteLevel, Boolean visibleInMenu, Long rowCount, String displayLabel, 
-                String icon, Integer sortOrder) {
+                        String resource, String entityName, String className, String tableName, String idType,
+                        String endpointBase, Integer createLevel, Integer readLevel, Integer updateLevel,
+                        Integer deleteLevel, Boolean visibleInMenu, Long rowCount, String displayLabel,
+                        String icon, Integer sortOrder) {
         }
 
         private final RoleRepository roleRepository;
@@ -179,7 +179,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // ========= SEED ENTIDADES (sólo esqueleto) =========
         private void seedAppEntitiesSkeleton() {
-                                // Eliminado: lógica de CompanyToken
+                // Eliminado: lógica de CompanyToken
                 // Para evitar choques, pasamos sortOrder deseado (o null) y dentro se normaliza
                 upsertAppEntity(new AppEntityConfig("company", "Company",
                                 "com.screenleads.backend.app.domain.model.Company", "company", "Long",
@@ -262,7 +262,7 @@ public class DataInitializer implements CommandLineRunner {
 
                 boolean changed = updateEntityFields(e, config);
                 Integer safeSortOrder = calculateSortOrder(config);
-                
+
                 if (!Objects.equals(safeSortOrder, e.getSortOrder())) {
                         e.setSortOrder(safeSortOrder);
                         changed = true;

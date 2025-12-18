@@ -18,8 +18,9 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
-    
+
     private static final long JWT_EXPIRATION_MS = 24 * 60 * 60 * 1000L; // 24 hours in milliseconds
+
     public SecretKey getSigningKey() {
         return signingKey;
     }
