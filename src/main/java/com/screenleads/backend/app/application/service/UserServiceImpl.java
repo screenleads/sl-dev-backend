@@ -106,15 +106,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public com.screenleads.backend.app.web.dto.UserCreationResponse create(UserDto dto) {
-        if (dto == null)
-            throw new IllegalArgumentException("Body requerido");
-        if (dto.getUsername() == null || dto.getUsername().isBlank())
-            throw new IllegalArgumentException("username requerido");
-
-        // Permisos para crear y jerarquía de nivel
+        validateCreateRequest(dto);
         assertCanCreateUser();
 
-        // Validar username antes de crear el usuario
         if (repo.findByUsername(dto.getUsername()).isPresent()) {
             throw new IllegalArgumentException("username ya existe");
         }
@@ -125,92 +119,10 @@ public class UserServiceImpl implements UserService {
         u.setName(dto.getName());
         u.setLastName(dto.getLastName());
 
-        // Password
-        String rawPassword = (dto.getPassword() != null && !dto.getPassword().isBlank())
-                ? dto.getPassword()
-                : generateTempPassword(12);
-        u.setPassword(passwordEncoder.encode(rawPassword));
-
-        // --- ASIGNAR COMPAÑÍA ---
-        Long companyIdToAssign;
-        if (dto.getCompanyId() != null) {
-            companyIdToAssign = dto.getCompanyId();
-        } else if (dto.getCompany() != null && dto.getCompany().id() != null) {
-            companyIdToAssign = dto.getCompany().id();
-        } else {
-            companyIdToAssign = null;
-        }
-
-        Company companyToSet = null;
-        if (companyIdToAssign != null) {
-            if (!isCurrentUserAdmin()) {
-                Long currentCompanyId = currentCompanyId();
-                if (currentCompanyId == null || !currentCompanyId.equals(companyIdToAssign)) {
-                    throw new IllegalArgumentException("No autorizado a asignar esa compañía");
-                }
-            }
-            companyToSet = companyRepo.findById(companyIdToAssign)
-                    .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + companyIdToAssign));
-        }
-        if (companyToSet != null) {
-            u.setCompany(companyToSet);
-        }
-
-        // --- ASIGNAR IMAGEN DE PERFIL ---
-        if (dto.getProfileImage() != null && dto.getProfileImage().src() != null) {
-            var mediaOpt = mediaRepository.findBySrc(dto.getProfileImage().src());
-            if (mediaOpt.isPresent()) {
-                u.setProfileImage(mediaOpt.get());
-            } else {
-                // Crear Media nueva
-                var mediaDto = dto.getProfileImage();
-                // Buscar o crear MediaType solo por id, type o extension
-                var typeDto = mediaDto.type();
-                MediaType type = null;
-                String src = mediaDto.src();
-                String extension = null;
-                if (src != null && src.contains(".")) {
-                    String extCandidate = src.substring(src.lastIndexOf('.') + 1).toLowerCase();
-                    int qIdx = extCandidate.indexOf('?');
-                    if (qIdx > 0) {
-                        extension = extCandidate.substring(0, qIdx);
-                    } else {
-                        extension = extCandidate;
-                    }
-                }
-                log.info("[MEDIA PROFILE] Extrayendo extensión de src: {} => {}", src, extension);
-                if (typeDto != null && typeDto.id() != null) {
-                    type = mediaTypeRepository.findById(typeDto.id()).orElse(null);
-                } else if (typeDto != null && typeDto.type() != null) {
-                    type = mediaTypeRepository.findByType(typeDto.type()).orElse(null);
-                } else if (extension != null) {
-                    type = mediaTypeRepository.findByExtension(extension).orElse(null);
-                }
-                if (type == null) {
-                    throw new IllegalArgumentException(
-                            "No se pudo determinar el tipo de media para la imagen de perfil"
-                                    + (extension != null ? " (extensión: " + extension + ")" : "")
-                                    + ". Asegúrate de que el MediaType existe.");
-                }
-                Media newMedia = Media.builder()
-                        .src(mediaDto.src())
-                        .type(type)
-                        .company(u.getCompany())
-                        .build();
-                u.setProfileImage(mediaRepository.save(newMedia));
-            }
-        }
-
-        // Rol ÚNICO desde el DTO
-        Role role = resolveRoleFromDto(dto);
-        if (role == null)
-            throw new IllegalArgumentException("Se requiere un rol");
-
-        // Verificación de jerarquía (nivel)
-        assertAssignableRole(role);
-
-        // Asignar como set (si la entidad User mantiene colección)
-        u.setRole(role);
+        String rawPassword = setPasswordForNewUser(dto, u);
+        assignCompanyToNewUser(dto, u);
+        assignProfileImageToNewUser(dto, u);
+        assignRoleToNewUser(dto, u);
 
         User saved = repo.save(u);
         return new com.screenleads.backend.app.web.dto.UserCreationResponse(
@@ -218,133 +130,214 @@ public class UserServiceImpl implements UserService {
                 (dto.getPassword() != null && !dto.getPassword().isBlank()) ? null : rawPassword);
     }
 
+    private void validateCreateRequest(UserDto dto) {
+        if (dto == null)
+            throw new IllegalArgumentException("Body requerido");
+        if (dto.getUsername() == null || dto.getUsername().isBlank())
+            throw new IllegalArgumentException("username requerido");
+    }
+
+    private String setPasswordForNewUser(UserDto dto, User u) {
+        String rawPassword = (dto.getPassword() != null && !dto.getPassword().isBlank())
+                ? dto.getPassword()
+                : generateTempPassword(12);
+        u.setPassword(passwordEncoder.encode(rawPassword));
+        return rawPassword;
+    }
+
+    private void assignCompanyToNewUser(UserDto dto, User u) {
+        Long companyId = extractCompanyId(dto);
+        if (companyId == null)
+            return;
+
+        validateCompanyAssignment(companyId);
+        Company company = companyRepo.findById(companyId)
+                .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + companyId));
+        u.setCompany(company);
+    }
+
+    private void assignProfileImageToNewUser(UserDto dto, User u) {
+        if (dto.getProfileImage() == null || dto.getProfileImage().src() == null)
+            return;
+
+        var mediaOpt = mediaRepository.findBySrc(dto.getProfileImage().src());
+        if (mediaOpt.isPresent()) {
+            u.setProfileImage(mediaOpt.get());
+        } else {
+            Media newMedia = createMediaFromDto(dto.getProfileImage(), u.getCompany(), dto);
+            u.setProfileImage(mediaRepository.save(newMedia));
+        }
+    }
+
+    private void assignRoleToNewUser(UserDto dto, User u) {
+        Role role = resolveRoleFromDto(dto);
+        if (role == null)
+            throw new IllegalArgumentException("Se requiere un rol");
+        assertAssignableRole(role);
+        u.setRole(role);
+    }
     @Override
     @Transactional
     public UserDto update(Long id, UserDto dto) {
         enableCompanyFilterIfNeeded();
 
         return repo.findById(id).map(existing -> {
-            if (dto.getUsername() != null)
-                existing.setUsername(dto.getUsername());
-            if (dto.getEmail() != null)
-                existing.setEmail(dto.getEmail());
-            if (dto.getName() != null)
-                existing.setName(dto.getName());
-            if (dto.getLastName() != null)
-                existing.setLastName(dto.getLastName());
-
-            if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
-                existing.setPassword(passwordEncoder.encode(dto.getPassword()));
-            }
-
-            // --- ACTUALIZAR COMPAÑÍA ---
-            Long finalCompanyId;
-            if (dto.getCompanyId() != null) {
-                finalCompanyId = dto.getCompanyId();
-            } else if (dto.getCompany() != null && dto.getCompany().id() != null) {
-                finalCompanyId = dto.getCompany().id();
-            } else {
-                finalCompanyId = null;
-            }
-            if (finalCompanyId != null) {
-                if (!isCurrentUserAdmin()) {
-                    Long currentCompanyId = currentCompanyId();
-                    if (currentCompanyId == null || !currentCompanyId.equals(finalCompanyId)) {
-                        throw new IllegalArgumentException("No autorizado a cambiar de compañía");
-                    }
-                }
-                Company c = companyRepo.findById(finalCompanyId)
-                        .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + finalCompanyId));
-                existing.setCompany(c);
-            }
-
-            // --- ACTUALIZAR IMAGEN DE PERFIL ---
-            if (dto.getProfileImage() != null && dto.getProfileImage().src() != null) {
-                var mediaOpt = mediaRepository.findBySrc(dto.getProfileImage().src());
-                if (mediaOpt.isPresent()) {
-                    existing.setProfileImage(mediaOpt.get());
-                } else {
-                    // Crear Media nueva
-                    var mediaDto = dto.getProfileImage();
-                    // Buscar o crear MediaType
-                    var typeDto = mediaDto.type();
-                    MediaType type = null;
-                    String src = mediaDto.src();
-                    final String extension;
-                    if (src != null && src.contains(".")) {
-                        extension = src.substring(src.lastIndexOf('.') + 1).toLowerCase();
-                    } else {
-                        extension = null;
-                    }
-
-                    if (typeDto != null) {
-                        if (typeDto.type() != null && !typeDto.type().isBlank()) {
-                            type = mediaTypeRepository.findByType(typeDto.type()).orElse(null);
-                        }
-                        // Si type es vacío o nulo, buscar por extensión
-                        if ((type == null || typeDto.type() == null || typeDto.type().isBlank())
-                                && typeDto.extension() != null && !typeDto.extension().isBlank()) {
-                            type = mediaTypeRepository.findByExtensionIgnoreCase(extension).orElse(null);
-                        }
-                    }
-                    // Si sigue sin encontrar, buscar por extensión deducida
-                    if (type == null && extension != null) {
-                        type = mediaTypeRepository.findByExtensionIgnoreCase(extension).orElse(null);
-                    }
-                    if (type == null) {
-                        // Log avanzado: mostrar todos los MediaType y la extensión buscada
-                        var allMediaTypes = mediaTypeRepository.findAll();
-                        log.error("[MEDIA PROFILE] No se encontró MediaType con extensión: {}. Payload src: {}",
-                                extension, src);
-                        log.error("[MEDIA PROFILE] MediaTypes en BD:");
-                        for (MediaType mt : allMediaTypes) {
-                            log.error("  - id: {}, type: {}, extension: '{}', enabled: {}", mt.getId(), mt.getType(),
-                                    mt.getExtension(), mt.getEnabled());
-                        }
-                        log.error("[MEDIA PROFILE] Valor de extensión buscada (TRIM, lower): '{}', original: '{}'",
-                                extension != null ? extension.trim().toLowerCase() : null, extension);
-                        throw new IllegalArgumentException(
-                                "No se pudo determinar el tipo de media para la imagen de perfil (extensión: "
-                                        + extension
-                                        + "). Asegúrate de que el MediaType existe y la extensión está bien escrita en la base de datos.");
-                    }
-                    // Buscar compañía
-                    Company company = existing.getCompany();
-                    if (company == null && dto.getCompanyId() != null) {
-                        company = companyRepo.findById(dto.getCompanyId()).orElse(null);
-                    }
-                    if (company == null && dto.getCompany() != null && dto.getCompany().id() != null) {
-                        company = companyRepo.findById(dto.getCompany().id()).orElse(null);
-                    }
-                    if (company == null) {
-                        throw new IllegalArgumentException("No se puede asociar media: compañía no encontrada");
-                    }
-                    var newMedia = Media.builder()
-                            .src(mediaDto.src())
-                            .type(type)
-                            .company(company)
-                            .build();
-                    existing.setProfileImage(mediaRepository.save(newMedia));
-                }
-            }
-
-            // Si llega un nombre de rol en el DTO, cambiarlo con mismas reglas
-            if (dto.getRole() != null) {
-                if (!perm.can("user", "update"))
-                    throw new IllegalArgumentException("No autorizado a actualizar usuarios");
-                Role newRole = resolveRoleFromDto(dto);
-                if (newRole == null)
-                    throw new IllegalArgumentException("Rol inválido");
-                assertAssignableRole(newRole);
-                existing.setRole(newRole);
-            }
+            updateBasicFields(dto, existing);
+            updateCompanyIfPresent(dto, existing);
+            updateProfileImageIfPresent(dto, existing);
+            updateRoleIfPresent(dto, existing);
 
             User saved = repo.save(existing);
             return UserMapper.toDto(saved);
         }).orElse(null);
     }
 
+    private void updateBasicFields(UserDto dto, User existing) {
+        if (dto.getUsername() != null)
+            existing.setUsername(dto.getUsername());
+        if (dto.getEmail() != null)
+            existing.setEmail(dto.getEmail());
+        if (dto.getName() != null)
+            existing.setName(dto.getName());
+        if (dto.getLastName() != null)
+            existing.setLastName(dto.getLastName());
+
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            existing.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+    }
+
+    private void updateCompanyIfPresent(UserDto dto, User existing) {
+        Long finalCompanyId = extractCompanyId(dto);
+        if (finalCompanyId == null)
+            return;
+
+        validateCompanyAssignment(finalCompanyId);
+        Company c = companyRepo.findById(finalCompanyId)
+                .orElseThrow(() -> new IllegalArgumentException("companyId inválido: " + finalCompanyId));
+        existing.setCompany(c);
+    }
+
+    private void updateProfileImageIfPresent(UserDto dto, User existing) {
+        if (dto.getProfileImage() == null || dto.getProfileImage().src() == null)
+            return;
+
+        var mediaOpt = mediaRepository.findBySrc(dto.getProfileImage().src());
+        if (mediaOpt.isPresent()) {
+            existing.setProfileImage(mediaOpt.get());
+        } else {
+            Media newMedia = createMediaFromDto(dto.getProfileImage(), existing.getCompany(), dto);
+            existing.setProfileImage(mediaRepository.save(newMedia));
+        }
+    }
+
+    private void updateRoleIfPresent(UserDto dto, User existing) {
+        if (dto.getRole() == null)
+            return;
+
+        if (!perm.can("user", "update"))
+            throw new IllegalArgumentException("No autorizado a actualizar usuarios");
+        Role newRole = resolveRoleFromDto(dto);
+        if (newRole == null)
+            throw new IllegalArgumentException("Rol inválido");
+        assertAssignableRole(newRole);
+        existing.setRole(newRole);
+    }
+
     // ---------------------------- HELPERS ----------------------------
+
+    private Long extractCompanyId(UserDto dto) {
+        if (dto.getCompanyId() != null) {
+            return dto.getCompanyId();
+        } else if (dto.getCompany() != null && dto.getCompany().id() != null) {
+            return dto.getCompany().id();
+        }
+        return null;
+    }
+
+    private void validateCompanyAssignment(Long companyId) {
+        if (isCurrentUserAdmin())
+            return;
+
+        Long currentCompanyId = currentCompanyId();
+        if (currentCompanyId == null || !currentCompanyId.equals(companyId)) {
+            throw new IllegalArgumentException("No autorizado a cambiar de compañía");
+        }
+    }
+
+    private Media createMediaFromDto(com.screenleads.backend.app.web.dto.MediaDto mediaDto, Company userCompany, UserDto dto) {
+        MediaType type = resolveMediaType(mediaDto);
+        Company company = resolveCompanyForMedia(userCompany, dto);
+        
+        return Media.builder()
+                .src(mediaDto.src())
+                .type(type)
+                .company(company)
+                .build();
+    }
+
+    private MediaType resolveMediaType(com.screenleads.backend.app.web.dto.MediaDto mediaDto) {
+        var typeDto = mediaDto.type();
+        String src = mediaDto.src();
+        String extension = extractExtension(src);
+
+        MediaType type = null;
+        if (typeDto != null) {
+            if (typeDto.type() != null && !typeDto.type().isBlank()) {
+                type = mediaTypeRepository.findByType(typeDto.type()).orElse(null);
+            }
+            if ((type == null || typeDto.type() == null || typeDto.type().isBlank())
+                    && typeDto.extension() != null && !typeDto.extension().isBlank()) {
+                type = mediaTypeRepository.findByExtensionIgnoreCase(extension).orElse(null);
+            }
+        }
+        if (type == null && extension != null) {
+            type = mediaTypeRepository.findByExtensionIgnoreCase(extension).orElse(null);
+        }
+
+        if (type == null) {
+            logMediaTypeError(extension, src);
+            throw new IllegalArgumentException(
+                    "No se pudo determinar el tipo de media para la imagen de perfil (extensión: "
+                            + extension + "). Asegúrate de que el MediaType existe.");
+        }
+        return type;
+    }
+
+    private String extractExtension(String src) {
+        if (src == null || !src.contains("."))
+            return null;
+
+        String extCandidate = src.substring(src.lastIndexOf('.') + 1).toLowerCase();
+        int qIdx = extCandidate.indexOf('?');
+        return qIdx > 0 ? extCandidate.substring(0, qIdx) : extCandidate;
+    }
+
+    private void logMediaTypeError(String extension, String src) {
+        var allMediaTypes = mediaTypeRepository.findAll();
+        log.error("[MEDIA PROFILE] No se encontró MediaType con extensión: {}. Payload src: {}", extension, src);
+        log.error("[MEDIA PROFILE] MediaTypes en BD:");
+        for (MediaType mt : allMediaTypes) {
+            log.error("  - id: {}, type: {}, extension: '{}', enabled: {}", 
+                    mt.getId(), mt.getType(), mt.getExtension(), mt.getEnabled());
+        }
+        log.error("[MEDIA PROFILE] Valor de extensión buscada (TRIM, lower): '{}', original: '{}'",
+                extension != null ? extension.trim().toLowerCase() : null, extension);
+    }
+
+    private Company resolveCompanyForMedia(Company userCompany, UserDto dto) {
+        Company company = userCompany;
+        if (company == null && dto.getCompanyId() != null) {
+            company = companyRepo.findById(dto.getCompanyId()).orElse(null);
+        }
+        if (company == null && dto.getCompany() != null && dto.getCompany().id() != null) {
+            company = companyRepo.findById(dto.getCompany().id()).orElse(null);
+        }
+        if (company == null) {
+            throw new IllegalArgumentException("No se puede asociar media: compañía no encontrada");
+        }
+        return company;
+    }
 
     private void enableCompanyFilterIfNeeded() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
