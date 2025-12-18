@@ -16,7 +16,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/coupons")
 @RequiredArgsConstructor
@@ -35,7 +37,7 @@ public class CouponController {
             PromotionLead lead = couponService.validate(code);
             return ResponseEntity.status(HttpStatus.OK).body(CouponValidationResponse.from(lead, true, null));
         } catch (Exception ex) {
-            // No filtramos tipos para simplificar: el mensaje explica la causa
+            log.warn("Error validando cupón {}: {}", code, ex.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new CouponValidationResponse(code, false, null, null, null, ex.getMessage()));
         }
     }

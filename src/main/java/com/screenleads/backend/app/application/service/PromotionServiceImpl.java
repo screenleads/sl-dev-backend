@@ -11,6 +11,7 @@ import com.screenleads.backend.app.web.dto.PromotionDTO;
 import com.screenleads.backend.app.web.dto.PromotionLeadDTO;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
@@ -24,6 +25,7 @@ import java.time.ZonedDateTime;
 import java.time.LocalDate;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -113,8 +115,8 @@ public class PromotionServiceImpl implements PromotionService {
             try {
                 billingService.reportLeadUsage(promo.getCompany(), 1L, java.time.Instant.now().getEpochSecond());
             } catch (Exception e) {
-                // Loguear el error, pero no interrumpir el registro del lead
-                e.printStackTrace();
+                log.warn("Error reportando uso de lead a Stripe para company {}: {}", 
+                    promo.getCompany().getId(), e.getMessage());
             }
         }
 

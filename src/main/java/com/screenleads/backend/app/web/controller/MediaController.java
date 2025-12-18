@@ -77,7 +77,11 @@ public class MediaController {
             log.info("📤 Subido a Firebase RAW: {}", rawPath);
 
             // opcional: borrar temporal
-            try { Files.deleteIfExists(tmp); } catch (Exception ignore) {}
+            try { 
+                Files.deleteIfExists(tmp); 
+            } catch (Exception e) {
+                log.warn("No se pudo eliminar archivo temporal {}: {}", tmp, e.getMessage());
+            }
 
             // 200 OK con filename (el front hace polling a /medias/status/{filename})
             return ResponseEntity.ok(Map.of("filename", fileName));

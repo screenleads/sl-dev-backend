@@ -113,7 +113,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (Exception ex) {
-            // Limpia por seguridad y deja que el chain gestione la respuesta
+            log.warn("Error procesando autenticación JWT: {}", ex.getMessage());
             SecurityContextHolder.clearContext();
             // No relanzamos RuntimeException para evitar 500: el EntryPoint/AccessDenied se
             // encargará

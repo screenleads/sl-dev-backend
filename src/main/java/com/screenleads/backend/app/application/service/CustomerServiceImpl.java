@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class CustomerServiceImpl implements CustomerService {
 
     private static final String CUSTOMER_NOT_FOUND = "Customer not found: ";
+    private static final String COMPANY_NOT_FOUND = "Company not found: ";
 
     private final CompanyRepository companyRepository;
     private final CustomerRepository customerRepository;
@@ -32,7 +33,7 @@ public class CustomerServiceImpl implements CustomerService {
                            String lastName) {
 
         Company company = companyRepository.findById(companyId)
-            .orElseThrow(() -> new IllegalArgumentException("Company not found: " + companyId));
+            .orElseThrow(() -> new IllegalArgumentException(COMPANY_NOT_FOUND + companyId));
 
         String normalized = IdentifierNormalizer.normalize(identifierType, identifier);
 
@@ -59,7 +60,7 @@ public class CustomerServiceImpl implements CustomerService {
                            String lastName) {
 
         Customer existing = customerRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + id));
+            .orElseThrow(() -> new IllegalArgumentException(CUSTOMER_NOT_FOUND + id));
 
         String normalized = IdentifierNormalizer.normalize(identifierType, identifier);
 
@@ -108,7 +109,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public void delete(Long id) {
         Customer existing = customerRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + id));
+            .orElseThrow(() -> new IllegalArgumentException(CUSTOMER_NOT_FOUND + id));
 
         // Si quieres proteger borrado cuando tiene leads, compruébalo aquí:
         // if (existing.getLeads() != null && !existing.getLeads().isEmpty()) { ... }

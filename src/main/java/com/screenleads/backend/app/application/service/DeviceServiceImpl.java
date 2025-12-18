@@ -27,6 +27,8 @@ import com.screenleads.backend.app.web.mapper.AdviceMapper;
 public class DeviceServiceImpl implements DeviceService {
 
     private static final String DEVICE_NOT_FOUND = "Device not found";
+    private static final String DEVICE_TYPE_NOT_FOUND = "Device type not found";
+    private static final String COMPANY_NOT_FOUND = "Company not found";
 
     private final DeviceRepository deviceRepository;
     private final DeviceTypeRepository deviceTypeRepository;
@@ -69,7 +71,7 @@ public class DeviceServiceImpl implements DeviceService {
     public DeviceDTO saveDevice(DeviceDTO dto) {
         // Upsert idempotente por UUID
         DeviceType type = deviceTypeRepository.findById(dto.type().id())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device type not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_TYPE_NOT_FOUND));
 
         Device device = deviceRepository.findOptionalByUuid(dto.uuid()).orElseGet(Device::new);
         Integer width = dto.width() != null ? dto.width().intValue() : null;
@@ -83,7 +85,7 @@ public class DeviceServiceImpl implements DeviceService {
 
         if (dto.company() != null && dto.company().id() != null) {
             Company company = companyRepository.findById(dto.company().id())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, COMPANY_NOT_FOUND));
             device.setCompany(company);
         } else {
             device.setCompany(null);
@@ -102,7 +104,7 @@ public class DeviceServiceImpl implements DeviceService {
         }
 
         DeviceType type = deviceTypeRepository.findById(deviceDTO.type().id())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device type not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_TYPE_NOT_FOUND));
 
         device.setUuid(deviceDTO.uuid());
         device.setDescriptionName(deviceDTO.descriptionName());
@@ -114,7 +116,7 @@ public class DeviceServiceImpl implements DeviceService {
 
         if (deviceDTO.company() != null && deviceDTO.company().id() != null) {
             Company company = companyRepository.findById(deviceDTO.company().id())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, COMPANY_NOT_FOUND));
             device.setCompany(company);
         } else {
             device.setCompany(null);

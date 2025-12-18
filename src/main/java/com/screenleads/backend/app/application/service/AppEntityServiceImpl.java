@@ -26,6 +26,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class AppEntityServiceImpl implements AppEntityService {
 
+    private static final String APP_ENTITY_NOT_FOUND = "AppEntity no encontrada: ";
+
     private final AppEntityRepository repo;
 
     @Nullable
@@ -63,7 +65,7 @@ public class AppEntityServiceImpl implements AppEntityService {
     @Override
     public AppEntityDTO findById(Long id, boolean withCount) {
         AppEntity e = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("AppEntity no encontrada: id=" + id));
+                .orElseThrow(() -> new IllegalArgumentException(APP_ENTITY_NOT_FOUND + "id=" + id));
         if (withCount) {
             e.setRowCount(countRowsSafe(e.getTableName()));
         }
@@ -73,7 +75,7 @@ public class AppEntityServiceImpl implements AppEntityService {
     @Override
     public AppEntityDTO findByResource(String resource, boolean withCount) {
         AppEntity e = repo.findByResource(resource)
-                .orElseThrow(() -> new IllegalArgumentException("AppEntity no encontrada: resource=" + resource));
+                .orElseThrow(() -> new IllegalArgumentException(APP_ENTITY_NOT_FOUND + "resource=" + resource));
         if (withCount) {
             e.setRowCount(countRowsSafe(e.getTableName()));
         }
@@ -209,7 +211,7 @@ public class AppEntityServiceImpl implements AppEntityService {
         }
 
         AppEntity entity = repo.findWithAttributesById(entityId)
-                .orElseThrow(() -> new IllegalArgumentException("AppEntity no encontrada: id=" + entityId));
+                .orElseThrow(() -> new IllegalArgumentException(APP_ENTITY_NOT_FOUND + "id=" + entityId));
 
         if (entity.getAttributes() == null || entity.getAttributes().isEmpty())
             return;

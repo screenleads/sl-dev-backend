@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthenticationService {
 
     private static final String USER_NOT_FOUND = "Usuario no encontrado";
+    private static final String USER_NOT_FOUND_MSG = "User not found";
 
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
@@ -67,7 +68,7 @@ public class AuthenticationService {
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG));
 
         String token = jwtService.generateToken(user);
         return JwtResponse.builder()
