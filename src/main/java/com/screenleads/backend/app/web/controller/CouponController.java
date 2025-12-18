@@ -35,10 +35,10 @@ public class CouponController {
     public ResponseEntity<CouponValidationResponse> validate(@PathVariable String code) {
         try {
             PromotionLead lead = couponService.validate(code);
-            return ResponseEntity.status(HttpStatus.OK).body(CouponValidationResponse.from(lead, true, null));
+            return ResponseEntity.ok(CouponValidationResponse.from(lead, true, null));
         } catch (Exception ex) {
             log.warn("Error validando cupón {}: {}", code, ex.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new CouponValidationResponse(code, false, null, null, null, ex.getMessage()));
+            return ResponseEntity.badRequest().body(new CouponValidationResponse(code, false, null, null, null, ex.getMessage()));
         }
     }
 

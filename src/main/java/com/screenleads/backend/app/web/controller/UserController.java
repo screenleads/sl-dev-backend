@@ -43,7 +43,7 @@ public class UserController {
     public ResponseEntity<?> create(@RequestBody UserDto dto) {
         try {
             com.screenleads.backend.app.web.dto.UserCreationResponse created = service.create(dto);
-            return ResponseEntity.status(HttpStatus.OK).body(created);
+            return ResponseEntity.ok(created);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         } catch (DataIntegrityViolationException ex) {
@@ -80,6 +80,6 @@ public class UserController {
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('user','delete')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return ResponseEntity.noContent().build();
     }
 }
