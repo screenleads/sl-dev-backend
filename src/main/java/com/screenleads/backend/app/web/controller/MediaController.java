@@ -102,15 +102,27 @@ public class MediaController {
     public ResponseEntity<Map<String, Object>> checkCompressionStatus(@PathVariable String filename) {
         log.info("📡 Comprobando estado de compresión: {}", filename);
 
-        final String IMG_DEST = "media/images";
-        final String VID_DEST = "media/videos";
-        final int[] IMAGE_THUMBS = {320, 640};
-        final int[] VIDEO_THUMBS = {320, 640};
-
         String base = stripExtension(filename);
         MediaKind kind = detectKind(filename);
 
         // 1) compatibilidad legacy
+        ResponseEntity<Map<String, Object>> legacyResponse = checkLegacyPath(filename);
+        if (legacyResponse != null) {
+            return legacyResponse;
+        }
+
+        // 2) rutas nuevas
+        CandidatePaths paths = buildCandidatePaths(base, kind);
+        String foundMain = findFirstExisting(paths.mainCandidates);
+
+        if (foundMain != null) {
+            return buildSuccessResponse(foundMain, paths.thumbCandidates);
+        }
+        
+        return ResponseEntity.status(202).body(Map.of("status", "processing"));
+    }
+
+    private ResponseEntity<Map<String, Object>> checkLegacyPath(String filename) {
         String legacyPath = "media/compressed-" + filename;
         if (firebaseService.exists(legacyPath)) {
             return ResponseEntity.ok(Map.of(
@@ -120,8 +132,15 @@ public class MediaController {
                 "thumbnails", List.of()
             ));
         }
+        return null;
+    }
 
-        // 2) rutas nuevas
+    private CandidatePaths buildCandidatePaths(String base, MediaKind kind) {
+        final String IMG_DEST = "media/images";
+        final String VID_DEST = "media/videos";
+        final int[] IMAGE_THUMBS = {320, 640};
+        final int[] VIDEO_THUMBS = {320, 640};
+
         List<String> mainCandidates = new ArrayList<>();
         List<String> thumbCandidates = new ArrayList<>();
 
@@ -148,28 +167,36 @@ public class MediaController {
             }
         }
 
-        String foundMain = null;
-        for (String cand : mainCandidates) {
-            if (firebaseService.exists(cand)) { foundMain = cand; break; }
-        }
-
-        if (foundMain != null) {
-            List<String> thumbs = thumbCandidates.stream()
-                    .filter(firebaseService::exists)
-                    .map(firebaseService::getPublicUrl)
-                    .toList();
-            String type = foundMain.startsWith(VID_DEST) ? "video"
-                        : foundMain.startsWith(IMG_DEST) ? "image" : "unknown";
-
-            return ResponseEntity.ok(Map.of(
-                "status", "ready",
-                "type", type,
-                "url", firebaseService.getPublicUrl(foundMain),
-                "thumbnails", thumbs
-            ));
-        }
-        return ResponseEntity.status(202).body(Map.of("status", "processing"));
+        return new CandidatePaths(mainCandidates, thumbCandidates);
     }
+
+    private String findFirstExisting(List<String> candidates) {
+        for (String cand : candidates) {
+            if (firebaseService.exists(cand)) {
+                return cand;
+            }
+        }
+        return null;
+    }
+
+    private ResponseEntity<Map<String, Object>> buildSuccessResponse(String foundMain, List<String> thumbCandidates) {
+        List<String> thumbs = thumbCandidates.stream()
+                .filter(firebaseService::exists)
+                .map(firebaseService::getPublicUrl)
+                .toList();
+        
+        String type = foundMain.startsWith("media/videos") ? "video"
+                    : foundMain.startsWith("media/images") ? "image" : "unknown";
+
+        return ResponseEntity.ok(Map.of(
+            "status", "ready",
+            "type", type,
+            "url", firebaseService.getPublicUrl(foundMain),
+            "thumbnails", thumbs
+        ));
+    }
+
+    private record CandidatePaths(List<String> mainCandidates, List<String> thumbCandidates) {}
 
     private enum MediaKind { VIDEO, IMAGE, UNKNOWN }
 
