@@ -83,7 +83,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     @Override
     public ApiKey updatePermissions(Long id, String permissions) {
         ApiKey key = apiKeyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("API Key no encontrada con id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(API_KEY_NOT_FOUND + id));
         key.setPermissions(permissions);
         return apiKeyRepository.save(key);
     }
@@ -91,7 +91,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     @Override
     public ApiKey updateDescription(Long id, String description) {
         ApiKey key = apiKeyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("API Key no encontrada con id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(API_KEY_NOT_FOUND + id));
         key.setDescription(description);
         return apiKeyRepository.save(key);
     }
@@ -99,7 +99,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     @Override
     public ApiKey updateCompanyScope(Long id, Long companyScope) {
         ApiKey key = apiKeyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("API Key no encontrada con id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(API_KEY_NOT_FOUND + id));
         key.setCompanyScope(companyScope);
         return apiKeyRepository.save(key);
     }

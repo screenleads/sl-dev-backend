@@ -89,7 +89,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional(readOnly = true)
     public Customer get(Long id) {
         return customerRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + id));
+            .orElseThrow(() -> new IllegalArgumentException(CUSTOMER_NOT_FOUND + id));
     }
 
     @Override

@@ -29,6 +29,8 @@ import java.util.*;
 @Transactional
 public class PromotionServiceImpl implements PromotionService {
 
+    private static final String PROMOTION_NOT_FOUND = "Promotion not found: ";
+
     private final PromotionRepository promotionRepository;
     private final PromotionLeadRepository promotionLeadRepository;
     private final ObjectMapper objectMapper; // Autoconfigurado por Spring Boot
@@ -51,7 +53,7 @@ public class PromotionServiceImpl implements PromotionService {
     @Transactional(readOnly = true)
     public PromotionDTO getPromotionById(Long id) {
         Promotion p = promotionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(PROMOTION_NOT_FOUND + id));
         return map(p, PromotionDTO.class);
     }
 
@@ -66,7 +68,7 @@ public class PromotionServiceImpl implements PromotionService {
     @Override
     public PromotionDTO updatePromotion(Long id, PromotionDTO dto) {
         Promotion existing = promotionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(PROMOTION_NOT_FOUND + id));
 
         // Creamos un "patch" a partir del DTO y fusionamos solo campos no nulos
         Promotion patch = map(dto, Promotion.class);
@@ -79,7 +81,7 @@ public class PromotionServiceImpl implements PromotionService {
     @Override
     public void deletePromotion(Long id) {
         if (!promotionRepository.existsById(id)) {
-            throw new IllegalArgumentException("Promotion not found: " + id);
+            throw new IllegalArgumentException(PROMOTION_NOT_FOUND + id);
         }
         promotionRepository.deleteById(id);
     }
@@ -91,7 +93,7 @@ public class PromotionServiceImpl implements PromotionService {
     @Override
     public PromotionLeadDTO registerLead(Long promotionId, PromotionLeadDTO dto) {
         Promotion promo = promotionRepository.findById(promotionId)
-                .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + promotionId));
+                .orElseThrow(() -> new IllegalArgumentException(PROMOTION_NOT_FOUND + promotionId));
 
         // Mapear DTO -> Entity temporalmente para leer campos como identifier sin usar
         // getters del DTO
@@ -199,7 +201,7 @@ public class PromotionServiceImpl implements PromotionService {
     @Override
     public PromotionLeadDTO createTestLead(Long promotionId, PromotionLeadDTO overrides) {
         Promotion promo = promotionRepository.findById(promotionId)
-                .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + promotionId));
+                .orElseThrow(() -> new IllegalArgumentException(PROMOTION_NOT_FOUND + promotionId));
 
         // Base "falsa" en Entity
         PromotionLead base = PromotionLead.builder()

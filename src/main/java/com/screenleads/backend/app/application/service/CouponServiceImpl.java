@@ -20,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 public class CouponServiceImpl implements CouponService {
 
     private static final String COUPON_NOT_FOUND = "Coupon not found";
+    private static final String PROMOTION_NOT_FOUND = "Promotion not found: ";
+    private static final String CUSTOMER_NOT_FOUND = "Customer not found: ";
 
     private final PromotionRepository promotionRepository;
     private final PromotionLeadRepository promotionLeadRepository;
@@ -28,10 +30,10 @@ public class CouponServiceImpl implements CouponService {
     @Override
     public PromotionLead issueCoupon(Long promotionId, Long customerId) {
         Promotion promotion = promotionRepository.findById(promotionId)
-            .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + promotionId));
+            .orElseThrow(() -> new IllegalArgumentException(PROMOTION_NOT_FOUND + promotionId));
 
         Customer customer = customerRepository.findById(customerId)
-            .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + customerId));
+            .orElseThrow(() -> new IllegalArgumentException(CUSTOMER_NOT_FOUND + customerId));
 
         // Chequeo de ventana temporal de la promo
         Instant now = Instant.now();
@@ -82,7 +84,7 @@ public class CouponServiceImpl implements CouponService {
     @Transactional(readOnly = true)
     public PromotionLead validate(String couponCode) {
         PromotionLead lead = promotionLeadRepository.findByCouponCode(couponCode)
-            .orElseThrow(() -> new IllegalArgumentException("Coupon not found"));
+            .orElseThrow(() -> new IllegalArgumentException(COUPON_NOT_FOUND));
 
         Instant now = Instant.now();
         Promotion p = lead.getPromotion();
@@ -111,7 +113,7 @@ public class CouponServiceImpl implements CouponService {
     @Override
     public PromotionLead redeem(String couponCode) {
         PromotionLead lead = promotionLeadRepository.findByCouponCode(couponCode)
-            .orElseThrow(() -> new IllegalArgumentException("Coupon not found"));
+            .orElseThrow(() -> new IllegalArgumentException(COUPON_NOT_FOUND));
 
         // Validaciones reutilizando validate() (pero con escritura)
         Promotion p = lead.getPromotion();
@@ -148,7 +150,7 @@ public class CouponServiceImpl implements CouponService {
     @Override
     public PromotionLead expire(String couponCode) {
         PromotionLead lead = promotionLeadRepository.findByCouponCode(couponCode)
-            .orElseThrow(() -> new IllegalArgumentException("Coupon not found"));
+            .orElseThrow(() -> new IllegalArgumentException(COUPON_NOT_FOUND));
 
         if (lead.getCouponStatus() == CouponStatus.REDEEMED) {
             throw new IllegalStateException("Cannot expire a redeemed coupon");

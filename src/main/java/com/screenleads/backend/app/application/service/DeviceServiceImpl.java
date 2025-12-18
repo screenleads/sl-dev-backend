@@ -26,6 +26,8 @@ import com.screenleads.backend.app.web.mapper.AdviceMapper;
 @Transactional
 public class DeviceServiceImpl implements DeviceService {
 
+    private static final String DEVICE_NOT_FOUND = "Device not found";
+
     private final DeviceRepository deviceRepository;
     private final DeviceTypeRepository deviceTypeRepository;
     private final CompanyRepository companyRepository;
@@ -93,7 +95,7 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public DeviceDTO updateDevice(Long id, DeviceDTO deviceDTO) {
         Device device = deviceRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_NOT_FOUND));
 
         if (deviceDTO.type() == null || deviceDTO.type().id() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Device type is required");
@@ -136,7 +138,7 @@ public class DeviceServiceImpl implements DeviceService {
     @Transactional(readOnly = true)
     public List<AdviceDTO> getAdvicesForDevice(Long deviceId) {
         Device device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_NOT_FOUND));
         return device.getAdvices().stream()
                 .sorted(Comparator.comparing(Advice::getId))
                 .map(AdviceMapper::toDTO)
@@ -146,7 +148,7 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public void assignAdviceToDevice(Long deviceId, Long adviceId) {
         Device device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_NOT_FOUND));
         Advice advice = adviceRepository.findById(adviceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Advice not found"));
         device.getAdvices().add(advice);
@@ -156,7 +158,7 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public void removeAdviceFromDevice(Long deviceId, Long adviceId) {
         Device device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_NOT_FOUND));
         Advice advice = adviceRepository.findById(adviceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Advice not found"));
         device.getAdvices().remove(advice);
