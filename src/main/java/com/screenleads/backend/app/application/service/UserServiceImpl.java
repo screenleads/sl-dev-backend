@@ -10,6 +10,8 @@ import com.screenleads.backend.app.domain.repositories.MediaRepository;
 import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
 import com.screenleads.backend.app.domain.model.MediaType;
 import com.screenleads.backend.app.domain.model.Media;
+import com.screenleads.backend.app.web.dto.MediaDto;
+import com.screenleads.backend.app.web.dto.MediaTypeDto;
 import com.screenleads.backend.app.web.dto.UserDto;
 import com.screenleads.backend.app.web.mapper.UserMapper;
 import jakarta.persistence.EntityManager;
@@ -176,6 +178,7 @@ public class UserServiceImpl implements UserService {
         assertAssignableRole(role);
         u.setRole(role);
     }
+
     @Override
     @Transactional
     public UserDto update(Long id, UserDto dto) {
@@ -265,10 +268,10 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private Media createMediaFromDto(com.screenleads.backend.app.web.dto.MediaDto mediaDto, Company userCompany, UserDto dto) {
+    private Media createMediaFromDto(MediaDto mediaDto, Company userCompany, UserDto dto) {
         MediaType type = resolveMediaType(mediaDto);
         Company company = resolveCompanyForMedia(userCompany, dto);
-        
+
         return Media.builder()
                 .src(mediaDto.src())
                 .type(type)
@@ -276,7 +279,7 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
-    private MediaType resolveMediaType(com.screenleads.backend.app.web.dto.MediaDto mediaDto) {
+    private MediaType resolveMediaType(MediaDto mediaDto) {
         var typeDto = mediaDto.type();
         String src = mediaDto.src();
         String extension = extractExtension(src);
@@ -294,7 +297,7 @@ public class UserServiceImpl implements UserService {
         return type;
     }
 
-    private Optional<MediaType> findMediaTypeByDto(com.screenleads.backend.app.web.dto.MediaTypeDto typeDto, String extension) {
+    private Optional<MediaType> findMediaTypeByDto(MediaTypeDto typeDto, String extension) {
         if (typeDto == null)
             return Optional.empty();
 
@@ -327,7 +330,7 @@ public class UserServiceImpl implements UserService {
         log.error("[MEDIA PROFILE] No se encontró MediaType con extensión: {}. Payload src: {}", extension, src);
         log.error("[MEDIA PROFILE] MediaTypes en BD:");
         for (MediaType mt : allMediaTypes) {
-            log.error("  - id: {}, type: {}, extension: '{}', enabled: {}", 
+            log.error("  - id: {}, type: {}, extension: '{}', enabled: {}",
                     mt.getId(), mt.getType(), mt.getExtension(), mt.getEnabled());
         }
         log.error("[MEDIA PROFILE] Valor de extensión buscada (TRIM, lower): '{}', original: '{}'",
@@ -341,9 +344,10 @@ public class UserServiceImpl implements UserService {
         Long companyId = extractCompanyId(dto);
         if (companyId != null) {
             return companyRepo.findById(companyId)
-                    .orElseThrow(() -> new IllegalArgumentException("No se puede asociar media: compañía no encontrada"));
+                    .orElseThrow(
+                            () -> new IllegalArgumentException("No se puede asociar media: compañía no encontrada"));
         }
-        
+
         throw new IllegalArgumentException("No se puede asociar media: compañía no encontrada");
     }
 
@@ -395,11 +399,11 @@ public class UserServiceImpl implements UserService {
                     .map(Company::getId)
                     .orElse(null);
         }
-        
+
         String username = extractUsername(principal);
         if (username == null)
             return null;
-            
+
         return repo.findByUsername(username)
                 .map(User::getCompany)
                 .map(Company::getId)
