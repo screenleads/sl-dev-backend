@@ -2,6 +2,8 @@ package com.screenleads.backend.app.application.service.util;
 
 import com.screenleads.backend.app.domain.model.LeadIdentifierType;
 
+import java.util.Locale;
+
 public final class IdentifierNormalizer {
 
     private IdentifierNormalizer() {}
@@ -11,7 +13,7 @@ public final class IdentifierNormalizer {
         String s = raw.trim();
         switch (type) {
             case EMAIL:
-                return s.toLowerCase();
+                return s.toLowerCase(Locale.ROOT);
             case PHONE:
                 // Normalización simple: quitar espacios/guiones, convertir 00xx a +xx
                 String p = s.replaceAll("[^+\\d]", "");

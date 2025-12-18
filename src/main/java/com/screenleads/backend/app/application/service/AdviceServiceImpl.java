@@ -440,7 +440,7 @@ public class AdviceServiceImpl implements AdviceService {
     private String extractExtension(String src) {
         int dotIdx = src.lastIndexOf('.');
         if (dotIdx > 0 && dotIdx < src.length() - 1) {
-            return src.substring(dotIdx + 1).toLowerCase();
+            return src.substring(dotIdx + 1).toLowerCase(Locale.ROOT);
         }
         return null;
     }

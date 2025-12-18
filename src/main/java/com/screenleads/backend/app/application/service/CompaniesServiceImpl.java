@@ -2,6 +2,7 @@ package com.screenleads.backend.app.application.service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.hibernate.Hibernate;
@@ -249,7 +250,7 @@ public class CompaniesServiceImpl implements CompaniesService {
     private void setMediaTypeFromSrc(Media media, String src) {
         if (src == null)
             return;
-        String lower = src.toLowerCase();
+        String lower = src.toLowerCase(Locale.ROOT);
         int dot = lower.lastIndexOf('.');
         if (dot != -1 && dot < lower.length() - 1) {
             String ext = lower.substring(dot + 1);

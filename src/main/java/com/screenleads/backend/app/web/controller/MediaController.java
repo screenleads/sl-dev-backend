@@ -203,7 +203,7 @@ public class MediaController {
     }
 
     private MediaKind detectKind(String filename) {
-        String f = filename.toLowerCase();
+        String f = filename.toLowerCase(Locale.ROOT);
         if (f.endsWith(".mp4") || f.endsWith(".mov") || f.endsWith(".webm"))
             return MediaKind.VIDEO;
         if (f.endsWith(".jpg") || f.endsWith(".jpeg") || f.endsWith(".png")

@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -316,7 +317,7 @@ public class UserServiceImpl implements UserService {
         if (src == null || !src.contains("."))
             return null;
 
-        String extCandidate = src.substring(src.lastIndexOf('.') + 1).toLowerCase();
+        String extCandidate = src.substring(src.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
         int qIdx = extCandidate.indexOf('?');
         return qIdx > 0 ? extCandidate.substring(0, qIdx) : extCandidate;
     }
@@ -330,7 +331,7 @@ public class UserServiceImpl implements UserService {
                     mt.getId(), mt.getType(), mt.getExtension(), mt.getEnabled());
         }
         log.error("[MEDIA PROFILE] Valor de extensión buscada (TRIM, lower): '{}', original: '{}'",
-                extension != null ? extension.trim().toLowerCase() : null, extension);
+                extension != null ? extension.trim().toLowerCase(Locale.ROOT) : null, extension);
     }
 
     private Company resolveCompanyForMedia(Company userCompany, UserDto dto) {
