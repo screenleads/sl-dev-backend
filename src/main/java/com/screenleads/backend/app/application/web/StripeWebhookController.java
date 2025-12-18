@@ -35,7 +35,7 @@ public class StripeWebhookController {
                         break;
                     // Obtener la suscripción y el item
                     String subId = session.getSubscription();
-                    var sub = stripe.subscriptions().v2().retrieve(subId);
+                    var sub = stripe.subscriptions().retrieve(subId);
                     var item = sub.getItems().getData().get(0);
 
                     // Vincular a la Company por customerId
