@@ -38,7 +38,9 @@ import com.screenleads.backend.app.web.dto.AdviceDTO;
 import com.screenleads.backend.app.web.dto.CompanyRefDTO;
 import com.screenleads.backend.app.web.dto.MediaUpsertDTO;
 import com.screenleads.backend.app.web.dto.AdviceScheduleDTO;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
@@ -100,7 +102,7 @@ public class DataInitializer implements CommandLineRunner {
                         try {
                                 Company company = companyRepository.findByName("ScreenLeads").orElse(null);
                                 if (company != null && adviceRepository.count() == 0) {
-                                        System.out.println("[MOCK] Creando anuncio de test por inicialización...");
+                                        log.info("[MOCK] Creando anuncio de test por inicialización...");
                                         String mediaSrc = "https://storage.googleapis.com/screenleads-e7e0b.firebasestorage.app/media/videos/compressed-e69233c4-260a-4b3c-8ba6-876c34989725-tv_desayunos_1.mp4";
                                         Long mediaId = mediaRepository.findBySrc(mediaSrc).map(m -> m.getId())
                                                         .orElse(null);
@@ -132,7 +134,7 @@ public class DataInitializer implements CommandLineRunner {
                                         adviceService.saveAdvice(mockDto);
                                 }
                         } catch (Exception e) {
-                                System.out.println("[MOCK] Error creando anuncio de test: " + e.getMessage());
+                                log.warn("[MOCK] Error creando anuncio de test: {}", e.getMessage());
                         }
                 }
         }
@@ -642,7 +644,7 @@ public class DataInitializer implements CommandLineRunner {
         private void createDefaultAdminUser(String username, String email, String rawPassword,
                         String name, String lastName, Role adminRole) {
                 if (userRepository.existsByUsername(username)) {
-                        System.out.println("ℹ️  Usuario admin ya existe: " + username);
+                        log.info("ℹ️  Usuario admin ya existe: {}", username);
                         return;
                 }
                 Company company = companyRepository.findByName("ScreenLeads")
@@ -659,6 +661,6 @@ public class DataInitializer implements CommandLineRunner {
                                 .build();
 
                 userRepository.save(user);
-                System.out.println("✅ Usuario admin creado: " + username + " / " + email);
+                log.info("✅ Usuario admin creado: {} / {}", username, email);
         }
 }

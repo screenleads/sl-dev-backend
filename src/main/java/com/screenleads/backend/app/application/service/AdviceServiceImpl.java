@@ -3,7 +3,6 @@ package com.screenleads.backend.app.application.service;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -22,7 +21,9 @@ import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
 import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
 import com.screenleads.backend.app.web.dto.*;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class AdviceServiceImpl implements AdviceService {
 
@@ -114,7 +115,7 @@ public class AdviceServiceImpl implements AdviceService {
     public AdviceDTO saveAdvice(AdviceDTO dto) {
         enableCompanyFilterIfNeeded();
 
-        System.out.println("[DEBUG] AdviceDTO recibido: " + dto);
+        log.debug("[AdviceServiceImpl] Recibido AdviceDTO: {}", dto);
 
         Advice advice = new Advice();
         advice.setDescription(dto.getDescription());
@@ -166,12 +167,12 @@ public class AdviceServiceImpl implements AdviceService {
         if (dto.getSchedules() != null) {
             for (AdviceScheduleDTO sDto : dto.getSchedules()) {
                 AdviceSchedule mappedSchedule = mapScheduleDTO(sDto, advice);
-                System.out.println("[DEBUG] AdviceSchedule mapeado: startDate=" + mappedSchedule.getStartDate()
-                        + ", endDate=" + mappedSchedule.getEndDate());
+                log.debug("[AdviceServiceImpl] Schedule mapeado: startDate={}, endDate={}", 
+                        mappedSchedule.getStartDate(), mappedSchedule.getEndDate());
                 if (mappedSchedule.getWindows() != null) {
                     for (AdviceTimeWindow win : mappedSchedule.getWindows()) {
-                        System.out.println("[DEBUG] AdviceTimeWindow mapeado: weekday=" + win.getWeekday() + ", from="
-                                + win.getFromTime() + ", to=" + win.getToTime());
+                        log.debug("[AdviceServiceImpl] Window mapeado: weekday={}, from={}, to={}",
+                                win.getWeekday(), win.getFromTime(), win.getToTime());
                     }
                 }
                 advice.getSchedules().add(mappedSchedule);
@@ -183,7 +184,7 @@ public class AdviceServiceImpl implements AdviceService {
         // Log de persistencia real de ventanas
         int totalWindows = saved.getSchedules() == null ? 0
                 : saved.getSchedules().stream().mapToInt(s -> s.getWindows() == null ? 0 : s.getWindows().size()).sum();
-        System.out.println("[DEBUG] Advice guardado. Total ventanas: " + totalWindows);
+        log.debug("[AdviceServiceImpl] Advice guardado con ID {}. Total ventanas: {}", saved.getId(), totalWindows);
         return convertToDTO(saved);
     }
 

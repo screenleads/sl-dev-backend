@@ -1,11 +1,13 @@
 package com.screenleads.backend.app.web.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.WebSocketService;
 import com.screenleads.backend.app.domain.model.ChatMessage;
 
+@Slf4j
 @RestController
 @RequestMapping("/ws") // 👈 Alineado con /ws/status
 @CrossOrigin(origins = "*") // ajusta orígenes si quieres
@@ -30,7 +32,7 @@ public class WsCommandController {
             message.setTimestamp(java.time.Instant.now());
         }
 
-        System.out.printf("[WsCommandController] POST command room=%s id=%s type=%s msg=%s%n",
+        log.debug("[WsCommandController] POST command room={} id={} type={} msg={}",
                 roomId, message.getId(), message.getType(), message.getMessage());
 
         service.notifyFrontend(message, roomId);
@@ -41,7 +43,7 @@ public class WsCommandController {
 
     @PostMapping("/test/{roomId}")
     public ResponseEntity<String> test(@PathVariable String roomId, @RequestBody ChatMessage message) {
-        System.out.println("[WsCommandController] test hit room=" + roomId);
+        log.debug("[WsCommandController] test hit room={}", roomId);
         return ResponseEntity.ok("200");
     }
 
@@ -49,7 +51,7 @@ public class WsCommandController {
     public ResponseEntity<String> sendMessageTest(
             @PathVariable String roomId,
             @RequestBody ChatMessage message) {
-        System.out.println("[WsCommandController] test-message room=" + roomId);
+        log.debug("[WsCommandController] test-message room={}", roomId);
         service.notifyFrontend(message, roomId);
         return ResponseEntity.ok("200");
     }
