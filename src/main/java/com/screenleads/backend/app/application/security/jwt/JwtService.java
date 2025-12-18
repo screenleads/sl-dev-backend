@@ -74,8 +74,14 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, String username) {
-        final String tokenUsername = extractUsername(token);
-        return (tokenUsername.equals(username)) && !isTokenExpired(token);
+        try {
+            final String tokenUsername = extractUsername(token);
+            return (tokenUsername.equals(username)) && !isTokenExpired(token);
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {

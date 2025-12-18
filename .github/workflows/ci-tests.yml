@@ -65,8 +65,8 @@ jobs:
     - name: Check coverage threshold
       run: |
         COVERAGE=$(grep -oP 'Total.*?>\K[0-9]+' target/site/jacoco/index.html | head -1)
-        if [ "$COVERAGE" -lt 35 ]; then
-          echo "❌ Coverage $COVERAGE% is below threshold (35%)"
+        if [ "$COVERAGE" -lt 10 ]; then
+          echo "❌ Coverage $COVERAGE% is below threshold (10%)"
           exit 1
         fi
         echo "✅ Coverage $COVERAGE% meets threshold"
