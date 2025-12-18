@@ -56,7 +56,11 @@ public class UserController {
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody UserDto dto) {
         try {
             UserDto updated = service.update(id, dto);
-            return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
+            if (updated != null) {
+                return ResponseEntity.ok(updated);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         } catch (DataIntegrityViolationException ex) {

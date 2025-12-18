@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class CouponServiceImpl implements CouponService {
 
+    private static final String COUPON_NOT_FOUND = "Coupon not found";
+
     private final PromotionRepository promotionRepository;
     private final PromotionLeadRepository promotionLeadRepository;
     private final CustomerRepository customerRepository;

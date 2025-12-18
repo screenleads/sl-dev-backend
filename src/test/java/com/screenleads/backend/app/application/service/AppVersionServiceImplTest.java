@@ -35,7 +35,6 @@ class AppVersionServiceImplTest {
     private AppVersionServiceImpl appVersionService;
 
     private AppVersion testAppVersion;
-    private AppVersionDTO testAppVersionDTO;
 
     @BeforeEach
     void setUp() {

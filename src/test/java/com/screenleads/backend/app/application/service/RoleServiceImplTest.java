@@ -37,7 +37,6 @@ class RoleServiceImplTest {
     private RoleServiceImpl roleService;
 
     private Role testRole;
-    private RoleDTO testRoleDTO;
 
     @BeforeEach
     void setUp() {

@@ -37,7 +37,6 @@ class DeviceTypeServiceImplTest {
     private DeviceTypeServiceImpl deviceTypeService;
 
     private DeviceType testDeviceType;
-    private DeviceTypeDTO testDeviceTypeDTO;
 
     @BeforeEach
     void setUp() {

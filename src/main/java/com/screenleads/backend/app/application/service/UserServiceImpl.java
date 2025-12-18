@@ -277,7 +277,6 @@ public class UserServiceImpl implements UserService {
                     } else {
                         extension = null;
                     }
-                    String detectedType = null;
                     if (extension != null) {
                         switch (extension) {
                             case "jpg":

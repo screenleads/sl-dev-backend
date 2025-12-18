@@ -43,7 +43,6 @@ class MediaServiceImplTest {
     private MediaServiceImpl mediaService;
 
     private Media testMedia;
-    private MediaDTO testMediaDTO;
     private MediaType testMediaType;
 
     @BeforeEach

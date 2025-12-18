@@ -29,18 +29,12 @@ public class CompaniesServiceImpl implements CompaniesService {
     private final MediaTypeRepository mediaTypeRepository;
     private final CompanyRepository companyRepository;
     private final MediaRepository mediaRepository;
-    private final AdviceRepository adviceRepository;
-    private final DeviceRepository deviceRepository;
 
     public CompaniesServiceImpl(CompanyRepository companyRepository,
             MediaRepository mediaRepository,
-            AdviceRepository adviceRepository,
-            DeviceRepository deviceRepository,
             MediaTypeRepository mediaTypeRepository) {
         this.companyRepository = companyRepository;
         this.mediaRepository = mediaRepository;
-        this.adviceRepository = adviceRepository;
-        this.deviceRepository = deviceRepository;
         this.mediaTypeRepository = mediaTypeRepository;
     }
 
@@ -263,20 +257,5 @@ public class CompaniesServiceImpl implements CompaniesService {
             String ext = lower.substring(dot + 1);
             mediaTypeRepository.findByExtension(ext).ifPresent(media::setType);
         }
-    }
-
-    private String deriveMediaName(String src, String prefix) {
-        if (src == null || src.isBlank())
-            return prefix + "-" + System.currentTimeMillis();
-        String base = src;
-        int q = base.indexOf('?');
-        if (q >= 0)
-            base = base.substring(0, q);
-        int slash = base.lastIndexOf('/');
-        if (slash >= 0 && slash < base.length() - 1)
-            base = base.substring(slash + 1);
-        if (base.isBlank())
-            base = prefix + "-" + System.currentTimeMillis();
-        return base;
     }
 }

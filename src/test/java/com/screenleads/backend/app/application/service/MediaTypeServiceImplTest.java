@@ -37,7 +37,6 @@ class MediaTypeServiceImplTest {
     private MediaTypeServiceImpl mediaTypeService;
 
     private MediaType testMediaType;
-    private MediaTypeDTO testMediaTypeDTO;
 
     @BeforeEach
     void setUp() {

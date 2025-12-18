@@ -85,11 +85,11 @@ public class AuthenticationService {
             User userPrincipal = (User) auth.getPrincipal();
             // Always reload from DB to ensure eager fetch
             u = userRepository.findWithCompanyAndProfileImageByUsername(userPrincipal.getUsername())
-                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+                    .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND));
         } else {
             String username = auth.getName();
             u = userRepository.findWithCompanyAndProfileImageByUsername(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+                    .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND));
         }
         return UserMapper.toDto(u);
     }
@@ -105,7 +105,7 @@ public class AuthenticationService {
         } else {
             String username = auth.getName();
             user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+                    .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND));
         }
         String token = jwtService.generateToken(user);
         return JwtResponse.builder()
@@ -117,7 +117,7 @@ public class AuthenticationService {
     public void changePassword(PasswordChangeRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new IllegalArgumentException("La contraseña actual no es correcta.");

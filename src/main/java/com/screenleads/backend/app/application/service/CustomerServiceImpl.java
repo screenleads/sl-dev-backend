@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class CustomerServiceImpl implements CustomerService {
 
+    private static final String CUSTOMER_NOT_FOUND = "Customer not found: ";
+
     private final CompanyRepository companyRepository;
     private final CustomerRepository customerRepository;
 

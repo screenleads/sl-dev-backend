@@ -14,6 +14,9 @@ import java.util.UUID;
 @Service
 @Transactional
 public class ApiKeyServiceImpl implements ApiKeyService {
+
+    private static final String API_KEY_NOT_FOUND = "API Key no encontrada con id: ";
+
     private final ApiKeyRepository apiKeyRepository;
     private final ClientRepository clientRepository;
 

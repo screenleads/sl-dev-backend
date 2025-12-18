@@ -16,10 +16,7 @@ import java.util.Map;
 @Controller
 public class CustomErrorController implements ErrorController {
 
-    private final ErrorAttributes errorAttributes;
-
     public CustomErrorController(ErrorAttributes errorAttributes) {
-        this.errorAttributes = errorAttributes;
     }
 
     @RequestMapping("/error")
