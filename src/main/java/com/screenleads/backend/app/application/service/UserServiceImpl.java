@@ -10,7 +10,8 @@ import com.screenleads.backend.app.domain.repositories.MediaRepository;
 import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
 import com.screenleads.backend.app.domain.model.MediaType;
 import com.screenleads.backend.app.domain.model.Media;
-import com.screenleads.backend.app.web.dto.MediaDTO;
+import com.screenleads.backend.app.web.dto.MediaSlimDTO;
+import com.screenleads.backend.app.web.dto.MediaTypeDTO;
 import com.screenleads.backend.app.web.dto.UserDto;
 import com.screenleads.backend.app.web.mapper.UserMapper;
 import jakarta.persistence.EntityManager;
@@ -267,7 +268,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private Media createMediaFromDto(MediaDTO mediaDto, Company userCompany, UserDto dto) {
+    private Media createMediaFromDto(MediaSlimDTO mediaDto, Company userCompany, UserDto dto) {
         MediaType type = resolveMediaType(mediaDto);
         Company company = resolveCompanyForMedia(userCompany, dto);
 
@@ -278,15 +279,22 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
-    private MediaType resolveMediaType(MediaDTO mediaDto) {
-        MediaType typeFromDto = mediaDto.type();
-        if (typeFromDto != null) {
-            return typeFromDto;
+    private MediaType resolveMediaType(MediaSlimDTO mediaDto) {
+        MediaTypeDTO typeDto = mediaDto.type();
+        
+        // Si viene con typeDto y tiene id, buscarlo
+        if (typeDto != null && typeDto.id() != null) {
+            return mediaTypeRepository.findById(typeDto.id()).orElse(null);
+        }
+        
+        // Si viene con type name, buscar por nombre
+        if (typeDto != null && typeDto.type() != null && !typeDto.type().isBlank()) {
+            return mediaTypeRepository.findByType(typeDto.type()).orElse(null);
         }
 
+        // Fallback: extraer extensión del src
         String src = mediaDto.src();
         String extension = extractExtension(src);
-        
         MediaType type = findMediaTypeByExtension(extension).orElse(null);
         
         if (type == null) {
