@@ -47,22 +47,6 @@ public class AuthController {
         return ResponseEntity.ok(authenticationService.getCurrentUser());
     }
 
-    // ====== VARIANTE A: refresh PÚBLICO (coincide con tu SecurityConfig permitAll)
-    // ======
-    // Quita @PreAuthorize y marca security = {} para que en Swagger no pida token.
-    // **Usa esta variante si /auth/refresh no requiere estar autenticado**
-    /*
-     * @PostMapping("/refresh")
-     * 
-     * @Operation(summary = "Refresh token", description =
-     * "Devuelve un nuevo access token", security = {})
-     * public ResponseEntity<JwtResponse> refreshToken() {
-     * return ResponseEntity.ok(authenticationService.refreshToken());
-     * }
-     */
-
-    // ====== VARIANTE B: refresh PROTEGIDO (si decides exigir autenticación) ======
-    // **Usa esta variante si /auth/refresh debe requerir token**
     @PreAuthorize("@authSecurityChecker.isAuthenticated()")
     @PostMapping("/refresh")
     @Operation(summary = "Refresh token (requiere token)")

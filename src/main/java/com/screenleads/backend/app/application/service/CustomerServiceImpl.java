@@ -116,9 +116,6 @@ public class CustomerServiceImpl implements CustomerService {
         Customer existing = customerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(CUSTOMER_NOT_FOUND + id));
 
-        // Si quieres proteger borrado cuando tiene leads, compruébalo aquí:
-        // if (existing.getLeads() != null && !existing.getLeads().isEmpty()) { ... }
-
         customerRepository.delete(existing);
     }
 }
