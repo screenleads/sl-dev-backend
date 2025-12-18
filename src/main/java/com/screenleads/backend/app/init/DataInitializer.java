@@ -45,6 +45,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
+        record AppEntityConfig(
+                String resource, String entityName, String className, String tableName, String idType,
+                String endpointBase, Integer createLevel, Integer readLevel, Integer updateLevel, 
+                Integer deleteLevel, Boolean visibleInMenu, Long rowCount, String displayLabel, 
+                String icon, Integer sortOrder) {
+        }
+
         private final RoleRepository roleRepository;
         private final MediaTypeRepository mediaTypeRepository;
         private final DeviceTypeRepository deviceTypeRepository;
@@ -174,160 +181,88 @@ public class DataInitializer implements CommandLineRunner {
         private void seedAppEntitiesSkeleton() {
                                 // Eliminado: lógica de CompanyToken
                 // Para evitar choques, pasamos sortOrder deseado (o null) y dentro se normaliza
-                upsertAppEntity("company", "Company",
+                upsertAppEntity(new AppEntityConfig("company", "Company",
                                 "com.screenleads.backend.app.domain.model.Company", "company", "Long",
                                 "/companies", 1, 1, 1, 1, true, null,
-                                "Companies", "building-2", 1);
+                                "Companies", "building-2", 1));
 
-                upsertAppEntity("device", "Device",
+                upsertAppEntity(new AppEntityConfig("device", "Device",
                                 "com.screenleads.backend.app.domain.model.Device", "device", "Long",
                                 "/devices", 4, 4, 3, 3, true, null,
-                                "Devices", "tv-2", 2);
+                                "Devices", "tv-2", 2));
 
-                upsertAppEntity("device_type", "DeviceType",
+                upsertAppEntity(new AppEntityConfig("device_type", "DeviceType",
                                 "com.screenleads.backend.app.domain.model.DeviceType", "device_type", "Long",
                                 "/devices/types", 1, 1, 1, 1, true, null,
-                                "Device Types", "devices_other", 3);
+                                "Device Types", "devices_other", 3));
 
-                upsertAppEntity("media", "Media",
+                upsertAppEntity(new AppEntityConfig("media", "Media",
                                 "com.screenleads.backend.app.domain.model.Media", "media", "Long",
-                                "/medias", 3, 4, 3, 3, true, null,
-                                "Media", "image", 4);
+                                "/medias", 3, 3, 3, 3, true, null,
+                                "Medias", "perm_media", 4));
 
-                upsertAppEntity("media_type", "MediaType",
+                upsertAppEntity(new AppEntityConfig("media_type", "MediaType",
                                 "com.screenleads.backend.app.domain.model.MediaType", "media_type", "Long",
                                 "/medias/types", 1, 1, 1, 1, true, null,
-                                "Media Types", "perm_media", 5);
+                                "Media Types", "perm_media", 5));
 
-                upsertAppEntity("advice", "Advice",
+                upsertAppEntity(new AppEntityConfig("advice", "Advice",
                                 "com.screenleads.backend.app.domain.model.Advice", "advice", "Long",
                                 "/advices", 3, 4, 3, 3, true, null,
-                                "Advices", "image_inset", 6);
+                                "Advices", "image_inset", 6));
 
-                upsertAppEntity("promotion", "Promotion",
+                upsertAppEntity(new AppEntityConfig("promotion", "Promotion",
                                 "com.screenleads.backend.app.domain.model.Promotion", "promotion", "Long",
                                 "/promotions", 3, 4, 3, 3, true, null,
-                                "Promotions", "campaign", 7);
+                                "Promotions", "campaign", 7));
 
-                upsertAppEntity("customer", "Customer",
+                upsertAppEntity(new AppEntityConfig("customer", "Customer",
                                 "com.screenleads.backend.app.domain.model.Customer", "customer", "Long",
                                 "/customers", 2, 2, 2, 2, true, null,
-                                "Customers", "man_4", 8);
+                                "Customers", "man_4", 8));
 
-                upsertAppEntity("user", "User",
+                upsertAppEntity(new AppEntityConfig("user", "User",
                                 "com.screenleads.backend.app.domain.model.User", "app_user", "Long",
                                 "/users", 2, 3, 2, 2, true, null,
-                                "Users", "account_circle", 9);
+                                "Users", "account_circle", 9));
 
-                upsertAppEntity("role", "Role",
+                upsertAppEntity(new AppEntityConfig("role", "Role",
                                 "com.screenleads.backend.app.domain.model.Role", "role", "Long",
                                 "/roles", 1, 1, 1, 1, true, null,
-                                "Roles", "shield", 10);
+                                "Roles", "shield", 10));
 
-                upsertAppEntity("app_version", "AppVersion",
+                upsertAppEntity(new AppEntityConfig("app_version", "AppVersion",
                                 "com.screenleads.backend.app.domain.model.AppVersion", "app_version", "Long",
                                 "/app-versions", 1, 1, 1, 1, true, null,
-                                "App Versions", "download-cloud", 11);
+                                "App Versions", "download-cloud", 11));
 
-                upsertAppEntity("api_key", "ApiKey",
+                upsertAppEntity(new AppEntityConfig("api_key", "ApiKey",
                                 "com.screenleads.backend.app.domain.model.ApiKey", "api_key", "Long",
                                 "/api-keys", 1, 3, 2, 2, true, null,
-                                "API Keys", "vpn_key", 13);
+                                "API Keys", "vpn_key", 13));
 
                 // AppEntity (metamodelo) visible en el menú -> sortOrder único (pasa null o
                 // repetido, se corrige)
-                upsertAppEntity("app_entity", "AppEntity",
+                upsertAppEntity(new AppEntityConfig("app_entity", "AppEntity",
                                 "com.screenleads.backend.app.domain.model.AppEntity", "app_entity", "Long",
                                 "/entities", 1, 4, 3, 3, true, null,
-                                "App Entities", "apps", null); // null => siguiente libre
+                                "App Entities", "apps", null)); // null => siguiente libre
 
                 // AppEntityAttribute (metamodelo) visible en el menú -> sortOrder único
-                upsertAppEntity("app_entity_attribute", "AppEntityAttribute",
+                upsertAppEntity(new AppEntityConfig("app_entity_attribute", "AppEntityAttribute",
                                 "com.screenleads.backend.app.domain.model.AppEntityAttribute", "app_entity_attribute",
                                 "Long",
                                 "/app-entity-attributes", 1, 4, 3, 3, true, null,
-                                "App Entity Attributes", "list", null); // null => siguiente libre
+                                "App Entity Attributes", "list", null)); // null => siguiente libre
         }
 
-        private void upsertAppEntity(
-                        String resource, String entityName,
-                        String className, String tableName, String idType,
-                        String endpointBase,
-                        Integer createLevel, Integer readLevel,
-                        Integer updateLevel, Integer deleteLevel, Boolean visibleInMenu,
-                        Long rowCount,
-                        String displayLabel, String icon, Integer sortOrder) {
+        private void upsertAppEntity(AppEntityConfig config) {
+                Optional<AppEntity> opt = appEntityRepository.findByResource(config.resource());
+                AppEntity e = opt.orElseGet(() -> AppEntity.builder().resource(config.resource()).build());
 
-                Optional<AppEntity> opt = appEntityRepository.findByResource(resource);
-                AppEntity e = opt.orElseGet(() -> AppEntity.builder().resource(resource).build());
-
-                boolean changed = false;
-
-                if (!Objects.equals(entityName, e.getEntityName())) {
-                        e.setEntityName(entityName);
-                        changed = true;
-                }
-                if (!Objects.equals(className, e.getClassName())) {
-                        e.setClassName(className);
-                        changed = true;
-                }
-                if (!Objects.equals(tableName, e.getTableName())) {
-                        e.setTableName(tableName);
-                        changed = true;
-                }
-                if (!Objects.equals(idType, e.getIdType())) {
-                        e.setIdType(idType);
-                        changed = true;
-                }
-                if (!Objects.equals(endpointBase, e.getEndpointBase())) {
-                        e.setEndpointBase(endpointBase);
-                        changed = true;
-                }
-
-                if (!Objects.equals(createLevel, e.getCreateLevel())) {
-                        e.setCreateLevel(createLevel);
-                        changed = true;
-                }
-                if (!Objects.equals(readLevel, e.getReadLevel())) {
-                        e.setReadLevel(readLevel);
-                        changed = true;
-                }
-                if (!Objects.equals(updateLevel, e.getUpdateLevel())) {
-                        e.setUpdateLevel(updateLevel);
-                        changed = true;
-                }
-                if (!Objects.equals(deleteLevel, e.getDeleteLevel())) {
-                        e.setDeleteLevel(deleteLevel);
-                        changed = true;
-                }
-                if (!Objects.equals(visibleInMenu, e.getVisibleInMenu())) {
-                        e.setVisibleInMenu(visibleInMenu);
-                        changed = true;
-                }
-
-                if (!Objects.equals(rowCount, e.getRowCount())) {
-                        e.setRowCount(rowCount);
-                        changed = true;
-                }
-                if (!Objects.equals(displayLabel, e.getDisplayLabel())) {
-                        e.setDisplayLabel(displayLabel);
-                        changed = true;
-                }
-                if (!Objects.equals(icon, e.getIcon())) {
-                        e.setIcon(icon);
-                        changed = true;
-                }
-
-                // sortOrder seguro: si es visible en menú, garantizamos unicidad; si viene null
-                // -> siguiente libre.
-                Integer safeSortOrder;
-                if (Boolean.TRUE.equals(visibleInMenu)) {
-                        safeSortOrder = ensureUniqueSortOrder(sortOrder, resource);
-                } else {
-                        // Para no chocar si más tarde se hace visible, colocamos al final si viene
-                        // null.
-                        safeSortOrder = (sortOrder != null) ? sortOrder : computeMaxSortOrder() + 1;
-                }
+                boolean changed = updateEntityFields(e, config);
+                Integer safeSortOrder = calculateSortOrder(config);
+                
                 if (!Objects.equals(safeSortOrder, e.getSortOrder())) {
                         e.setSortOrder(safeSortOrder);
                         changed = true;
@@ -335,6 +270,42 @@ public class DataInitializer implements CommandLineRunner {
 
                 if (opt.isEmpty() || changed) {
                         appEntityRepository.save(e);
+                }
+        }
+
+        private boolean updateEntityFields(AppEntity e, AppEntityConfig config) {
+                boolean changed = false;
+
+                changed |= updateField(e.getEntityName(), config.entityName(), e::setEntityName);
+                changed |= updateField(e.getClassName(), config.className(), e::setClassName);
+                changed |= updateField(e.getTableName(), config.tableName(), e::setTableName);
+                changed |= updateField(e.getIdType(), config.idType(), e::setIdType);
+                changed |= updateField(e.getEndpointBase(), config.endpointBase(), e::setEndpointBase);
+                changed |= updateField(e.getCreateLevel(), config.createLevel(), e::setCreateLevel);
+                changed |= updateField(e.getReadLevel(), config.readLevel(), e::setReadLevel);
+                changed |= updateField(e.getUpdateLevel(), config.updateLevel(), e::setUpdateLevel);
+                changed |= updateField(e.getDeleteLevel(), config.deleteLevel(), e::setDeleteLevel);
+                changed |= updateField(e.getVisibleInMenu(), config.visibleInMenu(), e::setVisibleInMenu);
+                changed |= updateField(e.getRowCount(), config.rowCount(), e::setRowCount);
+                changed |= updateField(e.getDisplayLabel(), config.displayLabel(), e::setDisplayLabel);
+                changed |= updateField(e.getIcon(), config.icon(), e::setIcon);
+
+                return changed;
+        }
+
+        private <T> boolean updateField(T current, T newValue, java.util.function.Consumer<T> setter) {
+                if (!Objects.equals(current, newValue)) {
+                        setter.accept(newValue);
+                        return true;
+                }
+                return false;
+        }
+
+        private Integer calculateSortOrder(AppEntityConfig config) {
+                if (Boolean.TRUE.equals(config.visibleInMenu())) {
+                        return ensureUniqueSortOrder(config.sortOrder(), config.resource());
+                } else {
+                        return (config.sortOrder() != null) ? config.sortOrder() : computeMaxSortOrder() + 1;
                 }
         }
 
