@@ -5,8 +5,6 @@ import com.screenleads.backend.app.domain.repositories.ClientRepository;
 import com.screenleads.backend.app.application.service.ApiKeyService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/clients")

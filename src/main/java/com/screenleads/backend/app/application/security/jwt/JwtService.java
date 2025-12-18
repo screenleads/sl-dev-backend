@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import com.screenleads.backend.app.domain.model.User;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -74,8 +73,14 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, String username) {
-        final String tokenUsername = extractUsername(token);
-        return (tokenUsername.equals(username)) && !isTokenExpired(token);
+        try {
+            final String tokenUsername = extractUsername(token);
+            return (tokenUsername.equals(username)) && !isTokenExpired(token);
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {

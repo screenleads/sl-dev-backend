@@ -2,8 +2,6 @@ package com.screenleads.backend.app.web.dto;
 
 import java.util.List;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.jackson.Jacksonized;
 
 @Jacksonized

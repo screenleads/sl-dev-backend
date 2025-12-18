@@ -1,9 +1,7 @@
 // ...eliminado método fuera de clase...
 package com.screenleads.backend.app.application.service;
 
-import com.screenleads.backend.app.domain.repositories.UserRepository;
 import com.screenleads.backend.app.domain.model.User;
-
 import com.screenleads.backend.app.domain.model.CompanyToken;
 import com.screenleads.backend.app.web.dto.CompanyTokenDTO;
 import com.screenleads.backend.app.domain.repositories.CompanyTokenRepository;

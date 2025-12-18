@@ -14,6 +14,7 @@ columnNames = {"platform", "version"}
 indexes = @Index(name = "ix_appversion_platform", columnList = "platform")
 )
 @Data
+@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

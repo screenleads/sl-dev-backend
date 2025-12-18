@@ -1,6 +1,5 @@
 package com.screenleads.backend.app.application.service;
 
-import com.screenleads.backend.app.domain.model.Role;
 import com.screenleads.backend.app.web.dto.RoleDTO;
 
 import java.util.List;
