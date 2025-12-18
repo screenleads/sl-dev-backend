@@ -240,7 +240,7 @@ public final class AdviceMapper {
                     return n.longValue();
                 if (v != null && v.getClass() == Long.class)
                     return (Long) v;
-            } catch (NoSuchMethodException | Exception ignored) {
+            } catch (Exception ignored) {
                 // Reflection fallback - method may not exist or be inaccessible
             }
         }
@@ -254,7 +254,7 @@ public final class AdviceMapper {
                 Object v = m.invoke(obj);
                 if (v instanceof String s)
                     return s;
-            } catch (NoSuchMethodException | Exception ignored) {
+            } catch (Exception ignored) {
                 // Reflection fallback - method may not exist or be inaccessible
             }
         }

@@ -19,6 +19,13 @@ import java.util.Map;
 @RequestMapping("/api/test-permissions")
 public class ApiKeyPermissionTestController {
 
+    private static final String COMPANY_SCOPE = "company_scope";
+    private static final String HAS_GLOBAL_ACCESS = "has_global_access";
+    private static final String SNAPSHOT = "snapshot";
+    private static final String ACTION = "action";
+    private static final String SUCCESS = "success";
+    private static final String MESSAGE = "message";
+
     private final ApiKeyPermissionService apiKeyPermissionService;
 
     public ApiKeyPermissionTestController(ApiKeyPermissionService apiKeyPermissionService) {
@@ -46,16 +53,16 @@ public class ApiKeyPermissionTestController {
         if (auth.getPrincipal() instanceof ApiKeyPrincipal principal) {
             info.put("client_id", principal.getClientId());
             info.put("permissions", principal.getPermissions());
-            info.put("company_scope", principal.getCompanyScope());
-            info.put("has_global_access", principal.hasGlobalAccess());
+            info.put(COMPANY_SCOPE, principal.getCompanyScope());
+            info.put(HAS_GLOBAL_ACCESS, principal.hasGlobalAccess());
             info.put("has_restricted_access", principal.hasRestrictedAccess());
 
             // Ejemplos de verificación de permisos
             Map<String, Boolean> permissionChecks = new HashMap<>();
-            permissionChecks.put("snapshot:read", principal.hasPermission("snapshot", "read"));
-            permissionChecks.put("snapshot:create", principal.hasPermission("snapshot", "create"));
-            permissionChecks.put("snapshot:update", principal.hasPermission("snapshot", "update"));
-            permissionChecks.put("snapshot:delete", principal.hasPermission("snapshot", "delete"));
+            permissionChecks.put("snapshot:read", principal.hasPermission(SNAPSHOT, "read"));
+            permissionChecks.put("snapshot:create", principal.hasPermission(SNAPSHOT, "create"));
+            permissionChecks.put("snapshot:update", principal.hasPermission(SNAPSHOT, "update"));
+            permissionChecks.put("snapshot:delete", principal.hasPermission(SNAPSHOT, "delete"));
             permissionChecks.put("lead:read", principal.hasPermission("lead", "read"));
             permissionChecks.put("lead:create", principal.hasPermission("lead", "create"));
 
@@ -72,10 +79,10 @@ public class ApiKeyPermissionTestController {
     @GetMapping("/snapshot/read")
     public Map<String, Object> testSnapshotRead() {
         Map<String, Object> result = new HashMap<>();
-        result.put("action", "snapshot:read");
-        result.put("success", true);
-        result.put("message", "You have permission to read snapshots");
-        result.put("company_scope", apiKeyPermissionService.getCompanyScope());
+        result.put(ACTION, "snapshot:read");
+        result.put(SUCCESS, true);
+        result.put(MESSAGE, "You have permission to read snapshots");
+        result.put(COMPANY_SCOPE, apiKeyPermissionService.getCompanyScope());
         return result;
     }
 
@@ -86,10 +93,10 @@ public class ApiKeyPermissionTestController {
     @PostMapping("/snapshot/create")
     public Map<String, Object> testSnapshotCreate() {
         Map<String, Object> result = new HashMap<>();
-        result.put("action", "snapshot:create");
-        result.put("success", true);
-        result.put("message", "You have permission to create snapshots");
-        result.put("company_scope", apiKeyPermissionService.getCompanyScope());
+        result.put(ACTION, "snapshot:create");
+        result.put(SUCCESS, true);
+        result.put(MESSAGE, "You have permission to create snapshots");
+        result.put(COMPANY_SCOPE, apiKeyPermissionService.getCompanyScope());
         return result;
     }
 
@@ -100,10 +107,10 @@ public class ApiKeyPermissionTestController {
     @PutMapping("/lead/update")
     public Map<String, Object> testLeadUpdate() {
         Map<String, Object> result = new HashMap<>();
-        result.put("action", "lead:update");
-        result.put("success", true);
-        result.put("message", "You have permission to update leads");
-        result.put("company_scope", apiKeyPermissionService.getCompanyScope());
+        result.put(ACTION, "lead:update");
+        result.put(SUCCESS, true);
+        result.put(MESSAGE, "You have permission to update leads");
+        result.put(COMPANY_SCOPE, apiKeyPermissionService.getCompanyScope());
         return result;
     }
 
@@ -114,10 +121,10 @@ public class ApiKeyPermissionTestController {
     @DeleteMapping("/lead/delete")
     public Map<String, Object> testLeadDelete() {
         Map<String, Object> result = new HashMap<>();
-        result.put("action", "lead:delete");
-        result.put("success", true);
-        result.put("message", "You have permission to delete leads");
-        result.put("company_scope", apiKeyPermissionService.getCompanyScope());
+        result.put(ACTION, "lead:delete");
+        result.put(SUCCESS, true);
+        result.put(MESSAGE, "You have permission to delete leads");
+        result.put(COMPANY_SCOPE, apiKeyPermissionService.getCompanyScope());
         return result;
     }
 
@@ -129,14 +136,14 @@ public class ApiKeyPermissionTestController {
         Map<String, Object> result = new HashMap<>();
 
         if (!apiKeyPermissionService.hasGlobalAccess()) {
-            result.put("success", false);
-            result.put("message", "This endpoint requires global access");
+            result.put(SUCCESS, false);
+            result.put(MESSAGE, "This endpoint requires global access");
             result.put("your_scope", apiKeyPermissionService.getCompanyScope());
             return result;
         }
 
-        result.put("success", true);
-        result.put("message", "You have global access");
+        result.put(SUCCESS, true);
+        result.put(MESSAGE, "You have global access");
         return result;
     }
 
@@ -148,15 +155,15 @@ public class ApiKeyPermissionTestController {
         Map<String, Object> result = new HashMap<>();
         result.put("company_id_requested", companyId);
         result.put("your_company_scope", apiKeyPermissionService.getCompanyScope());
-        result.put("has_global_access", apiKeyPermissionService.hasGlobalAccess());
+        result.put(HAS_GLOBAL_ACCESS, apiKeyPermissionService.hasGlobalAccess());
 
         boolean canAccess = apiKeyPermissionService.canAccessCompany(companyId);
         result.put("can_access", canAccess);
 
         if (canAccess) {
-            result.put("message", "You can access data from company " + companyId);
+            result.put(MESSAGE, "You can access data from company " + companyId);
         } else {
-            result.put("message", "You cannot access data from company " + companyId);
+            result.put(MESSAGE, "You cannot access data from company " + companyId);
         }
 
         return result;
@@ -172,10 +179,10 @@ public class ApiKeyPermissionTestController {
 
         Map<String, Object> result = new HashMap<>();
         result.put("resource", resource);
-        result.put("action", action);
+        result.put(ACTION, action);
         result.put("has_permission", apiKeyPermissionService.can(resource, action));
-        result.put("company_scope", apiKeyPermissionService.getCompanyScope());
-        result.put("has_global_access", apiKeyPermissionService.hasGlobalAccess());
+        result.put(COMPANY_SCOPE, apiKeyPermissionService.getCompanyScope());
+        result.put(HAS_GLOBAL_ACCESS, apiKeyPermissionService.hasGlobalAccess());
 
         return result;
     }

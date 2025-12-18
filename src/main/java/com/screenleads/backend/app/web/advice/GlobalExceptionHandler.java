@@ -16,6 +16,8 @@ import org.springframework.web.context.request.WebRequest;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final String TIMESTAMP = "timestamp";
+    private static final String MESSAGE = "message";
 
 @ExceptionHandler(MethodArgumentNotValidException.class)
 @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -23,10 +25,10 @@ public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex, We
 var errors = ex.getBindingResult().getFieldErrors().stream()
 .collect(java.util.stream.Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage, (a,b)->a));
 return ResponseEntity.badRequest().body(Map.of(
-"timestamp", Instant.now().toString(),
+TIMESTAMP, Instant.now().toString(),
 "path", req.getDescription(false),
 "code", "VALIDATION_ERROR",
-"message", "Datos inválidos",
+MESSAGE, "Datos inválidos",
 "details", errors
 ));
 }
@@ -36,10 +38,10 @@ return ResponseEntity.badRequest().body(Map.of(
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException ex, WebRequest req) {
 return ResponseEntity.badRequest().body(Map.of(
-"timestamp", Instant.now().toString(),
+TIMESTAMP, Instant.now().toString(),
 "path", req.getDescription(false),
 "code", "BAD_REQUEST",
-"message", ex.getMessage()
+MESSAGE, ex.getMessage()
 ));
 }
 
@@ -48,10 +50,10 @@ return ResponseEntity.badRequest().body(Map.of(
 @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 public ResponseEntity<?> handleGeneric(Exception ex, WebRequest req) {
 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-"timestamp", Instant.now().toString(),
+TIMESTAMP, Instant.now().toString(),
 "path", req.getDescription(false),
 "code", "INTERNAL_ERROR",
-"message", ex.getMessage()
+MESSAGE, ex.getMessage()
 ));
 }
 }

@@ -35,11 +35,7 @@ public class AuthSecurityChecker {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         // Si no hay autenticación válida o no tiene roles, denegar
-        if (auth == null || !auth.isAuthenticated() || auth.getAuthorities() == null) {
-            return false;
-        } else {
-            return true;
-        }
+        return auth != null && auth.isAuthenticated() && auth.getAuthorities() != null;
 
     }
 }

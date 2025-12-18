@@ -144,7 +144,7 @@ public class DeviceServiceImpl implements DeviceService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_NOT_FOUND));
         return device.getAdvices().stream()
                 .sorted(Comparator.comparing(Advice::getId))
-                .map(AdviceMapper::toDTO)
+                .map(AdviceMapper::toDto)
                 .toList();
     }
 

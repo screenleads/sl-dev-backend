@@ -64,24 +64,24 @@ class AdviceMapperTest {
         assertThat(result.getDescription()).isEqualTo("Test Advice");
         assertThat(result.getCustomInterval()).isTrue();
         assertThat(result.getInterval()).isEqualTo(120L);
-        
+
         assertThat(result.getMedia()).isNotNull();
         assertThat(result.getMedia().id()).isEqualTo(10L);
         assertThat(result.getMedia().src()).isEqualTo("video.mp4");
-        
+
         assertThat(result.getPromotion()).isNotNull();
         assertThat(result.getPromotion().id()).isEqualTo(20L);
-        
+
         assertThat(result.getCompany()).isNotNull();
         assertThat(result.getCompany().id()).isEqualTo(30L);
         assertThat(result.getCompany().name()).isEqualTo("Test Company");
-        
+
         assertThat(result.getSchedules()).hasSize(1);
         AdviceScheduleDTO scheduleDto = result.getSchedules().get(0);
         assertThat(scheduleDto.getId()).isEqualTo(50L);
         assertThat(scheduleDto.getStartDate()).isEqualTo("2025-01-01");
         assertThat(scheduleDto.getEndDate()).isEqualTo("2025-12-31");
-        
+
         assertThat(scheduleDto.getWindows()).hasSize(1);
         AdviceTimeWindowDTO windowDto = scheduleDto.getWindows().get(0);
         assertThat(windowDto.getId()).isEqualTo(100L);
@@ -126,7 +126,7 @@ class AdviceMapperTest {
         advice.setDescription("Test");
 
         // Act
-        AdviceDTO result = AdviceMapper.toDTO(advice);
+        AdviceDTO result = AdviceMapper.toDto(advice);
 
         // Assert
         assertThat(result).isNotNull();
@@ -209,22 +209,22 @@ class AdviceMapperTest {
         assertThat(result.getDescription()).isEqualTo("Test Advice");
         assertThat(result.getCustomInterval()).isTrue();
         assertThat(result.getInterval()).isEqualTo(Duration.ofSeconds(180));
-        
+
         assertThat(result.getMedia()).isNotNull();
         assertThat(result.getMedia().getId()).isEqualTo(10L);
-        
+
         assertThat(result.getPromotion()).isNotNull();
         assertThat(result.getPromotion().getId()).isEqualTo(20L);
-        
+
         assertThat(result.getCompany()).isNotNull();
         assertThat(result.getCompany().getId()).isEqualTo(30L);
-        
+
         assertThat(result.getSchedules()).hasSize(1);
         AdviceSchedule schedule = result.getSchedules().get(0);
         assertThat(schedule.getStartDate()).isEqualTo(LocalDate.of(2025, 1, 15));
         assertThat(schedule.getEndDate()).isEqualTo(LocalDate.of(2025, 6, 15));
         assertThat(schedule.getAdvice()).isEqualTo(result);
-        
+
         assertThat(schedule.getWindows()).hasSize(1);
         AdviceTimeWindow window = schedule.getWindows().get(0);
         assertThat(window.getWeekday()).isEqualTo(DayOfWeek.TUESDAY);

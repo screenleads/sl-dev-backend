@@ -70,7 +70,7 @@ public class DataInitializer implements CommandLineRunner {
         @Override
         @Transactional
         public void run(String... args) {
-                createDefaultCompany("ScreenLeads", "Compañía por defecto para demo");
+                createDefaultCompany(SCREENLEADS, "Compañía por defecto para demo");
 
                 Role admin = upsertRole("ROLE_ADMIN", "Acceso total", 1);
                 upsertRole("ROLE_COMPANY_ADMIN", "Administrador de empresa", 2);
@@ -351,13 +351,13 @@ public class DataInitializer implements CommandLineRunner {
                         }
 
                         Map<String, AppEntityAttribute> existing = (e.getAttributes() == null)
-                                        ? new HashMap<String, AppEntityAttribute>()
+                                        ? new HashMap<>()
                                         : e.getAttributes().stream()
                                                         .collect(Collectors.toMap(AppEntityAttribute::getName, a -> a,
                                                                         (a, b) -> a));
 
                         if (e.getAttributes() == null) {
-                                e.setAttributes(new ArrayList<AppEntityAttribute>());
+                                e.setAttributes(new ArrayList<>());
                         }
 
                         int order = 0;
@@ -427,7 +427,7 @@ public class DataInitializer implements CommandLineRunner {
                         return true;
 
                 String n = name.toLowerCase(Locale.ROOT);
-                if (Set.of("password", "devices", "advices", "users", "roles").contains(n))
+                if (Set.of(PASSWORD, "devices", "advices", "users", "roles").contains(n))
                         return true;
 
                 return false;
@@ -500,10 +500,10 @@ public class DataInitializer implements CommandLineRunner {
                 String n = a.getName() == null ? "" : a.getName().toLowerCase(Locale.ROOT);
                 if (n.contains("color"))
                         return "color";
-                if (n.equals("email") || n.endsWith("email"))
-                        return "email";
-                if (n.contains("password"))
-                        return "password";
+                if (n.equals(EMAIL) || n.endsWith(EMAIL))
+                        return EMAIL;
+                if (n.contains(PASSWORD))
+                        return PASSWORD;
                 if (n.contains("url") || n.contains("link"))
                         return "url";
                 if (n.contains("phone") || n.contains("mobile"))
@@ -536,7 +536,7 @@ public class DataInitializer implements CommandLineRunner {
         private String toKebab(String s) {
                 if (s == null)
                         return "";
-                return s.replaceAll("([a-z0-9])([A-Z])", "$1-$2")
+                return s.replaceAll(REGEX_CAMEL_TO_KEBAB, "$1-$2")
                                 .replaceAll("[\\s_]+", "-")
                                 .toLowerCase(Locale.ROOT);
         }

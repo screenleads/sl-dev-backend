@@ -28,6 +28,7 @@ public class CustomErrorController implements ErrorController {
             try {
                 status = HttpStatus.valueOf(Integer.parseInt(statusCode.toString()));
             } catch (NumberFormatException ignored) {
+                // Invalid status code format - use default INTERNAL_SERVER_ERROR
             }
         }
 

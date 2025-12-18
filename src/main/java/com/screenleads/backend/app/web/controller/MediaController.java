@@ -22,6 +22,12 @@ import java.util.*;
 @Slf4j
 public class MediaController {
 
+    private static final String ERROR_KEY = "error";
+    private static final String STATUS_KEY = "status";
+    private static final String COMPRESSED_PREFIX = "/compressed-";
+    private static final String THUMB_PREFIX = "/thumb-";
+    private static final String THUMBNAILS_PATH = "/thumbnails/";
+
     private final FirebaseStorageService firebaseService;
     private final MediaService mediaService;
 
@@ -47,7 +53,7 @@ public class MediaController {
     public ResponseEntity<Map<String, Object>> upload(@RequestPart("file") MultipartFile file) {
         try {
             if (file == null || file.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Archivo vacío"));
+                return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, "Archivo vacío"));
             }
 
             final String original = Optional.ofNullable(file.getOriginalFilename()).orElse("upload.bin");
@@ -83,11 +89,11 @@ public class MediaController {
             return ResponseEntity.ok(Map.of("filename", fileName));
 
         } catch (MaxUploadSizeExceededException tooBig) {
-            return ResponseEntity.status(413).body(Map.of("error", "Archivo demasiado grande"));
+            return ResponseEntity.status(413).body(Map.of(ERROR_KEY, "Archivo demasiado grande"));
         } catch (Exception ex) {
             log.error("❌ Error subiendo archivo", ex);
             return ResponseEntity.status(500).body(Map.of(
-                    "error", "Fallo subiendo archivo",
+                    ERROR_KEY, "Fallo subiendo archivo",
                     "detail", ex.getMessage()));
         }
     }
@@ -114,14 +120,14 @@ public class MediaController {
             return buildSuccessResponse(foundMain, paths.thumbCandidates);
         }
 
-        return ResponseEntity.status(202).body(Map.of("status", "processing"));
+        return ResponseEntity.status(202).body(Map.of(STATUS_KEY, "processing"));
     }
 
     private ResponseEntity<Map<String, Object>> checkLegacyPath(String filename) {
-        String legacyPath = "media/compressed-" + filename;
+        String legacyPath = "media" + COMPRESSED_PREFIX + filename;
         if (firebaseService.exists(legacyPath)) {
             return ResponseEntity.ok(Map.of(
-                    "status", "ready",
+                    STATUS_KEY, "ready",
                     "type", "legacy",
                     "url", firebaseService.getPublicUrl(legacyPath),
                     "thumbnails", List.of()));
@@ -139,25 +145,25 @@ public class MediaController {
         List<String> thumbCandidates = new ArrayList<>();
 
         if (kind == MediaKind.VIDEO) {
-            mainCandidates.add(VID_DEST + "/compressed-" + base + ".mp4");
+            mainCandidates.add(VID_DEST + COMPRESSED_PREFIX + base + ".mp4");
             for (int s : VIDEO_THUMBS) {
-                thumbCandidates.add(VID_DEST + "/thumbnails/" + s + "/thumb-" + s + "-" + base + ".jpg");
+                thumbCandidates.add(VID_DEST + THUMBNAILS_PATH + s + THUMB_PREFIX + s + "-" + base + ".jpg");
             }
         } else if (kind == MediaKind.IMAGE) {
-            mainCandidates.add(IMG_DEST + "/compressed-" + base + ".jpg");
-            mainCandidates.add(IMG_DEST + "/compressed-" + base + ".png");
+            mainCandidates.add(IMG_DEST + COMPRESSED_PREFIX + base + ".jpg");
+            mainCandidates.add(IMG_DEST + COMPRESSED_PREFIX + base + ".png");
             for (int s : IMAGE_THUMBS) {
-                thumbCandidates.add(IMG_DEST + "/thumbnails/" + s + "/thumb-" + s + "-" + base + ".jpg");
-                thumbCandidates.add(IMG_DEST + "/thumbnails/" + s + "/thumb-" + s + "-" + base + ".png");
+                thumbCandidates.add(IMG_DEST + THUMBNAILS_PATH + s + THUMB_PREFIX + s + "-" + base + ".jpg");
+                thumbCandidates.add(IMG_DEST + THUMBNAILS_PATH + s + THUMB_PREFIX + s + "-" + base + ".png");
             }
         } else {
-            mainCandidates.add(VID_DEST + "/compressed-" + base + ".mp4");
-            mainCandidates.add(IMG_DEST + "/compressed-" + base + ".jpg");
-            mainCandidates.add(IMG_DEST + "/compressed-" + base + ".png");
+            mainCandidates.add(VID_DEST + COMPRESSED_PREFIX + base + ".mp4");
+            mainCandidates.add(IMG_DEST + COMPRESSED_PREFIX + base + ".jpg");
+            mainCandidates.add(IMG_DEST + COMPRESSED_PREFIX + base + ".png");
             for (int s : new int[] { 320, 640 }) {
-                thumbCandidates.add(VID_DEST + "/thumbnails/" + s + "/thumb-" + s + "-" + base + ".jpg");
-                thumbCandidates.add(IMG_DEST + "/thumbnails/" + s + "/thumb-" + s + "-" + base + ".jpg");
-                thumbCandidates.add(IMG_DEST + "/thumbnails/" + s + "/thumb-" + s + "-" + base + ".png");
+                thumbCandidates.add(VID_DEST + THUMBNAILS_PATH + s + THUMB_PREFIX + s + "-" + base + ".jpg");
+                thumbCandidates.add(IMG_DEST + THUMBNAILS_PATH + s + THUMB_PREFIX + s + "-" + base + ".jpg");
+                thumbCandidates.add(IMG_DEST + THUMBNAILS_PATH + s + THUMB_PREFIX + s + "-" + base + ".png");
             }
         }
 
@@ -183,7 +189,7 @@ public class MediaController {
                 : foundMain.startsWith("media/images") ? "image" : "unknown";
 
         return ResponseEntity.ok(Map.of(
-                "status", "ready",
+                STATUS_KEY, "ready",
                 "type", type,
                 "url", firebaseService.getPublicUrl(foundMain),
                 "thumbnails", thumbs));
