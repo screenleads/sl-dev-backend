@@ -4,7 +4,6 @@ import com.screenleads.backend.app.application.service.FirebaseStorageService;
 import com.screenleads.backend.app.application.service.MediaService;
 import com.screenleads.backend.app.web.dto.MediaDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
