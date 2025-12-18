@@ -10,8 +10,8 @@ import com.screenleads.backend.app.domain.repositories.MediaRepository;
 import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
 import com.screenleads.backend.app.domain.model.MediaType;
 import com.screenleads.backend.app.domain.model.Media;
-import com.screenleads.backend.app.web.dto.MediaDto;
-import com.screenleads.backend.app.web.dto.MediaTypeDto;
+import com.screenleads.backend.app.web.dto.MediaDTO;
+import com.screenleads.backend.app.web.dto.MediaTypeDTO;
 import com.screenleads.backend.app.web.dto.UserDto;
 import com.screenleads.backend.app.web.mapper.UserMapper;
 import jakarta.persistence.EntityManager;
@@ -268,7 +268,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private Media createMediaFromDto(MediaDto mediaDto, Company userCompany, UserDto dto) {
+    private Media createMediaFromDto(MediaDTO mediaDto, Company userCompany, UserDto dto) {
         MediaType type = resolveMediaType(mediaDto);
         Company company = resolveCompanyForMedia(userCompany, dto);
 
@@ -279,7 +279,7 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
-    private MediaType resolveMediaType(MediaDto mediaDto) {
+    private MediaType resolveMediaType(MediaDTO mediaDto) {
         var typeDto = mediaDto.type();
         String src = mediaDto.src();
         String extension = extractExtension(src);
@@ -297,7 +297,7 @@ public class UserServiceImpl implements UserService {
         return type;
     }
 
-    private Optional<MediaType> findMediaTypeByDto(MediaTypeDto typeDto, String extension) {
+    private Optional<MediaType> findMediaTypeByDto(MediaTypeDTO typeDto, String extension) {
         if (typeDto == null)
             return Optional.empty();
 
