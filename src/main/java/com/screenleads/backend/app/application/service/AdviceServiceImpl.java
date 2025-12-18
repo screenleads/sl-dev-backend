@@ -123,68 +123,14 @@ public class AdviceServiceImpl implements AdviceService {
         advice.setInterval(numberToDuration(dto.getInterval()));
 
         advice.setCompany(resolveCompanyForWrite(dto.getCompany(), null));
-        // Si la media no existe, crearla con los datos mínimos
-        Media media = null;
-        MediaUpsertDTO mediaDto = dto.getMedia();
-        if (mediaDto != null) {
-            if (mediaDto.id() != null && mediaDto.id() > 0) {
-                media = mediaRepository.findById(mediaDto.id()).orElse(null);
-            } else if (mediaDto.src() != null && !mediaDto.src().isBlank()) {
-                media = mediaRepository.findBySrc(mediaDto.src().trim()).orElse(null);
-                if (media == null) {
-                    // Crear nueva Media
-                    MediaType defaultType = null;
-                    Company company = advice.getCompany();
-                    // Buscar tipo por extensión
-                    String ext = null;
-                    String src = mediaDto.src().trim();
-                    int dotIdx = src.lastIndexOf('.');
-                    if (dotIdx > 0 && dotIdx < src.length() - 1) {
-                        ext = src.substring(dotIdx + 1).toLowerCase();
-                    }
-                    if (ext != null) {
-                        defaultType = mediaTypeRepository.findByExtension(ext).orElse(null);
-                    }
-                    if (defaultType == null) {
-                        // fallback: primer tipo disponible
-                        defaultType = mediaTypeRepository.findAll().stream().findFirst().orElse(null);
-                    }
-                    if (company != null && defaultType != null) {
-                        Media newMedia = new Media();
-                        newMedia.setSrc(src);
-                        newMedia.setType(defaultType);
-                        newMedia.setCompany(company);
-                        media = mediaRepository.save(newMedia);
-                    }
-                }
-            }
-        }
-        advice.setMedia(media);
+        advice.setMedia(resolveMediaForCreate(dto.getMedia(), advice.getCompany()));
         advice.setPromotion(resolvePromotionFromDto(dto.getPromotion()));
 
-        // schedules
-        advice.setSchedules(new ArrayList<>());
-        if (dto.getSchedules() != null) {
-            for (AdviceScheduleDTO sDto : dto.getSchedules()) {
-                AdviceSchedule mappedSchedule = mapScheduleDTO(sDto, advice);
-                log.debug("[AdviceServiceImpl] Schedule mapeado: startDate={}, endDate={}",
-                        mappedSchedule.getStartDate(), mappedSchedule.getEndDate());
-                if (mappedSchedule.getWindows() != null) {
-                    for (AdviceTimeWindow win : mappedSchedule.getWindows()) {
-                        log.debug("[AdviceServiceImpl] Window mapeado: weekday={}, from={}, to={}",
-                                win.getWeekday(), win.getFromTime(), win.getToTime());
-                    }
-                }
-                advice.getSchedules().add(mappedSchedule);
-            }
-        }
+        advice.setSchedules(buildSchedulesForAdvice(dto.getSchedules(), advice));
 
         validateAdvice(advice);
         Advice saved = adviceRepository.save(advice);
-        // Log de persistencia real de ventanas
-        int totalWindows = saved.getSchedules() == null ? 0
-                : saved.getSchedules().stream().mapToInt(s -> s.getWindows() == null ? 0 : s.getWindows().size()).sum();
-        log.debug("[AdviceServiceImpl] Advice guardado con ID {}. Total ventanas: {}", saved.getId(), totalWindows);
+        logSavedAdvice(saved);
         return convertToDTO(saved);
     }
 
@@ -450,6 +396,90 @@ public class AdviceServiceImpl implements AdviceService {
     }
 
     /** Activa el filtro "companyFilter" si NO es admin. */
+    // ============================= MEDIA RESOLUTION =============================
+
+    private Media resolveMediaForCreate(MediaUpsertDTO mediaDto, Company company) {
+        if (mediaDto == null) {
+            return null;
+        }
+
+        if (mediaDto.id() != null && mediaDto.id() > 0) {
+            return mediaRepository.findById(mediaDto.id()).orElse(null);
+        }
+
+        if (mediaDto.src() != null && !mediaDto.src().isBlank()) {
+            String src = mediaDto.src().trim();
+            return mediaRepository.findBySrc(src)
+                    .orElseGet(() -> createNewMedia(src, company));
+        }
+
+        return null;
+    }
+
+    private Media createNewMedia(String src, Company company) {
+        MediaType mediaType = resolveMediaType(src);
+        if (company == null || mediaType == null) {
+            return null;
+        }
+
+        Media newMedia = new Media();
+        newMedia.setSrc(src);
+        newMedia.setType(mediaType);
+        newMedia.setCompany(company);
+        return mediaRepository.save(newMedia);
+    }
+
+    private MediaType resolveMediaType(String src) {
+        String ext = extractExtension(src);
+        if (ext != null) {
+            return mediaTypeRepository.findByExtension(ext).orElse(null);
+        }
+        return mediaTypeRepository.findAll().stream().findFirst().orElse(null);
+    }
+
+    private String extractExtension(String src) {
+        int dotIdx = src.lastIndexOf('.');
+        if (dotIdx > 0 && dotIdx < src.length() - 1) {
+            return src.substring(dotIdx + 1).toLowerCase();
+        }
+        return null;
+    }
+
+    // ============================= SCHEDULE BUILDING =============================
+
+    private List<AdviceSchedule> buildSchedulesForAdvice(List<AdviceScheduleDTO> scheduleDtos, Advice advice) {
+        List<AdviceSchedule> schedules = new ArrayList<>();
+        if (scheduleDtos != null) {
+            for (AdviceScheduleDTO sDto : scheduleDtos) {
+                AdviceSchedule mappedSchedule = mapScheduleDTO(sDto, advice);
+                logScheduleMapping(mappedSchedule);
+                schedules.add(mappedSchedule);
+            }
+        }
+        return schedules;
+    }
+
+    private void logScheduleMapping(AdviceSchedule schedule) {
+        log.debug("[AdviceServiceImpl] Schedule mapeado: startDate={}, endDate={}",
+                schedule.getStartDate(), schedule.getEndDate());
+        if (schedule.getWindows() != null) {
+            for (AdviceTimeWindow win : schedule.getWindows()) {
+                log.debug("[AdviceServiceImpl] Window mapeado: weekday={}, from={}, to={}",
+                        win.getWeekday(), win.getFromTime(), win.getToTime());
+            }
+        }
+    }
+
+    private void logSavedAdvice(Advice saved) {
+        int totalWindows = saved.getSchedules() == null ? 0
+                : saved.getSchedules().stream()
+                        .mapToInt(s -> s.getWindows() == null ? 0 : s.getWindows().size())
+                        .sum();
+        log.debug("[AdviceServiceImpl] Advice guardado con ID {}. Total ventanas: {}", saved.getId(), totalWindows);
+    }
+
+    // ============================= COMPANY FILTER =============================
+
     private void enableCompanyFilterIfNeeded() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated())

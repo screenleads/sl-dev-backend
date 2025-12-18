@@ -115,11 +115,4 @@ public class DevicesController {
         deviceService.removeAdviceFromDevice(deviceId, adviceId);
         return ResponseEntity.noContent().build();
     }
-
-    // -------------------------------------------------------------------------
-    // (Opcional) Endpoint placeholder para /code/{uuid} si realmente lo necesitas
-    // -------------------------------------------------------------------------
-    /**
-     * TODO: Implementar generación/lectura de código de conexión para el dispositivo.
-     */
 }

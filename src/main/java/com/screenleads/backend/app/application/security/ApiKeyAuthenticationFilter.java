@@ -52,7 +52,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
         log.info("🔐 ApiKeyAuthenticationFilter - Path: {}, API-KEY: {}, client-id: {}",
                 request.getRequestURI(),
-                apiKey != null ? "***" + apiKey.substring(Math.max(0, apiKey.length() - 4)) : "null",
+                maskApiKey(apiKey),
                 clientId);
 
         if (apiKey != null && clientId != null) {
@@ -86,5 +86,13 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String maskApiKey(String apiKey) {
+        if (apiKey == null) {
+            return "null";
+        }
+        int lastFourStart = Math.max(0, apiKey.length() - 4);
+        return "***" + apiKey.substring(lastFourStart);
     }
 }

@@ -74,7 +74,6 @@ public class MediaServiceImpl implements MediaService {
         }
         media.setType(mediaTypeRepository.findById(mediaDTO.type().getId())
                 .orElseThrow(() -> new IllegalArgumentException(MEDIA_TYPE_NOT_FOUND)));
-        // TODO: recibir o inferir companyId; sin eso, se caerá el save si es NOT NULL
         return media;
     }
 

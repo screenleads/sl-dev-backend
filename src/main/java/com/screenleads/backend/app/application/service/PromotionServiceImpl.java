@@ -139,51 +139,18 @@ public class PromotionServiceImpl implements PromotionService {
     @Override
     @Transactional(readOnly = true)
     public String exportLeadsCsv(Long promotionId, ZonedDateTime from, ZonedDateTime to) {
-        Instant fromI = from != null ? from.toInstant() : Instant.EPOCH;
-        Instant toI = to != null ? to.toInstant() : Instant.now();
-
-        List<PromotionLead> leads = promotionLeadRepository.findByPromotionId(promotionId).stream()
-                .filter(l -> {
-                    Instant c = l.getCreatedAt();
-                    return (c.equals(fromI) || c.isAfter(fromI)) && (c.equals(toI) || c.isBefore(toI));
-                })
+        List<PromotionLead> leads = filterLeadsByDateRange(promotionId, from, to).stream()
                 .sorted(Comparator.comparing(PromotionLead::getCreatedAt))
                 .toList();
 
-        StringBuilder sb = new StringBuilder();
-        sb.append(
-                "id,promotionId,identifierType,identifier,firstName,lastName,email,phone,birthDate,acceptedPrivacyAt,acceptedTermsAt,createdAt\n");
-        for (PromotionLead l : leads) {
-            sb.append(Optional.ofNullable(l.getId()).orElse(0L)).append(',')
-                    .append(l.getPromotion() != null ? l.getPromotion().getId() : null).append(',')
-                    .append(Optional.ofNullable(l.getIdentifierType()).map(Enum::name).orElse("")).append(',')
-                    .append(csv(l.getIdentifier())).append(',')
-                    .append(csv(l.getFirstName())).append(',')
-                    .append(csv(l.getLastName())).append(',')
-                    .append(csv(l.getEmail())).append(',')
-                    .append(csv(l.getPhone())).append(',')
-                    .append(l.getBirthDate()).append(',')
-                    .append(l.getAcceptedPrivacyAt()).append(',')
-                    .append(l.getAcceptedTermsAt()).append(',')
-                    .append(l.getCreatedAt())
-                    .append('\n');
-        }
-        return sb.toString();
+        return buildCsvFromLeads(leads);
     }
 
     @Override
     @Transactional(readOnly = true)
     public LeadSummaryDTO getLeadSummary(Long promotionId, ZonedDateTime from, ZonedDateTime to) {
         ZoneId zone = ZoneId.systemDefault();
-        Instant fromI = from != null ? from.toInstant() : Instant.EPOCH;
-        Instant toI = to != null ? to.toInstant() : Instant.now();
-
-        List<PromotionLead> leads = promotionLeadRepository.findByPromotionId(promotionId).stream()
-                .filter(l -> {
-                    Instant c = l.getCreatedAt();
-                    return (c.equals(fromI) || c.isAfter(fromI)) && (c.equals(toI) || c.isBefore(toI));
-                })
-                .toList();
+        List<PromotionLead> leads = filterLeadsByDateRange(promotionId, from, to);
 
         long totalLeads = leads.size();
         long uniqueIdentifiers = leads.stream()
@@ -259,6 +226,44 @@ public class PromotionServiceImpl implements PromotionService {
             }
         }
         return emptyNames.toArray(new String[0]);
+    }
+
+    private List<PromotionLead> filterLeadsByDateRange(Long promotionId, ZonedDateTime from, ZonedDateTime to) {
+        Instant fromI = from != null ? from.toInstant() : Instant.EPOCH;
+        Instant toI = to != null ? to.toInstant() : Instant.now();
+
+        return promotionLeadRepository.findByPromotionId(promotionId).stream()
+                .filter(l -> {
+                    Instant c = l.getCreatedAt();
+                    return (c.equals(fromI) || c.isAfter(fromI)) && (c.equals(toI) || c.isBefore(toI));
+                })
+                .toList();
+    }
+
+    private String buildCsvFromLeads(List<PromotionLead> leads) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(
+                "id,promotionId,identifierType,identifier,firstName,lastName,email,phone,birthDate,acceptedPrivacyAt,acceptedTermsAt,createdAt\n");
+        for (PromotionLead l : leads) {
+            appendLeadCsvRow(sb, l);
+        }
+        return sb.toString();
+    }
+
+    private void appendLeadCsvRow(StringBuilder sb, PromotionLead l) {
+        sb.append(Optional.ofNullable(l.getId()).orElse(0L)).append(',')
+                .append(l.getPromotion() != null ? l.getPromotion().getId() : null).append(',')
+                .append(Optional.ofNullable(l.getIdentifierType()).map(Enum::name).orElse("")).append(',')
+                .append(csv(l.getIdentifier())).append(',')
+                .append(csv(l.getFirstName())).append(',')
+                .append(csv(l.getLastName())).append(',')
+                .append(csv(l.getEmail())).append(',')
+                .append(csv(l.getPhone())).append(',')
+                .append(l.getBirthDate()).append(',')
+                .append(l.getAcceptedPrivacyAt()).append(',')
+                .append(l.getAcceptedTermsAt()).append(',')
+                .append(l.getCreatedAt())
+                .append('\n');
     }
 
     private static String csv(String s) {
