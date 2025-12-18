@@ -18,6 +18,8 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
+    
+    private static final long JWT_EXPIRATION_MS = 24 * 60 * 60 * 1000L; // 24 hours in milliseconds
     public SecretKey getSigningKey() {
         return signingKey;
     }
@@ -67,7 +69,7 @@ public class JwtService {
                         .map(Object::toString)
                         .toList())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24h
+                .expiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS))
                 .signWith(signingKey, Jwts.SIG.HS256)
                 .compact();
     }

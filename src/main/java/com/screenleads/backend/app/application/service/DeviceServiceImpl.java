@@ -29,6 +29,7 @@ public class DeviceServiceImpl implements DeviceService {
     private static final String DEVICE_NOT_FOUND = "Device not found";
     private static final String DEVICE_TYPE_NOT_FOUND = "Device type not found";
     private static final String COMPANY_NOT_FOUND = "Company not found";
+    private static final String ADVICE_NOT_FOUND = "Advice not found";
 
     private final DeviceRepository deviceRepository;
     private final DeviceTypeRepository deviceTypeRepository;
@@ -152,7 +153,7 @@ public class DeviceServiceImpl implements DeviceService {
         Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_NOT_FOUND));
         Advice advice = adviceRepository.findById(adviceId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Advice not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, ADVICE_NOT_FOUND));
         device.getAdvices().add(advice);
         deviceRepository.save(device);
     }
@@ -162,7 +163,7 @@ public class DeviceServiceImpl implements DeviceService {
         Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_NOT_FOUND));
         Advice advice = adviceRepository.findById(adviceId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Advice not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, ADVICE_NOT_FOUND));
         device.getAdvices().remove(advice);
         deviceRepository.save(device);
     }
