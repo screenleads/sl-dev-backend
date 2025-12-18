@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -79,11 +80,11 @@ public class StripeBillingServiceImpl implements StripeBillingService {
                 c.getStripeSubscriptionItemId());
 
         StringBuilder postData = new StringBuilder();
-        postData.append("quantity=").append(URLEncoder.encode(String.valueOf(quantity), "UTF-8"));
-        postData.append("&timestamp=").append(URLEncoder.encode(String.valueOf(unixTs), "UTF-8"));
+        postData.append("quantity=").append(URLEncoder.encode(String.valueOf(quantity), StandardCharsets.UTF_8));
+        postData.append("&timestamp=").append(URLEncoder.encode(String.valueOf(unixTs), StandardCharsets.UTF_8));
         postData.append("&action=increment");
 
-        byte[] postDataBytes = postData.toString().getBytes("UTF-8");
+        byte[] postDataBytes = postData.toString().getBytes(StandardCharsets.UTF_8);
 
         URL url = new URL(endpoint);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();

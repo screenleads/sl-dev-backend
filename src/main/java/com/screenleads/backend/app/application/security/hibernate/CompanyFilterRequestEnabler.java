@@ -25,6 +25,8 @@ import java.util.Set;
 @Order(20) // ejecuta después del filtro JWT
 public class CompanyFilterRequestEnabler extends OncePerRequestFilter {
 
+    private static final String COMPANY_FILTER = "companyFilter";
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -57,7 +59,7 @@ public class CompanyFilterRequestEnabler extends OncePerRequestFilter {
 
                 if (!isAdmin && companyId != null) {
                     Session session = entityManager.unwrap(Session.class);
-                    var filter = session.enableFilter("companyFilter");
+                    var filter = session.enableFilter(COMPANY_FILTER);
                     filter.setParameter("companyId", companyId);
                     log.info("Enabled companyFilter with companyId={}", companyId);
                 }
@@ -67,11 +69,12 @@ public class CompanyFilterRequestEnabler extends OncePerRequestFilter {
         } finally {
             try {
                 Session s = entityManager.unwrap(Session.class);
-                if (s.getEnabledFilter("companyFilter") != null) {
-                    s.disableFilter("companyFilter");
+                if (s.getEnabledFilter(COMPANY_FILTER) != null) {
+                    s.disableFilter(COMPANY_FILTER);
                     log.debug("Disabled companyFilter at end of request");
                 }
             } catch (Exception ignored) {
+                // Exception during filter cleanup - safe to ignore
             }
         }
     }

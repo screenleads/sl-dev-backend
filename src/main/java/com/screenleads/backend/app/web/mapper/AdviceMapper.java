@@ -100,11 +100,6 @@ public final class AdviceMapper {
                 .build();
     }
 
-    /** Alias: por si lo referenciabas como AdviceMapper::toDTO */
-    public static AdviceDTO toDTO(Advice a) {
-        return toDto(a);
-    }
-
     // ================= DTO -> Entity =================
 
     public static Advice toEntity(AdviceDTO dto) {
@@ -245,8 +240,8 @@ public final class AdviceMapper {
                     return n.longValue();
                 if (v != null && v.getClass() == Long.class)
                     return (Long) v;
-            } catch (NoSuchMethodException ignored) {
-            } catch (Exception ignored) {
+            } catch (NoSuchMethodException | Exception ignored) {
+                // Reflection fallback - method may not exist or be inaccessible
             }
         }
         return null;
@@ -259,8 +254,8 @@ public final class AdviceMapper {
                 Object v = m.invoke(obj);
                 if (v instanceof String s)
                     return s;
-            } catch (NoSuchMethodException ignored) {
-            } catch (Exception ignored) {
+            } catch (NoSuchMethodException | Exception ignored) {
+                // Reflection fallback - method may not exist or be inaccessible
             }
         }
         return null;
