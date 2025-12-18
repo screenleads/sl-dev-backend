@@ -44,8 +44,7 @@ public class ApiKeyCompanyFilterEnabler extends OncePerRequestFilter {
                 if (isApiClient) {
                     Object principal = auth.getPrincipal();
                     
-                    if (principal instanceof ApiKeyPrincipal) {
-                        ApiKeyPrincipal apiKeyPrincipal = (ApiKeyPrincipal) principal;
+                    if (principal instanceof ApiKeyPrincipal apiKeyPrincipal) {
                         
                         // Si tiene alcance restringido a una compañía, habilitar el filtro
                         if (apiKeyPrincipal.hasRestrictedAccess()) {

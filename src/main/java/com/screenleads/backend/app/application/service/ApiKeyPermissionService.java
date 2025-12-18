@@ -36,11 +36,11 @@ public class ApiKeyPermissionService {
         log.info("Principal: {} (type: {})", principal, principal != null ? principal.getClass().getName() : "null");
 
         Long apiKeyId = null;
-        if (principal instanceof Long) {
-            apiKeyId = (Long) principal;
-        } else if (principal instanceof String) {
+        if (principal instanceof Long id) {
+            apiKeyId = id;
+        } else if (principal instanceof String str) {
             try {
-                apiKeyId = Long.valueOf((String) principal);
+                apiKeyId = Long.valueOf(str);
             } catch (NumberFormatException e) {
                 log.error("❌ Error convirtiendo principal a Long: {}", principal, e);
                 return false;
@@ -126,11 +126,11 @@ public class ApiKeyPermissionService {
         Object principal = auth.getPrincipal();
         Long apiKeyId = null;
 
-        if (principal instanceof Long) {
-            apiKeyId = (Long) principal;
-        } else if (principal instanceof String) {
+        if (principal instanceof Long id) {
+            apiKeyId = id;
+        } else if (principal instanceof String str) {
             try {
-                apiKeyId = Long.valueOf((String) principal);
+                apiKeyId = Long.valueOf(str);
             } catch (NumberFormatException e) {
                 return null;
             }

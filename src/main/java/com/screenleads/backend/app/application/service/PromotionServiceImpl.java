@@ -45,7 +45,7 @@ public class PromotionServiceImpl implements PromotionService {
         return promotionRepository.findAll()
                 .stream()
                 .map(p -> map(p, PromotionDTO.class))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -125,7 +125,7 @@ public class PromotionServiceImpl implements PromotionService {
     public List<PromotionLeadDTO> listLeads(Long promotionId) {
         return promotionLeadRepository.findByPromotionId(promotionId).stream()
                 .map(l -> map(l, PromotionLeadDTO.class))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // =========================================
@@ -144,7 +144,7 @@ public class PromotionServiceImpl implements PromotionService {
                     return (c.equals(fromI) || c.isAfter(fromI)) && (c.equals(toI) || c.isBefore(toI));
                 })
                 .sorted(Comparator.comparing(PromotionLead::getCreatedAt))
-                .collect(Collectors.toList());
+                .toList();
 
         StringBuilder sb = new StringBuilder();
         sb.append(

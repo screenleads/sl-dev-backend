@@ -56,7 +56,7 @@ public class AdviceServiceImpl implements AdviceService {
         return adviceRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .sorted(Comparator.comparing(AdviceDTO::getId, Comparator.nullsLast(Long::compareTo)))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -75,7 +75,7 @@ public class AdviceServiceImpl implements AdviceService {
                 .filter(a -> isVisibleNow(a, date, weekday, time))
                 .map(this::convertToDTO)
                 .sorted(Comparator.comparing(AdviceDTO::getId, Comparator.nullsLast(Long::compareTo)))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private boolean isVisibleNow(Advice a, LocalDate date, DayOfWeek weekday, LocalTime time) {
@@ -492,18 +492,15 @@ public class AdviceServiceImpl implements AdviceService {
     private Long resolveCompanyId(Authentication auth) {
         Object principal = auth.getPrincipal();
 
-        if (principal instanceof com.screenleads.backend.app.domain.model.User) {
-            com.screenleads.backend.app.domain.model.User u = (com.screenleads.backend.app.domain.model.User) principal;
+        if (principal instanceof com.screenleads.backend.app.domain.model.User u) {
             return (u.getCompany() != null) ? u.getCompany().getId() : null;
         }
-        if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
-            org.springframework.security.core.userdetails.UserDetails ud = (org.springframework.security.core.userdetails.UserDetails) principal;
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails ud) {
             return userRepository.findByUsername(ud.getUsername())
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
-        if (principal instanceof String) {
-            String username = (String) principal;
+        if (principal instanceof String username) {
             return userRepository.findByUsername(username)
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);

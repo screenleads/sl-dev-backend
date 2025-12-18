@@ -241,8 +241,8 @@ public final class AdviceMapper {
             try {
                 Method m = obj.getClass().getMethod(name);
                 Object v = m.invoke(obj);
-                if (v instanceof Number)
-                    return ((Number) v).longValue();
+                if (v instanceof Number n)
+                    return n.longValue();
                 if (v != null && v.getClass() == Long.class)
                     return (Long) v;
             } catch (NoSuchMethodException ignored) {
@@ -257,8 +257,8 @@ public final class AdviceMapper {
             try {
                 Method m = obj.getClass().getMethod(name);
                 Object v = m.invoke(obj);
-                if (v instanceof String)
-                    return (String) v;
+                if (v instanceof String s)
+                    return s;
             } catch (NoSuchMethodException ignored) {
             } catch (Exception ignored) {
             }

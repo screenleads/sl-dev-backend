@@ -49,7 +49,7 @@ public class ApiKeyController {
         List<ApiKey> keys = apiKeyService.getApiKeysByClientDbId(clientDbId);
         return ResponseEntity.ok(keys.stream()
                 .map(ApiKeyMapper::toDto)
-                .collect(Collectors.toList()));
+                .toList()));
     }
 
     @PatchMapping("/{id}/permissions")

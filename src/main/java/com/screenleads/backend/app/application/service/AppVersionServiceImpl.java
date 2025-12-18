@@ -28,7 +28,7 @@ public class AppVersionServiceImpl implements AppVersionService {
         return repository.findAll()
                 .stream()
                 .map(this::toDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

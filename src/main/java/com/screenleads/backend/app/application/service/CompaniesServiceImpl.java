@@ -46,7 +46,7 @@ public class CompaniesServiceImpl implements CompaniesService {
         return companyRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .sorted(Comparator.comparing(CompanyDTO::id))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

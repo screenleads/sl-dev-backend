@@ -25,7 +25,7 @@ public class MediaTypeServiceImpl implements MediaTypeService {
         return mediaTypeRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .sorted(Comparator.comparing(MediaTypeDTO::id))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

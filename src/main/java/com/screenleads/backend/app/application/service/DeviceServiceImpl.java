@@ -49,7 +49,7 @@ public class DeviceServiceImpl implements DeviceService {
         return deviceRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .sorted(Comparator.comparing(DeviceDTO::id))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -141,7 +141,7 @@ public class DeviceServiceImpl implements DeviceService {
         return device.getAdvices().stream()
                 .sorted(Comparator.comparing(Advice::getId))
                 .map(AdviceMapper::toDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

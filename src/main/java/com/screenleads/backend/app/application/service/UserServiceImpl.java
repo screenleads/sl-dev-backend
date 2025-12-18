@@ -414,18 +414,15 @@ public class UserServiceImpl implements UserService {
     private Long resolveCompanyId(Authentication auth) {
         Object principal = auth.getPrincipal();
 
-        if (principal instanceof User) {
-            User u = (User) principal;
+        if (principal instanceof User u) {
             return (u.getCompany() != null) ? u.getCompany().getId() : null;
         }
-        if (principal instanceof UserDetails) {
-            UserDetails ud = (UserDetails) principal;
+        if (principal instanceof UserDetails ud) {
             return repo.findByUsername(ud.getUsername())
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);
         }
-        if (principal instanceof String) {
-            String username = (String) principal;
+        if (principal instanceof String username) {
             return repo.findByUsername(username)
                     .map(u -> u.getCompany() != null ? u.getCompany().getId() : null)
                     .orElse(null);

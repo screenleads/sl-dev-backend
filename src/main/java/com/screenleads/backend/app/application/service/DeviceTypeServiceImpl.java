@@ -26,7 +26,7 @@ public class DeviceTypeServiceImpl implements DeviceTypeService {
         return deviceTypeRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .sorted(Comparator.comparing(DeviceTypeDTO::id))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

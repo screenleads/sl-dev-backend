@@ -42,8 +42,7 @@ public class ApiKeyPermissionTestController {
         info.put("authenticated", true);
         info.put("principal_type", auth.getPrincipal().getClass().getSimpleName());
         
-        if (auth.getPrincipal() instanceof ApiKeyPrincipal) {
-            ApiKeyPrincipal principal = (ApiKeyPrincipal) auth.getPrincipal();
+        if (auth.getPrincipal() instanceof ApiKeyPrincipal principal) {
             info.put("client_id", principal.getClientId());
             info.put("permissions", principal.getPermissions());
             info.put("company_scope", principal.getCompanyScope());
