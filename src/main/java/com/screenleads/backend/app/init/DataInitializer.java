@@ -113,7 +113,7 @@ public class DataInitializer implements CommandLineRunner {
                 String activeProfile = System.getProperty("spring.profiles.active", "dev");
                 if (Set.of("dev", "development").contains(activeProfile.toLowerCase())) {
                         try {
-                                Company company = companyRepository.findByName("ScreenLeads").orElse(null);
+                                Company company = companyRepository.findByName(SCREENLEADS).orElse(null);
                                 if (company != null && adviceRepository.count() == 0) {
                                         log.info("[MOCK] Creando anuncio de test por inicialización...");
                                         String mediaSrc = "https://storage.googleapis.com/screenleads-e7e0b.firebasestorage.app/media/videos/compressed-e69233c4-260a-4b3c-8ba6-876c34989725-tv_desayunos_1.mp4";
@@ -479,7 +479,7 @@ public class DataInitializer implements CommandLineRunner {
                         return false;
                 if (a instanceof PluralAttribute<?, ?, ?>)
                         return false;
-                if (n.equals("password"))
+                if (n.equals(PASSWORD))
                         return false;
                 return true;
         }
@@ -557,13 +557,13 @@ public class DataInitializer implements CommandLineRunner {
         private String toResource(String entityName) {
                 if (entityName == null)
                         return "";
-                return entityName.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toLowerCase(Locale.ROOT);
+                return entityName.replaceAll(REGEX_CAMEL_TO_KEBAB, "$1_$2").toLowerCase(Locale.ROOT);
         }
 
         private String humanize(String s) {
                 if (s == null)
                         return "";
-                String r = s.replaceAll("([a-z0-9])([A-Z])", "$1 $2")
+                String r = s.replaceAll(REGEX_CAMEL_TO_KEBAB, "$1 $2")
                                 .replaceAll("[-_]+", " ")
                                 .replaceAll("\\s+", " ")
                                 .trim();
@@ -617,7 +617,7 @@ public class DataInitializer implements CommandLineRunner {
                         log.info("ℹ️  Usuario admin ya existe: {}", username);
                         return;
                 }
-                Company company = companyRepository.findByName("ScreenLeads")
+                Company company = companyRepository.findByName(SCREENLEADS)
                                 .orElseThrow(() -> new IllegalStateException("Company 'ScreenLeads' no encontrada."));
 
                 User user = User.builder()

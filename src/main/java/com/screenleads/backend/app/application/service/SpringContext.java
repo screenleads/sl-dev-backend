@@ -10,7 +10,7 @@ public class SpringContext implements ApplicationContextAware {
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
-        SpringContext.context = applicationContext;
+        context = applicationContext;
     }
 
     public static <T> T getBean(Class<T> beanClass) {
