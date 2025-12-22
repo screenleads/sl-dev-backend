@@ -2,6 +2,11 @@
 
 Colecciones completas y exhaustivas de Postman para todos los endpoints de la API de ScreenLeads.
 
+**Última actualización**: 22 de diciembre de 2025 ✨
+**Versión API**: v0.0.1-SNAPSHOT
+**Spring Boot**: 3.5.9
+**Java**: 17
+
 ## 📋 Índice de Colecciones
 
 ### 🔐 Autenticación y Seguridad
@@ -9,34 +14,35 @@ Colecciones completas y exhaustivas de Postman para todos los endpoints de la AP
 2. **ScreenLeads-APIKeys.postman_collection.json** - API Keys y Clients
 
 ### 📊 Gestión de Contenido
-3. **ScreenLeads-Advices.postman_collection.json** - Anuncios (Advices) ⭐ NUEVO
-4. **ScreenLeads-Media.postman_collection.json** - Multimedia
+3. **ScreenLeads-Advices.postman_collection.json** - Anuncios (Advices)
+4. **ScreenLeads-Media.postman_collection.json** - Multimedia ⭐ **ACTUALIZADO 22/12/2025**
 5. **ScreenLeads-Promotions.postman_collection.json** - Promociones y Leads
+6. **ScreenLeads-MediaTypes.postman_collection.json** - Tipos de medios
 
 ### 🏢 Gestión Empresarial
-6. **ScreenLeads-Companies.postman_collection.json** - Compañías ⭐ NUEVO
-7. **ScreenLeads-Customers.postman_collection.json** - Clientes
+7. **ScreenLeads-Companies.postman_collection.json** - Compañías
+8. **ScreenLeads-Customers.postman_collection.json** - Clientes
 
 ### 🖥️ Dispositivos
-8. **ScreenLeads-Devices.postman_collection.json** - Dispositivos (pantallas LED)
+9. **ScreenLeads-Devices.postman_collection.json** - Dispositivos (pantallas LED)
+10. **ScreenLeads-DeviceTypes.postman_collection.json** - Tipos de dispositivos
 
 ### 🎟️ Cupones
-9. **ScreenLeads-Coupons.postman_collection.json** - Validación y canje de cupones ⭐ NUEVO
+11. **ScreenLeads-Coupons.postman_collection.json** - Validación y canje de cupones
 
 ### 👥 Administración
-10. **ScreenLeads-Users-Roles.postman_collection.json** - Usuarios y Roles ⭐ NUEVO
-11. **ScreenLeads-Admin.postman_collection.json** - Administración general
-12. **ScreenLeads-AppVersions-Entities.postman_collection.json** - Versiones y Entidades ⭐ NUEVO
+12. **ScreenLeads-Users-Roles.postman_collection.json** - Usuarios y Roles
+13. **ScreenLeads-AppVersions-Entities.postman_collection.json** - Versiones y Entidades
 
 ### 💳 Facturación
-13. **ScreenLeads-Billing.postman_collection.json** - Integración con Stripe ⭐ NUEVO
+14. **ScreenLeads-Billing.postman_collection.json** - Integración con Stripe
 
 ## 🌍 Entornos
 
 Disponemos de 3 entornos preconfigurados:
 
-- **ScreenLeads-Environment-Dev.postman_environment.json** - Desarrollo local (`http://localhost:8080`)
-- **ScreenLeads-Environment-Pre.postman_environment.json** - Pre-producción (`https://api.pre.screenleads.com`)
+- **ScreenLeads-Environment-Dev.postman_environment.json** - Desarrollo local (`http://localhost:3000`)
+- **ScreenLeads-Environment-Pre.postman_environment.json** - Pre-producción ⭐ **ACTUALIZADO** (`https://sl-dev-backend-pre.herokuapp.com`)
 - **ScreenLeads-Environment-Pro.postman_environment.json** - Producción (`https://api.screenleads.com`)
 
 ## 🚀 Configuración Inicial
@@ -91,7 +97,94 @@ Endpoints de autenticación con tokens JWT:
 - ✅ **POST** `/auth/change-password` - Cambiar contraseña
 - ✅ **POST** `/auth/refresh` - Renovar token
 
-### 🔑 06. API Keys & Clients
+### � 04. Media (Multimedia) ⭐ **ACTUALIZADO 22/12/2025**
+
+Gestión de archivos multimedia con **procesamiento síncrono**.
+
+#### 🚀 Cambios Importantes:
+
+**Antes (Asíncrono con polling):**
+1. POST /medias/upload → `status: "processing"` + `jobId`
+2. GET /medias/status/{filename} (múltiples llamadas hasta `status: "ready"`)
+3. Obtener URLs finales
+
+**Ahora (Síncrono - respuesta inmediata):**
+1. POST /medias/upload → `status: "ready"` + URLs + thumbnails (en una sola llamada)
+
+#### Endpoints Disponibles:
+
+**JWT + API Key Authentication:**
+- ✅ **GET** `/medias` - Listar todos los archivos multimedia
+- ✅ **POST** `/medias/upload` - **Subida síncrona** (NUEVO)
+- ⚠️ **GET** `/medias/status/{filename}` - Verificación de estado (DEPRECATED - ya no necesario)
+
+#### 📤 POST /medias/upload - Detalles Completos
+
+**Parámetros:**
+- `file` (multipart/form-data) - **ÚNICO parámetro requerido**
+- ❌ Ya NO requiere `companyId` ni `mediaTypeId`
+
+**Formatos soportados:**
+- 🖼️ **Imágenes**: JPG, JPEG, PNG, GIF, WebP (max 50MB)
+- 🎬 **Videos**: MP4, AVI, MOV, MKV, WebM (max 100MB)
+
+**Procesamiento automático:**
+- ✅ Compresión inteligente (H.264 @ 1Mbps para videos)
+- ✅ Redimensionado automático (máx 1920x1080)
+- ✅ Generación de thumbnails (320px y 640px)
+- ✅ Subida a Firebase Storage
+- ✅ URLs públicas generadas automáticamente
+
+**Timeouts:**
+- ⏱️ Connection timeout: 5 minutos
+- ⏱️ Read timeout: 5 minutos
+- ✅ Suficiente para videos grandes
+
+**Respuesta exitosa (200 OK):**
+```json
+{
+  "status": "ready",
+  "type": "image" | "video",
+  "url": "https://storage.googleapis.com/.../compressed-uuid-file.jpg",
+  "thumbnails": [
+    "https://storage.googleapis.com/.../thumb-320-uuid-file.jpg",
+    "https://storage.googleapis.com/.../thumb-640-uuid-file.jpg"
+  ],
+  "processingTimeMs": 2500
+}
+```
+
+**Respuestas de error:**
+- `400 Bad Request` - Archivo vacío
+- `413 Payload Too Large` - Archivo demasiado grande
+- `500 Internal Server Error` - Error procesando archivo
+
+**Ejemplo de uso en Postman:**
+```
+POST {{base_url}}/medias/upload
+Authorization: Bearer {{jwt_token}}
+Content-Type: multipart/form-data
+
+Body:
+- file: [seleccionar archivo imagen o video]
+```
+
+**Ejemplo con API Key:**
+```
+POST {{base_url}}/medias/upload
+X-API-KEY: {{api_key}}
+client-id: {{client_id}}
+Content-Type: multipart/form-data
+
+Body:
+- file: [seleccionar archivo imagen o video]
+```
+
+**Permisos requeridos:**
+- JWT: `@PreAuthorize("@perm.can('media', 'create')")`
+- API Key: Permiso `media:create`
+
+### �🔑 06. API Keys & Clients
 
 Gestión de clientes y API Keys para autenticación programática:
 

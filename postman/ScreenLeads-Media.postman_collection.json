@@ -47,7 +47,7 @@
                             "response": []
                         },
                         {
-                            "name": "Upload Media",
+                            "name": "Upload Media (Synchronous)",
                             "request": {
                                 "auth": {
                                     "type": "bearer",
@@ -67,17 +67,8 @@
                                         {
                                             "key": "file",
                                             "type": "file",
-                                            "src": "/path/to/your/image.jpg"
-                                        },
-                                        {
-                                            "key": "companyId",
-                                            "value": "{{company_id}}",
-                                            "type": "text"
-                                        },
-                                        {
-                                            "key": "mediaTypeId",
-                                            "value": "1",
-                                            "type": "text"
+                                            "src": "/path/to/your/media.jpg",
+                                            "description": "Imagen o video a subir (max 50MB para imágenes, 100MB para videos)"
                                         }
                                     ]
                                 },
@@ -90,7 +81,8 @@
                                         "medias",
                                         "upload"
                                     ]
-                                }
+                                },
+                                "description": "Sube y procesa un archivo multimedia de forma síncrona. Retorna inmediatamente con URLs de archivo procesado y thumbnails. Soporta imágenes (JPG, PNG, GIF, WebP) y videos (MP4, AVI, MOV, MKV, WebM).\n\nRespuesta esperada:\n```json\n{\n  \"status\": \"ready\",\n  \"type\": \"image\" | \"video\",\n  \"url\": \"https://storage.googleapis.com/.../compressed-xxx.jpg\",\n  \"thumbnails\": [\"url_320px\", \"url_640px\"],\n  \"processingTimeMs\": 2500\n}\n```"
                             },
                             "response": []
                         }
@@ -134,7 +126,7 @@
                             "response": []
                         },
                         {
-                            "name": "Upload Media (API Key)",
+                            "name": "Upload Media (API Key - Synchronous)",
                             "request": {
                                 "method": "POST",
                                 "header": [
@@ -155,17 +147,8 @@
                                         {
                                             "key": "file",
                                             "type": "file",
-                                            "src": "/path/to/your/image.jpg"
-                                        },
-                                        {
-                                            "key": "companyId",
-                                            "value": "{{company_id}}",
-                                            "type": "text"
-                                        },
-                                        {
-                                            "key": "mediaTypeId",
-                                            "value": "1",
-                                            "type": "text"
+                                            "src": "/path/to/your/media.jpg",
+                                            "description": "Imagen o video a subir (max 50MB para imágenes, 100MB para videos)"
                                         }
                                     ]
                                 },
@@ -179,7 +162,7 @@
                                         "upload"
                                     ]
                                 },
-                                "description": "Con API Key que tenga permiso 'media:create'"
+                                "description": "Sube y procesa un archivo multimedia de forma síncrona usando API Key. Retorna inmediatamente con URLs de archivo procesado y thumbnails.\n\nRequiere API Key con permiso 'media:create'.\n\nRespuesta esperada:\n```json\n{\n  \"status\": \"ready\",\n  \"type\": \"image\" | \"video\",\n  \"url\": \"https://storage.googleapis.com/.../compressed-xxx.jpg\",\n  \"thumbnails\": [\"url_320px\", \"url_640px\"],\n  \"processingTimeMs\": 2500\n}\n```"
                             },
                             "response": []
                         }
