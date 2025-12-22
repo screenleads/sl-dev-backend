@@ -282,12 +282,12 @@ public class UserServiceImpl implements UserService {
 
     private MediaType resolveMediaType(MediaSlimDTO mediaDto) {
         MediaTypeDTO typeDto = mediaDto.type();
-        
+
         // Si viene con typeDto y tiene id, buscarlo
         if (typeDto != null && typeDto.id() != null) {
             return mediaTypeRepository.findById(typeDto.id()).orElse(null);
         }
-        
+
         // Si viene con type name, buscar por nombre
         if (typeDto != null && typeDto.type() != null && !typeDto.type().isBlank()) {
             return mediaTypeRepository.findByType(typeDto.type()).orElse(null);
@@ -297,7 +297,7 @@ public class UserServiceImpl implements UserService {
         String src = mediaDto.src();
         String extension = extractExtension(src);
         MediaType type = findMediaTypeByExtension(extension).orElse(null);
-        
+
         if (type == null) {
             logMediaTypeError(extension, src);
             throw new IllegalArgumentException(

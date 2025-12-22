@@ -51,7 +51,7 @@ public final class AdviceMapper {
             return null;
 
         Number intervalSecs = (a.getInterval() == null) ? null : a.getInterval().getSeconds();
-        
+
         MediaUpsertDTO mediaDto = buildMediaRef(a.getMedia());
         PromotionRefDTO promoDto = buildPromotionRef(a.getPromotion());
         CompanyRefDTO companyDto = buildCompanyRef(a.getCompany());

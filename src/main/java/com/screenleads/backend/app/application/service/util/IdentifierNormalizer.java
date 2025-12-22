@@ -6,10 +6,12 @@ import java.util.Locale;
 
 public final class IdentifierNormalizer {
 
-    private IdentifierNormalizer() {}
+    private IdentifierNormalizer() {
+    }
 
     public static String normalize(LeadIdentifierType type, String raw) {
-        if (raw == null) return null;
+        if (raw == null)
+            return null;
         String s = raw.trim();
         switch (type) {
             case EMAIL:

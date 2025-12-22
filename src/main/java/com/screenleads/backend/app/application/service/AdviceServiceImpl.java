@@ -224,7 +224,7 @@ public class AdviceServiceImpl implements AdviceService {
 
         List<AdviceTimeWindow> windows = convertTimeWindows(sDto);
         validateAndNormalizeWindows(windows);
-        
+
         for (AdviceTimeWindow w : windows) {
             w.setSchedule(s);
         }
@@ -234,14 +234,14 @@ public class AdviceServiceImpl implements AdviceService {
 
     private List<AdviceTimeWindow> convertTimeWindows(AdviceScheduleDTO sDto) {
         List<AdviceTimeWindow> windows = new ArrayList<>();
-        
+
         // Soportar ambos formatos: windows plano y dayWindows agrupado
         if (sDto.getWindows() != null && !sDto.getWindows().isEmpty()) {
             windows.addAll(convertFromPlainWindows(sDto.getWindows()));
         } else if (sDto.getDayWindows() != null && !sDto.getDayWindows().isEmpty()) {
             windows.addAll(convertFromDayWindows(sDto.getDayWindows()));
         }
-        
+
         return windows;
     }
 
