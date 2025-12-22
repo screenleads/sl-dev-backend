@@ -17,7 +17,7 @@ public class PresenceChannelInterceptor implements ChannelInterceptor {
     private static final Map<String, Set<String>> activeRooms = new ConcurrentHashMap<>();
 
     @Override
-    public Message<?> preSend(@Nullable Message<?> message, @Nullable MessageChannel channel) {
+    public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         String sessionId = accessor.getSessionId();
 
