@@ -50,44 +50,12 @@ public final class AdviceMapper {
         if (a == null)
             return null;
 
-        // interval Duration -> segundos
         Number intervalSecs = (a.getInterval() == null) ? null : a.getInterval().getSeconds();
-
-        // media / promotion / company como DTOs "ref"
-        MediaUpsertDTO mediaDto = (a.getMedia() != null)
-                ? new MediaUpsertDTO(a.getMedia().getId(), a.getMedia().getSrc())
-                : null;
-
-        PromotionRefDTO promoDto = (a.getPromotion() != null)
-                ? new PromotionRefDTO(a.getPromotion().getId())
-                : null;
-
-        CompanyRefDTO companyDto = (a.getCompany() != null)
-                ? new CompanyRefDTO(a.getCompany().getId(), a.getCompany().getName())
-                : null;
-
-        // schedules -> DTO
-        List<AdviceScheduleDTO> schedules = new ArrayList<>();
-        if (a.getSchedules() != null) {
-            for (AdviceSchedule s : a.getSchedules()) {
-                List<AdviceTimeWindowDTO> wins = new ArrayList<>();
-                if (s.getWindows() != null) {
-                    for (AdviceTimeWindow w : s.getWindows()) {
-                        wins.add(new AdviceTimeWindowDTO(
-                                w.getId(),
-                                w.getWeekday() != null ? w.getWeekday().name() : null,
-                                formatTime(w.getFromTime()),
-                                formatTime(w.getToTime())));
-                    }
-                }
-                schedules.add(new AdviceScheduleDTO(
-                        s.getId(),
-                        formatDate(s.getStartDate()),
-                        formatDate(s.getEndDate()),
-                        wins,
-                        null));
-            }
-        }
+        
+        MediaUpsertDTO mediaDto = buildMediaRef(a.getMedia());
+        PromotionRefDTO promoDto = buildPromotionRef(a.getPromotion());
+        CompanyRefDTO companyDto = buildCompanyRef(a.getCompany());
+        List<AdviceScheduleDTO> schedules = buildScheduleDTOs(a.getSchedules());
 
         return AdviceDTO.builder()
                 .id(a.getId())
@@ -99,6 +67,48 @@ public final class AdviceMapper {
                 .company(companyDto)
                 .schedules(schedules)
                 .build();
+    }
+
+    private static MediaUpsertDTO buildMediaRef(Media media) {
+        return (media != null) ? new MediaUpsertDTO(media.getId(), media.getSrc()) : null;
+    }
+
+    private static PromotionRefDTO buildPromotionRef(Promotion promotion) {
+        return (promotion != null) ? new PromotionRefDTO(promotion.getId()) : null;
+    }
+
+    private static CompanyRefDTO buildCompanyRef(Company company) {
+        return (company != null) ? new CompanyRefDTO(company.getId(), company.getName()) : null;
+    }
+
+    private static List<AdviceScheduleDTO> buildScheduleDTOs(List<AdviceSchedule> schedules) {
+        List<AdviceScheduleDTO> scheduleDtos = new ArrayList<>();
+        if (schedules != null) {
+            for (AdviceSchedule s : schedules) {
+                List<AdviceTimeWindowDTO> wins = buildTimeWindowDTOs(s.getWindows());
+                scheduleDtos.add(new AdviceScheduleDTO(
+                        s.getId(),
+                        formatDate(s.getStartDate()),
+                        formatDate(s.getEndDate()),
+                        wins,
+                        null));
+            }
+        }
+        return scheduleDtos;
+    }
+
+    private static List<AdviceTimeWindowDTO> buildTimeWindowDTOs(List<AdviceTimeWindow> windows) {
+        List<AdviceTimeWindowDTO> wins = new ArrayList<>();
+        if (windows != null) {
+            for (AdviceTimeWindow w : windows) {
+                wins.add(new AdviceTimeWindowDTO(
+                        w.getId(),
+                        w.getWeekday() != null ? w.getWeekday().name() : null,
+                        formatTime(w.getFromTime()),
+                        formatTime(w.getToTime())));
+            }
+        }
+        return wins;
     }
 
     // ================= DTO -> Entity =================
