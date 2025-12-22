@@ -34,12 +34,13 @@ import jakarta.persistence.metamodel.PluralAttribute;
 
 import lombok.RequiredArgsConstructor;
 import com.screenleads.backend.app.domain.repositories.AdviceRepository;
-import com.screenleads.backend.app.application.service.AdviceService;
-import com.screenleads.backend.app.web.dto.AdviceDTO;
-import com.screenleads.backend.app.web.dto.CompanyRefDTO;
-import com.screenleads.backend.app.web.dto.MediaUpsertDTO;
-import com.screenleads.backend.app.web.dto.AdviceScheduleDTO;
+import com.screenleads.backend.app.domain.model.Advice;
+import com.screenleads.backend.app.domain.model.AdviceSchedule;
+import com.screenleads.backend.app.domain.model.AdviceTimeWindow;
 import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.DayOfWeek;
 
 @Slf4j
 @Component
@@ -58,7 +59,6 @@ public class DataInitializer implements CommandLineRunner {
         private static final String EMAIL = "email";
         private static final String REGEX_CAMEL_TO_KEBAB = "([a-z0-9])([A-Z])";
 
-        private final DataInitializer self;
         private final RoleRepository roleRepository;
         private final MediaTypeRepository mediaTypeRepository;
         private final DeviceTypeRepository deviceTypeRepository;
@@ -69,7 +69,6 @@ public class DataInitializer implements CommandLineRunner {
         private final AppEntityRepository appEntityRepository;
         private final MediaRepository mediaRepository;
         private final AdviceRepository adviceRepository;
-        private final AdviceService adviceService;
 
         @PersistenceContext
         private EntityManager em;
@@ -108,48 +107,12 @@ public class DataInitializer implements CommandLineRunner {
                 seedAppEntitiesSkeleton();
 
                 // 2) Bootstrap de atributos desde el metamodelo JPA (nuevas entidades al final)
-                self.bootstrapEntityAttributesFromMetamodel();
+                bootstrapEntityAttributesFromMetamodel();
 
                 // === CREAR ANUNCIO MOCK SI NO EXISTEN Y ESTAMOS EN DESARROLLO ===
                 String activeProfile = System.getProperty("spring.profiles.active", "dev");
                 if (Set.of("dev", "development").contains(activeProfile.toLowerCase())) {
-                        try {
-                                Company company = companyRepository.findByName(SCREENLEADS).orElse(null);
-                                if (company != null && adviceRepository.count() == 0) {
-                                        log.info("[MOCK] Creando anuncio de test por inicialización...");
-                                        String mediaSrc = "https://storage.googleapis.com/screenleads-e7e0b.firebasestorage.app/media/videos/compressed-e69233c4-260a-4b3c-8ba6-876c34989725-tv_desayunos_1.mp4";
-                                        Long mediaId = mediaRepository.findBySrc(mediaSrc).map(Media::getId)
-                                                        .orElse(null);
-                                        AdviceDTO mockDto = new AdviceDTO(
-                                                        null,
-                                                        "Anuncio de test ",
-                                                        false,
-                                                        0,
-                                                        new MediaUpsertDTO(mediaId, mediaSrc),
-                                                        null,
-                                                        new CompanyRefDTO(company.getId(), company.getName()),
-                                                        Arrays.asList(
-                                                                        new AdviceScheduleDTO(
-                                                                                        null,
-                                                                                        "2025-09-30T22:00:00.000Z",
-                                                                                        "2025-10-30T23:00:00.000Z",
-                                                                                        Arrays.asList(
-                                                                                                        new com.screenleads.backend.app.web.dto.AdviceTimeWindowDTO(
-                                                                                                                        null,
-                                                                                                                        "MONDAY",
-                                                                                                                        "00:00",
-                                                                                                                        "23:59"),
-                                                                                                        new com.screenleads.backend.app.web.dto.AdviceTimeWindowDTO(
-                                                                                                                        null,
-                                                                                                                        "SUNDAY",
-                                                                                                                        "00:00",
-                                                                                                                        "23:59")),
-                                                                                        null)));
-                                        adviceService.saveAdvice(mockDto);
-                                }
-                        } catch (Exception e) {
-                                log.warn("[MOCK] Error creando anuncio de test: {}", e.getMessage());
-                        }
+                        createMockAdviceIfNeeded();
                 }
         }
 
@@ -663,5 +626,59 @@ public class DataInitializer implements CommandLineRunner {
 
                 userRepository.save(user);
                 log.info("✅ Usuario admin creado: {} / {}", username, email);
+        }
+
+        /**
+         * Crea un anuncio mock para desarrollo usando directamente los repositorios.
+         * Esto evita dependencias circulares con AdviceService.
+         */
+        private void createMockAdviceIfNeeded() {
+                try {
+                        Company company = companyRepository.findByName(SCREENLEADS).orElse(null);
+                        if (company != null && adviceRepository.count() == 0) {
+                                log.info("[MOCK] Creando anuncio de test por inicialización...");
+                                
+                                // Buscar o crear media
+                                String mediaSrc = "https://storage.googleapis.com/screenleads-e7e0b.firebasestorage.app/media/videos/compressed-e69233c4-260a-4b3c-8ba6-876c34989725-tv_desayunos_1.mp4";
+                                Media media = mediaRepository.findBySrc(mediaSrc).orElse(null);
+                                
+                                // Crear anuncio directamente con el builder
+                                Advice advice = Advice.builder()
+                                        .description("Anuncio de test")
+                                        .customInterval(false)
+                                        .interval(null)
+                                        .company(company)
+                                        .media(media)
+                                        .promotion(null)
+                                        .build();
+                                
+                                // Crear schedule con time windows
+                                AdviceSchedule schedule = new AdviceSchedule();
+                                schedule.setAdvice(advice);
+                                schedule.setStartDate(LocalDate.of(2025, 9, 30));
+                                schedule.setEndDate(LocalDate.of(2025, 10, 30));
+                                
+                                AdviceTimeWindow windowMonday = new AdviceTimeWindow();
+                                windowMonday.setSchedule(schedule);
+                                windowMonday.setWeekday(DayOfWeek.MONDAY);
+                                windowMonday.setFromTime(LocalTime.of(0, 0));
+                                windowMonday.setToTime(LocalTime.of(23, 59));
+                                
+                                AdviceTimeWindow windowSunday = new AdviceTimeWindow();
+                                windowSunday.setSchedule(schedule);
+                                windowSunday.setWeekday(DayOfWeek.SUNDAY);
+                                windowSunday.setFromTime(LocalTime.of(0, 0));
+                                windowSunday.setToTime(LocalTime.of(23, 59));
+                                
+                                schedule.setWindows(Arrays.asList(windowMonday, windowSunday));
+                                advice.setSchedules(Arrays.asList(schedule));
+                                
+                                // Guardar (cascade guardará los schedules y windows)
+                                adviceRepository.save(advice);
+                                log.info("[MOCK] ✅ Anuncio de test creado exitosamente");
+                        }
+                } catch (Exception e) {
+                        log.warn("[MOCK] Error creando anuncio de test: {}", e.getMessage());
+                }
         }
 }
