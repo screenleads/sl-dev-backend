@@ -1,6 +1,7 @@
 package com.screenleads.backend.app.web.controller;
 
 import com.screenleads.backend.app.application.service.FirebaseStorageService;
+import com.screenleads.backend.app.application.service.MediaProcessingService;
 import com.screenleads.backend.app.application.service.MediaService;
 import com.screenleads.backend.app.web.dto.MediaDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +31,13 @@ public class MediaController {
 
     private final FirebaseStorageService firebaseService;
     private final MediaService mediaService;
+    private final MediaProcessingService processingService;
 
-    public MediaController(FirebaseStorageService firebaseService, MediaService mediaService) {
+    public MediaController(FirebaseStorageService firebaseService, MediaService mediaService,
+            MediaProcessingService processingService) {
         this.firebaseService = firebaseService;
         this.mediaService = mediaService;
+        this.processingService = processingService;
     }
 
     // ---------------- LIST/CRUD ----------------
@@ -45,12 +49,14 @@ public class MediaController {
         return ResponseEntity.ok(mediaService.getAllMedias());
     }
 
-    // ---------------- UPLOAD ----------------
+    // ---------------- UPLOAD (SÍNCRONO) ----------------
 
     @PreAuthorize("@perm.can('media', 'create')")
     @CrossOrigin
     @PostMapping(value = "/medias/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> upload(@RequestPart("file") MultipartFile file) {
+        long startTime = System.currentTimeMillis();
+
         try {
             if (file == null || file.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, "Archivo vacío"));
@@ -59,9 +65,8 @@ public class MediaController {
             final String original = Optional.ofNullable(file.getOriginalFilename()).orElse("upload.bin");
             final String safeName = original.replaceAll("[^A-Za-z0-9._-]", "_");
             final String fileName = UUID.randomUUID() + "-" + safeName;
-            final String rawPath = "raw/" + fileName;
 
-            // /tmp es el disco efímero de Heroku
+            // Crear archivo temporal
             Path tmpDir = Paths.get(Optional.ofNullable(System.getProperty("java.io.tmpdir")).orElse("/tmp"));
             Files.createDirectories(tmpDir);
             Path tmp = Files.createTempFile(tmpDir, "upload_", "_" + safeName);
@@ -69,31 +74,44 @@ public class MediaController {
             log.info("📥 Recibido multipart: name={}, size={} bytes, contentType={}",
                     safeName, file.getSize(), file.getContentType());
 
-            // copiar a tmp
+            // Copiar a temporal
             try (InputStream in = file.getInputStream()) {
                 Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
             }
 
-            // subir a Firebase (raw/)
-            firebaseService.upload(tmp.toFile(), rawPath);
-            log.info("📤 Subido a Firebase RAW: {}", rawPath);
+            // Procesar de forma síncrona (comprimir + thumbnails + subir)
+            log.info("🔄 Iniciando procesamiento síncrono...");
+            MediaProcessingService.ProcessedMedia result = processingService.processMedia(tmp.toFile(), fileName,
+                    firebaseService);
 
-            // opcional: borrar temporal
+            // Limpiar temporal
             deleteTempFile(tmp);
 
-            // 200 OK con filename (el front hace polling a /medias/status/{filename})
-            return ResponseEntity.ok(Map.of("filename", fileName));
+            long totalTime = System.currentTimeMillis() - startTime;
+            log.info("✅ Proceso completo en {}ms", totalTime);
+
+            // Retornar resultado inmediato (sin polling)
+            return ResponseEntity.ok(Map.of(
+                    STATUS_KEY, "ready",
+                    "type", result.type(),
+                    "url", result.mainUrl(),
+                    "thumbnails", result.thumbnailUrls(),
+                    "processingTimeMs", totalTime));
 
         } catch (MaxUploadSizeExceededException tooBig) {
             return ResponseEntity.status(413).body(Map.of(ERROR_KEY, "Archivo demasiado grande"));
         } catch (Exception ex) {
-            log.error("❌ Error subiendo archivo", ex);
+            log.error("❌ Error procesando archivo", ex);
             return ResponseEntity.status(500).body(Map.of(
-                    ERROR_KEY, "Fallo subiendo archivo",
+                    ERROR_KEY, "Fallo procesando archivo",
                     "detail", ex.getMessage()));
         }
     }
 
+    // ---------------- STATUS CHECK (LEGACY - ya no necesario con upload síncrono)
+    // ----------------
+
+    @Deprecated
     @CrossOrigin
     @GetMapping(value = "/medias/status/{filename}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> checkCompressionStatus(@PathVariable String filename) {
