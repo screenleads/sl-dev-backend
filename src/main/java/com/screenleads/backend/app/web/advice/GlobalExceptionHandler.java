@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
 
 @ExceptionHandler(MethodArgumentNotValidException.class)
 @ResponseStatus(HttpStatus.BAD_REQUEST)
-public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex, WebRequest req) {
+public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex, WebRequest req) {
 var errors = ex.getBindingResult().getFieldErrors().stream()
 .collect(java.util.stream.Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage, (a,b)->a));
 return ResponseEntity.badRequest().body(Map.of(
@@ -36,7 +36,7 @@ MESSAGE, "Datos inválidos",
 
 @ExceptionHandler(IllegalArgumentException.class)
 @ResponseStatus(HttpStatus.BAD_REQUEST)
-public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException ex, WebRequest req) {
+public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex, WebRequest req) {
 return ResponseEntity.badRequest().body(Map.of(
 TIMESTAMP, Instant.now().toString(),
 "path", req.getDescription(false),
@@ -48,7 +48,7 @@ MESSAGE, ex.getMessage()
 
 @ExceptionHandler(Exception.class)
 @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-public ResponseEntity<?> handleGeneric(Exception ex, WebRequest req) {
+public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex, WebRequest req) {
 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
 TIMESTAMP, Instant.now().toString(),
 "path", req.getDescription(false),

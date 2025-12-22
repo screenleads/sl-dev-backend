@@ -15,6 +15,7 @@ import java.util.Map;
 // @PreAuthorize("hasAnyRole('admin','company_admin')")
 public class UserController {
 
+    private static final String ERROR_KEY = "error";
     private static final String ERROR_INTEGRITY = "Violación de integridad (¿username/email único?)";
     private static final String ERROR_CREATE_USER = "No se pudo crear el usuario";
     private static final String ERROR_UPDATE_USER = "No se pudo actualizar el usuario";
@@ -40,24 +41,24 @@ public class UserController {
 
     @PostMapping
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('user','create')")
-    public ResponseEntity<?> create(@RequestBody UserDto dto) {
+    public ResponseEntity<Object> create(@RequestBody UserDto dto) {
         try {
             com.screenleads.backend.app.web.dto.UserCreationResponse created = service.create(dto);
             return ResponseEntity.ok(created);
         } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, ex.getMessage()));
         } catch (DataIntegrityViolationException ex) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", ERROR_INTEGRITY));
+                    .body(Map.of(ERROR_KEY, ERROR_INTEGRITY));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", ERROR_CREATE_USER));
+                    .body(Map.of(ERROR_KEY, ERROR_CREATE_USER));
         }
     }
 
     @PutMapping("/{id}")
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('user','update')")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody UserDto dto) {
+    public ResponseEntity<Object> update(@PathVariable Long id, @RequestBody UserDto dto) {
         try {
             UserDto updated = service.update(id, dto);
             if (updated != null) {
@@ -66,13 +67,13 @@ public class UserController {
                 return ResponseEntity.notFound().build();
             }
         } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, ex.getMessage()));
         } catch (DataIntegrityViolationException ex) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", ERROR_INTEGRITY));
+                    .body(Map.of(ERROR_KEY, ERROR_INTEGRITY));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", ERROR_UPDATE_USER));
+                    .body(Map.of(ERROR_KEY, ERROR_UPDATE_USER));
         }
     }
 

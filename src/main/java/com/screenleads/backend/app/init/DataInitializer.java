@@ -106,6 +106,7 @@ public class DataInitializer implements CommandLineRunner {
                 seedAppEntitiesSkeleton();
 
                 // 2) Bootstrap de atributos desde el metamodelo JPA (nuevas entidades al final)
+                // Nota: método transaccional llamado dentro del mismo bean
                 bootstrapEntityAttributesFromMetamodel();
 
                 // === CREAR ANUNCIO MOCK SI NO EXISTEN Y ESTAMOS EN DESARROLLO ===

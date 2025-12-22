@@ -75,6 +75,9 @@ public class StripeWebhookController {
                     // opcional: sync estado, enviar emails, marcar company en grace period, etc.
                     break;
                 }
+                default:
+                    // Ignorar otros tipos de eventos
+                    break;
             }
             return ResponseEntity.ok("success");
         } catch (Exception e) {

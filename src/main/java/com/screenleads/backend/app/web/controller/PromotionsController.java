@@ -17,6 +17,7 @@ import java.util.List;
 @RequestMapping("/promotions")
 @RequiredArgsConstructor
 public class PromotionsController {
+    private static final String EUROPE_MADRID = "Europe/Madrid";
 
     private final PromotionService promotionService;
 
@@ -80,7 +81,7 @@ public class PromotionsController {
             @PathVariable Long id,
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to) {
-        ZonedDateTime toZdt = parseZdtOrDefault(to, ZonedDateTime.now(ZoneId.of("Europe/Madrid")));
+        ZonedDateTime toZdt = parseZdtOrDefault(to, ZonedDateTime.now(ZoneId.of(EUROPE_MADRID)));
         ZonedDateTime fromZdt = parseZdtOrDefault(from, toZdt.minusDays(30));
 
         StreamingResponseBody body = outputStream -> {
@@ -102,7 +103,7 @@ public class PromotionsController {
             @PathVariable Long id,
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to) {
-        ZonedDateTime toZdt = parseZdtOrDefault(to, ZonedDateTime.now(ZoneId.of("Europe/Madrid")));
+        ZonedDateTime toZdt = parseZdtOrDefault(to, ZonedDateTime.now(ZoneId.of(EUROPE_MADRID)));
         ZonedDateTime fromZdt = parseZdtOrDefault(from, toZdt.minusDays(30));
         return promotionService.getLeadSummary(id, fromZdt, toZdt);
     }
@@ -113,7 +114,7 @@ public class PromotionsController {
         try {
             if (s.length() == 10) {
                 LocalDate d = LocalDate.parse(s);
-                return d.atStartOfDay(ZoneId.of("Europe/Madrid"));
+                return d.atStartOfDay(ZoneId.of(EUROPE_MADRID));
             }
             return ZonedDateTime.parse(s);
         } catch (DateTimeParseException e) {

@@ -39,6 +39,7 @@ import java.util.List;
  * Company/Promotion/Media DTOs.
  */
 public final class AdviceMapper {
+    private static final String GET_ID = "getId";
 
     private AdviceMapper() {
     }
@@ -152,7 +153,7 @@ public final class AdviceMapper {
         if (companyDto == null)
             return null;
         Long id = extractLong(companyDto,
-                "getId", "id", "getCompanyId", "companyId", "getCompanyID", "companyID");
+                GET_ID, "id", "getCompanyId", "companyId", "getCompanyID", "companyID");
         if (id == null)
             return null;
         Company c = new Company();
@@ -164,7 +165,7 @@ public final class AdviceMapper {
         if (promoDto == null)
             return null;
         Long id = extractLong(promoDto,
-                "getId", "id", "getPromotionId", "promotionId", "getPromotionID", "promotionID");
+                GET_ID, "id", "getPromotionId", "promotionId", "getPromotionID", "promotionID");
         if (id == null)
             return null;
         Promotion p = new Promotion();
@@ -176,7 +177,7 @@ public final class AdviceMapper {
         if (mediaDto == null)
             return null;
         Long id = extractLong(mediaDto,
-                "getId", "id", "getMediaId", "mediaId", "getMediaID", "mediaID");
+                GET_ID, "id", "getMediaId", "mediaId", "getMediaID", "mediaID");
         String src = extractString(mediaDto, "getSrc", "src");
 
         if (id == null && (src == null || src.isBlank()))
