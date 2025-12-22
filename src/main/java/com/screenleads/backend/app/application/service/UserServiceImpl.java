@@ -73,9 +73,10 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> getAll() {
         enableCompanyFilterIfNeeded();
         return repo.findAll().stream()
-                .peek(u -> {
+                .map(u -> {
                     if (u.getProfileImage() != null)
                         Hibernate.initialize(u.getProfileImage());
+                    return u;
                 })
                 .map(UserMapper::toDto)
                 .toList();

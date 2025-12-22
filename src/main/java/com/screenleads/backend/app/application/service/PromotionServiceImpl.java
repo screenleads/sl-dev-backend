@@ -61,7 +61,7 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
-    public PromotionDTO savePromotion(PromotionDTO dto) {
+    public PromotionDTO savePromotion(@org.springframework.lang.Nullable PromotionDTO dto) {
         // Mapear DTO -> Entity sin suponer getters concretos
         Promotion toSave = map(dto, Promotion.class);
         Promotion saved = promotionRepository.save(toSave);

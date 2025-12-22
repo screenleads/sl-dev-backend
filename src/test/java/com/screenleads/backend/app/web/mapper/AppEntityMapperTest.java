@@ -124,9 +124,81 @@ class AppEntityMapperTest {
     }
 
     @Test
-    @DisplayName("toDto should convert AppEntityAttribute to EntityAttributeDTO with all fields")
-    void whenToDtoAttribute_thenConvertAllFields() {
+    @DisplayName("toDto should convert AppEntityAttribute basic fields")
+    void whenToDtoAttribute_thenConvertBasicFields() {
         // Arrange
+        AppEntityAttribute attr = createFullyPopulatedAttribute();
+
+        // Act
+        EntityAttributeDTO result = AppEntityMapper.toDto(attr);
+
+        // Assert - Basic fields
+        assertThat(result).isNotNull();
+        assertThat(result.id()).isEqualTo(10L);
+        assertThat(result.name()).isEqualTo("status");
+        assertThat(result.attrType()).isEqualTo("Enum");
+        assertThat(result.dataType()).isEqualTo("String");
+        assertThat(result.relationTarget()).isEqualTo("StatusEnum");
+        assertThat(result.enumValuesJson()).contains("ACTIVE", "INACTIVE", "PENDING");
+    }
+
+    @Test
+    @DisplayName("toDto should convert AppEntityAttribute list config fields")
+    void whenToDtoAttribute_thenConvertListFields() {
+        // Arrange
+        AppEntityAttribute attr = createFullyPopulatedAttribute();
+
+        // Act
+        EntityAttributeDTO result = AppEntityMapper.toDto(attr);
+
+        // Assert - List config
+        assertThat(result.listVisible()).isTrue();
+        assertThat(result.listOrder()).isEqualTo(5);
+        assertThat(result.listLabel()).isEqualTo("Status");
+        assertThat(result.listWidthPx()).isEqualTo(150);
+        assertThat(result.listAlign()).isEqualTo("center");
+        assertThat(result.listSearchable()).isTrue();
+        assertThat(result.listSortable()).isTrue();
+    }
+
+    @Test
+    @DisplayName("toDto should convert AppEntityAttribute form config fields")
+    void whenToDtoAttribute_thenConvertFormFields() {
+        // Arrange
+        AppEntityAttribute attr = createFullyPopulatedAttribute();
+
+        // Act
+        EntityAttributeDTO result = AppEntityMapper.toDto(attr);
+
+        // Assert - Form config
+        assertThat(result.formVisible()).isTrue();
+        assertThat(result.formOrder()).isEqualTo(2);
+        assertThat(result.formLabel()).isEqualTo("User Status");
+        assertThat(result.controlType()).isEqualTo("select");
+        assertThat(result.placeholder()).isEqualTo("Select status");
+        assertThat(result.helpText()).isEqualTo("User account status");
+        assertThat(result.required()).isTrue();
+        assertThat(result.readOnly()).isFalse();
+    }
+
+    @Test
+    @DisplayName("toDto should convert AppEntityAttribute validation and options fields")
+    void whenToDtoAttribute_thenConvertValidationAndOptions() {
+        // Arrange
+        AppEntityAttribute attr = createFullyPopulatedAttribute();
+
+        // Act
+        EntityAttributeDTO result = AppEntityMapper.toDto(attr);
+
+        // Assert - Validation and options
+        assertThat(result.minLen()).isEqualTo(1);
+        assertThat(result.maxLen()).isEqualTo(20);
+        assertThat(result.pattern()).isEqualTo("[A-Z]+");
+        assertThat(result.defaultValue()).isEqualTo("PENDING");
+        assertThat(result.optionsEndpoint()).isEqualTo("/api/statuses");
+    }
+
+    private AppEntityAttribute createFullyPopulatedAttribute() {
         AppEntityAttribute attr = new AppEntityAttribute();
         attr.setId(10L);
         attr.setName("status");
@@ -162,42 +234,8 @@ class AppEntityMapperTest {
         
         attr.setDefaultValue("PENDING");
         attr.setOptionsEndpoint("/api/statuses");
-
-        // Act
-        EntityAttributeDTO result = AppEntityMapper.toDto(attr);
-
-        // Assert
-        assertThat(result).isNotNull();
-        assertThat(result.id()).isEqualTo(10L);
-        assertThat(result.name()).isEqualTo("status");
-        assertThat(result.attrType()).isEqualTo("Enum");
-        assertThat(result.dataType()).isEqualTo("String");
-        assertThat(result.relationTarget()).isEqualTo("StatusEnum");
-        assertThat(result.enumValuesJson()).contains("ACTIVE", "INACTIVE", "PENDING");
         
-        assertThat(result.listVisible()).isTrue();
-        assertThat(result.listOrder()).isEqualTo(5);
-        assertThat(result.listLabel()).isEqualTo("Status");
-        assertThat(result.listWidthPx()).isEqualTo(150);
-        assertThat(result.listAlign()).isEqualTo("center");
-        assertThat(result.listSearchable()).isTrue();
-        assertThat(result.listSortable()).isTrue();
-        
-        assertThat(result.formVisible()).isTrue();
-        assertThat(result.formOrder()).isEqualTo(2);
-        assertThat(result.formLabel()).isEqualTo("User Status");
-        assertThat(result.controlType()).isEqualTo("select");
-        assertThat(result.placeholder()).isEqualTo("Select status");
-        assertThat(result.helpText()).isEqualTo("User account status");
-        assertThat(result.required()).isTrue();
-        assertThat(result.readOnly()).isFalse();
-        
-        assertThat(result.minLen()).isEqualTo(1);
-        assertThat(result.maxLen()).isEqualTo(20);
-        assertThat(result.pattern()).isEqualTo("[A-Z]+");
-        
-        assertThat(result.defaultValue()).isEqualTo("PENDING");
-        assertThat(result.optionsEndpoint()).isEqualTo("/api/statuses");
+        return attr;
     }
 
     @Test

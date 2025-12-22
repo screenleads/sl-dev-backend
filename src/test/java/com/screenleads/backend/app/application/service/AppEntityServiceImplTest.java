@@ -303,18 +303,26 @@ class AppEntityServiceImplTest {
     @DisplayName("reorderEntities should throw exception when list is empty")
     void whenReorderEntitiesWithEmptyList_thenThrowException() {
         // Act & Assert
-        assertThatThrownBy(() -> appEntityService.reorderEntities(List.of()))
+        assertThatThrownBy(() -> reorderWithEmptyList())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Debe enviarse una lista de IDs");
+    }
+
+    private void reorderWithEmptyList() {
+        appEntityService.reorderEntities(List.of());
     }
 
     @Test
     @DisplayName("reorderEntities should throw exception when list contains duplicates")
     void whenReorderEntitiesWithDuplicates_thenThrowException() {
         // Act & Assert
-        assertThatThrownBy(() -> appEntityService.reorderEntities(Arrays.asList(1L, 1L)))
+        assertThatThrownBy(() -> reorderWithDuplicates())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("duplicados");
+    }
+
+    private void reorderWithDuplicates() {
+        appEntityService.reorderEntities(Arrays.asList(1L, 1L));
     }
 
     @Test
@@ -325,9 +333,13 @@ class AppEntityServiceImplTest {
                 .thenReturn(List.of(testEntity));
 
         // Act & Assert
-        assertThatThrownBy(() -> appEntityService.reorderEntities(Arrays.asList(999L)))
+        assertThatThrownBy(() -> reorderWithInvalidId())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("no pertenece a entidades visibles");
+    }
+
+    private void reorderWithInvalidId() {
+        appEntityService.reorderEntities(Arrays.asList(999L));
     }
 
     @Test
@@ -362,17 +374,25 @@ class AppEntityServiceImplTest {
         when(appEntityRepository.findWithAttributesById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> appEntityService.reorderAttributes(999L, List.of(1L)))
+        assertThatThrownBy(() -> reorderAttributesNotFound())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("AppEntity no encontrada");
+    }
+
+    private void reorderAttributesNotFound() {
+        appEntityService.reorderAttributes(999L, List.of(1L));
     }
 
     @Test
     @DisplayName("reorderAttributes should throw exception when attribute list contains duplicates")
     void whenReorderAttributesWithDuplicates_thenThrowException() {
         // Act & Assert
-        assertThatThrownBy(() -> appEntityService.reorderAttributes(1L, Arrays.asList(1L, 1L)))
+        assertThatThrownBy(() -> reorderAttributesWithDuplicates())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("duplicados");
+    }
+
+    private void reorderAttributesWithDuplicates() {
+        appEntityService.reorderAttributes(1L, Arrays.asList(1L, 1L));
     }
 }

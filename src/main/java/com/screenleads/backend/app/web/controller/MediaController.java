@@ -79,11 +79,7 @@ public class MediaController {
             log.info("📤 Subido a Firebase RAW: {}", rawPath);
 
             // opcional: borrar temporal
-            try {
-                Files.deleteIfExists(tmp);
-            } catch (Exception e) {
-                log.warn("No se pudo eliminar archivo temporal {}: {}", tmp, e.getMessage());
-            }
+            deleteTempFile(tmp);
 
             // 200 OK con filename (el front hace polling a /medias/status/{filename})
             return ResponseEntity.ok(Map.of("filename", fileName));
@@ -271,6 +267,14 @@ public class MediaController {
                     .body(resource);
         } catch (Exception e) {
             throw new MediaException("Failed to render media", e);
+        }
+    }
+
+    private void deleteTempFile(Path tmp) {
+        try {
+            Files.deleteIfExists(tmp);
+        } catch (Exception e) {
+            log.warn("No se pudo eliminar archivo temporal {}: {}", tmp, e.getMessage());
         }
     }
 }
