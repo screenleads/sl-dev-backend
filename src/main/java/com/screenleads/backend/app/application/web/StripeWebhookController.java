@@ -61,7 +61,7 @@ public class StripeWebhookController {
             }
 
             String subId = session.getSubscription();
-            var sub = stripe.subscriptions().retrieve(subId);
+            var sub = Subscription.retrieve(subId);
             var item = sub.getItems().getData().get(0);
 
             String customerId = session.getCustomer();
@@ -97,9 +97,8 @@ public class StripeWebhookController {
 
     private void handleInvoiceEvent(com.stripe.model.Event event) {
         var invoice = (Invoice) event.getDataObjectDeserializer().getObject().orElse(null);
-        if (invoice == null) {
-            return;
+        if (invoice != null) {
+            // opcional: sync estado, enviar emails, marcar company en grace period, etc.
         }
-        // opcional: sync estado, enviar emails, marcar company en grace period, etc.
     }
 }

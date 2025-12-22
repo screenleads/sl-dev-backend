@@ -116,8 +116,7 @@ class UserServiceImplTest {
         List<UserDto> result = userService.getAll();
 
         // Assert
-        assertThat(result).isNotNull();
-        assertThat(result).hasSize(1);
+        assertThat(result).isNotNull().hasSize(1);
         assertThat(result.get(0).getUsername()).isEqualTo("testuser");
         verify(userRepository, times(1)).findAll();
     }

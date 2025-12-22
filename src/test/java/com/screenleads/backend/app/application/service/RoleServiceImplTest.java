@@ -160,7 +160,7 @@ class RoleServiceImplTest {
         assertThat(result.id()).isEqualTo(1L);
         assertThat(result.role()).isEqualTo("SUPER_ADMIN");
         assertThat(result.description()).isEqualTo("Super Administrator");
-        assertThat(result.level()).isEqualTo(0);
+        assertThat(result.level()).isZero();
         verify(roleRepository, times(1)).findById(1L);
         verify(roleRepository, times(1)).save(any(Role.class));
     }

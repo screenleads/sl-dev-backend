@@ -137,8 +137,7 @@ class AdviceServiceImplTest {
         List<AdviceDTO> result = adviceService.getAllAdvices();
 
         // Assert
-        assertThat(result).isNotNull();
-        assertThat(result).hasSize(1);
+        assertThat(result).isNotNull().hasSize(1);
         assertThat(result.get(0).getDescription()).isEqualTo("Test Advice");
         verify(adviceRepository, times(1)).findAll();
     }

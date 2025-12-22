@@ -217,8 +217,7 @@ class ApiKeyServiceImplTest {
         List<ApiKey> result = apiKeyService.getApiKeysByClientDbId(1L);
 
         // Assert
-        assertThat(result).hasSize(2);
-        assertThat(result).contains(testApiKey, key2);
+        assertThat(result).hasSize(2).contains(testApiKey, key2);
         verify(apiKeyRepository, times(1)).findAllByClient_Id(1L);
     }
 

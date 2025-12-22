@@ -14,7 +14,7 @@ public class WebSocketServiceImpl implements WebSocketService {
     private SimpMessagingTemplate messagingTemplate = null;
 
     @Autowired
-    public void WSService(SimpMessagingTemplate messagingTemplate) {
+    public void wsService(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
     }
 

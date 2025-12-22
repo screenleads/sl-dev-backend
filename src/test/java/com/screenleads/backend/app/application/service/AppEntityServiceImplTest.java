@@ -117,8 +117,7 @@ class AppEntityServiceImplTest {
         List<AppEntityDTO> result = appEntityService.findAll(false);
 
         // Assert
-        assertThat(result).isNotNull();
-        assertThat(result).hasSize(1);
+        assertThat(result).isNotNull().hasSize(1);
         assertThat(result.get(0).resource()).isEqualTo("test_resource");
         verify(appEntityRepository, times(1)).findAll();
         verify(jdbcTemplate, never()).queryForObject(anyString(), eq(Long.class));
@@ -135,8 +134,7 @@ class AppEntityServiceImplTest {
         List<AppEntityDTO> result = appEntityService.findAll(true);
 
         // Assert
-        assertThat(result).isNotNull();
-        assertThat(result).hasSize(1);
+        assertThat(result).isNotNull().hasSize(1);
         assertThat(result.get(0).rowCount()).isEqualTo(42L);
         verify(appEntityRepository, times(1)).findAll();
         verify(jdbcTemplate, times(1)).queryForObject(anyString(), eq(Long.class));

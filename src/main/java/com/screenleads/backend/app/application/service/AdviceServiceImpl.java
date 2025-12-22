@@ -85,11 +85,9 @@ public class AdviceServiceImpl implements AdviceService {
         for (AdviceSchedule s : a.getSchedules()) {
             boolean dateOk = (s.getStartDate() == null || !date.isBefore(s.getStartDate()))
                     && (s.getEndDate() == null || !date.isAfter(s.getEndDate()));
-            if (!dateOk)
-                continue;
-
-            // Si el día no tiene horas, no es visible ese día
-            if (s.getWindows() == null || s.getWindows().isEmpty())
+            
+            // Skip si no está en rango de fechas o si no tiene horarios
+            if (!dateOk || s.getWindows() == null || s.getWindows().isEmpty())
                 continue;
 
             boolean any = s.getWindows().stream().anyMatch(w -> w.getWeekday() == weekday
