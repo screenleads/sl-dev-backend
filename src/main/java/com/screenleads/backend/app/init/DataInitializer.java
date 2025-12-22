@@ -303,9 +303,8 @@ public class DataInitializer implements CommandLineRunner {
         private <T> boolean updateField(T current, T newValue, java.util.function.Consumer<T> setter) {
                 if (!Objects.equals(current, newValue)) {
                         setter.accept(newValue);
-                        return true;
                 }
-                return false;
+                return !Objects.equals(current, newValue);
         }
 
         private Integer calculateSortOrder(AppEntityConfig config) {
