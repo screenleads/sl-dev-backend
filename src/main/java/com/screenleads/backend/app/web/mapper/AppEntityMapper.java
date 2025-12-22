@@ -55,7 +55,8 @@ public final class AppEntityMapper {
         if (a.getEnumValues() != null) {
             try {
                 enumJson = MAPPER.writeValueAsString(a.getEnumValues());
-            } catch (Exception ignore) {
+            } catch (Exception e) {
+                // Ignore serialization errors, keep null
             }
         }
 
@@ -125,7 +126,8 @@ public final class AppEntityMapper {
                 List<String> parsed = MAPPER.readValue(d.enumValuesJson(), new TypeReference<List<String>>() {
                 });
                 a.setEnumValues(parsed);
-            } catch (Exception ignore) {
+            } catch (Exception e) {
+                // Ignore deserialization errors, keep existing values
             }
         }
     }

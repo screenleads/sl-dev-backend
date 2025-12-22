@@ -455,7 +455,8 @@ public class DataInitializer implements CommandLineRunner {
                                 Class<?> idClass = idt.getIdType().getJavaType();
                                 return simpleJavaToType(idClass);
                         }
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+                        // Fallback to Long if ID type cannot be determined
                 }
                 return "Long";
         }

@@ -185,8 +185,14 @@ public class MediaController {
                 .map(firebaseService::getPublicUrl)
                 .toList();
 
-        String type = foundMain.startsWith("media/videos") ? "video"
-                : foundMain.startsWith("media/images") ? "image" : "unknown";
+        String type;
+        if (foundMain.startsWith("media/videos")) {
+            type = "video";
+        } else if (foundMain.startsWith("media/images")) {
+            type = "image";
+        } else {
+            type = "unknown";
+        }
 
         return ResponseEntity.ok(Map.of(
                 STATUS_KEY, "ready",
@@ -249,18 +255,22 @@ public class MediaController {
 
     @CrossOrigin
     @GetMapping("/medias/render/{id}")
-    public ResponseEntity<Resource> getImage(@PathVariable Long id) throws Exception {
-        Optional<MediaDTO> mediaaux = mediaService.getMediaById(id);
-        if (!mediaaux.isPresent()) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<Resource> getImage(@PathVariable Long id) throws MediaException {
+        try {
+            Optional<MediaDTO> mediaaux = mediaService.getMediaById(id);
+            if (!mediaaux.isPresent()) {
+                return ResponseEntity.notFound().build();
+            }
+            Path filePath = Paths.get("src/main/resources/static/medias/").resolve(mediaaux.get().src()).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+            if (!resource.exists())
+                return ResponseEntity.notFound().build();
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType("application/octet-stream"))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            throw new MediaException("Failed to render media", e);
         }
-        Path filePath = Paths.get("src/main/resources/static/medias/").resolve(mediaaux.get().src()).normalize();
-        Resource resource = new UrlResource(filePath.toUri());
-        if (!resource.exists())
-            return ResponseEntity.notFound().build();
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("application/octet-stream"))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                .body(resource);
     }
 }

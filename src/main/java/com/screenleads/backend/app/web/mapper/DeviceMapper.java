@@ -8,6 +8,10 @@ import com.screenleads.backend.app.web.dto.DeviceDTO;
 import com.screenleads.backend.app.web.dto.DeviceTypeDTO;
 
 public class DeviceMapper {
+
+    private DeviceMapper() {
+    }
+
     public static DeviceDTO toDTO(Device device) {
         return new DeviceDTO(
             device.getId(),

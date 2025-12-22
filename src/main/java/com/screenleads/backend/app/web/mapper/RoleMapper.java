@@ -6,6 +6,9 @@ import com.screenleads.backend.app.web.dto.RoleDTO;
 
 public class RoleMapper {
 
+    private RoleMapper() {
+    }
+
     public static RoleDTO toDTO(Role r) {
         if (r == null)
             return null;

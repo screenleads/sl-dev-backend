@@ -46,28 +46,34 @@ public class StripeWebhookController {
                     break;
             }
             return ResponseEntity.ok("success");
+        } catch (WebhookProcessingException e) {
+            return ResponseEntity.badRequest().body("webhook error: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("webhook error");
         }
     }
 
-    private void handleCheckoutSessionCompleted(com.stripe.model.Event event) throws Exception {
-        var session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
-        if (session == null) {
-            return;
-        }
+    private void handleCheckoutSessionCompleted(com.stripe.model.Event event) throws WebhookProcessingException {
+        try {
+            var session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
+            if (session == null) {
+                return;
+            }
 
-        String subId = session.getSubscription();
-        var sub = stripe.subscriptions().retrieve(subId);
-        var item = sub.getItems().getData().get(0);
+            String subId = session.getSubscription();
+            var sub = stripe.subscriptions().retrieve(subId);
+            var item = sub.getItems().getData().get(0);
 
-        String customerId = session.getCustomer();
-        var company = companies.findByStripeCustomerId(customerId).orElse(null);
-        if (company != null) {
-            company.setStripeSubscriptionId(subId);
-            company.setStripeSubscriptionItemId(item.getId());
-            company.setBillingStatus(sub.getStatus());
-            companies.save(company);
+            String customerId = session.getCustomer();
+            var company = companies.findByStripeCustomerId(customerId).orElse(null);
+            if (company != null) {
+                company.setStripeSubscriptionId(subId);
+                company.setStripeSubscriptionItemId(item.getId());
+                company.setBillingStatus(sub.getStatus());
+                companies.save(company);
+            }
+        } catch (Exception e) {
+            throw new WebhookProcessingException("Failed to handle checkout session completed", e);
         }
     }
 

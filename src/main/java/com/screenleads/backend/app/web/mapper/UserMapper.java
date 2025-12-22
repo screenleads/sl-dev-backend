@@ -6,6 +6,10 @@ import com.screenleads.backend.app.web.dto.CompanyRefDTO;
 import com.screenleads.backend.app.web.dto.UserDto;
 
 public class UserMapper {
+
+    private UserMapper() {
+    }
+
     public static UserDto toDto(User u) {
         if (u == null)
             return null;
@@ -17,22 +21,36 @@ public class UserMapper {
                 .lastName(u.getLastName())
                 .companyId(u.getCompany() != null ? u.getCompany().getId() : null)
                 .company(toCompanyRefDTO(u.getCompany()))
-                .profileImage(u.getProfileImage() != null ? new com.screenleads.backend.app.web.dto.MediaSlimDTO(
-                        u.getProfileImage().getId(),
-                        u.getProfileImage().getSrc(),
-                        u.getProfileImage().getType() != null ? new com.screenleads.backend.app.web.dto.MediaTypeDTO(
-                                u.getProfileImage().getType().getId(),
-                                u.getProfileImage().getType().getExtension(),
-                                u.getProfileImage().getType().getType(),
-                                u.getProfileImage().getType().getEnabled()) : null,
-                        u.getProfileImage().getCreatedAt(),
-                        u.getProfileImage().getUpdatedAt()) : null)
+                .profileImage(buildProfileImageDTO(u.getProfileImage()))
                 .role(u.getRole() != null ? new com.screenleads.backend.app.web.dto.RoleDTO(
                         u.getRole().getId(),
                         u.getRole().getRole(),
                         u.getRole().getDescription(),
                         u.getRole().getLevel()) : null)
                 .build();
+    }
+
+    private static com.screenleads.backend.app.web.dto.MediaSlimDTO buildProfileImageDTO(
+            com.screenleads.backend.app.domain.model.Media profileImage) {
+        if (profileImage == null) {
+            return null;
+        }
+
+        com.screenleads.backend.app.web.dto.MediaTypeDTO mediaTypeDTO = null;
+        if (profileImage.getType() != null) {
+            mediaTypeDTO = new com.screenleads.backend.app.web.dto.MediaTypeDTO(
+                    profileImage.getType().getId(),
+                    profileImage.getType().getExtension(),
+                    profileImage.getType().getType(),
+                    profileImage.getType().getEnabled());
+        }
+
+        return new com.screenleads.backend.app.web.dto.MediaSlimDTO(
+                profileImage.getId(),
+                profileImage.getSrc(),
+                mediaTypeDTO,
+                profileImage.getCreatedAt(),
+                profileImage.getUpdatedAt());
     }
 
     private static CompanyRefDTO toCompanyRefDTO(Company company) {

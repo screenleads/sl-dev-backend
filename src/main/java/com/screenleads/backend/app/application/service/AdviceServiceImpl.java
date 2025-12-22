@@ -505,10 +505,12 @@ public class AdviceServiceImpl implements AdviceService {
     }
 
     private void logSavedAdvice(Advice saved) {
-        int totalWindows = saved.getSchedules() == null ? 0
-                : saved.getSchedules().stream()
-                        .mapToInt(s -> s.getWindows() == null ? 0 : s.getWindows().size())
-                        .sum();
+        int totalWindows = 0;
+        if (saved.getSchedules() != null) {
+            totalWindows = saved.getSchedules().stream()
+                    .mapToInt(s -> s.getWindows() == null ? 0 : s.getWindows().size())
+                    .sum();
+        }
         log.debug("[AdviceServiceImpl] Advice guardado con ID {}. Total ventanas: {}", saved.getId(), totalWindows);
     }
 

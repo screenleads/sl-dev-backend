@@ -1,5 +1,6 @@
 package com.screenleads.backend.app.web.controller;
 
+import com.screenleads.backend.app.application.service.BillingException;
 import com.screenleads.backend.app.application.service.StripeBillingService;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ public class BillingController {
 
     @PostMapping("/checkout-session/{companyId}")
     @PreAuthorize("hasRole('admin') or hasRole('company_admin')")
-    public Map<String, String> createCheckout(@PathVariable Long companyId) throws Exception {
+    public Map<String, String> createCheckout(@PathVariable Long companyId) throws BillingException {
         var company = companies.findById(companyId).orElseThrow();
         String sessionId = billing.createCheckoutSession(company);
         return Map.of("id", sessionId);
@@ -25,7 +26,7 @@ public class BillingController {
 
     @PostMapping("/portal-session/{companyId}")
     @PreAuthorize("hasRole('admin') or hasRole('company_admin')")
-    public Map<String, String> portal(@PathVariable Long companyId) throws Exception {
+    public Map<String, String> portal(@PathVariable Long companyId) throws BillingException {
         var company = companies.findById(companyId).orElseThrow();
         String url = billing.createBillingPortalSession(company);
         return Map.of("url", url);

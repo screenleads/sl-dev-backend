@@ -5,6 +5,9 @@ import com.screenleads.backend.app.web.dto.ApiKeyDTO;
 
 public class ApiKeyMapper {
 
+    private ApiKeyMapper() {
+    }
+
     public static ApiKeyDTO toDto(ApiKey apiKey) {
         if (apiKey == null) {
             return null;
