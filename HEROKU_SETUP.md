@@ -73,16 +73,16 @@ heroku releases:retry -a sl-dev-backend-pre
 Después del deploy, verificar que FFmpeg esté disponible:
 
 ```bash
-# Conectar a dyno
-heroku run bash -a sl-dev-backend-pre
+# Verificar ubicación de FFmpeg
+heroku run "which ffmpeg" -a sl-dev-backend-pre
+# Output esperado: /app/vendor/ffmpeg/ffmpeg
 
-# Verificar FFmpeg
-which ffmpeg
-ffmpeg -version
-
-# Should output:
-# ffmpeg version ...
+# Verificar versión de FFmpeg
+heroku run "ffmpeg -version" -a sl-dev-backend-pre
+# Output esperado: ffmpeg version N-71064...
 ```
+
+**IMPORTANTE**: La aplicación está configurada para usar automáticamente el FFmpeg del buildpack en Heroku (`/app/vendor/ffmpeg/ffmpeg`). El código de `MediaProcessingService` detecta si está en Heroku y usa el FFmpeg correcto.
 
 ## Logs de Verificación
 

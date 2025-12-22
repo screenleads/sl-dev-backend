@@ -11,6 +11,8 @@ import ws.schild.jave.encode.EncodingAttributes;
 import ws.schild.jave.encode.VideoAttributes;
 import ws.schild.jave.info.MultimediaInfo;
 import ws.schild.jave.info.VideoInfo;
+import ws.schild.jave.process.ProcessLocator;
+import ws.schild.jave.process.ffmpeg.DefaultFFMPEGLocator;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -31,6 +33,41 @@ public class MediaProcessingService {
     private static final int AUDIO_BITRATE = 128000; // 128kbps
     private static final int MAX_IMAGE_WIDTH = 1920;
     private static final int MAX_IMAGE_HEIGHT = 1080;
+    
+    /**
+     * Custom ProcessLocator que usa el FFmpeg de Heroku buildpack
+     */
+    private static class HerokuFFmpegLocator implements ProcessLocator {
+        private final String ffmpegPath;
+        
+        public HerokuFFmpegLocator(String ffmpegPath) {
+            this.ffmpegPath = ffmpegPath;
+        }
+        
+        @Override
+        public String getExecutablePath() {
+            return ffmpegPath;
+        }
+    }
+    
+    /**
+     * Obtiene el ProcessLocator correcto para FFmpeg.
+     * En Heroku, usa el FFmpeg instalado por el buildpack en /app/vendor/ffmpeg/ffmpeg
+     * En local, usa el FFmpeg embebido de JAVE
+     */
+    private ProcessLocator getFFmpegLocator() {
+        // Verificar si estamos en Heroku (buildpack instala FFmpeg en /app/vendor/ffmpeg/)
+        String herokuFFmpegPath = "/app/vendor/ffmpeg/ffmpeg";
+        File herokuFFmpeg = new File(herokuFFmpegPath);
+        
+        if (herokuFFmpeg.exists() && herokuFFmpeg.canExecute()) {
+            log.info("🎬 Usando FFmpeg de Heroku buildpack: {}", herokuFFmpegPath);
+            return new HerokuFFmpegLocator(herokuFFmpegPath);
+        }
+        
+        log.info("💻 Usando FFmpeg embebido de JAVE (ambiente local)");
+        return new DefaultFFMPEGLocator(); // Default = JAVE usará su FFmpeg embebido
+    }
 
     public record ProcessingResult(
             String mainUrl,
@@ -176,7 +213,11 @@ public class MediaProcessingService {
             attrs.setAudioAttributes(audio);
             attrs.setVideoAttributes(video);
 
-            Encoder encoder = new Encoder();
+            // Crear encoder con FFmpeg correcto (Heroku buildpack o JAVE embebido)
+            ProcessLocator ffmpegLocator = getFFmpegLocator();
+            Encoder encoder = new Encoder(ffmpegLocator);
+            
+            log.info("🎬 Iniciando compresión de video con FFmpeg...");
             encoder.encode(multimediaObject, target, attrs);
 
             log.info("🎥 Video comprimido: {} → {} bytes",
