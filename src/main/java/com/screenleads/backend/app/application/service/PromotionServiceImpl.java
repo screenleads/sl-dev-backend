@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,7 +62,7 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
-    public PromotionDTO savePromotion(@org.springframework.lang.Nullable PromotionDTO dto) {
+    public PromotionDTO savePromotion(@Nullable PromotionDTO dto) {
         // Mapear DTO -> Entity sin suponer getters concretos
         Promotion toSave = map(dto, Promotion.class);
         Promotion saved = promotionRepository.save(toSave);
