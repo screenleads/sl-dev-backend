@@ -178,7 +178,10 @@ public class MediaProcessingService {
             Path tempOutput = Files.createTempFile("compressed_video_", ".mp4");
             File target = tempOutput.toFile();
 
-            MultimediaObject multimediaObject = new MultimediaObject(source);
+            // Obtener FFmpeg locator ANTES de crear MultimediaObject
+            ProcessLocator ffmpegLocator = getFFmpegLocator();
+            
+            MultimediaObject multimediaObject = new MultimediaObject(source, ffmpegLocator);
             MultimediaInfo info = multimediaObject.getInfo();
 
             // Configurar atributos de audio
@@ -213,8 +216,7 @@ public class MediaProcessingService {
             attrs.setAudioAttributes(audio);
             attrs.setVideoAttributes(video);
 
-            // Crear encoder con FFmpeg correcto (Heroku buildpack o JAVE embebido)
-            ProcessLocator ffmpegLocator = getFFmpegLocator();
+            // Crear encoder con FFmpeg correcto (ya inicializado arriba)
             Encoder encoder = new Encoder(ffmpegLocator);
             
             log.info("🎬 Iniciando compresión de video con FFmpeg...");
@@ -235,7 +237,10 @@ public class MediaProcessingService {
             Path tempThumb = Files.createTempFile("video_thumb_", ".jpg");
             File target = tempThumb.toFile();
 
-            MultimediaObject multimediaObject = new MultimediaObject(videoFile);
+            // Obtener FFmpeg locator para usar en MultimediaObject y Encoder
+            ProcessLocator ffmpegLocator = getFFmpegLocator();
+            
+            MultimediaObject multimediaObject = new MultimediaObject(videoFile, ffmpegLocator);
 
             // Extraer frame en el segundo 1
             VideoAttributes video = new VideoAttributes();
@@ -248,7 +253,7 @@ public class MediaProcessingService {
             attrs.setDuration(0.001f); // un solo frame
             attrs.setVideoAttributes(video);
 
-            Encoder encoder = new Encoder();
+            Encoder encoder = new Encoder(ffmpegLocator);
             encoder.encode(multimediaObject, target, attrs);
 
             return target;
