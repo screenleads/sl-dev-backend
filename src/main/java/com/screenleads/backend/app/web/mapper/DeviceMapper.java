@@ -14,23 +14,24 @@ public class DeviceMapper {
 
     public static DeviceDTO toDTO(Device device) {
         return new DeviceDTO(
-            device.getId(),
-            device.getUuid(),
-            device.getDescriptionName(),
-            device.getWidth(),
-            device.getHeight(),
-            toDeviceTypeDTO(device.getType()),
-            toCompanyRefDTO(device.getCompany())
-        );
+                device.getId(),
+                device.getUuid(),
+                device.getDescriptionName(),
+                device.getWidth(),
+                device.getHeight(),
+                toDeviceTypeDTO(device.getType()),
+                toCompanyRefDTO(device.getCompany()));
     }
 
     public static DeviceTypeDTO toDeviceTypeDTO(DeviceType type) {
-        if (type == null) return null;
+        if (type == null)
+            return null;
         return new DeviceTypeDTO(type.getId(), type.getType(), type.getEnabled());
     }
 
     public static CompanyRefDTO toCompanyRefDTO(Company company) {
-        if (company == null) return null;
+        if (company == null)
+            return null;
         return new CompanyRefDTO(company.getId(), company.getName());
     }
 }

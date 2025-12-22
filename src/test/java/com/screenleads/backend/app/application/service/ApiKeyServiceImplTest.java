@@ -84,7 +84,7 @@ class ApiKeyServiceImplTest {
         // Arrange
         when(clientRepository.findByClientIdAndActiveTrue("client-123"))
                 .thenReturn(Optional.of(testClient));
-        
+
         ArgumentCaptor<ApiKey> apiKeyCaptor = ArgumentCaptor.forClass(ApiKey.class);
         when(apiKeyRepository.save(apiKeyCaptor.capture())).thenReturn(testApiKey);
 
@@ -241,7 +241,7 @@ class ApiKeyServiceImplTest {
         // Arrange
         when(clientRepository.findByClientIdAndActiveTrue("client-123"))
                 .thenReturn(Optional.of(testClient));
-        
+
         ArgumentCaptor<ApiKey> apiKeyCaptor = ArgumentCaptor.forClass(ApiKey.class);
         when(apiKeyRepository.save(apiKeyCaptor.capture())).thenReturn(testApiKey);
 

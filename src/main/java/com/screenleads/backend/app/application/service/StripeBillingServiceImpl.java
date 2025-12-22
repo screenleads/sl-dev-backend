@@ -94,26 +94,26 @@ public class StripeBillingServiceImpl implements StripeBillingService {
             String endpoint = String.format("https://api.stripe.com/v1/subscription_items/%s/usage_records",
                     c.getStripeSubscriptionItemId());
 
-        StringBuilder postData = new StringBuilder();
-        postData.append("quantity=").append(URLEncoder.encode(String.valueOf(quantity), StandardCharsets.UTF_8));
-        postData.append("&timestamp=").append(URLEncoder.encode(String.valueOf(unixTs), StandardCharsets.UTF_8));
-        postData.append("&action=increment");
+            StringBuilder postData = new StringBuilder();
+            postData.append("quantity=").append(URLEncoder.encode(String.valueOf(quantity), StandardCharsets.UTF_8));
+            postData.append("&timestamp=").append(URLEncoder.encode(String.valueOf(unixTs), StandardCharsets.UTF_8));
+            postData.append("&action=increment");
 
-        byte[] postDataBytes = postData.toString().getBytes(StandardCharsets.UTF_8);
+            byte[] postDataBytes = postData.toString().getBytes(StandardCharsets.UTF_8);
 
-        URL url = new URL(endpoint);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Authorization", "Bearer " + apiKey);
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        conn.setDoOutput(true);
-        try (OutputStream os = conn.getOutputStream()) {
-            os.write(postDataBytes);
-        }
-        int responseCode = conn.getResponseCode();
-        if (responseCode < 200 || responseCode >= 300) {
-            throw new RuntimeException("Stripe usage report failed: HTTP " + responseCode);
-        }
+            URL url = new URL(endpoint);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Authorization", "Bearer " + apiKey);
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            conn.setDoOutput(true);
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(postDataBytes);
+            }
+            int responseCode = conn.getResponseCode();
+            if (responseCode < 200 || responseCode >= 300) {
+                throw new RuntimeException("Stripe usage report failed: HTTP " + responseCode);
+            }
         } catch (Exception e) {
             throw new BillingException("Failed to report lead usage", e);
         }

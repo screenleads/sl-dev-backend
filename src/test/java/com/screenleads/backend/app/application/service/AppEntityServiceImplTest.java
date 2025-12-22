@@ -56,7 +56,7 @@ class AppEntityServiceImplTest {
         // Setup test entity
         List<AppEntityAttribute> attributes = new ArrayList<>();
         attributes.add(testAttribute);
-        
+
         testEntity = AppEntity.builder()
                 .id(1L)
                 .resource("test_resource")

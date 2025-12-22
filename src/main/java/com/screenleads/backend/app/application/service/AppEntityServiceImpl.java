@@ -271,8 +271,8 @@ public class AppEntityServiceImpl implements AppEntityService {
         return byId;
     }
 
-    private void validateAttributesBelongToEntity(List<Long> orderedAttributeIds, 
-                                                   Map<Long, AppEntityAttribute> byId, Long entityId) {
+    private void validateAttributesBelongToEntity(List<Long> orderedAttributeIds,
+            Map<Long, AppEntityAttribute> byId, Long entityId) {
         for (Long id : orderedAttributeIds) {
             if (!byId.containsKey(id)) {
                 throw new IllegalArgumentException("El atributo " + id + " no pertenece a la entidad " + entityId);
@@ -280,8 +280,8 @@ public class AppEntityServiceImpl implements AppEntityService {
         }
     }
 
-    private void applyNewAttributeOrder(List<Long> orderedAttributeIds, 
-                                        Map<Long, AppEntityAttribute> byId, AppEntity entity) {
+    private void applyNewAttributeOrder(List<Long> orderedAttributeIds,
+            Map<Long, AppEntityAttribute> byId, AppEntity entity) {
         int order = 0;
 
         // Reordena los indicados primero

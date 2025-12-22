@@ -205,10 +205,10 @@ class AppEntityMapperTest {
         attr.setAttrType("Enum");
         attr.setDataType("String");
         attr.setRelationTarget("StatusEnum");
-        
+
         List<String> enumValues = Arrays.asList("ACTIVE", "INACTIVE", "PENDING");
         attr.setEnumValues(enumValues);
-        
+
         attr.setListVisible(true);
         attr.setListOrder(5);
         attr.setListLabel("Status");
@@ -216,7 +216,7 @@ class AppEntityMapperTest {
         attr.setListAlign("center");
         attr.setListSearchable(true);
         attr.setListSortable(true);
-        
+
         attr.setFormVisible(true);
         attr.setFormOrder(2);
         attr.setFormLabel("User Status");
@@ -225,16 +225,16 @@ class AppEntityMapperTest {
         attr.setHelpText("User account status");
         attr.setRequired(true);
         attr.setReadOnly(false);
-        
+
         attr.setMinNum(null);
         attr.setMaxNum(null);
         attr.setMinLen(1);
         attr.setMaxLen(20);
         attr.setPattern("[A-Z]+");
-        
+
         attr.setDefaultValue("PENDING");
         attr.setOptionsEndpoint("/api/statuses");
-        
+
         return attr;
     }
 

@@ -85,7 +85,7 @@ public class AdviceServiceImpl implements AdviceService {
         for (AdviceSchedule s : a.getSchedules()) {
             boolean dateOk = (s.getStartDate() == null || !date.isBefore(s.getStartDate()))
                     && (s.getEndDate() == null || !date.isAfter(s.getEndDate()));
-            
+
             // Skip si no está en rango de fechas o si no tiene horarios
             if (!dateOk || s.getWindows() == null || s.getWindows().isEmpty())
                 continue;
