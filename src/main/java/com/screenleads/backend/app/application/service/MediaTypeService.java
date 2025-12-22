@@ -10,9 +10,9 @@ public interface MediaTypeService {
 
     Optional<MediaTypeDTO> getMediaTypeById(Long id);
 
-    MediaTypeDTO saveMediaType(MediaTypeDTO MediaTypeDTO);
+    MediaTypeDTO saveMediaType(MediaTypeDTO dto);
 
-    MediaTypeDTO updateMediaType(Long id, MediaTypeDTO MediaTypeDTO);
+    MediaTypeDTO updateMediaType(Long id, MediaTypeDTO dto);
 
     void deleteMediaType(Long id);
 }

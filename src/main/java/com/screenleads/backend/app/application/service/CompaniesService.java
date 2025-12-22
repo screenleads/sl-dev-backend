@@ -10,9 +10,9 @@ public interface CompaniesService {
 
     Optional<CompanyDTO> getCompanyById(Long id);
 
-    CompanyDTO saveCompany(CompanyDTO CompanyDTO);
+    CompanyDTO saveCompany(CompanyDTO dto);
 
-    CompanyDTO updateCompany(Long id, CompanyDTO CompanyDTO);
+    CompanyDTO updateCompany(Long id, CompanyDTO dto);
 
     void deleteCompany(Long id);
 }

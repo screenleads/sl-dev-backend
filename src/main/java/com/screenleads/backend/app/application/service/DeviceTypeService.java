@@ -10,9 +10,9 @@ public interface DeviceTypeService {
 
     Optional<DeviceTypeDTO> getDeviceTypeById(Long id);
 
-    DeviceTypeDTO saveDeviceType(DeviceTypeDTO DeviceTypeDTO);
+    DeviceTypeDTO saveDeviceType(DeviceTypeDTO dto);
 
-    DeviceTypeDTO updateDeviceType(Long id, DeviceTypeDTO DeviceTypeDTO);
+    DeviceTypeDTO updateDeviceType(Long id, DeviceTypeDTO dto);
 
     void deleteDeviceType(Long id);
 }

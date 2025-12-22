@@ -303,7 +303,7 @@ class AppEntityServiceImplTest {
     @DisplayName("reorderEntities should throw exception when list is empty")
     void whenReorderEntitiesWithEmptyList_thenThrowException() {
         // Act & Assert
-        assertThatThrownBy(() -> reorderWithEmptyList())
+        assertThatThrownBy(this::reorderWithEmptyList)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Debe enviarse una lista de IDs");
     }
@@ -316,7 +316,7 @@ class AppEntityServiceImplTest {
     @DisplayName("reorderEntities should throw exception when list contains duplicates")
     void whenReorderEntitiesWithDuplicates_thenThrowException() {
         // Act & Assert
-        assertThatThrownBy(() -> reorderWithDuplicates())
+        assertThatThrownBy(this::reorderWithDuplicates)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("duplicados");
     }
@@ -333,7 +333,7 @@ class AppEntityServiceImplTest {
                 .thenReturn(List.of(testEntity));
 
         // Act & Assert
-        assertThatThrownBy(() -> reorderWithInvalidId())
+        assertThatThrownBy(this::reorderWithInvalidId)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("no pertenece a entidades visibles");
     }
@@ -374,7 +374,7 @@ class AppEntityServiceImplTest {
         when(appEntityRepository.findWithAttributesById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> reorderAttributesNotFound())
+        assertThatThrownBy(this::reorderAttributesNotFound)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("AppEntity no encontrada");
     }
@@ -387,7 +387,7 @@ class AppEntityServiceImplTest {
     @DisplayName("reorderAttributes should throw exception when attribute list contains duplicates")
     void whenReorderAttributesWithDuplicates_thenThrowException() {
         // Act & Assert
-        assertThatThrownBy(() -> reorderAttributesWithDuplicates())
+        assertThatThrownBy(this::reorderAttributesWithDuplicates)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("duplicados");
     }

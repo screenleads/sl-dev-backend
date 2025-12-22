@@ -12,6 +12,7 @@ import com.screenleads.backend.app.domain.model.AppEntity;
 import com.screenleads.backend.app.domain.model.AppEntityAttribute;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.DeviceType;
+import com.screenleads.backend.app.domain.model.Media;
 import com.screenleads.backend.app.domain.model.MediaType;
 import com.screenleads.backend.app.domain.model.Role;
 import com.screenleads.backend.app.domain.model.User;
@@ -117,7 +118,7 @@ public class DataInitializer implements CommandLineRunner {
                                 if (company != null && adviceRepository.count() == 0) {
                                         log.info("[MOCK] Creando anuncio de test por inicialización...");
                                         String mediaSrc = "https://storage.googleapis.com/screenleads-e7e0b.firebasestorage.app/media/videos/compressed-e69233c4-260a-4b3c-8ba6-876c34989725-tv_desayunos_1.mp4";
-                                        Long mediaId = mediaRepository.findBySrc(mediaSrc).map(m -> m.getId())
+                                        Long mediaId = mediaRepository.findBySrc(mediaSrc).map(Media::getId)
                                                         .orElse(null);
                                         AdviceDTO mockDto = new AdviceDTO(
                                                         null,

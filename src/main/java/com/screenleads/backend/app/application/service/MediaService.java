@@ -10,9 +10,9 @@ public interface MediaService {
 
     Optional<MediaDTO> getMediaById(Long id);
 
-    MediaDTO saveMedia(MediaDTO MediaDTO);
+    MediaDTO saveMedia(MediaDTO dto);
 
-    MediaDTO updateMedia(Long id, MediaDTO MediaDTO);
+    MediaDTO updateMedia(Long id, MediaDTO dto);
 
     void deleteMedia(Long id);
 }
