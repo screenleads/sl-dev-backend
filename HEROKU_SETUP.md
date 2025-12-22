@@ -1,0 +1,119 @@
+# Configuración de Heroku para sl-dev-backend-pre
+
+## Buildpacks Requeridos
+
+La aplicación necesita dos buildpacks en este orden:
+
+1. **FFmpeg Buildpack** (para procesamiento de videos)
+2. **Java Buildpack** (para la aplicación Spring Boot)
+
+## Instalación de FFmpeg Buildpack
+
+### Opción 1: Usando Heroku CLI (Recomendado)
+
+```bash
+# 1. Agregar el buildpack de FFmpeg
+heroku buildpacks:add --index 1 https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git -a sl-dev-backend-pre
+
+# 2. Verificar buildpacks
+heroku buildpacks -a sl-dev-backend-pre
+```
+
+**Output esperado:**
+```
+=== sl-dev-backend-pre Buildpack URLs
+1. https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git
+2. heroku/java
+```
+
+### Opción 2: Desde Heroku Dashboard
+
+1. Ir a: https://dashboard.heroku.com/apps/sl-dev-backend-pre/settings
+2. Scroll hasta "Buildpacks"
+3. Click "Add buildpack"
+4. Pegar: `https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git`
+5. Click "Save changes"
+6. **IMPORTANTE**: Arrastrar el buildpack de FFmpeg para que esté ANTES de `heroku/java`
+
+## Variables de Entorno Requeridas
+
+Verificar que estas variables estén configuradas:
+
+```bash
+# Verificar variables de Firebase
+heroku config:get FIREBASE_ENABLED -a sl-dev-backend-pre
+heroku config:get GOOGLE_CREDENTIALS_BASE64 -a sl-dev-backend-pre
+heroku config:get FIREBASE_STORAGE_BUCKET -a sl-dev-backend-pre
+
+# Si falta alguna, configurarla:
+heroku config:set FIREBASE_ENABLED=true -a sl-dev-backend-pre
+heroku config:set GOOGLE_CREDENTIALS_BASE64="ewogICJ0eX..." -a sl-dev-backend-pre
+heroku config:set FIREBASE_STORAGE_BUCKET="screenleads-e7e0b.firebasestorage.app" -a sl-dev-backend-pre
+```
+
+## Re-deploy después de agregar buildpack
+
+Después de agregar el buildpack, necesitas hacer un nuevo deploy:
+
+```bash
+# Forzar rebuild con buildpack de FFmpeg
+git commit --allow-empty -m "chore: rebuild with ffmpeg buildpack"
+git push origin main
+```
+
+O desde Heroku CLI:
+```bash
+heroku releases -a sl-dev-backend-pre
+heroku releases:rollback v<número_anterior> -a sl-dev-backend-pre
+heroku releases:retry -a sl-dev-backend-pre
+```
+
+## Verificación
+
+Después del deploy, verificar que FFmpeg esté disponible:
+
+```bash
+# Conectar a dyno
+heroku run bash -a sl-dev-backend-pre
+
+# Verificar FFmpeg
+which ffmpeg
+ffmpeg -version
+
+# Should output:
+# ffmpeg version ...
+```
+
+## Logs de Verificación
+
+Buscar en los logs:
+
+```bash
+heroku logs --tail -a sl-dev-backend-pre
+```
+
+Deberías ver:
+- `🔥 Iniciando configuración de Firebase...`
+- `✅ Firebase inicializado correctamente`
+- `📦 Storage Bucket: screenleads-e7e0b.firebasestorage.app`
+- Sin errores de `Cannot run program "/tmp/jave/ffmpeg-amd64-3.5.0"`
+
+## Troubleshooting
+
+### Error: "Cannot run program ffmpeg"
+- **Causa**: Buildpack no instalado o en orden incorrecto
+- **Solución**: Verificar buildpacks con `heroku buildpacks -a sl-dev-backend-pre`
+
+### Error: "FirebaseApp with name [DEFAULT] doesn't exist"
+- **Causa**: Variable `FIREBASE_ENABLED` no configurada o en `false`
+- **Solución**: `heroku config:set FIREBASE_ENABLED=true -a sl-dev-backend-pre`
+
+### Videos no se procesan
+- **Causa**: FFmpeg no disponible
+- **Solución**: Seguir pasos de instalación de buildpack arriba
+
+## Documentación de Buildpacks
+
+- FFmpeg Buildpack: https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest
+- Java Buildpack: https://devcenter.heroku.com/articles/java-support
+- Buildpacks Order: https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app
