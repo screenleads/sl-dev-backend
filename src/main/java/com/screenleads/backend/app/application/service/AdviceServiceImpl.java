@@ -222,30 +222,9 @@ public class AdviceServiceImpl implements AdviceService {
         s.setStartDate(parseDate(sDto.getStartDate()));
         s.setEndDate(parseDate(sDto.getEndDate()));
 
-        List<AdviceTimeWindow> windows = new ArrayList<>();
-        // Soportar ambos formatos: windows plano y dayWindows agrupado
-        if (sDto.getWindows() != null && !sDto.getWindows().isEmpty()) {
-            for (AdviceTimeWindowDTO wDto : sDto.getWindows()) {
-                AdviceTimeWindow w = new AdviceTimeWindow();
-                w.setWeekday(parseWeekday(wDto.getWeekday()));
-                w.setFromTime(parseTime(wDto.getFromTime()));
-                w.setToTime(parseTime(wDto.getToTime()));
-                windows.add(w);
-            }
-        } else if (sDto.getDayWindows() != null && !sDto.getDayWindows().isEmpty()) {
-            for (AdviceScheduleDTO.DayWindowDTO day : sDto.getDayWindows()) {
-                if (day.getRanges() != null) {
-                    for (AdviceScheduleDTO.RangeDTO range : day.getRanges()) {
-                        AdviceTimeWindow w = new AdviceTimeWindow();
-                        w.setWeekday(parseWeekday(day.getWeekday()));
-                        w.setFromTime(parseTime(range.getFromTime()));
-                        w.setToTime(parseTime(range.getToTime()));
-                        windows.add(w);
-                    }
-                }
-            }
-        }
+        List<AdviceTimeWindow> windows = convertTimeWindows(sDto);
         validateAndNormalizeWindows(windows);
+        
         for (AdviceTimeWindow w : windows) {
             w.setSchedule(s);
         }
@@ -253,42 +232,53 @@ public class AdviceServiceImpl implements AdviceService {
         return s;
     }
 
-    private AdviceDTO convertToDTO(Advice advice) {
-        MediaUpsertDTO mediaDto = (advice.getMedia() != null)
-                ? new MediaUpsertDTO(advice.getMedia().getId(), advice.getMedia().getSrc())
-                : null;
+    private List<AdviceTimeWindow> convertTimeWindows(AdviceScheduleDTO sDto) {
+        List<AdviceTimeWindow> windows = new ArrayList<>();
+        
+        // Soportar ambos formatos: windows plano y dayWindows agrupado
+        if (sDto.getWindows() != null && !sDto.getWindows().isEmpty()) {
+            windows.addAll(convertFromPlainWindows(sDto.getWindows()));
+        } else if (sDto.getDayWindows() != null && !sDto.getDayWindows().isEmpty()) {
+            windows.addAll(convertFromDayWindows(sDto.getDayWindows()));
+        }
+        
+        return windows;
+    }
 
-        PromotionRefDTO promoDto = (advice.getPromotion() != null)
-                ? new PromotionRefDTO(advice.getPromotion().getId())
-                : null;
+    private List<AdviceTimeWindow> convertFromPlainWindows(List<AdviceTimeWindowDTO> windowDtos) {
+        List<AdviceTimeWindow> windows = new ArrayList<>();
+        for (AdviceTimeWindowDTO wDto : windowDtos) {
+            AdviceTimeWindow w = new AdviceTimeWindow();
+            w.setWeekday(parseWeekday(wDto.getWeekday()));
+            w.setFromTime(parseTime(wDto.getFromTime()));
+            w.setToTime(parseTime(wDto.getToTime()));
+            windows.add(w);
+        }
+        return windows;
+    }
 
-        CompanyRefDTO companyDto = (advice.getCompany() != null)
-                ? new CompanyRefDTO(advice.getCompany().getId(), advice.getCompany().getName())
-                : null;
-
-        Number intervalValue = (advice.getInterval() == null) ? null : advice.getInterval().getSeconds();
-
-        List<AdviceScheduleDTO> schedules = new ArrayList<>();
-        if (advice.getSchedules() != null) {
-            for (AdviceSchedule s : advice.getSchedules()) {
-                List<AdviceTimeWindowDTO> wins = new ArrayList<>();
-                if (s.getWindows() != null) {
-                    for (AdviceTimeWindow w : s.getWindows()) {
-                        wins.add(new AdviceTimeWindowDTO(
-                                w.getId(),
-                                w.getWeekday() != null ? w.getWeekday().name() : null,
-                                formatTime(w.getFromTime()),
-                                formatTime(w.getToTime())));
-                    }
+    private List<AdviceTimeWindow> convertFromDayWindows(List<AdviceScheduleDTO.DayWindowDTO> dayWindows) {
+        List<AdviceTimeWindow> windows = new ArrayList<>();
+        for (AdviceScheduleDTO.DayWindowDTO day : dayWindows) {
+            if (day.getRanges() != null) {
+                for (AdviceScheduleDTO.RangeDTO range : day.getRanges()) {
+                    AdviceTimeWindow w = new AdviceTimeWindow();
+                    w.setWeekday(parseWeekday(day.getWeekday()));
+                    w.setFromTime(parseTime(range.getFromTime()));
+                    w.setToTime(parseTime(range.getToTime()));
+                    windows.add(w);
                 }
-                schedules.add(new AdviceScheduleDTO(
-                        s.getId(),
-                        formatDate(s.getStartDate()),
-                        formatDate(s.getEndDate()),
-                        wins,
-                        null));
             }
         }
+        return windows;
+    }
+
+    private AdviceDTO convertToDTO(Advice advice) {
+        MediaUpsertDTO mediaDto = buildMediaRef(advice.getMedia());
+        PromotionRefDTO promoDto = buildPromotionRef(advice.getPromotion());
+        CompanyRefDTO companyDto = buildCompanyRef(advice.getCompany());
+        Number intervalValue = (advice.getInterval() == null) ? null : advice.getInterval().getSeconds();
+        List<AdviceScheduleDTO> schedules = buildScheduleDTOs(advice.getSchedules());
 
         return AdviceDTO.builder()
                 .id(advice.getId())
@@ -300,6 +290,48 @@ public class AdviceServiceImpl implements AdviceService {
                 .company(companyDto)
                 .schedules(schedules)
                 .build();
+    }
+
+    private MediaUpsertDTO buildMediaRef(Media media) {
+        return (media != null) ? new MediaUpsertDTO(media.getId(), media.getSrc()) : null;
+    }
+
+    private PromotionRefDTO buildPromotionRef(Promotion promotion) {
+        return (promotion != null) ? new PromotionRefDTO(promotion.getId()) : null;
+    }
+
+    private CompanyRefDTO buildCompanyRef(Company company) {
+        return (company != null) ? new CompanyRefDTO(company.getId(), company.getName()) : null;
+    }
+
+    private List<AdviceScheduleDTO> buildScheduleDTOs(List<AdviceSchedule> schedules) {
+        List<AdviceScheduleDTO> scheduleDtos = new ArrayList<>();
+        if (schedules != null) {
+            for (AdviceSchedule s : schedules) {
+                List<AdviceTimeWindowDTO> wins = buildTimeWindowDTOs(s.getWindows());
+                scheduleDtos.add(new AdviceScheduleDTO(
+                        s.getId(),
+                        formatDate(s.getStartDate()),
+                        formatDate(s.getEndDate()),
+                        wins,
+                        null));
+            }
+        }
+        return scheduleDtos;
+    }
+
+    private List<AdviceTimeWindowDTO> buildTimeWindowDTOs(List<AdviceTimeWindow> windows) {
+        List<AdviceTimeWindowDTO> wins = new ArrayList<>();
+        if (windows != null) {
+            for (AdviceTimeWindow w : windows) {
+                wins.add(new AdviceTimeWindowDTO(
+                        w.getId(),
+                        w.getWeekday() != null ? w.getWeekday().name() : null,
+                        formatTime(w.getFromTime()),
+                        formatTime(w.getToTime())));
+            }
+        }
+        return wins;
     }
 
     // ============================= HELPERS =============================

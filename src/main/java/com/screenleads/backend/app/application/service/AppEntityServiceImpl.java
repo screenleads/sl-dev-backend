@@ -87,41 +87,12 @@ public class AppEntityServiceImpl implements AppEntityService {
     @Override
     @Transactional
     public AppEntityDTO upsert(AppEntityDTO dto) {
-        if (dto == null) {
-            throw new IllegalArgumentException("AppEntityDTO nulo");
-        }
-        if (dto.resource() == null || dto.resource().isBlank()) {
-            throw new IllegalArgumentException("resource obligatorio en AppEntityDTO");
-        }
+        validateUpsertDto(dto);
 
-        AppEntity e;
-        if (dto.id() != null) {
-            e = repo.findById(dto.id())
-                    .orElseGet(() -> AppEntity.builder().id(dto.id()).resource(dto.resource()).build());
-        } else {
-            e = repo.findByResource(dto.resource())
-                    .orElseGet(() -> AppEntity.builder().resource(dto.resource()).build());
-        }
-
-        // Metadatos principales
-        e.setEntityName(nullIfBlank(dto.entityName(), e.getEntityName()));
-        e.setClassName(nullIfBlank(dto.className(), e.getClassName()));
-        e.setTableName(nullIfBlank(dto.tableName(), e.getTableName()));
-        e.setIdType(nullIfBlank(dto.idType(), e.getIdType()));
-        e.setEndpointBase(nullIfBlank(dto.endpointBase(), e.getEndpointBase()));
-        e.setCreateLevel(dto.createLevel() != null ? dto.createLevel() : e.getCreateLevel());
-        e.setReadLevel(dto.readLevel() != null ? dto.readLevel() : e.getReadLevel());
-        e.setUpdateLevel(dto.updateLevel() != null ? dto.updateLevel() : e.getUpdateLevel());
-        e.setDeleteLevel(dto.deleteLevel() != null ? dto.deleteLevel() : e.getDeleteLevel());
-        e.setVisibleInMenu(dto.visibleInMenu() != null ? dto.visibleInMenu() : e.getVisibleInMenu());
-        // Dashboard metadata
-        if (dto.displayLabel() != null && !dto.displayLabel().isBlank()) {
-            e.setDisplayLabel(dto.displayLabel());
-        } else if (e.getDisplayLabel() == null && e.getEntityName() != null) {
-            e.setDisplayLabel(e.getEntityName());
-        }
-        e.setIcon(dto.icon() != null ? dto.icon() : e.getIcon());
-        e.setSortOrder(dto.sortOrder() != null ? dto.sortOrder() : e.getSortOrder());
+        AppEntity e = findOrCreateEntity(dto);
+        mergeMainMetadata(e, dto);
+        mergePermissionLevels(e, dto);
+        mergeDashboardMetadata(e, dto);
 
         // Atributos (merge no destructivo)
         if (dto.attributes() != null) {
@@ -130,6 +101,51 @@ public class AppEntityServiceImpl implements AppEntityService {
 
         AppEntity saved = repo.save(e);
         return AppEntityMapper.toDto(saved);
+    }
+
+    private void validateUpsertDto(AppEntityDTO dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("AppEntityDTO nulo");
+        }
+        if (dto.resource() == null || dto.resource().isBlank()) {
+            throw new IllegalArgumentException("resource obligatorio en AppEntityDTO");
+        }
+    }
+
+    private AppEntity findOrCreateEntity(AppEntityDTO dto) {
+        if (dto.id() != null) {
+            return repo.findById(dto.id())
+                    .orElseGet(() -> AppEntity.builder().id(dto.id()).resource(dto.resource()).build());
+        } else {
+            return repo.findByResource(dto.resource())
+                    .orElseGet(() -> AppEntity.builder().resource(dto.resource()).build());
+        }
+    }
+
+    private void mergeMainMetadata(AppEntity e, AppEntityDTO dto) {
+        e.setEntityName(nullIfBlank(dto.entityName(), e.getEntityName()));
+        e.setClassName(nullIfBlank(dto.className(), e.getClassName()));
+        e.setTableName(nullIfBlank(dto.tableName(), e.getTableName()));
+        e.setIdType(nullIfBlank(dto.idType(), e.getIdType()));
+        e.setEndpointBase(nullIfBlank(dto.endpointBase(), e.getEndpointBase()));
+        e.setVisibleInMenu(dto.visibleInMenu() != null ? dto.visibleInMenu() : e.getVisibleInMenu());
+    }
+
+    private void mergePermissionLevels(AppEntity e, AppEntityDTO dto) {
+        e.setCreateLevel(dto.createLevel() != null ? dto.createLevel() : e.getCreateLevel());
+        e.setReadLevel(dto.readLevel() != null ? dto.readLevel() : e.getReadLevel());
+        e.setUpdateLevel(dto.updateLevel() != null ? dto.updateLevel() : e.getUpdateLevel());
+        e.setDeleteLevel(dto.deleteLevel() != null ? dto.deleteLevel() : e.getDeleteLevel());
+    }
+
+    private void mergeDashboardMetadata(AppEntity e, AppEntityDTO dto) {
+        if (dto.displayLabel() != null && !dto.displayLabel().isBlank()) {
+            e.setDisplayLabel(dto.displayLabel());
+        } else if (e.getDisplayLabel() == null && e.getEntityName() != null) {
+            e.setDisplayLabel(e.getEntityName());
+        }
+        e.setIcon(dto.icon() != null ? dto.icon() : e.getIcon());
+        e.setSortOrder(dto.sortOrder() != null ? dto.sortOrder() : e.getSortOrder());
     }
 
     @Override
@@ -147,7 +163,21 @@ public class AppEntityServiceImpl implements AppEntityService {
             throw new IllegalArgumentException("Debe enviarse una lista de IDs para reordenar.");
         }
 
-        // Validar duplicados en la lista
+        validateNoDuplicates(orderedIds);
+
+        List<AppEntity> visibles = repo.findByVisibleInMenuTrueOrderBySortOrderAsc();
+        if (visibles.isEmpty()) {
+            return;
+        }
+
+        Map<Long, AppEntity> byId = buildEntityMap(visibles);
+        validateAllIdsExist(orderedIds, byId);
+        applyNewOrder(orderedIds, byId, visibles);
+
+        repo.saveAll(visibles);
+    }
+
+    private void validateNoDuplicates(List<Long> orderedIds) {
         var seen = new HashSet<Long>();
         for (Long id : orderedIds) {
             if (id == null) {
@@ -157,30 +187,32 @@ public class AppEntityServiceImpl implements AppEntityService {
                 throw new IllegalArgumentException("La lista de IDs contiene duplicados: " + id);
             }
         }
+    }
 
-        // Reordenamos SOLO las visibles en menú
-        List<AppEntity> visibles = repo.findByVisibleInMenuTrueOrderBySortOrderAsc();
-        if (visibles.isEmpty())
-            return;
-
+    private Map<Long, AppEntity> buildEntityMap(List<AppEntity> entities) {
         Map<Long, AppEntity> byId = new HashMap<>();
-        for (AppEntity e : visibles) {
+        for (AppEntity e : entities) {
             byId.put(e.getId(), e);
         }
+        return byId;
+    }
 
-        // Validar que todos los IDs pertenezcan al conjunto visible
+    private void validateAllIdsExist(List<Long> orderedIds, Map<Long, AppEntity> byId) {
         for (Long id : orderedIds) {
             if (!byId.containsKey(id)) {
                 throw new IllegalArgumentException("El ID " + id + " no pertenece a entidades visibles en menú.");
             }
         }
+    }
 
+    private void applyNewOrder(List<Long> orderedIds, Map<Long, AppEntity> byId, List<AppEntity> visibles) {
         int order = 1;
         // Asignar primero los recibidos en el nuevo orden
         for (Long id : orderedIds) {
             AppEntity e = byId.remove(id);
-            if (e != null)
+            if (e != null) {
                 e.setSortOrder(order++);
+            }
         }
 
         // Mantener el resto con su orden relativo, colocándolos a continuación
@@ -189,8 +221,6 @@ public class AppEntityServiceImpl implements AppEntityService {
                 e.setSortOrder(order++);
             }
         }
-
-        repo.saveAll(visibles);
     }
 
     @Override

@@ -29,52 +29,18 @@ public class StripeWebhookController {
             var event = Webhook.constructEvent(payload, sig, webhookSecret);
 
             switch (event.getType()) {
-                case "checkout.session.completed": {
-                    var session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
-                    if (session == null)
-                        break;
-                    // Obtener la suscripción y el item
-                    String subId = session.getSubscription();
-                    var sub = stripe.subscriptions().retrieve(subId);
-                    var item = sub.getItems().getData().get(0);
-
-                    // Vincular a la Company por customerId
-                    String customerId = session.getCustomer();
-                    var company = companies.findByStripeCustomerId(customerId).orElse(null);
-                    if (company != null) {
-                        company.setStripeSubscriptionId(subId);
-                        company.setStripeSubscriptionItemId(item.getId());
-                        company.setBillingStatus(sub.getStatus());
-                        companies.save(company);
-                    }
+                case "checkout.session.completed":
+                    handleCheckoutSessionCompleted(event);
                     break;
-                }
                 case "customer.subscription.updated":
                 case "customer.subscription.created":
-                case "customer.subscription.deleted": {
-                    var sub = (Subscription) event.getDataObjectDeserializer().getObject().orElse(null);
-                    if (sub == null)
-                        break;
-                    String customerId = sub.getCustomer();
-                    var company = companies.findByStripeCustomerId(customerId).orElse(null);
-                    if (company != null) {
-                        company.setStripeSubscriptionId(sub.getId());
-                        if (sub.getItems() != null && !sub.getItems().getData().isEmpty()) {
-                            company.setStripeSubscriptionItemId(sub.getItems().getData().get(0).getId());
-                        }
-                        company.setBillingStatus(sub.getStatus());
-                        companies.save(company);
-                    }
+                case "customer.subscription.deleted":
+                    handleSubscriptionEvent(event);
                     break;
-                }
                 case "invoice.payment_failed":
-                case "invoice.paid": {
-                    var invoice = (Invoice) event.getDataObjectDeserializer().getObject().orElse(null);
-                    if (invoice == null)
-                        break;
-                    // opcional: sync estado, enviar emails, marcar company en grace period, etc.
+                case "invoice.paid":
+                    handleInvoiceEvent(event);
                     break;
-                }
                 default:
                     // Ignorar otros tipos de eventos
                     break;
@@ -83,5 +49,51 @@ public class StripeWebhookController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("webhook error");
         }
+    }
+
+    private void handleCheckoutSessionCompleted(com.stripe.model.Event event) throws Exception {
+        var session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
+        if (session == null) {
+            return;
+        }
+
+        String subId = session.getSubscription();
+        var sub = stripe.subscriptions().retrieve(subId);
+        var item = sub.getItems().getData().get(0);
+
+        String customerId = session.getCustomer();
+        var company = companies.findByStripeCustomerId(customerId).orElse(null);
+        if (company != null) {
+            company.setStripeSubscriptionId(subId);
+            company.setStripeSubscriptionItemId(item.getId());
+            company.setBillingStatus(sub.getStatus());
+            companies.save(company);
+        }
+    }
+
+    private void handleSubscriptionEvent(com.stripe.model.Event event) {
+        var sub = (Subscription) event.getDataObjectDeserializer().getObject().orElse(null);
+        if (sub == null) {
+            return;
+        }
+
+        String customerId = sub.getCustomer();
+        var company = companies.findByStripeCustomerId(customerId).orElse(null);
+        if (company != null) {
+            company.setStripeSubscriptionId(sub.getId());
+            if (sub.getItems() != null && !sub.getItems().getData().isEmpty()) {
+                company.setStripeSubscriptionItemId(sub.getItems().getData().get(0).getId());
+            }
+            company.setBillingStatus(sub.getStatus());
+            companies.save(company);
+        }
+    }
+
+    private void handleInvoiceEvent(com.stripe.model.Event event) {
+        var invoice = (Invoice) event.getDataObjectDeserializer().getObject().orElse(null);
+        if (invoice == null) {
+            return;
+        }
+        // opcional: sync estado, enviar emails, marcar company en grace period, etc.
     }
 }
