@@ -57,6 +57,7 @@ public class DataInitializer implements CommandLineRunner {
         private static final String EMAIL = "email";
         private static final String REGEX_CAMEL_TO_KEBAB = "([a-z0-9])([A-Z])";
 
+        private final DataInitializer self;
         private final RoleRepository roleRepository;
         private final MediaTypeRepository mediaTypeRepository;
         private final DeviceTypeRepository deviceTypeRepository;
@@ -106,8 +107,7 @@ public class DataInitializer implements CommandLineRunner {
                 seedAppEntitiesSkeleton();
 
                 // 2) Bootstrap de atributos desde el metamodelo JPA (nuevas entidades al final)
-                // Nota: método transaccional llamado dentro del mismo bean
-                bootstrapEntityAttributesFromMetamodel();
+                self.bootstrapEntityAttributesFromMetamodel();
 
                 // === CREAR ANUNCIO MOCK SI NO EXISTEN Y ESTAMOS EN DESARROLLO ===
                 String activeProfile = System.getProperty("spring.profiles.active", "dev");
@@ -323,109 +323,120 @@ public class DataInitializer implements CommandLineRunner {
                 Map<String, AppEntity> byEntityName = appEntityRepository.findAll().stream()
                                 .collect(Collectors.toMap(AppEntity::getEntityName, x -> x, (a, b) -> a));
 
-                // Comenzamos a asignar sortOrder para nuevas entidades DESPUÉS del máximo
-                // actual
                 int nextSortOrder = computeMaxSortOrder();
 
                 for (ManagedType<?> mt : mm.getManagedTypes()) {
-                        // ---- sin pattern matching (Java 8/11) ----
                         if (!(mt instanceof jakarta.persistence.metamodel.EntityType)) {
                                 continue;
                         }
                         jakarta.persistence.metamodel.EntityType<?> et = (jakarta.persistence.metamodel.EntityType<?>) mt;
-                        // -----------------------------------------
 
                         String entityName = et.getJavaType().getSimpleName();
+                        AppEntity e = ensureEntityExists(byEntityName, et, entityName, ++nextSortOrder);
 
-                        AppEntity e = byEntityName.get(entityName);
-                        if (e == null) {
-                                String resource = toResource(entityName);
-                                e = AppEntity.builder()
-                                                .resource(resource)
-                                                .entityName(entityName)
-                                                .className(et.getJavaType().getName())
-                                                .tableName(et.getName())
-                                                .idType(resolveIdType(et))
-                                                .endpointBase("/" + ensurePlural(toKebab(resource)))
-                                                .displayLabel(ensurePlural(entityName))
-                                                .sortOrder(++nextSortOrder) // colocar al final para evitar choques
-                                                .visibleInMenu(false)
-                                                .createLevel(2).readLevel(4).updateLevel(3).deleteLevel(3)
-                                                .build();
-                                appEntityRepository.save(e);
-                                byEntityName.put(entityName, e);
-                        }
-
-                        Map<String, AppEntityAttribute> existing = (e.getAttributes() == null)
-                                        ? new HashMap<>()
-                                        : e.getAttributes().stream()
-                                                        .collect(Collectors.toMap(AppEntityAttribute::getName, a -> a,
-                                                                        (a, b) -> a));
-
-                        if (e.getAttributes() == null) {
-                                e.setAttributes(new ArrayList<>());
-                        }
-
-                        int order = 0;
-
-                        for (Attribute<?, ?> a : et.getAttributes()) {
-                                String name = a.getName();
-
-                                if (shouldSkip(name, a))
-                                        continue;
-
-                                AppEntityAttribute attr = existing.get(name);
-                                if (attr == null) {
-                                        attr = new AppEntityAttribute();
-                                        attr.setAppEntity(e);
-                                        attr.setName(name);
-
-                                        fillTypeInfoFromMetamodel(attr, a);
-
-                                        attr.setListVisible(defaultListVisible(name, a));
-                                        attr.setListOrder(order += 1);
-                                        attr.setListLabel(humanize(name));
-                                        attr.setListSearchable(Boolean.TRUE);
-                                        attr.setListSortable(Boolean.TRUE);
-
-                                        // Por defecto, los campos createdAt y updatedAt no deben ser visibles en
-                                        // formularios
-                                        if (Set.of("createdat", "updatedat").contains(name.toLowerCase())) {
-                                                attr.setFormVisible(Boolean.FALSE);
-                                        } else {
-                                                attr.setFormVisible(Boolean.TRUE);
-                                        }
-                                        attr.setFormOrder(attr.getListOrder());
-                                        attr.setFormLabel(humanize(name));
-                                        attr.setControlType(pickControlType(attr));
-
-                                        e.getAttributes().add(attr);
-                                } else {
-                                        if (attr.getAttrType() == null || attr.getDataType() == null
-                                                        || attr.getRelationTarget() == null) {
-                                                fillTypeInfoFromMetamodel(attr, a);
-                                        }
-                                        if (attr.getListOrder() == null)
-                                                attr.setListOrder(order += 1);
-                                        if (attr.getListLabel() == null)
-                                                attr.setListLabel(humanize(name));
-                                        if (attr.getFormOrder() == null)
-                                                attr.setFormOrder(attr.getListOrder());
-                                        if (attr.getFormLabel() == null)
-                                                attr.setFormLabel(humanize(name));
-                                        if (attr.getControlType() == null)
-                                                attr.setControlType(pickControlType(attr));
-                                        if (attr.getListVisible() == null)
-                                                attr.setListVisible(defaultListVisible(name, a));
-                                        if (attr.getListSearchable() == null)
-                                                attr.setListSearchable(Boolean.TRUE);
-                                        if (attr.getListSortable() == null)
-                                                attr.setListSortable(Boolean.TRUE);
-                                }
-                        }
-
+                        processEntityAttributes(et, e);
                         appEntityRepository.save(e);
                 }
+        }
+
+        private AppEntity ensureEntityExists(Map<String, AppEntity> byEntityName,
+                        jakarta.persistence.metamodel.EntityType<?> et, String entityName, int sortOrder) {
+                AppEntity e = byEntityName.get(entityName);
+                if (e == null) {
+                        String resource = toResource(entityName);
+                        e = AppEntity.builder()
+                                        .resource(resource)
+                                        .entityName(entityName)
+                                        .className(et.getJavaType().getName())
+                                        .tableName(et.getName())
+                                        .idType(resolveIdType(et))
+                                        .endpointBase("/" + ensurePlural(toKebab(resource)))
+                                        .displayLabel(ensurePlural(entityName))
+                                        .sortOrder(sortOrder)
+                                        .visibleInMenu(false)
+                                        .createLevel(2).readLevel(4).updateLevel(3).deleteLevel(3)
+                                        .build();
+                        appEntityRepository.save(e);
+                        byEntityName.put(entityName, e);
+                }
+                return e;
+        }
+
+        private void processEntityAttributes(jakarta.persistence.metamodel.EntityType<?> et, AppEntity e) {
+                Map<String, AppEntityAttribute> existing = (e.getAttributes() == null)
+                                ? new HashMap<>()
+                                : e.getAttributes().stream()
+                                                .collect(Collectors.toMap(AppEntityAttribute::getName, a -> a,
+                                                                (a, b) -> a));
+
+                if (e.getAttributes() == null) {
+                        e.setAttributes(new ArrayList<>());
+                }
+
+                int order = 0;
+
+                for (Attribute<?, ?> a : et.getAttributes()) {
+                        String name = a.getName();
+
+                        if (shouldSkip(name, a))
+                                continue;
+
+                        AppEntityAttribute attr = existing.get(name);
+                        if (attr == null) {
+                                attr = createNewAttribute(e, a, name, ++order);
+                                e.getAttributes().add(attr);
+                        } else {
+                                updateExistingAttribute(attr, a, name, ++order);
+                        }
+                }
+        }
+
+        private AppEntityAttribute createNewAttribute(AppEntity e, Attribute<?, ?> a, String name, int order) {
+                AppEntityAttribute attr = new AppEntityAttribute();
+                attr.setAppEntity(e);
+                attr.setName(name);
+
+                fillTypeInfoFromMetamodel(attr, a);
+
+                attr.setListVisible(defaultListVisible(name, a));
+                attr.setListOrder(order);
+                attr.setListLabel(humanize(name));
+                attr.setListSearchable(Boolean.TRUE);
+                attr.setListSortable(Boolean.TRUE);
+
+                if (Set.of("createdat", "updatedat").contains(name.toLowerCase())) {
+                        attr.setFormVisible(Boolean.FALSE);
+                } else {
+                        attr.setFormVisible(Boolean.TRUE);
+                }
+                attr.setFormOrder(attr.getListOrder());
+                attr.setFormLabel(humanize(name));
+                attr.setControlType(pickControlType(attr));
+
+                return attr;
+        }
+
+        private void updateExistingAttribute(AppEntityAttribute attr, Attribute<?, ?> a, String name, int order) {
+                if (attr.getAttrType() == null || attr.getDataType() == null
+                                || attr.getRelationTarget() == null) {
+                        fillTypeInfoFromMetamodel(attr, a);
+                }
+                if (attr.getListOrder() == null)
+                        attr.setListOrder(order);
+                if (attr.getListLabel() == null)
+                        attr.setListLabel(humanize(name));
+                if (attr.getFormOrder() == null)
+                        attr.setFormOrder(attr.getListOrder());
+                if (attr.getFormLabel() == null)
+                        attr.setFormLabel(humanize(name));
+                if (attr.getControlType() == null)
+                        attr.setControlType(pickControlType(attr));
+                if (attr.getListVisible() == null)
+                        attr.setListVisible(defaultListVisible(name, a));
+                if (attr.getListSearchable() == null)
+                        attr.setListSearchable(Boolean.TRUE);
+                if (attr.getListSortable() == null)
+                        attr.setListSortable(Boolean.TRUE);
         }
 
         private boolean shouldSkip(String name, Attribute<?, ?> a) {
@@ -488,7 +499,21 @@ public class DataInitializer implements CommandLineRunner {
                 if (a.getRelationTarget() != null)
                         return "select";
 
-                String t = (a.getDataType() == null ? "" : a.getDataType()).toLowerCase(Locale.ROOT);
+                String controlByDataType = getControlByDataType(a.getDataType());
+                if (controlByDataType != null)
+                        return controlByDataType;
+
+                String controlByName = getControlByAttributeName(a.getName());
+                if (controlByName != null)
+                        return controlByName;
+
+                return "text";
+        }
+
+        private String getControlByDataType(String dataType) {
+                if (dataType == null)
+                        return null;
+                String t = dataType.toLowerCase(Locale.ROOT);
                 if ("boolean".equals(t))
                         return "switch";
                 if (Set.of("integer", "int", "long", "double", "float", "number", "bigdecimal").contains(t))
@@ -499,8 +524,13 @@ public class DataInitializer implements CommandLineRunner {
                         return "time";
                 if (Set.of("localdatetime", "offsetdatetime", "instant", "datetime").contains(t))
                         return "datetime";
+                return null;
+        }
 
-                String n = a.getName() == null ? "" : a.getName().toLowerCase(Locale.ROOT);
+        private String getControlByAttributeName(String name) {
+                if (name == null)
+                        return null;
+                String n = name.toLowerCase(Locale.ROOT);
                 if (n.contains("color"))
                         return "color";
                 if (n.equals(EMAIL) || n.endsWith(EMAIL))
@@ -511,7 +541,7 @@ public class DataInitializer implements CommandLineRunner {
                         return "url";
                 if (n.contains("phone") || n.contains("mobile"))
                         return "phone";
-                return "text";
+                return null;
         }
 
         private String simpleJavaToType(Class<?> c) {

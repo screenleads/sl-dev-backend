@@ -100,6 +100,15 @@ public final class AppEntityMapper {
         if (d == null)
             return;
 
+        applyBasicFields(a, d);
+        applyEnumValues(a, d);
+        applyListFields(a, d);
+        applyFormFields(a, d);
+        applyValidationFields(a, d);
+        applyOptionsFields(a, d);
+    }
+
+    private static void applyBasicFields(AppEntityAttribute a, EntityAttributeDTO d) {
         if (d.name() != null)
             a.setName(d.name());
         if (d.attrType() != null)
@@ -108,8 +117,9 @@ public final class AppEntityMapper {
             a.setDataType(d.dataType());
         if (d.relationTarget() != null)
             a.setRelationTarget(d.relationTarget());
+    }
 
-        // Preferir la lista nativa; si viene vacía pero hay enumValuesJson, parsear
+    private static void applyEnumValues(AppEntityAttribute a, EntityAttributeDTO d) {
         if (d.enumValuesJson() != null && !d.enumValuesJson().isBlank()) {
             try {
                 List<String> parsed = MAPPER.readValue(d.enumValuesJson(), new TypeReference<List<String>>() {
@@ -118,7 +128,9 @@ public final class AppEntityMapper {
             } catch (Exception ignore) {
             }
         }
+    }
 
+    private static void applyListFields(AppEntityAttribute a, EntityAttributeDTO d) {
         if (d.listVisible() != null)
             a.setListVisible(d.listVisible());
         if (d.listOrder() != null)
@@ -133,7 +145,9 @@ public final class AppEntityMapper {
             a.setListSearchable(d.listSearchable());
         if (d.listSortable() != null)
             a.setListSortable(d.listSortable());
+    }
 
+    private static void applyFormFields(AppEntityAttribute a, EntityAttributeDTO d) {
         if (d.formVisible() != null)
             a.setFormVisible(d.formVisible());
         if (d.formOrder() != null)
@@ -150,7 +164,9 @@ public final class AppEntityMapper {
             a.setRequired(d.required());
         if (d.readOnly() != null)
             a.setReadOnly(d.readOnly());
+    }
 
+    private static void applyValidationFields(AppEntityAttribute a, EntityAttributeDTO d) {
         if (d.minNum() != null)
             a.setMinNum(d.minNum());
         if (d.maxNum() != null)
@@ -161,7 +177,9 @@ public final class AppEntityMapper {
             a.setMaxLen(d.maxLen());
         if (d.pattern() != null)
             a.setPattern(d.pattern());
+    }
 
+    private static void applyOptionsFields(AppEntityAttribute a, EntityAttributeDTO d) {
         if (d.defaultValue() != null)
             a.setDefaultValue(d.defaultValue());
         if (d.optionsEndpoint() != null)

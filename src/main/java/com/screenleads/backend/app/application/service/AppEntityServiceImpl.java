@@ -226,12 +226,31 @@ public class AppEntityServiceImpl implements AppEntityService {
     @Override
     @Transactional
     public void reorderAttributes(Long entityId, List<Long> orderedAttributeIds) {
+        validateReorderAttributesInput(entityId, orderedAttributeIds);
+        validateNoDuplicateAttributeIds(orderedAttributeIds);
+
+        AppEntity entity = repo.findWithAttributesById(entityId)
+                .orElseThrow(() -> new IllegalArgumentException(APP_ENTITY_NOT_FOUND + "id=" + entityId));
+
+        if (entity.getAttributes() == null || entity.getAttributes().isEmpty())
+            return;
+
+        Map<Long, AppEntityAttribute> byId = buildAttributeMap(entity.getAttributes());
+        validateAttributesBelongToEntity(orderedAttributeIds, byId, entityId);
+        applyNewAttributeOrder(orderedAttributeIds, byId, entity);
+
+        repo.save(entity);
+    }
+
+    private void validateReorderAttributesInput(Long entityId, List<Long> orderedAttributeIds) {
         if (entityId == null)
             throw new IllegalArgumentException("entityId requerido");
         if (orderedAttributeIds == null || orderedAttributeIds.isEmpty()) {
             throw new IllegalArgumentException("Debe enviarse una lista de IDs de atributos para reordenar.");
         }
+    }
 
+    private void validateNoDuplicateAttributeIds(List<Long> orderedAttributeIds) {
         var seen = new HashSet<Long>();
         for (Long id : orderedAttributeIds) {
             if (id == null) {
@@ -241,26 +260,28 @@ public class AppEntityServiceImpl implements AppEntityService {
                 throw new IllegalArgumentException("La lista de IDs de atributos contiene duplicados: " + id);
             }
         }
+    }
 
-        AppEntity entity = repo.findWithAttributesById(entityId)
-                .orElseThrow(() -> new IllegalArgumentException(APP_ENTITY_NOT_FOUND + "id=" + entityId));
-
-        if (entity.getAttributes() == null || entity.getAttributes().isEmpty())
-            return;
-
+    private Map<Long, AppEntityAttribute> buildAttributeMap(List<AppEntityAttribute> attributes) {
         Map<Long, AppEntityAttribute> byId = new HashMap<>();
-        for (AppEntityAttribute a : entity.getAttributes()) {
+        for (AppEntityAttribute a : attributes) {
             if (a.getId() != null)
                 byId.put(a.getId(), a);
         }
+        return byId;
+    }
 
-        // Validar pertenencia
+    private void validateAttributesBelongToEntity(List<Long> orderedAttributeIds, 
+                                                   Map<Long, AppEntityAttribute> byId, Long entityId) {
         for (Long id : orderedAttributeIds) {
             if (!byId.containsKey(id)) {
                 throw new IllegalArgumentException("El atributo " + id + " no pertenece a la entidad " + entityId);
             }
         }
+    }
 
+    private void applyNewAttributeOrder(List<Long> orderedAttributeIds, 
+                                        Map<Long, AppEntityAttribute> byId, AppEntity entity) {
         int order = 0;
 
         // Reordena los indicados primero
@@ -296,9 +317,6 @@ public class AppEntityServiceImpl implements AppEntityService {
                 a.setFormOrder(newOrder);
             }
         }
-
-        // Guardar. (Cascade en AppEntity -> AppEntityAttribute)
-        repo.save(entity);
     }
 
     // ===================== ROW COUNT =====================
