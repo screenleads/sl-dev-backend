@@ -302,11 +302,7 @@ public class AppEntityServiceImpl implements AppEntityService {
         // Añade el resto manteniendo su orden relativo original
         List<AppEntityAttribute> remaining = entity.getAttributes().stream()
                 .filter(a -> byId.containsKey(a.getId()))
-                .sorted((x, y) -> {
-                    Integer lx = x.getListOrder() == null ? Integer.MAX_VALUE : x.getListOrder();
-                    Integer ly = y.getListOrder() == null ? Integer.MAX_VALUE : y.getListOrder();
-                    return Integer.compare(lx, ly);
-                })
+                .sorted(this::compareByListOrder)
                 .toList();
 
         for (AppEntityAttribute a : remaining) {
@@ -317,6 +313,12 @@ public class AppEntityServiceImpl implements AppEntityService {
                 a.setFormOrder(newOrder);
             }
         }
+    }
+
+    private int compareByListOrder(AppEntityAttribute x, AppEntityAttribute y) {
+        Integer lx = x.getListOrder() == null ? Integer.MAX_VALUE : x.getListOrder();
+        Integer ly = y.getListOrder() == null ? Integer.MAX_VALUE : y.getListOrder();
+        return Integer.compare(lx, ly);
     }
 
     // ===================== ROW COUNT =====================
