@@ -62,6 +62,8 @@ public class MediaProcessingService {
         
         if (herokuFFmpeg.exists() && herokuFFmpeg.canExecute()) {
             log.info("🎬 Usando FFmpeg de Heroku buildpack: {}", herokuFFmpegPath);
+            log.info("📍 Verificando permisos: readable={}, writable={}, executable={}",
+                    herokuFFmpeg.canRead(), herokuFFmpeg.canWrite(), herokuFFmpeg.canExecute());
             return new HerokuFFmpegLocator(herokuFFmpegPath);
         }
         
@@ -191,23 +193,32 @@ public class MediaProcessingService {
             audio.setChannels(2);
             audio.setSamplingRate(44100);
 
-            // Configurar atributos de video
+            // Configurar atributos de video con opciones compatibles para Heroku
             VideoAttributes video = new VideoAttributes();
-            video.setCodec("h264");
+            video.setCodec("libx264"); // Usar libx264 explícitamente
             video.setBitRate(VIDEO_BITRATE);
             video.setFrameRate(30);
+            
+            // Opciones adicionales para compatibilidad con Heroku
+            // preset ultrafast para reducir carga de CPU, yuv420p para compatibilidad
+            video.setTag("x264opts", "keyint=30:min-keyint=30:no-scenecut");
 
             // Mantener aspect ratio pero limitar resolución
             VideoInfo videoInfo = info.getVideo();
             if (videoInfo != null) {
                 int width = videoInfo.getSize().getWidth();
                 int height = videoInfo.getSize().getHeight();
+                log.info("📐 Resolución original: {}x{}", width, height);
 
                 if (width > 1920 || height > 1080) {
                     double scale = Math.min(1920.0 / width, 1080.0 / height);
-                    video.setSize(new ws.schild.jave.info.VideoSize(
-                            (int) (width * scale),
-                            (int) (height * scale)));
+                    int newWidth = (int) (width * scale);
+                    int newHeight = (int) (height * scale);
+                    // Asegurar que las dimensiones sean pares (requerido por h264)
+                    newWidth = (newWidth / 2) * 2;
+                    newHeight = (newHeight / 2) * 2;
+                    video.setSize(new ws.schild.jave.info.VideoSize(newWidth, newHeight));
+                    log.info("📐 Resolución ajustada: {}x{}", newWidth, newHeight);
                 }
             }
 
@@ -215,12 +226,24 @@ public class MediaProcessingService {
             attrs.setOutputFormat("mp4");
             attrs.setAudioAttributes(audio);
             attrs.setVideoAttributes(video);
+            // Opciones de formato para mejor compatibilidad
+            attrs.setDecodingThreads(2);
+            attrs.setEncodingThreads(2);
 
             // Crear encoder con FFmpeg correcto (ya inicializado arriba)
             Encoder encoder = new Encoder(ffmpegLocator);
             
             log.info("🎬 Iniciando compresión de video con FFmpeg...");
-            encoder.encode(multimediaObject, target, attrs);
+            log.info("⚙️ Configuración: codec={}, bitrate={}bps, formato={}",
+                    video.getCodec(), video.getBitRate(), attrs.getOutputFormat());
+            
+            try {
+                encoder.encode(multimediaObject, target, attrs);
+            } catch (EncoderException e) {
+                log.error("❌ Error en encoder FFmpeg: {}", e.getMessage());
+                log.error("📋 Input file: {}, size: {} bytes", source.getAbsolutePath(), source.length());
+                throw e;
+            }
 
             log.info("🎥 Video comprimido: {} → {} bytes",
                     source.length(), target.length());

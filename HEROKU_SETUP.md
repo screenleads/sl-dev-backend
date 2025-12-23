@@ -104,6 +104,30 @@ Deberías ver:
 - **Causa**: Buildpack no instalado o en orden incorrecto
 - **Solución**: Verificar buildpacks con `heroku buildpacks -a sl-dev-backend-pre`
 
+### Error: "Generic error in an external library" durante compresión de video
+- **Causa**: FFmpeg no tiene los codecs necesarios o configuración incompatible
+- **Solución 1**: Verificar que el buildpack de FFmpeg esté correctamente instalado:
+  ```bash
+  heroku run "ffmpeg -version" -a sl-dev-backend-pre
+  heroku run "ffmpeg -codecs | grep -E 'h264|aac'" -a sl-dev-backend-pre
+  ```
+- **Solución 2**: Forzar rebuild con buildpack actualizado:
+  ```bash
+  # Remover buildpack actual
+  heroku buildpacks:remove https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git -a sl-dev-backend-pre
+  
+  # Agregar buildpack actualizado
+  heroku buildpacks:add --index 1 https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git -a sl-dev-backend-pre
+  
+  # Re-deploy
+  git commit --allow-empty -m "chore: rebuild with updated ffmpeg buildpack"
+  git push heroku main
+  ```
+- **Solución 3**: Si persiste, considerar buildpack alternativo:
+  ```bash
+  heroku buildpacks:add --index 1 https://github.com/kitcast/buildpack-ffmpeg.git -a sl-dev-backend-pre
+  ```
+
 ### Error: "FirebaseApp with name [DEFAULT] doesn't exist"
 - **Causa**: Variable `FIREBASE_ENABLED` no configurada o en `false`
 - **Solución**: `heroku config:set FIREBASE_ENABLED=true -a sl-dev-backend-pre`
@@ -111,6 +135,18 @@ Deberías ver:
 ### Videos no se procesan
 - **Causa**: FFmpeg no disponible
 - **Solución**: Seguir pasos de instalación de buildpack arriba
+
+### Error: "Error sending frames to consumers"
+- **Causa**: Problema con codecs o resolución del video
+- **Diagnóstico**: Verificar logs para ver configuración:
+  ```bash
+  heroku logs --tail -a sl-dev-backend-pre | grep -E "Resolución|codec|bitrate"
+  ```
+- **Solución**: El código ahora incluye:
+  - Uso explícito de `libx264` codec
+  - Dimensiones ajustadas a números pares (requerido por h264)
+  - Configuración optimizada para entornos con recursos limitados
+  - Mejor manejo de errores con logs detallados
 
 ## Documentación de Buildpacks
 
