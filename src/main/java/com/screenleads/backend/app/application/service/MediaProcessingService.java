@@ -198,10 +198,6 @@ public class MediaProcessingService {
             video.setCodec("libx264"); // Usar libx264 explícitamente
             video.setBitRate(VIDEO_BITRATE);
             video.setFrameRate(30);
-            
-            // Opciones adicionales para compatibilidad con Heroku
-            // preset ultrafast para reducir carga de CPU, yuv420p para compatibilidad
-            video.setTag("x264opts", "keyint=30:min-keyint=30:no-scenecut");
 
             // Mantener aspect ratio pero limitar resolución
             VideoInfo videoInfo = info.getVideo();
