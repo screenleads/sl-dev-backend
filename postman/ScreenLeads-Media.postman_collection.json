@@ -85,6 +85,45 @@
                                 "description": "Sube y procesa un archivo multimedia de forma síncrona. Retorna inmediatamente con URLs de archivo procesado y thumbnails. Soporta imágenes (JPG, PNG, GIF, WebP) y videos (MP4, AVI, MOV, MKV, WebM).\n\nRespuesta esperada:\n```json\n{\n  \"status\": \"ready\",\n  \"type\": \"image\" | \"video\",\n  \"url\": \"https://storage.googleapis.com/.../compressed-xxx.jpg\",\n  \"thumbnails\": [\"url_320px\", \"url_640px\"],\n  \"processingTimeMs\": 2500\n}\n```"
                             },
                             "response": []
+                        },
+                        {
+                            "name": "Upload Media from URL (Synchronous)",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{jwt_token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json",
+                                        "type": "text"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"url\": \"https://example.com/path/to/image.jpg\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/medias/upload-from-url",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "medias",
+                                        "upload-from-url"
+                                    ]
+                                },
+                                "description": "Descarga un archivo desde una URL pública y lo procesa de forma síncrona. Retorna inmediatamente con URLs de archivo procesado y thumbnails.\n\nBody:\n```json\n{\n  \"url\": \"https://example.com/image.jpg\"\n}\n```\n\nRespuesta esperada:\n```json\n{\n  \"status\": \"ready\",\n  \"type\": \"image\" | \"video\",\n  \"url\": \"https://storage.googleapis.com/.../compressed-xxx.jpg\",\n  \"thumbnails\": [\"url_320px\", \"url_640px\"],\n  \"processingTimeMs\": 3500\n}\n```"
+                            },
+                            "response": []
                         }
                     ]
                 }
@@ -163,6 +202,45 @@
                                     ]
                                 },
                                 "description": "Sube y procesa un archivo multimedia de forma síncrona usando API Key. Retorna inmediatamente con URLs de archivo procesado y thumbnails.\n\nRequiere API Key con permiso 'media:create'.\n\nRespuesta esperada:\n```json\n{\n  \"status\": \"ready\",\n  \"type\": \"image\" | \"video\",\n  \"url\": \"https://storage.googleapis.com/.../compressed-xxx.jpg\",\n  \"thumbnails\": [\"url_320px\", \"url_640px\"],\n  \"processingTimeMs\": 2500\n}\n```"
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Upload Media from URL (API Key - Synchronous)",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "X-API-KEY",
+                                        "value": "{{api_key}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "client-id",
+                                        "value": "{{client_id}}",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json",
+                                        "type": "text"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"url\": \"https://example.com/path/to/image.jpg\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/medias/upload-from-url",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "medias",
+                                        "upload-from-url"
+                                    ]
+                                },
+                                "description": "Descarga un archivo desde una URL pública y lo procesa de forma síncrona usando API Key. Retorna inmediatamente con URLs de archivo procesado y thumbnails.\n\nRequiere API Key con permiso 'media:create'.\n\nBody:\n```json\n{\n  \"url\": \"https://example.com/image.jpg\"\n}\n```\n\nRespuesta esperada:\n```json\n{\n  \"status\": \"ready\",\n  \"type\": \"image\" | \"video\",\n  \"url\": \"https://storage.googleapis.com/.../compressed-xxx.jpg\",\n  \"thumbnails\": [\"url_320px\", \"url_640px\"],\n  \"processingTimeMs\": 3500\n}\n```"
                             },
                             "response": []
                         }

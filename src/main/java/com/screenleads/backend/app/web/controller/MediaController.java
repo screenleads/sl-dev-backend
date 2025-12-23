@@ -16,6 +16,9 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.*;
 import java.util.*;
 
@@ -104,6 +107,84 @@ public class MediaController {
             log.error("❌ Error procesando archivo", ex);
             return ResponseEntity.status(500).body(Map.of(
                     ERROR_KEY, "Fallo procesando archivo",
+                    "detail", ex.getMessage()));
+        }
+    }
+
+    // ---------------- UPLOAD FROM URL (SÍNCRONO) ----------------
+
+    @PreAuthorize("@perm.can('media', 'create')")
+    @CrossOrigin
+    @PostMapping(value = "/medias/upload-from-url", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> uploadFromUrl(@RequestBody Map<String, String> request) {
+        long startTime = System.currentTimeMillis();
+
+        try {
+            String fileUrl = request.get("url");
+            if (fileUrl == null || fileUrl.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, "URL vacía o inválida"));
+            }
+
+            log.info("🌐 Recibida URL para procesar: {}", fileUrl);
+
+            // Descargar archivo desde URL
+            URL url = new URI(fileUrl).toURL();
+            URLConnection connection = url.openConnection();
+            connection.setConnectTimeout(10000); // 10 segundos timeout
+            connection.setReadTimeout(30000); // 30 segundos timeout
+
+            String contentType = connection.getContentType();
+            long contentLength = connection.getContentLengthLong();
+            
+            log.info("📥 Descargando archivo: size={} bytes, contentType={}", 
+                    contentLength > 0 ? contentLength : "unknown", contentType);
+
+            // Extraer nombre del archivo de la URL
+            String urlPath = url.getPath();
+            String originalName = urlPath.substring(urlPath.lastIndexOf('/') + 1);
+            if (originalName.isEmpty() || !originalName.contains(".")) {
+                originalName = "download-" + System.currentTimeMillis() + ".bin";
+            }
+
+            final String safeName = originalName.replaceAll("[^A-Za-z0-9._-]", "_");
+            final String fileName = UUID.randomUUID() + "-" + safeName;
+
+            // Crear archivo temporal
+            Path tmpDir = Paths.get(Optional.ofNullable(System.getProperty("java.io.tmpdir")).orElse("/tmp"));
+            Files.createDirectories(tmpDir);
+            Path tmp = Files.createTempFile(tmpDir, "url_download_", "_" + safeName);
+
+            // Descargar a temporal
+            try (InputStream in = connection.getInputStream()) {
+                Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            long downloadedSize = Files.size(tmp);
+            log.info("✅ Archivo descargado: {} bytes", downloadedSize);
+
+            // Procesar de forma síncrona (comprimir + thumbnails + subir)
+            log.info("🔄 Iniciando procesamiento síncrono...");
+            MediaProcessingService.ProcessedMedia result = processingService.processMedia(tmp.toFile(), fileName,
+                    firebaseService);
+
+            // Limpiar temporal
+            deleteTempFile(tmp);
+
+            long totalTime = System.currentTimeMillis() - startTime;
+            log.info("✅ Proceso completo en {}ms", totalTime);
+
+            // Retornar resultado inmediato (sin polling)
+            return ResponseEntity.ok(Map.of(
+                    STATUS_KEY, "ready",
+                    "type", result.type(),
+                    "url", result.mainUrl(),
+                    "thumbnails", result.thumbnailUrls(),
+                    "processingTimeMs", totalTime));
+
+        } catch (Exception ex) {
+            log.error("❌ Error procesando archivo desde URL", ex);
+            return ResponseEntity.status(500).body(Map.of(
+                    ERROR_KEY, "Fallo procesando archivo desde URL",
                     "detail", ex.getMessage()));
         }
     }
