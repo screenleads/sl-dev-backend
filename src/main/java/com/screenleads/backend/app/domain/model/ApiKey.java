@@ -27,6 +27,7 @@ public class ApiKey {
     @Column(name = "company_scope")
     private Long companyScope; // NULL = acceso global, ID = compañía específica
 
+    private String name; // Nombre descriptivo de la API Key
     private String description; // Descripción de la API Key
 
     // Getters y setters
@@ -100,5 +101,13 @@ public class ApiKey {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

@@ -22,42 +22,39 @@ public class AppVersionController {
     private final AppVersionService service;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appversion', 'create')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Crear versión")
     public AppVersionDTO save(@RequestBody AppVersionDTO dto) {
         return service.save(dto);
     }
 
     @GetMapping
-    @PreAuthorize("@perm.can('appversion', 'read')")
     @Operation(summary = "Listar versiones")
     public List<AppVersionDTO> findAll() {
         return service.findAll();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("@perm.can('appversion', 'read')")
     @Operation(summary = "Obtener versión por id")
     public AppVersionDTO findById(@PathVariable Long id) {
         return service.findById(id);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appversion', 'delete')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Eliminar versión por id")
     public void deleteById(@PathVariable Long id) {
         service.deleteById(id);
     }
 
     @GetMapping("/latest/{platform}")
-    @PreAuthorize("@perm.can('appversion', 'read')")
     @Operation(summary = "Última versión por plataforma")
     public AppVersionDTO getLatestVersion(@PathVariable String platform) {
         return service.getLatestVersion(platform);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appversion', 'update')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Actualizar versión por id")
     public AppVersionDTO update(@PathVariable Long id, @RequestBody AppVersionDTO dto) {
         dto.setId(id);

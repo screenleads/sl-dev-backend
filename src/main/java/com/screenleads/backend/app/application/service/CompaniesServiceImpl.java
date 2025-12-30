@@ -74,8 +74,16 @@ public class CompaniesServiceImpl implements CompaniesService {
         // Guardar primero la company para obtener ID
         Company savedCompany = companyRepository.save(company);
 
-        // Logo: vincular existente o crear desde src
-        if (companyDTO.logo() != null) {
+        // Primero intentar con logoId (viene del frontend)
+        if (companyDTO.logoId() != null) {
+            Media media = mediaRepository.findById(companyDTO.logoId())
+                    .orElseThrow(() -> new RuntimeException(MEDIA_NOT_FOUND_WITH_ID + companyDTO.logoId()));
+            if (media.getCompany() == null) {
+                media.setCompany(savedCompany);
+                mediaRepository.save(media);
+            }
+            savedCompany.setLogo(media);
+        } else if (companyDTO.logo() != null) {
             if (companyDTO.logo().id() != null) {
                 Media media = mediaRepository.findById(companyDTO.logo().id())
                         .orElseThrow(
@@ -115,8 +123,23 @@ public class CompaniesServiceImpl implements CompaniesService {
         company.setObservations(companyDTO.observations());
         company.setPrimaryColor(companyDTO.primaryColor());
         company.setSecondaryColor(companyDTO.secondaryColor());
+        company.setStripeCustomerId(companyDTO.stripeCustomerId());
+        company.setStripeSubscriptionId(companyDTO.stripeSubscriptionId());
+        company.setStripeSubscriptionItemId(companyDTO.stripeSubscriptionItemId());
+        if (companyDTO.billingStatus() != null) {
+            company.setBillingStatus(companyDTO.billingStatus().name());
+        }
 
-        if (companyDTO.logo() != null) {
+        // Primero intentar con logoId (viene del frontend)
+        if (companyDTO.logoId() != null) {
+            Media media = mediaRepository.findById(companyDTO.logoId())
+                    .orElseThrow(() -> new RuntimeException(MEDIA_NOT_FOUND_WITH_ID + companyDTO.logoId()));
+            if (media.getCompany() == null) {
+                media.setCompany(company);
+                mediaRepository.save(media);
+            }
+            company.setLogo(media);
+        } else if (companyDTO.logo() != null) {
             if (companyDTO.logo().id() != null) {
                 Media media = mediaRepository.findById(companyDTO.logo().id())
                         .orElseThrow(
@@ -184,6 +207,7 @@ public class CompaniesServiceImpl implements CompaniesService {
                 company.getName(),
                 company.getObservations(),
                 toMediaSlimDTO(company.getLogo()),
+                company.getLogo() != null ? company.getLogo().getId() : null, // logoId
                 devices,
                 advices,
                 company.getPrimaryColor(),

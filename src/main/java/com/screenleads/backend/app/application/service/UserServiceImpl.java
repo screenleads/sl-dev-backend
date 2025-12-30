@@ -18,6 +18,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+
+import java.util.List;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -161,6 +163,15 @@ public class UserServiceImpl implements UserService {
     }
 
     private void assignProfileImageToNewUser(UserDto dto, User u) {
+        // Primero intentar con profileImageId (viene del frontend)
+        if (dto.getProfileImageId() != null) {
+            Media media = mediaRepository.findById(dto.getProfileImageId())
+                    .orElseThrow(() -> new IllegalArgumentException("Media no encontrado con id: " + dto.getProfileImageId()));
+            u.setProfileImage(media);
+            return;
+        }
+        
+        // Fallback: si viene el objeto completo profileImage
         if (dto.getProfileImage() == null || dto.getProfileImage().src() == null)
             return;
 
@@ -224,6 +235,15 @@ public class UserServiceImpl implements UserService {
     }
 
     private void updateProfileImageIfPresent(UserDto dto, User existing) {
+        // Primero intentar con profileImageId (viene del frontend)
+        if (dto.getProfileImageId() != null) {
+            Media media = mediaRepository.findById(dto.getProfileImageId())
+                    .orElseThrow(() -> new IllegalArgumentException("Media no encontrado con id: " + dto.getProfileImageId()));
+            existing.setProfileImage(media);
+            return;
+        }
+        
+        // Fallback: si viene el objeto completo profileImage
         if (dto.getProfileImage() == null || dto.getProfileImage().src() == null)
             return;
 
@@ -324,7 +344,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private void logMediaTypeError(String extension, String src) {
-        var allMediaTypes = mediaTypeRepository.findAll();
+        List<MediaType> allMediaTypes = mediaTypeRepository.findAll();
         log.error("[MEDIA PROFILE] No se encontró MediaType con extensión: {}. Payload src: {}", extension, src);
         log.error("[MEDIA PROFILE] MediaTypes en BD:");
         for (MediaType mt : allMediaTypes) {

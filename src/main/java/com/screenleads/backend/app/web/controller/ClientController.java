@@ -61,32 +61,38 @@ public class ClientController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Client> getClient(@PathVariable Long id) {
+    public ResponseEntity<com.screenleads.backend.app.web.dto.ClientDTO> getClient(@PathVariable Long id) {
         return clientRepository.findById(id)
+                .map(this::toDTO)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Client> createClient(@RequestBody Client client) {
+    public ResponseEntity<com.screenleads.backend.app.web.dto.ClientDTO> createClient(@RequestBody Client client) {
         // Autogenerar clientId alfanumérico
         client.setClientId(java.util.UUID.randomUUID().toString());
         client.setActive(true);
         Client saved = clientRepository.save(client);
         // Crear la primera API Key con permisos básicos de lectura
         String defaultPermissions = "device:read,customer:read,promotion:read,advice:read,media:read";
-        apiKeyService.createApiKeyByDbId(saved.getId(), defaultPermissions, 365);
-        return ResponseEntity.ok(saved);
+        com.screenleads.backend.app.domain.model.ApiKey defaultApiKey = apiKeyService.createApiKeyByDbId(saved.getId(), defaultPermissions, 365);
+        // Establecer nombre y descripción por defecto
+        defaultApiKey.setName("API Key Principal - " + saved.getName());
+        defaultApiKey.setDescription("API Key generada automáticamente al crear el cliente");
+        apiKeyService.saveApiKey(defaultApiKey);
+        return ResponseEntity.ok(toDTO(saved));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Client> updateClient(@PathVariable Long id, @RequestBody Client client) {
+    public ResponseEntity<com.screenleads.backend.app.web.dto.ClientDTO> updateClient(@PathVariable Long id, @RequestBody Client client) {
         return clientRepository.findById(id)
                 .map(existing -> {
                     existing.setName(client.getName());
                     existing.setClientId(client.getClientId());
                     existing.setActive(client.isActive());
-                    return ResponseEntity.ok(clientRepository.save(existing));
+                    Client saved = clientRepository.save(existing);
+                    return ResponseEntity.ok(toDTO(saved));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

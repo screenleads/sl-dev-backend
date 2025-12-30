@@ -16,10 +16,17 @@ public class ApiKeyMapper {
         ApiKeyDTO dto = new ApiKeyDTO();
         dto.setId(apiKey.getId());
         dto.setKey(apiKey.getKey());
+        dto.setName(apiKey.getName());
+        dto.setDescription(apiKey.getDescription());
         dto.setActive(apiKey.isActive());
         dto.setCreatedAt(apiKey.getCreatedAt());
         dto.setExpiresAt(apiKey.getExpiresAt());
         dto.setPermissions(apiKey.getPermissions());
+        
+        // Map clientId from the Client relationship
+        if (apiKey.getClient() != null) {
+            dto.setClientId(apiKey.getClient().getId());
+        }
 
         return dto;
     }

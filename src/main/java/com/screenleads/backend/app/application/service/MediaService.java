@@ -15,4 +15,6 @@ public interface MediaService {
     MediaDTO updateMedia(Long id, MediaDTO dto);
 
     void deleteMedia(Long id);
+    
+    MediaDTO saveMediaFromUpload(String url, String type);
 }

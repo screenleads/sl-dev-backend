@@ -128,7 +128,7 @@ class CompaniesServiceImplTest {
     void whenSaveCompanyWithoutLogo_thenCreatesCompany() {
         // Arrange
         CompanyDTO dto = new CompanyDTO(
-                null, "New Company", "Observations", null,
+                null, "New Company", "Observations", null, null,
                 List.of(), List.of(), "#000000", "#FFFFFF",
                 null, null, null, null);
         
@@ -158,7 +158,7 @@ class CompaniesServiceImplTest {
     void whenSaveCompanyWithExistingName_thenReturnsExisting() {
         // Arrange
         CompanyDTO dto = new CompanyDTO(
-                null, "Test Company", "New observations", null,
+                null, "Test Company", "New observations", null, null,
                 List.of(), List.of(), "#000000", "#FFFFFF",
                 null, null, null, null);
 
@@ -179,7 +179,7 @@ class CompaniesServiceImplTest {
         // Arrange
         MediaSlimDTO logoDTO = new MediaSlimDTO(1L, "https://example.com/logo.png", null, null, null);
         CompanyDTO dto = new CompanyDTO(
-                null, "New Company", "Observations", logoDTO,
+                null, "New Company", "Observations", logoDTO, 1L,
                 List.of(), List.of(), "#000000", "#FFFFFF",
                 null, null, null, null);
 
@@ -211,7 +211,7 @@ class CompaniesServiceImplTest {
         // Arrange
         MediaSlimDTO logoDTO = new MediaSlimDTO(null, "https://example.com/newlogo.jpg", null, null, null);
         CompanyDTO dto = new CompanyDTO(
-                null, "New Company", "Observations", logoDTO,
+                null, "New Company", "Observations", logoDTO, null,
                 List.of(), List.of(), "#000000", "#FFFFFF",
                 null, null, null, null);
 
@@ -248,7 +248,7 @@ class CompaniesServiceImplTest {
     void whenUpdateCompany_thenUpdatesAllFields() {
         // Arrange
         CompanyDTO dto = new CompanyDTO(
-                1L, "Updated Company", "Updated observations", null,
+                1L, "Updated Company", "Updated observations", null, null,
                 List.of(), List.of(), "#111111", "#222222",
                 "stripe_cust_123", "stripe_sub_123", "stripe_item_123",
                 Company.BillingStatus.ACTIVE);
@@ -270,7 +270,7 @@ class CompaniesServiceImplTest {
     void whenUpdateCompanyNotExists_thenThrowsException() {
         // Arrange
         CompanyDTO dto = new CompanyDTO(
-                999L, "Updated", "Obs", null, List.of(), List.of(),
+                999L, "Updated", "Obs", null, null, List.of(), List.of(),
                 "#000", "#FFF", null, null, null, null);
 
         when(companyRepository.findById(999L)).thenReturn(Optional.empty());

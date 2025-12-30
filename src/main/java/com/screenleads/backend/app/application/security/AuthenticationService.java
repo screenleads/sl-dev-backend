@@ -1,15 +1,19 @@
 package com.screenleads.backend.app.application.security;
 
 import com.screenleads.backend.app.application.security.jwt.JwtService;
+import com.screenleads.backend.app.application.service.EmailService;
 import com.screenleads.backend.app.domain.model.Company;
+import com.screenleads.backend.app.domain.model.PasswordResetToken;
 import com.screenleads.backend.app.domain.model.Role;
 import com.screenleads.backend.app.domain.model.User;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
+import com.screenleads.backend.app.domain.repositories.PasswordResetTokenRepository;
 import com.screenleads.backend.app.domain.repositories.RoleRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
 import com.screenleads.backend.app.web.dto.*;
 import com.screenleads.backend.app.web.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
@@ -19,12 +23,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationService {
 
     private static final String USER_NOT_FOUND = "Usuario no encontrado";
     private static final String USER_NOT_FOUND_MSG = "User not found";
+    private static final int TOKEN_EXPIRY_HOURS = 1;
 
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
@@ -32,6 +41,8 @@ public class AuthenticationService {
     private final RoleRepository roleRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
 
     public JwtResponse register(RegisterRequest request) {
         User user = new User();
@@ -130,5 +141,105 @@ public class AuthenticationService {
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+    }
+
+    /**
+     * Solicitar recuperación de contraseña - genera token y envía email
+     */
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+        // Buscar usuario por email (case-insensitive)
+        String email = request.getEmail().trim();
+
+        // Por seguridad, NO revelamos si el email existe o no
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if (user != null) {
+            // Invalidar tokens anteriores del usuario
+            passwordResetTokenRepository.markAllUserTokensAsUsed(user);
+
+            // Generar nuevo token único
+            String token = UUID.randomUUID().toString();
+
+            // Crear registro de token con expiración de 1 hora
+            PasswordResetToken resetToken = PasswordResetToken.builder()
+                    .token(token)
+                    .user(user)
+                    .expiryDate(LocalDateTime.now().plusHours(TOKEN_EXPIRY_HOURS))
+                    .used(false)
+                    .build();
+
+            passwordResetTokenRepository.save(resetToken);
+
+            // Enviar email con el enlace de reset
+            String userName = user.getName() != null ? user.getName() : user.getUsername();
+            emailService.sendPasswordResetEmail(user.getEmail(), userName, token);
+
+            log.info("Password reset token generated for user: {}", user.getUsername());
+        } else {
+            log.warn("Password reset requested for non-existent email: {} (query is case-insensitive)", email);
+            // Por seguridad, no hacemos nada pero tampoco lanzamos error
+        }
+    }
+
+    /**
+     * Verificar validez de un token de reset
+     */
+    @Transactional(readOnly = true)
+    public VerifyTokenResponse verifyResetToken(String token) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElse(null);
+
+        if (resetToken == null) {
+            return VerifyTokenResponse.builder()
+                    .valid(false)
+                    .message("Token inválido o no encontrado")
+                    .build();
+        }
+
+        if (resetToken.getUsed()) {
+            return VerifyTokenResponse.builder()
+                    .valid(false)
+                    .message("Este token ya ha sido utilizado")
+                    .build();
+        }
+
+        if (resetToken.isExpired()) {
+            return VerifyTokenResponse.builder()
+                    .valid(false)
+                    .message("Este token ha expirado")
+                    .build();
+        }
+
+        return VerifyTokenResponse.builder()
+                .valid(true)
+                .message("Token válido")
+                .userEmail(resetToken.getUser().getEmail())
+                .build();
+    }
+
+    /**
+     * Restablecer contraseña usando token válido
+     */
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(request.getToken())
+                .orElseThrow(() -> new IllegalArgumentException("Token inválido o no encontrado"));
+
+        if (!resetToken.isValid()) {
+            throw new IllegalArgumentException("El token ha expirado o ya ha sido utilizado");
+        }
+
+        User user = resetToken.getUser();
+
+        // Actualizar contraseña
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        // Marcar token como usado
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
+
+        log.info("Password successfully reset for user: {}", user.getUsername());
     }
 }

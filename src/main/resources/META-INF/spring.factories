@@ -1,0 +1,2 @@
+org.springframework.context.ApplicationContextInitializer=\
+com.screenleads.backend.app.config.DotenvConfig

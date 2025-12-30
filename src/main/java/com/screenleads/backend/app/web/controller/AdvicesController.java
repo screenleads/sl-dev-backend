@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequestMapping("/advices")
+@CrossOrigin(origins = "*")
 @Tag(name = "Advices", description = "Gestión y consulta de anuncios (advices)")
 public class AdvicesController {
 

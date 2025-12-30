@@ -33,40 +33,42 @@ public class MediaProcessingService {
     private static final int AUDIO_BITRATE = 128000; // 128kbps
     private static final int MAX_IMAGE_WIDTH = 1920;
     private static final int MAX_IMAGE_HEIGHT = 1080;
-    
+
     /**
      * Custom ProcessLocator que usa el FFmpeg de Heroku buildpack
      */
     private static class HerokuFFmpegLocator implements ProcessLocator {
         private final String ffmpegPath;
-        
+
         public HerokuFFmpegLocator(String ffmpegPath) {
             this.ffmpegPath = ffmpegPath;
         }
-        
+
         @Override
         public String getExecutablePath() {
             return ffmpegPath;
         }
     }
-    
+
     /**
      * Obtiene el ProcessLocator correcto para FFmpeg.
-     * En Heroku, usa el FFmpeg instalado por el buildpack en /app/vendor/ffmpeg/ffmpeg
+     * En Heroku, usa el FFmpeg instalado por el buildpack en
+     * /app/vendor/ffmpeg/ffmpeg
      * En local, usa el FFmpeg embebido de JAVE
      */
     private ProcessLocator getFFmpegLocator() {
-        // Verificar si estamos en Heroku (buildpack instala FFmpeg en /app/vendor/ffmpeg/)
+        // Verificar si estamos en Heroku (buildpack instala FFmpeg en
+        // /app/vendor/ffmpeg/)
         String herokuFFmpegPath = "/app/vendor/ffmpeg/ffmpeg";
         File herokuFFmpeg = new File(herokuFFmpegPath);
-        
+
         if (herokuFFmpeg.exists() && herokuFFmpeg.canExecute()) {
             log.info("🎬 Usando FFmpeg de Heroku buildpack: {}", herokuFFmpegPath);
             log.info("📍 Verificando permisos: readable={}, writable={}, executable={}",
                     herokuFFmpeg.canRead(), herokuFFmpeg.canWrite(), herokuFFmpeg.canExecute());
             return new HerokuFFmpegLocator(herokuFFmpegPath);
         }
-        
+
         log.info("💻 Usando FFmpeg embebido de JAVE (ambiente local)");
         return new DefaultFFMPEGLocator(); // Default = JAVE usará su FFmpeg embebido
     }
@@ -88,7 +90,10 @@ public class MediaProcessingService {
         String extension = getExtension(originalFilename).toLowerCase(Locale.ROOT);
         MediaType mediaType = detectMediaType(extension);
 
-        log.info("🎬 Iniciando procesamiento {} de archivo: {}", mediaType, originalFilename);
+        log.info("🎬 Iniciando procesamiento {} de archivo: {} (extensión: {})", 
+                mediaType, originalFilename, extension);
+        log.info("📊 Tamaño archivo: {} bytes, existe: {}", 
+                sourceFile.length(), sourceFile.exists());
 
         ProcessedMedia result;
 
@@ -117,11 +122,22 @@ public class MediaProcessingService {
         String baseName = stripExtension(originalFilename);
         String destinationFolder = "media/videos";
 
-        // 1. Comprimir video
-        File compressedVideo = compressVideo(sourceFile);
-        String compressedPath = destinationFolder + "/compressed-" + baseName + ".mp4";
-        String mainUrl = firebaseService.upload(compressedVideo, compressedPath);
-        log.info("📤 Video comprimido subido: {}", compressedPath);
+        // 1. Intentar comprimir video
+        File compressedVideo = null;
+        String mainUrl;
+        
+        try {
+            compressedVideo = compressVideo(sourceFile);
+            String compressedPath = destinationFolder + "/compressed-" + baseName + ".mp4";
+            mainUrl = firebaseService.upload(compressedVideo, compressedPath);
+            log.info("📤 Video comprimido subido: {}", compressedPath);
+        } catch (Exception e) {
+            log.warn("⚠️ No se pudo comprimir video, subiendo original: {}", e.getMessage());
+            // Si falla la compresión, subir el archivo original
+            String originalPath = destinationFolder + "/" + originalFilename;
+            mainUrl = firebaseService.upload(sourceFile, originalPath);
+            log.info("📤 Video original subido: {}", originalPath);
+        }
 
         // 2. Generar thumbnails del video
         List<String> thumbnailUrls = new ArrayList<>();
@@ -134,11 +150,13 @@ public class MediaProcessingService {
                 thumbnailUrls.add(thumbUrl);
                 Files.deleteIfExists(thumbnail.toPath());
             } catch (Exception e) {
-                log.warn("⚠️ No se pudo generar thumbnail de {}px: {}", size, e.getMessage());
+                log.warn("⚠️ No se pudo extraer thumbnail de video {}px: {}", size, e.getMessage());
             }
         }
 
-        Files.deleteIfExists(compressedVideo.toPath());
+        if (compressedVideo != null) {
+            Files.deleteIfExists(compressedVideo.toPath());
+        }
 
         return new ProcessedMedia(mainUrl, thumbnailUrls, "video");
     }
@@ -182,7 +200,7 @@ public class MediaProcessingService {
 
             // Obtener FFmpeg locator ANTES de crear MultimediaObject
             ProcessLocator ffmpegLocator = getFFmpegLocator();
-            
+
             MultimediaObject multimediaObject = new MultimediaObject(source, ffmpegLocator);
             MultimediaInfo info = multimediaObject.getInfo();
 
@@ -228,11 +246,11 @@ public class MediaProcessingService {
 
             // Crear encoder con FFmpeg correcto (ya inicializado arriba)
             Encoder encoder = new Encoder(ffmpegLocator);
-            
+
             log.info("🎬 Iniciando compresión de video con FFmpeg...");
             log.info("⚙️ Configuración: codec={}, bitrate={}bps, formato={}",
                     video.getCodec(), video.getBitRate(), attrs.getOutputFormat());
-            
+
             try {
                 encoder.encode(multimediaObject, target, attrs);
             } catch (EncoderException e) {
@@ -258,7 +276,7 @@ public class MediaProcessingService {
 
             // Obtener FFmpeg locator para usar en MultimediaObject y Encoder
             ProcessLocator ffmpegLocator = getFFmpegLocator();
-            
+
             MultimediaObject multimediaObject = new MultimediaObject(videoFile, ffmpegLocator);
 
             // Extraer frame en el segundo 1

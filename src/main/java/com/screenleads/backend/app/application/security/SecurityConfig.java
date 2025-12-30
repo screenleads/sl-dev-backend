@@ -63,8 +63,11 @@ public class SecurityConfig {
                                                                 com.screenleads.backend.app.infraestructure.config.SwaggerWhitelist.ENDPOINTS)
                                                 .permitAll()
 
-                                                // Auth: solo login/refresh públicos
+                                                // Auth: login, refresh y password reset públicos
                                                 .requestMatchers("/auth/login", "/auth/refresh").permitAll()
+                                                .requestMatchers("/auth/forgot-password", "/auth/verify-reset-token",
+                                                                "/auth/reset-password")
+                                                .permitAll()
                                                 // /auth/me requiere autenticación
                                                 .requestMatchers("/auth/me").authenticated()
 

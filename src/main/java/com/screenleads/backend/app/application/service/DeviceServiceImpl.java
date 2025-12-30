@@ -71,6 +71,10 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public DeviceDTO saveDevice(DeviceDTO dto) {
         // Upsert idempotente por UUID
+        if (dto.type() == null || dto.type().id() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Device type is required");
+        }
+        
         DeviceType type = deviceTypeRepository.findById(dto.type().id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_TYPE_NOT_FOUND));
 

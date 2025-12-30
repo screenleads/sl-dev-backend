@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.screenleads.backend.app.domain.model.DeviceType;
 import com.screenleads.backend.app.domain.repositories.DeviceTypeRepository;
@@ -51,7 +53,8 @@ public class DeviceTypeServiceImpl implements DeviceTypeService {
         DeviceType deviceType = deviceTypeRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException(DEVICE_TYPE_NOT_FOUND_WITH_ID + id));
         deviceType.setType(deviceTypeDTO.type());
-        deviceType.setEnabled(deviceTypeDTO.enabled());
+        // Si enabled es null, mantener el valor actual o establecer true
+        deviceType.setEnabled(deviceTypeDTO.enabled() != null ? deviceTypeDTO.enabled() : deviceType.getEnabled());
 
         DeviceType updatedDeviceType = deviceTypeRepository.save(deviceType);
         return convertToDTO(updatedDeviceType);
@@ -69,10 +72,16 @@ public class DeviceTypeServiceImpl implements DeviceTypeService {
 
     // Convert DeviceTypeDTO to DeviceType Entity
     private DeviceType convertToEntity(DeviceTypeDTO deviceTypeDTO) {
+        // Validar que el campo type sea requerido
+        if (deviceTypeDTO.type() == null || deviceTypeDTO.type().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Device type name is required");
+        }
+        
         DeviceType deviceType = new DeviceType();
         deviceType.setId(deviceTypeDTO.id());
         deviceType.setType(deviceTypeDTO.type());
-        deviceType.setEnabled(deviceTypeDTO.enabled());
+        // Si enabled es null, establecer true por defecto
+        deviceType.setEnabled(deviceTypeDTO.enabled() != null ? deviceTypeDTO.enabled() : true);
         return deviceType;
     }
 }

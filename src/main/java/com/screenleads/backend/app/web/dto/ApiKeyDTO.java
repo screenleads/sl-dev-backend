@@ -5,6 +5,9 @@ import java.time.LocalDateTime;
 public class ApiKeyDTO {
     private Long id;
     private String key;
+    private String name;
+    private String description;
+    private Long clientId;
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;
@@ -57,5 +60,29 @@ public class ApiKeyDTO {
 
     public void setPermissions(String permissions) {
         this.permissions = permissions;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Long getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(Long clientId) {
+        this.clientId = clientId;
     }
 }

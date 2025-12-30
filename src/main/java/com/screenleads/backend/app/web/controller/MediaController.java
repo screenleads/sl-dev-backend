@@ -87,16 +87,21 @@ public class MediaController {
             MediaProcessingService.ProcessedMedia result = processingService.processMedia(tmp.toFile(), fileName,
                     firebaseService);
 
+            // Guardar Media en la base de datos
+            MediaDTO savedMedia = mediaService.saveMediaFromUpload(result.mainUrl(), result.type());
+            
             // Limpiar temporal
             deleteTempFile(tmp);
 
             long totalTime = System.currentTimeMillis() - startTime;
-            log.info("✅ Proceso completo en {}ms", totalTime);
+            log.info("✅ Proceso completo en {}ms, Media ID: {}", totalTime, savedMedia.id());
 
-            // Retornar resultado inmediato (sin polling)
+            // Retornar resultado con el ID de la Media guardada
             return ResponseEntity.ok(Map.of(
-                    STATUS_KEY, "ready",
+                    "id", savedMedia.id(),
+                    "src", savedMedia.src(),
                     "type", result.type(),
+                    STATUS_KEY, "ready",
                     "url", result.mainUrl(),
                     "thumbnails", result.thumbnailUrls(),
                     "processingTimeMs", totalTime));
@@ -135,8 +140,8 @@ public class MediaController {
 
             String contentType = connection.getContentType();
             long contentLength = connection.getContentLengthLong();
-            
-            log.info("📥 Descargando archivo: size={} bytes, contentType={}", 
+
+            log.info("📥 Descargando archivo: size={} bytes, contentType={}",
                     contentLength > 0 ? contentLength : "unknown", contentType);
 
             // Extraer nombre del archivo de la URL

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -78,6 +79,21 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     public List<ApiKey> getApiKeysByClientDbId(Long clientDbId) {
         // Usar el método del repositorio para evitar errores de tipo
         return apiKeyRepository.findAllByClient_Id(clientDbId);
+    }
+
+    @Override
+    public List<ApiKey> getAllApiKeys() {
+        return apiKeyRepository.findAll();
+    }
+
+    @Override
+    public Optional<ApiKey> getApiKeyById(Long id) {
+        return apiKeyRepository.findById(id);
+    }
+
+    @Override
+    public ApiKey saveApiKey(ApiKey apiKey) {
+        return apiKeyRepository.save(apiKey);
     }
 
     @Override

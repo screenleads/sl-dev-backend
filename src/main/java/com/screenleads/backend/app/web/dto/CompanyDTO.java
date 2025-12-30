@@ -12,6 +12,7 @@ public record CompanyDTO(
         String name,
         String observations,
         MediaSlimDTO logo,
+        Long logoId, // ID del logo para crear/actualizar
         List<Device> devices,
         List<Advice> advices,
         String primaryColor,

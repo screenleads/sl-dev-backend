@@ -2,6 +2,7 @@ package com.screenleads.backend.app.application.service;
 
 import com.screenleads.backend.app.domain.model.ApiKey;
 import java.util.List;
+import java.util.Optional;
 
 public interface ApiKeyService {
     ApiKey createApiKey(String clientId, String permissions, int daysValid);
@@ -15,6 +16,12 @@ public interface ApiKeyService {
     ApiKey createApiKeyByDbId(Long clientDbId, String permissions, int daysValid);
 
     List<ApiKey> getApiKeysByClientDbId(Long clientDbId);
+
+    List<ApiKey> getAllApiKeys();
+
+    Optional<ApiKey> getApiKeyById(Long id);
+
+    ApiKey saveApiKey(ApiKey apiKey);
 
     ApiKey updatePermissions(Long id, String permissions);
 

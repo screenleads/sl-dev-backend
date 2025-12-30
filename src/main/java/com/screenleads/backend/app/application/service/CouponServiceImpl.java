@@ -2,6 +2,7 @@ package com.screenleads.backend.app.application.service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,11 @@ public class CouponServiceImpl implements CouponService {
     private final PromotionRepository promotionRepository;
     private final PromotionLeadRepository promotionLeadRepository;
     private final CustomerRepository customerRepository;
+
+    @Override
+    public List<PromotionLead> getAllCoupons() {
+        return promotionLeadRepository.findAll();
+    }
 
     @Override
     public PromotionLead issueCoupon(Long promotionId, Long customerId) {

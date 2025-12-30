@@ -17,12 +17,76 @@ public class ApiKeyController {
         this.apiKeyService = apiKeyService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<ApiKeyDTO>> getAllApiKeys() {
+        List<ApiKey> keys = apiKeyService.getAllApiKeys();
+        return ResponseEntity.ok(keys.stream()
+                .map(ApiKeyMapper::toDto)
+                .toList());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiKeyDTO> getApiKeyById(@PathVariable Long id) {
+        return apiKeyService.getApiKeyById(id)
+                .map(ApiKeyMapper::toDto)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping
-    public ResponseEntity<ApiKeyDTO> createApiKey(@RequestParam Long clientDbId,
-            @RequestParam String permissions,
-            @RequestParam(defaultValue = "365") int daysValid) {
-        ApiKey key = apiKeyService.createApiKeyByDbId(clientDbId, permissions, daysValid);
+    public ResponseEntity<ApiKeyDTO> createApiKey(@RequestBody ApiKeyDTO apiKeyDTO) {
+        if (apiKeyDTO.getClientId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        // Calculate days valid from expiresAt or use default
+        int daysValid = 365;
+        if (apiKeyDTO.getExpiresAt() != null) {
+            daysValid = (int) java.time.temporal.ChronoUnit.DAYS.between(
+                java.time.LocalDateTime.now(), 
+                apiKeyDTO.getExpiresAt()
+            );
+        }
+        
+        ApiKey key = apiKeyService.createApiKeyByDbId(
+            apiKeyDTO.getClientId(), 
+            apiKeyDTO.getPermissions(), 
+            daysValid
+        );
+        
+        if (apiKeyDTO.getName() != null) {
+            key.setName(apiKeyDTO.getName());
+        }
+        if (apiKeyDTO.getDescription() != null) {
+            key.setDescription(apiKeyDTO.getDescription());
+        }
+        key = apiKeyService.saveApiKey(key);
+        
         return ResponseEntity.ok(ApiKeyMapper.toDto(key));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiKeyDTO> updateApiKey(@PathVariable Long id, @RequestBody ApiKeyDTO apiKeyDTO) {
+        return apiKeyService.getApiKeyById(id)
+            .map(existingKey -> {
+                if (apiKeyDTO.getName() != null) {
+                    existingKey.setName(apiKeyDTO.getName());
+                }
+                if (apiKeyDTO.getPermissions() != null) {
+                    existingKey.setPermissions(apiKeyDTO.getPermissions());
+                }
+                if (apiKeyDTO.getDescription() != null) {
+                    existingKey.setDescription(apiKeyDTO.getDescription());
+                }
+                if (apiKeyDTO.getExpiresAt() != null) {
+                    existingKey.setExpiresAt(apiKeyDTO.getExpiresAt());
+                }
+                existingKey.setActive(apiKeyDTO.isActive());
+                
+                ApiKey updated = apiKeyService.saveApiKey(existingKey);
+                return ResponseEntity.ok(ApiKeyMapper.toDto(updated));
+            })
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{id}/activate")

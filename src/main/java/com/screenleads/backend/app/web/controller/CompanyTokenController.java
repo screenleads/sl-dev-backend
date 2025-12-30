@@ -13,6 +13,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/company-tokens")
+@CrossOrigin(origins = "*")
 public class CompanyTokenController {
     @PutMapping("/{id}")
     public ResponseEntity<CompanyTokenDTO> updateToken(@PathVariable Long id, @RequestBody CompanyTokenDTO dto) {

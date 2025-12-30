@@ -53,4 +53,24 @@ public class AuthController {
     public ResponseEntity<JwtResponse> refreshTokenProtected() {
         return ResponseEntity.ok(authenticationService.refreshToken());
     }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Solicitar recuperación de contraseña", description = "Envía un email con enlace para restablecer contraseña", security = {})
+    public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        authenticationService.forgotPassword(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/verify-reset-token")
+    @Operation(summary = "Verificar validez de token de reset", description = "Comprueba si un token es válido, no expirado y no usado", security = {})
+    public ResponseEntity<VerifyTokenResponse> verifyResetToken(@RequestParam String token) {
+        return ResponseEntity.ok(authenticationService.verifyResetToken(token));
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Restablecer contraseña", description = "Establece nueva contraseña usando token válido", security = {})
+    public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
+        authenticationService.resetPassword(request);
+        return ResponseEntity.ok().build();
+    }
 }

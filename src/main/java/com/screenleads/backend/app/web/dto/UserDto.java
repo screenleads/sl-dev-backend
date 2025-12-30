@@ -24,6 +24,9 @@ public class UserDto {
 
     // Nuevo: imagen de perfil como objeto slim
     private MediaSlimDTO profileImage;
+    
+    // ID de la imagen de perfil (para crear/actualizar)
+    private Long profileImageId;
 
     // solo para crear/actualizar; no lo rellenes al responder
     private String password;
