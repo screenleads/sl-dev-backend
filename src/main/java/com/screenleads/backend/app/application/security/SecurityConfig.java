@@ -124,7 +124,9 @@ public class SecurityConfig {
                                 "http://localhost:8100",
                                 "https://sl-device-connector.web.app",
                                 "https://sl-dev-dashboard-pre-c4a3c4b00c91.herokuapp.com",
-                                "https://sl-dev-dashboard-bfb13611d5d6.herokuapp.com"
+                                "https://sl-dev-dashboard-bfb13611d5d6.herokuapp.com",
+                                "https://dashboard.pre.screenleads.com",
+                                "https://dashboard.screenleads.com"
                 // añade aquí preprod/prod si procede
                 ));
 
