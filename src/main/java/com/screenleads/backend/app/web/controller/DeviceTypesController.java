@@ -41,7 +41,7 @@ public class DeviceTypesController {
 
     @CrossOrigin
     @PostMapping("/devices/types")
-    @PreAuthorize("@perm.can('device', 'create')")
+    @PreAuthorize("@perm.can('device', 'write')")
     @Operation(summary = "Crear tipo de dispositivo")
     public ResponseEntity<DeviceTypeDTO> createDeviceType(@RequestBody DeviceTypeDTO deviceDTO) {
         return ResponseEntity.ok(deviceTypeService.saveDeviceType(deviceDTO));
@@ -49,7 +49,7 @@ public class DeviceTypesController {
 
     @CrossOrigin
     @PutMapping("/devices/types/{id}")
-    @PreAuthorize("@perm.can('device', 'update')")
+    @PreAuthorize("@perm.can('device', 'write')")
     @Operation(summary = "Actualizar tipo de dispositivo")
     public ResponseEntity<DeviceTypeDTO> updateDeviceType(@PathVariable Long id, @RequestBody DeviceTypeDTO deviceDTO) {
         DeviceTypeDTO updatedDevice = deviceTypeService.updateDeviceType(id, deviceDTO);

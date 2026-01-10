@@ -64,14 +64,14 @@ public class AdvicesController {
         return advice.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("@perm.can('advice', 'create')")
+    @PreAuthorize("@perm.can('advice', 'write')")
     @PostMapping
     @Operation(summary = "Crear un advice")
     public ResponseEntity<AdviceDTO> createAdvice(@RequestBody AdviceDTO adviceDTO) {
         return ResponseEntity.ok(adviceService.saveAdvice(adviceDTO));
     }
 
-    @PreAuthorize("@perm.can('advice', 'update')")
+    @PreAuthorize("@perm.can('advice', 'write')")
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar un advice")
     public ResponseEntity<AdviceDTO> updateAdvice(@PathVariable Long id, @RequestBody AdviceDTO adviceDTO) {

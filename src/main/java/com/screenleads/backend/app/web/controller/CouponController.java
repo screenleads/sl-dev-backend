@@ -53,7 +53,7 @@ public class CouponController {
 
     // === POST /coupons/{code}/redeem -> canjear ===
     @PostMapping("/{code}/redeem")
-    @PreAuthorize("@perm.can('promotion', 'update')")
+    @PreAuthorize("@perm.can('promotion', 'write')")
     @Operation(summary = "Canjear cupón por código", description = "Marca el cupón como REDEEMED si es válido")
     public ResponseEntity<CouponValidationResponse> redeem(@PathVariable String code) {
         PromotionLead lead = couponService.redeem(code);
@@ -62,7 +62,7 @@ public class CouponController {
 
     // === POST /coupons/{code}/expire -> caducar manualmente ===
     @PostMapping("/{code}/expire")
-    @PreAuthorize("@perm.can('promotion', 'update')")
+    @PreAuthorize("@perm.can('promotion', 'write')")
     @Operation(summary = "Caducar cupón por código", description = "Marca el cupón como EXPIRED si aún no se ha canjeado")
     public ResponseEntity<CouponValidationResponse> expire(@PathVariable String code) {
         PromotionLead lead = couponService.expire(code);
@@ -71,7 +71,7 @@ public class CouponController {
 
     // === POST /coupons/issue?promotionId=&customerId= -> emitir ===
     @PostMapping("/issue")
-    @PreAuthorize("@perm.can('promotion', 'create')")
+    @PreAuthorize("@perm.can('promotion', 'write')")
     @Operation(summary = "Emitir cupón (crear lead histórico)", description = "Genera un nuevo cupón interno para un cliente y una promoción, respetando límites")
     public ResponseEntity<CouponValidationResponse> issue(
             @RequestParam Long promotionId,

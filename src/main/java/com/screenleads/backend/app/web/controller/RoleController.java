@@ -35,13 +35,13 @@ public class RoleController {
     }
 
     @PostMapping
-    @PreAuthorize("@perm.can('user','update')")
+    @PreAuthorize("@perm.can('user','write')")
     public ResponseEntity<RoleDTO> create(@RequestBody RoleDTO dto) {
         return ResponseEntity.ok(service.create(dto));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("@perm.can('user','update')")
+    @PreAuthorize("@perm.can('user','write')")
     public ResponseEntity<RoleDTO> update(@PathVariable Long id, @RequestBody RoleDTO dto) {
         return ResponseEntity.ok(service.update(id, dto));
     }
@@ -58,7 +58,7 @@ public class RoleController {
      * Requiere permiso de crear o actualizar usuarios.
      */
     @GetMapping("/assignable")
-    @PreAuthorize("@perm.can('user','create') or @perm.can('user','update')")
+    @PreAuthorize("@perm.can('user','write')")
     public ResponseEntity<List<RoleDTO>> assignable() {
         int myLevel = perm.effectiveLevel();
         List<RoleDTO> all = service.getAll();

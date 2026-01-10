@@ -54,7 +54,7 @@ public class MediaController {
 
     // ---------------- UPLOAD (SÍNCRONO) ----------------
 
-    @PreAuthorize("@perm.can('media', 'create')")
+    @PreAuthorize("@perm.can('media', 'write')")
     @CrossOrigin
     @PostMapping(value = "/medias/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> upload(@RequestPart("file") MultipartFile file) {
@@ -118,7 +118,7 @@ public class MediaController {
 
     // ---------------- UPLOAD FROM URL (SÍNCRONO) ----------------
 
-    @PreAuthorize("@perm.can('media', 'create')")
+    @PreAuthorize("@perm.can('media', 'write')")
     @CrossOrigin
     @PostMapping(value = "/medias/upload-from-url", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> uploadFromUrl(@RequestBody Map<String, String> request) {

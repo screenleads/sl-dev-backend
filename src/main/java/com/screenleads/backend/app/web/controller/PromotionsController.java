@@ -34,13 +34,13 @@ public class PromotionsController {
         return promotionService.getPromotionById(id);
     }
 
-    @PreAuthorize("@perm.can('promotion', 'create')")
+    @PreAuthorize("@perm.can('promotion', 'write')")
     @PostMapping
     public PromotionDTO createPromotion(@RequestBody PromotionDTO promotionDTO) {
         return promotionService.savePromotion(promotionDTO);
     }
 
-    @PreAuthorize("@perm.can('promotion', 'update')")
+    @PreAuthorize("@perm.can('promotion', 'write')")
     @PutMapping("/{id}")
     public PromotionDTO updatePromotion(@PathVariable Long id, @RequestBody PromotionDTO promotionDTO) {
         return promotionService.updatePromotion(id, promotionDTO);
@@ -53,7 +53,7 @@ public class PromotionsController {
     }
 
     // ===== Leads =====
-    @PreAuthorize("@perm.can('lead', 'create')")
+    @PreAuthorize("@perm.can('lead', 'write')")
     @PostMapping("/{id}/leads")
     public PromotionLeadDTO registerLead(@PathVariable Long id, @RequestBody PromotionLeadDTO leadDTO) {
         return promotionService.registerLead(id, leadDTO);
@@ -66,7 +66,7 @@ public class PromotionsController {
     }
 
     // ===== Lead de prueba =====
-    @PreAuthorize("@perm.can('lead', 'create')")
+    @PreAuthorize("@perm.can('lead', 'write')")
     @PostMapping("/{id}/leads/test")
     public PromotionLeadDTO createTestLead(
             @PathVariable Long id,

@@ -60,11 +60,11 @@ public class ApiKeyPermissionTestController {
             // Ejemplos de verificación de permisos
             Map<String, Boolean> permissionChecks = new HashMap<>();
             permissionChecks.put("snapshot:read", principal.hasPermission(SNAPSHOT, "read"));
-            permissionChecks.put("snapshot:create", principal.hasPermission(SNAPSHOT, "create"));
-            permissionChecks.put("snapshot:update", principal.hasPermission(SNAPSHOT, "update"));
+            permissionChecks.put("snapshot:write", principal.hasPermission(SNAPSHOT, "write"));
             permissionChecks.put("snapshot:delete", principal.hasPermission(SNAPSHOT, "delete"));
             permissionChecks.put("lead:read", principal.hasPermission("lead", "read"));
-            permissionChecks.put("lead:create", principal.hasPermission("lead", "create"));
+            permissionChecks.put("lead:write", principal.hasPermission("lead", "write"));
+            permissionChecks.put("lead:delete", principal.hasPermission("lead", "delete"));
 
             info.put("permission_checks", permissionChecks);
         }
@@ -87,29 +87,29 @@ public class ApiKeyPermissionTestController {
     }
 
     /**
-     * Endpoint que requiere permiso de creación sobre snapshots.
+     * Endpoint que requiere permiso de escritura sobre snapshots.
      */
-    @PreAuthorize("@apiKeyPerm.can('snapshot', 'create')")
+    @PreAuthorize("@apiKeyPerm.can('snapshot', 'write')")
     @PostMapping("/snapshot/create")
     public Map<String, Object> testSnapshotCreate() {
         Map<String, Object> result = new HashMap<>();
-        result.put(ACTION, "snapshot:create");
+        result.put(ACTION, "snapshot:write");
         result.put(SUCCESS, true);
-        result.put(MESSAGE, "You have permission to create snapshots");
+        result.put(MESSAGE, "You have permission to write snapshots");
         result.put(COMPANY_SCOPE, apiKeyPermissionService.getCompanyScope());
         return result;
     }
 
     /**
-     * Endpoint que requiere permiso de actualización sobre leads.
+     * Endpoint que requiere permiso de escritura sobre leads.
      */
-    @PreAuthorize("@apiKeyPerm.can('lead', 'update')")
+    @PreAuthorize("@apiKeyPerm.can('lead', 'write')")
     @PutMapping("/lead/update")
     public Map<String, Object> testLeadUpdate() {
         Map<String, Object> result = new HashMap<>();
-        result.put(ACTION, "lead:update");
+        result.put(ACTION, "lead:write");
         result.put(SUCCESS, true);
-        result.put(MESSAGE, "You have permission to update leads");
+        result.put(MESSAGE, "You have permission to write leads");
         result.put(COMPANY_SCOPE, apiKeyPermissionService.getCompanyScope());
         return result;
     }

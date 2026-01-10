@@ -52,14 +52,14 @@ public class AppEntityController {
 
     // ---- UPSERT (CREAR/ACTUALIZAR) ----
     @PutMapping
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'update')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'write')")
     public ResponseEntity<AppEntityDTO> upsert(@RequestBody AppEntityDTO dto) {
         AppEntityDTO saved = service.upsert(dto);
         return new ResponseEntity<>(saved, HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'update')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'write')")
     public ResponseEntity<AppEntityDTO> update(@PathVariable Long id, @RequestBody AppEntityDTO dto) {
         if (dto.id() != null && !dto.id().equals(id)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Path id y body id no coinciden");
@@ -78,7 +78,7 @@ public class AppEntityController {
 
     // ---- REORDENAR ENTIDADES (drag & drop) ----
     @PutMapping("/reorder")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'update')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'write')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void reorderEntities(@RequestBody ReorderRequest request) {
         service.reorderEntities(request.ids());
@@ -86,7 +86,7 @@ public class AppEntityController {
 
     // ---- REORDENAR ATRIBUTOS DE UNA ENTIDAD (drag & drop) ----
     @PutMapping("/{id}/attributes/reorder")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'update')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('appentity', 'write')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void reorderAttributes(@PathVariable Long id, @RequestBody ReorderRequest request) {
         service.reorderAttributes(id, request.ids());

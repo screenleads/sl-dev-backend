@@ -47,7 +47,7 @@ public class CustomerController {
     }
 
     // ===== Crear =====
-    @PreAuthorize("@perm.can('customer', 'create')")
+    @PreAuthorize("@perm.can('customer', 'write')")
     @PostMapping
     @Operation(summary = "Crear cliente", description = "Crea un cliente normalizando el identificador y aplicando unicidad por empresa")
     public ResponseEntity<CustomerResponse> create(@RequestBody CreateRequest req) {
@@ -63,7 +63,7 @@ public class CustomerController {
     }
 
     // ===== Actualizar =====
-    @PreAuthorize("@perm.can('customer', 'update')")
+    @PreAuthorize("@perm.can('customer', 'write')")
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar cliente")
     public ResponseEntity<CustomerResponse> update(@PathVariable Long id, @RequestBody UpdateRequest req) {

@@ -117,6 +117,7 @@ public class SecurityConfig {
 
                 // Orígenes explícitos (ajusta según tus entornos)
                 config.setAllowedOrigins(List.of(
+                                "http://localhost",
                                 "https://localhost",
                                 "https://localhost:4200",
                                 "https://localhost:8100",

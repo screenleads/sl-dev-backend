@@ -47,7 +47,7 @@ public class DevicesController {
         return device.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("@perm.can('device', 'create')")
+    @PreAuthorize("@perm.can('device', 'write')")
     @PostMapping
     @Operation(summary = "Crear dispositivo")
     public ResponseEntity<DeviceDTO> createDevice(@RequestBody DeviceDTO deviceDTO) {
@@ -55,7 +55,7 @@ public class DevicesController {
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    @PreAuthorize("@perm.can('device', 'update')")
+    @PreAuthorize("@perm.can('device', 'write')")
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar dispositivo")
     public ResponseEntity<DeviceDTO> updateDevice(@PathVariable Long id, @RequestBody DeviceDTO deviceDTO) {

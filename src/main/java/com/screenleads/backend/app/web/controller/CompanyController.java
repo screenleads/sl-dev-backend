@@ -41,16 +41,16 @@ public class CompanyController {
         return company.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'create')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'write')")
     @PostMapping
-    @Operation(summary = "Crear compañía", description = "ROLE_ADMIN o permiso company:create")
+    @Operation(summary = "Crear compañía", description = "ROLE_ADMIN o permiso company:write")
     public ResponseEntity<CompanyDTO> createCompany(@RequestBody CompanyDTO companyDTO) {
         return ResponseEntity.ok(companiesService.saveCompany(companyDTO));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'update')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'write')")
     @PutMapping("/{id}")
-    @Operation(summary = "Actualizar compañía", description = "ROLE_ADMIN o permiso company:update")
+    @Operation(summary = "Actualizar compañía", description = "ROLE_ADMIN o permiso company:write")
     public ResponseEntity<CompanyDTO> updateCompany(@PathVariable Long id, @RequestBody CompanyDTO companyDTO) {
         CompanyDTO updatedCompany = companiesService.updateCompany(id, companyDTO);
         return ResponseEntity.ok(updatedCompany);
