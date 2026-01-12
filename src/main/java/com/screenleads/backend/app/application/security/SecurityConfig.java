@@ -84,9 +84,11 @@ public class SecurityConfig {
                                                 .anyRequest().authenticated())
                                 .authenticationProvider(authenticationProvider())
 
-                                // ✅ IMPORTANTE: anclar SIEMPRE a un filtro estándar (no a filtros custom)
-                                .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                                // ✅ IMPORTANTE: JWT debe ejecutarse ANTES que ApiKey
+                                // 1. JWT se ejecuta antes de UsernamePasswordAuthenticationFilter
+                                // 2. ApiKey se ejecuta después de JWT (para que JWT procese primero el token)
+                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                                .addFilterAfter(apiKeyAuthFilter, JwtAuthenticationFilter.class);
 
                 return http.build();
         }
