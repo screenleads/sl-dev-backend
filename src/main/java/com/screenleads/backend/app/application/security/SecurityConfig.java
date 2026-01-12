@@ -121,11 +121,13 @@ public class SecurityConfig {
                 CorsConfiguration config = new CorsConfiguration();
 
                 // Orígenes explícitos (ajusta según tus entornos)
-                config.setAllowedOrigins(List.of(
+                // Usar setAllowedOriginPatterns para soportar patrones como http://localhost:*
+                config.setAllowedOriginPatterns(List.of(
                                 "http://localhost",
+                                "http://localhost:*",
                                 "https://localhost",
-                                "https://localhost:4200",
-                                "https://localhost:8100",
+                                "https://localhost:*",
+                                "capacitor://localhost",
                                 "http://localhost:4200",
                                 "http://localhost:8100",
                                 "https://sl-device-connector.web.app",
