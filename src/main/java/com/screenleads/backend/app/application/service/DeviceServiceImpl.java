@@ -102,15 +102,22 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public DeviceDTO updateDevice(Long id, DeviceDTO deviceDTO) {
+        log.info("🔧 updateDevice called - ID: {}, DTO: {}", id, deviceDTO);
+        
         Device device = deviceRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_NOT_FOUND));
+        
+        log.info("✅ Device found - ID: {}, UUID: {}, Company: {}", device.getId(), device.getUuid(), device.getCompany());
 
         if (deviceDTO.type() == null || deviceDTO.type().id() == null || deviceDTO.type().id() == 0) {
+            log.error("❌ Invalid device type: {}", deviceDTO.type());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Device type is required and must have a valid ID");
         }
 
         DeviceType type = deviceTypeRepository.findById(deviceDTO.type().id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_TYPE_NOT_FOUND));
+        
+        log.info("✅ Device type found - ID: {}, Type: {}", type.getId(), type.getType());
 
         device.setUuid(deviceDTO.uuid());
         device.setDescriptionName(deviceDTO.descriptionName());
@@ -123,13 +130,18 @@ public class DeviceServiceImpl implements DeviceService {
         // Solo actualizar company si se proporciona un ID válido
         // Si no se proporciona o es inválido, mantener el company actual
         if (deviceDTO.company() != null && deviceDTO.company().id() != null && deviceDTO.company().id() > 0) {
+            log.info("🏢 Updating company to ID: {}", deviceDTO.company().id());
             Company company = companyRepository.findById(deviceDTO.company().id())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, COMPANY_NOT_FOUND));
             device.setCompany(company);
+        } else {
+            log.info("🏢 Keeping existing company - ID: {}", device.getCompany() != null ? device.getCompany().getId() : "null");
         }
         // Si no se proporciona company o es inválido, mantener el company existente (no hacer nada)
 
+        log.info("💾 Saving device...");
         Device updatedDevice = deviceRepository.save(device);
+        log.info("✅ Device saved successfully");
         return convertToDTO(updatedDevice);
     }
 
