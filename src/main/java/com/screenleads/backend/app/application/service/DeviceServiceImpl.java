@@ -88,12 +88,13 @@ public class DeviceServiceImpl implements DeviceService {
         device.setHeight(height);
         device.setType(type);
 
-        if (dto.company() != null && dto.company().id() != null) {
+        // Company es obligatorio en la creación
+        if (dto.company() != null && dto.company().id() != null && dto.company().id() > 0) {
             Company company = companyRepository.findById(dto.company().id())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, COMPANY_NOT_FOUND));
             device.setCompany(company);
         } else {
-            device.setCompany(null);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Company is required for device creation");
         }
 
         return convertToDTO(deviceRepository.save(device));
@@ -119,13 +120,14 @@ public class DeviceServiceImpl implements DeviceService {
         device.setHeight(height);
         device.setType(type);
 
-        if (deviceDTO.company() != null && deviceDTO.company().id() != null && deviceDTO.company().id() != 0) {
+        // Solo actualizar company si se proporciona un ID válido
+        // Si no se proporciona o es inválido, mantener el company actual
+        if (deviceDTO.company() != null && deviceDTO.company().id() != null && deviceDTO.company().id() > 0) {
             Company company = companyRepository.findById(deviceDTO.company().id())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, COMPANY_NOT_FOUND));
             device.setCompany(company);
-        } else {
-            device.setCompany(null);
         }
+        // Si no se proporciona company o es inválido, mantener el company existente (no hacer nada)
 
         Device updatedDevice = deviceRepository.save(device);
         return convertToDTO(updatedDevice);
