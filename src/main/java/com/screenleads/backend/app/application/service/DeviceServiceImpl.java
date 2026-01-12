@@ -22,6 +22,9 @@ import com.screenleads.backend.app.web.dto.DeviceDTO;
 import com.screenleads.backend.app.web.mapper.DeviceMapper;
 import com.screenleads.backend.app.web.mapper.AdviceMapper;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 @Transactional
 public class DeviceServiceImpl implements DeviceService {
