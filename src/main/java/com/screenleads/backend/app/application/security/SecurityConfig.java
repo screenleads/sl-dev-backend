@@ -74,6 +74,10 @@ public class SecurityConfig {
                                                 // Device registration: permitir POST público para auto-registro
                                                 .requestMatchers(HttpMethod.POST, "/devices").permitAll()
                                                 .requestMatchers(HttpMethod.GET, "/devices/uuid/**").permitAll()
+                                                // Device update: permitir PUT público para actualizar dispositivo
+                                                .requestMatchers(HttpMethod.PUT, "/devices/*").permitAll()
+                                                // Device types: permitir GET público para listar tipos
+                                                .requestMatchers(HttpMethod.GET, "/devices/types").permitAll()
 
                                 // App versions: permitir consulta pública para verificación de actualizaciones
                                 .requestMatchers(HttpMethod.GET, "/app-versions/latest/**").permitAll()
