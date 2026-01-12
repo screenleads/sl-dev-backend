@@ -47,9 +47,9 @@ public class DevicesController {
         return device.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("@perm.can('device', 'write')")
+    // @PreAuthorize removed - Public endpoint for device self-registration
     @PostMapping
-    @Operation(summary = "Crear dispositivo")
+    @Operation(summary = "Crear dispositivo (auto-registro público)")
     public ResponseEntity<DeviceDTO> createDevice(@RequestBody DeviceDTO deviceDTO) {
         DeviceDTO saved = deviceService.saveDevice(deviceDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
@@ -75,9 +75,9 @@ public class DevicesController {
     // Búsqueda / existencia por UUID (para que el frontend se "autocure")
     // -------------------------------------------------------------------------
 
-    @PreAuthorize("@perm.can('device', 'read')")
+    // @PreAuthorize removed - Public endpoint for device lookup
     @GetMapping("/uuid/{uuid}")
-    @Operation(summary = "Obtener dispositivo por UUID")
+    @Operation(summary = "Obtener dispositivo por UUID (público)")
     public ResponseEntity<DeviceDTO> getDeviceByUuid(@PathVariable String uuid) {
         return deviceService.getDeviceByUuid(uuid)
                 .map(ResponseEntity::ok)

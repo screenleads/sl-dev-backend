@@ -71,10 +71,13 @@ public class SecurityConfig {
                                                 // /auth/me requiere autenticación
                                                 .requestMatchers("/auth/me").authenticated()
 
-                                                // Swagger / OpenAPI / Health
-                                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**",
-                                                                "/swagger-ui.html")
-                                                .permitAll()
+                                                // Device registration: permitir POST público para auto-registro
+                                                .requestMatchers(HttpMethod.POST, "/devices").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/devices/uuid/**").permitAll()
+
+                                // App versions: permitir consulta pública para verificación de actualizaciones
+                                .requestMatchers(HttpMethod.GET, "/app-versions/latest/**").permitAll()
+
                                                 .requestMatchers("/actuator/health").permitAll()
 
                                                 // El resto autenticado

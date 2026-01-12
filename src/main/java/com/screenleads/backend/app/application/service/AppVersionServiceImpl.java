@@ -44,9 +44,9 @@ public class AppVersionServiceImpl implements AppVersionService {
 
     @Override
     public AppVersionDTO getLatestVersion(String platform) {
-        AppVersion entity = repository.findTopByPlatformOrderByIdDesc(platform)
-                .orElseThrow(() -> new RuntimeException("No version found for platform " + platform));
-        return toDTO(entity);
+        return repository.findTopByPlatformOrderByIdDesc(platform)
+                .map(this::toDTO)
+                .orElse(null);
     }
 
     // --- Métodos de conversión ---

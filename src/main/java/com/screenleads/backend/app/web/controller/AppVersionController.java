@@ -3,6 +3,7 @@ package com.screenleads.backend.app.web.controller;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,8 +50,12 @@ public class AppVersionController {
 
     @GetMapping("/latest/{platform}")
     @Operation(summary = "Última versión por plataforma")
-    public AppVersionDTO getLatestVersion(@PathVariable String platform) {
-        return service.getLatestVersion(platform);
+    public ResponseEntity<AppVersionDTO> getLatestVersion(@PathVariable String platform) {
+        AppVersionDTO version = service.getLatestVersion(platform);
+        if (version == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(version);
     }
 
     @PutMapping("/{id}")
