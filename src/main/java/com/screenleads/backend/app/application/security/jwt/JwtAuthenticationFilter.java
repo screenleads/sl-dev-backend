@@ -87,25 +87,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             final String authHeader = request.getHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
                 // Sin token -> continúa; si la ruta requiere auth, Security devolverá 401
+                log.debug("🔓 No JWT token in request: {}", uri);
                 filterChain.doFilter(request, response);
                 return;
             }
 
             final String jwt = authHeader.substring(BEARER_PREFIX.length());
+            log.debug("🔑 JWT token found for: {} (length: {})", uri, jwt.length());
 
             // 3) Extrae username del token
             final String username = jwtService.extractUsername(jwt);
+            log.debug("👤 Username extracted from token: {}", username);
+            
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 // 4) Valida token y construye autenticación
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                if (jwtService.isTokenValid(jwt, userDetails)) {
+                boolean isValid = jwtService.isTokenValid(jwt, userDetails);
+                log.debug("🔍 Token validation result: {} for user: {}", isValid, username);
+                
+                if (isValid) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    log.info("✅ JWT authentication successful for user: {} on {}", username, uri);
                 } else {
                     // Token inválido -> limpia contexto y sigue; endpoint autenticado devolverá 401
                     SecurityContextHolder.clearContext();
+                    log.warn("❌ Invalid JWT token for user: {} on {}", username, uri);
                 }
             }
 
@@ -113,7 +122,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (Exception ex) {
-            log.warn("Error procesando autenticación JWT: {}", ex.getMessage());
+            log.error("❌ Error procesando autenticación JWT en {}: {}", uri, ex.getMessage(), ex);
             SecurityContextHolder.clearContext();
             // No relanzamos RuntimeException para evitar 500: el EntryPoint/AccessDenied se
             // encargará
