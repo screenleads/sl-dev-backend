@@ -104,8 +104,8 @@ public class DeviceServiceImpl implements DeviceService {
         Device device = deviceRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_NOT_FOUND));
 
-        if (deviceDTO.type() == null || deviceDTO.type().id() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Device type is required");
+        if (deviceDTO.type() == null || deviceDTO.type().id() == null || deviceDTO.type().id() == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Device type is required and must have a valid ID");
         }
 
         DeviceType type = deviceTypeRepository.findById(deviceDTO.type().id())
@@ -119,7 +119,7 @@ public class DeviceServiceImpl implements DeviceService {
         device.setHeight(height);
         device.setType(type);
 
-        if (deviceDTO.company() != null && deviceDTO.company().id() != null) {
+        if (deviceDTO.company() != null && deviceDTO.company().id() != null && deviceDTO.company().id() != 0) {
             Company company = companyRepository.findById(deviceDTO.company().id())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, COMPANY_NOT_FOUND));
             device.setCompany(company);
