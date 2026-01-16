@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.screenleads.backend.app.application.service.util.CouponCodeGenerator;
 import com.screenleads.backend.app.domain.model.*;
 import com.screenleads.backend.app.domain.repositories.CustomerRepository;
+import com.screenleads.backend.app.domain.repositories.DeviceRepository;
 import com.screenleads.backend.app.domain.repositories.PromotionRedemptionRepository;
 import com.screenleads.backend.app.domain.repositories.PromotionRepository;
 
@@ -23,10 +24,12 @@ public class CouponServiceImpl implements CouponService {
     private static final String COUPON_NOT_FOUND = "Coupon not found";
     private static final String PROMOTION_NOT_FOUND = "Promotion not found: ";
     private static final String CUSTOMER_NOT_FOUND = "Customer not found: ";
+    private static final String DEVICE_NOT_FOUND = "Device not found: ";
 
     private final PromotionRepository promotionRepository;
     private final PromotionRedemptionRepository promotionRedemptionRepository;
     private final CustomerRepository customerRepository;
+    private final DeviceRepository deviceRepository;
 
     @Override
     public List<PromotionRedemption> getAllCoupons() {
@@ -34,12 +37,15 @@ public class CouponServiceImpl implements CouponService {
     }
 
     @Override
-    public PromotionRedemption issueCoupon(Long promotionId, Long customerId) {
+    public PromotionRedemption issueCoupon(Long promotionId, Long customerId, Long deviceId) {
         Promotion promotion = promotionRepository.findById(promotionId)
                 .orElseThrow(() -> new IllegalArgumentException(PROMOTION_NOT_FOUND + promotionId));
 
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException(CUSTOMER_NOT_FOUND + customerId));
+
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new IllegalArgumentException(DEVICE_NOT_FOUND + deviceId));
 
         // Chequeo de ventana temporal de la promo
         Instant now = Instant.now();
@@ -75,6 +81,7 @@ public class CouponServiceImpl implements CouponService {
         PromotionRedemption redemption = new PromotionRedemption();
         redemption.setPromotion(promotion);
         redemption.setCustomer(customer);
+        redemption.setDevice(device); // FIX: Asignar device (NOT NULL constraint)
         redemption.setCouponCode(code);
         redemption.setCouponStatus(CouponStatus.VALID);
         redemption.setExpiresAt(promotion.getEndAt());

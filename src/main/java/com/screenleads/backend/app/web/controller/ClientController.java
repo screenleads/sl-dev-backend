@@ -1,6 +1,6 @@
 package com.screenleads.backend.app.web.controller;
 
-import com.screenleads.backend.app.domain.model.Client;
+import com.screenleads.backend.app.domain.model.ApiClient;
 import com.screenleads.backend.app.domain.repositories.ClientRepository;
 import com.screenleads.backend.app.application.service.ApiKeyService;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/clients")
 public class ClientController {
-    private com.screenleads.backend.app.web.dto.ClientDTO toDTO(Client client) {
+    private com.screenleads.backend.app.web.dto.ClientDTO toDTO(ApiClient client) {
         com.screenleads.backend.app.web.dto.ClientDTO dto = new com.screenleads.backend.app.web.dto.ClientDTO();
         dto.setId(client.getId());
         dto.setClientId(client.getClientId());
@@ -32,13 +32,13 @@ public class ClientController {
         return dto;
     }
 
-    private ResponseEntity<Void> activate(Client client) {
+    private ResponseEntity<Void> activate(ApiClient client) {
         client.setActive(true);
         clientRepository.save(client);
         return ResponseEntity.ok().build();
     }
 
-    private ResponseEntity<Void> deactivate(Client client) {
+    private ResponseEntity<Void> deactivate(ApiClient client) {
         client.setActive(false);
         clientRepository.save(client);
         return ResponseEntity.ok().build();
@@ -55,7 +55,7 @@ public class ClientController {
 
     @GetMapping
     public ResponseEntity<java.util.List<com.screenleads.backend.app.web.dto.ClientDTO>> listClients() {
-        java.util.List<Client> clients = clientRepository.findAll();
+        java.util.List<ApiClient> clients = clientRepository.findAll();
         java.util.List<com.screenleads.backend.app.web.dto.ClientDTO> dtos = clients.stream().map(this::toDTO).toList();
         return ResponseEntity.ok(dtos);
     }
@@ -69,11 +69,11 @@ public class ClientController {
     }
 
     @PostMapping
-    public ResponseEntity<com.screenleads.backend.app.web.dto.ClientDTO> createClient(@RequestBody Client client) {
+    public ResponseEntity<com.screenleads.backend.app.web.dto.ClientDTO> createClient(@RequestBody ApiClient client) {
         // Autogenerar clientId alfanumérico
         client.setClientId(java.util.UUID.randomUUID().toString());
         client.setActive(true);
-        Client saved = clientRepository.save(client);
+        ApiClient saved = clientRepository.save(client);
         // Crear la primera API Key con permisos básicos de lectura
         String defaultPermissions = "device:read,customer:read,promotion:read,advice:read,media:read";
         com.screenleads.backend.app.domain.model.ApiKey defaultApiKey = apiKeyService.createApiKeyByDbId(saved.getId(), defaultPermissions, 365);
@@ -85,13 +85,13 @@ public class ClientController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<com.screenleads.backend.app.web.dto.ClientDTO> updateClient(@PathVariable Long id, @RequestBody Client client) {
+    public ResponseEntity<com.screenleads.backend.app.web.dto.ClientDTO> updateClient(@PathVariable Long id, @RequestBody ApiClient client) {
         return clientRepository.findById(id)
                 .map(existing -> {
                     existing.setName(client.getName());
                     existing.setClientId(client.getClientId());
                     existing.setActive(client.getActive());
-                    Client saved = clientRepository.save(existing);
+                    ApiClient saved = clientRepository.save(existing);
                     return ResponseEntity.ok(toDTO(saved));
                 })
                 .orElse(ResponseEntity.notFound().build());

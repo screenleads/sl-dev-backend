@@ -14,7 +14,7 @@ public class ApiKey {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client", nullable = false)
-    private Client client;
+    private ApiClient apiClient;
 
     @Column(nullable = false)
     private boolean active = true;
@@ -47,12 +47,12 @@ public class ApiKey {
         this.key = key;
     }
 
-    public Client getClient() {
-        return client;
+    public ApiClient getApiClient() {
+        return apiClient;
     }
 
-    public void setClient(Client client) {
-        this.client = client;
+    public void setApiClient(ApiClient apiClient) {
+        this.apiClient = apiClient;
     }
 
     public boolean isActive() {

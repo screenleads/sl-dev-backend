@@ -24,8 +24,8 @@ public class ApiKeyMapper {
         dto.setPermissions(apiKey.getPermissions());
         
         // Map clientId from the Client relationship
-        if (apiKey.getClient() != null) {
-            dto.setClientId(apiKey.getClient().getId());
+        if (apiKey.getApiClient() != null) {
+            dto.setClientId(apiKey.getApiClient().getId());
         }
 
         return dto;

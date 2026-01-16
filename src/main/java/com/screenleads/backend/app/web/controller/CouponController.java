@@ -69,14 +69,15 @@ public class CouponController {
         return ResponseEntity.ok(CouponValidationResponse.from(redemption, false, "EXPIRED"));
     }
 
-    // === POST /coupons/issue?promotionId=&customerId= -> emitir ===
+    // === POST /coupons/issue?promotionId=&customerId=&deviceId= -> emitir ===
     @PostMapping("/issue")
     @PreAuthorize("@perm.can('promotion', 'write')")
-    @Operation(summary = "Emitir cupón (crear lead histórico)", description = "Genera un nuevo cupón interno para un cliente y una promoción, respetando límites")
+    @Operation(summary = "Emitir cupón (crear lead histórico)", description = "Genera un nuevo cupón interno para un cliente y una promoción desde un dispositivo, respetando límites")
     public ResponseEntity<CouponValidationResponse> issue(
             @RequestParam Long promotionId,
-            @RequestParam Long customerId) {
-        PromotionRedemption redemption = couponService.issueCoupon(promotionId, customerId);
+            @RequestParam Long customerId,
+            @RequestParam Long deviceId) {
+        PromotionRedemption redemption = couponService.issueCoupon(promotionId, customerId, deviceId);
         return ResponseEntity.ok(CouponValidationResponse.from(redemption, true, "VALID"));
     }
 

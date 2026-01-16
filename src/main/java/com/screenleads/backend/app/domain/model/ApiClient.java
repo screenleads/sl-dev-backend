@@ -10,8 +10,8 @@ import java.util.List;
  * No confundir con Customer (cliente final que canjea promociones).
  */
 @Entity
-@Table(name = "clients")
-public class Client extends Auditable {
+@Table(name = "api_clients")
+public class ApiClient extends Auditable {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,7 +36,7 @@ public class Client extends Auditable {
     private Instant updatedAt;
     
     // Relación con API Keys
-    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "apiClient", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ApiKey> apiKeys = new ArrayList<>();
     
     @PrePersist
@@ -51,9 +51,9 @@ public class Client extends Auditable {
     }
     
     // Constructors
-    public Client() {}
+    public ApiClient() {}
     
-    public Client(String clientId, String name) {
+    public ApiClient(String clientId, String name) {
         this.clientId = clientId;
         this.name = name;
         this.active = true;

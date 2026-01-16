@@ -2,7 +2,7 @@ package com.screenleads.backend.app.application.security;
 
 import com.screenleads.backend.app.domain.model.ApiKey;
 import com.screenleads.backend.app.domain.repositories.ApiKeyRepository;
-import com.screenleads.backend.app.domain.model.Client;
+import com.screenleads.backend.app.domain.model.ApiClient;
 import com.screenleads.backend.app.domain.repositories.ClientRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -56,9 +56,9 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
                 clientId);
 
         if (apiKey != null && clientId != null) {
-            Optional<Client> clientOpt = clientRepository.findByClientIdAndActiveTrue(clientId);
+            Optional<ApiClient> clientOpt = clientRepository.findByClientIdAndActiveTrue(clientId);
             if (clientOpt.isPresent()) {
-                Client client = clientOpt.get();
+                ApiClient client = clientOpt.get();
                 log.info("✅ Cliente encontrado: ID={}, clientId={}", client.getId(), client.getClientId());
 
                 Optional<ApiKey> keyOpt = apiKeyRepository.findByKeyAndClientAndActiveTrue(apiKey, client);
