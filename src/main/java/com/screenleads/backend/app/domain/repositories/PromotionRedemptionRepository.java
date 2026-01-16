@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import com.screenleads.backend.app.domain.model.PromotionRedemption;
 import com.screenleads.backend.app.domain.model.CouponStatus;
 import com.screenleads.backend.app.domain.model.FraudStatus;
-import com.screenleads.backend.app.domain.model.enums.RedemptionBillingStatus;
+import com.screenleads.backend.app.domain.model.RedemptionBillingStatus;
 
 public interface PromotionRedemptionRepository extends JpaRepository<PromotionRedemption, Long> {
     

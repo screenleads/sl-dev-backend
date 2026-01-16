@@ -14,7 +14,7 @@ public class ClientController {
         dto.setId(client.getId());
         dto.setClientId(client.getClientId());
         dto.setName(client.getName());
-        dto.setActive(client.isActive());
+        dto.setActive(client.getActive());
         if (client.getApiKeys() != null) {
             java.util.List<com.screenleads.backend.app.web.dto.ApiKeyDTO> apiKeyDTOs = client.getApiKeys().stream()
                     .map(apiKey -> {
@@ -90,7 +90,7 @@ public class ClientController {
                 .map(existing -> {
                     existing.setName(client.getName());
                     existing.setClientId(client.getClientId());
-                    existing.setActive(client.isActive());
+                    existing.setActive(client.getActive());
                     Client saved = clientRepository.save(existing);
                     return ResponseEntity.ok(toDTO(saved));
                 })

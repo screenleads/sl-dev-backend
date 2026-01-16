@@ -35,7 +35,6 @@ public class PromotionServiceImpl implements PromotionService {
     private static final String LEAD_ALREADY_EXISTS = "Lead already exists for identifier: ";
 
     private final PromotionRepository promotionRepository;
-    private final PromotionLeadRepository promotionLeadRepository;
     private final ObjectMapper objectMapper; // Autoconfigurado por Spring Boot
     private final StripeBillingService billingService;
 

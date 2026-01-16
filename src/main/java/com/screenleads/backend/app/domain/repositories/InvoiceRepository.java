@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.screenleads.backend.app.domain.model.Invoice;
-import com.screenleads.backend.app.domain.model.enums.InvoiceStatus;
+import com.screenleads.backend.app.domain.model.InvoiceStatus;
 
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     
