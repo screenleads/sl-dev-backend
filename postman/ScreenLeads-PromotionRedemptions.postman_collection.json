@@ -1,0 +1,659 @@
+{
+    "info": {
+        "_postman_id": "promotion-redemptions-collection-001",
+        "name": "ScreenLeads - 11. Promotion Redemptions",
+        "description": "Gestión de canjes de promociones (Redemptions) - Soporta autenticación JWT y API Key",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "redemptions_path",
+            "value": "/promotion-redemptions",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "JWT Authentication",
+            "item": [
+                {
+                    "name": "Get All Redemptions",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions"
+                            ]
+                        },
+                        "description": "Listar todos los canjes. Requiere ROLE_ADMIN o permiso redemption:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Redemption by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "1"
+                            ]
+                        },
+                        "description": "Obtener un canje por su ID. Requiere ROLE_ADMIN o permiso redemption:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Redemption by Coupon Code",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/coupon/SCREEN2024-ABC123",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "coupon",
+                                "SCREEN2024-ABC123"
+                            ]
+                        },
+                        "description": "Buscar canje por código de cupón. Requiere ROLE_ADMIN o permiso redemption:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Redemptions by Customer",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/customer/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "customer",
+                                "1"
+                            ]
+                        },
+                        "description": "Listar todos los canjes de un cliente. Requiere ROLE_ADMIN o permiso redemption:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Redemptions by Promotion",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/promotion/5",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "promotion",
+                                "5"
+                            ]
+                        },
+                        "description": "Listar todos los canjes de una promoción. Requiere ROLE_ADMIN o permiso redemption:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Redemption",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"promotionId\": 1,\n  \"customerId\": 5,\n  \"deviceId\": 3,\n  \"couponCode\": \"SCREEN2024-XYZ789\",\n  \"couponStatus\": \"VALID\",\n  \"expiresAt\": \"2024-12-31T23:59:59Z\",\n  \"redemptionMethod\": \"EMAIL\",\n  \"ipAddress\": \"192.168.1.100\",\n  \"userAgent\": \"Mozilla/5.0\",\n  \"verified\": false,\n  \"leadScore\": 85,\n  \"fraudStatus\": \"PENDING\",\n  \"utmSource\": \"google\",\n  \"utmMedium\": \"cpc\",\n  \"utmCampaign\": \"verano2024\",\n  \"billingStatus\": \"PENDING\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions"
+                            ]
+                        },
+                        "description": "Crear un nuevo canje. Requiere ROLE_ADMIN o permiso redemption:write"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Redemption",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"leadScore\": 92,\n  \"fraudStatus\": \"CLEAN\",\n  \"verified\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "1"
+                            ]
+                        },
+                        "description": "Actualizar un canje existente. Requiere ROLE_ADMIN o permiso redemption:write"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Verify Redemption",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/1/verify",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "1",
+                                "verify"
+                            ]
+                        },
+                        "description": "Marcar canje como verificado. Requiere ROLE_ADMIN o permiso redemption:write"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Mark as Redeemed",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/1/redeem",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "1",
+                                "redeem"
+                            ]
+                        },
+                        "description": "Marcar cupón como canjeado/usado. Requiere ROLE_ADMIN o permiso redemption:write"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Redemption",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "1"
+                            ]
+                        },
+                        "description": "Eliminar un canje. Requiere ROLE_ADMIN o permiso redemption:delete"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Endpoints usando autenticación JWT (Bearer Token)"
+        },
+        {
+            "name": "API Key Authentication",
+            "item": [
+                {
+                    "name": "Get All Redemptions (API Key)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions"
+                            ]
+                        },
+                        "description": "Listar todos los canjes usando API Key. Requiere permiso: redemption:read\n\nEjemplo de configuración de API Key:\n```sql\nINSERT INTO api_key (key, client, active, permissions, company_scope, description)\nVALUES (\n    'sk_redemption_readonly_abc123',\n    1,\n    true,\n    'redemption:read',\n    NULL,\n    'Read-only redemption access'\n);\n```"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Redemption by ID (API Key)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "1"
+                            ]
+                        },
+                        "description": "Obtener canje por ID usando API Key. Requiere permiso: redemption:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Redemption by Coupon (API Key)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/coupon/SCREEN2024-ABC123",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "coupon",
+                                "SCREEN2024-ABC123"
+                            ]
+                        },
+                        "description": "Buscar canje por código de cupón usando API Key. Requiere permiso: redemption:read\n\nÚtil para validar cupones en puntos de venta externos."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Redemptions by Customer (API Key)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/customer/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "customer",
+                                "1"
+                            ]
+                        },
+                        "description": "Listar canjes de un cliente usando API Key. Requiere permiso: redemption:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Redemptions by Promotion (API Key)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/promotion/5",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "promotion",
+                                "5"
+                            ]
+                        },
+                        "description": "Listar canjes de una promoción usando API Key. Requiere permiso: redemption:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Redemption (API Key)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"promotionId\": 1,\n  \"customerId\": 5,\n  \"deviceId\": 3,\n  \"couponCode\": \"SCREEN2024-API789\",\n  \"couponStatus\": \"VALID\",\n  \"expiresAt\": \"2024-12-31T23:59:59Z\",\n  \"redemptionMethod\": \"API\",\n  \"ipAddress\": \"203.0.113.42\",\n  \"userAgent\": \"Integration-Service/1.0\",\n  \"verified\": false,\n  \"leadScore\": 75,\n  \"fraudStatus\": \"PENDING\",\n  \"billingStatus\": \"PENDING\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions"
+                            ]
+                        },
+                        "description": "Crear canje usando API Key. Requiere permiso: redemption:write\n\nEjemplo de configuración de API Key:\n```sql\nINSERT INTO api_key (key, client, active, permissions, company_scope, description)\nVALUES (\n    'sk_redemption_write_xyz456',\n    1,\n    true,\n    'redemption:read,redemption:write',\n    42,  -- Solo compañía 42\n    'Redemption write access for Company XYZ'\n);\n```"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Redemption (API Key)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"leadScore\": 95,\n  \"fraudStatus\": \"CLEAN\",\n  \"verified\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "1"
+                            ]
+                        },
+                        "description": "Actualizar canje usando API Key. Requiere permiso: redemption:write"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Verify Redemption (API Key)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/1/verify",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "1",
+                                "verify"
+                            ]
+                        },
+                        "description": "Verificar canje usando API Key. Requiere permiso: redemption:write"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Mark as Redeemed (API Key)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/1/redeem",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "1",
+                                "redeem"
+                            ]
+                        },
+                        "description": "Marcar como canjeado usando API Key. Requiere permiso: redemption:write\n\nÚtil para integraciones de puntos de venta que registran el uso del cupón."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Redemption (API Key)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}{{redemptions_path}}/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "promotion-redemptions",
+                                "1"
+                            ]
+                        },
+                        "description": "Eliminar canje usando API Key. Requiere permiso: redemption:delete\n\nEjemplo de configuración de API Key con permisos completos:\n```sql\nINSERT INTO api_key (key, client, active, permissions, company_scope, description)\nVALUES (\n    'sk_redemption_full_def789',\n    1,\n    true,\n    'redemption:*',\n    NULL,\n    'Full redemption access'\n);\n```"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Endpoints usando autenticación con API Key\n\n### Configuración Requerida\n\nPara usar estos endpoints con API Key, asegúrate de tener configuradas las siguientes variables de entorno en Postman:\n\n- `api_key`: Tu API key (ej: sk_redemption_readonly_abc123)\n- `client_id`: Tu client ID (ej: screen_client_001)\n\n### Permisos Necesarios\n\nLa API Key debe tener los siguientes permisos según el endpoint:\n\n- **Lectura**: `redemption:read`\n- **Escritura**: `redemption:write` (incluye create, update, verify, mark as redeemed)\n- **Eliminación**: `redemption:delete`\n- **Full Access**: `redemption:*` o `*:*`\n\n### Company Scope\n\nSi la API Key tiene `company_scope` configurado (no NULL), solo podrá acceder a los canjes de esa compañía específica. Para acceso global, configurar `company_scope = NULL`."
+        }
+    ]
+}

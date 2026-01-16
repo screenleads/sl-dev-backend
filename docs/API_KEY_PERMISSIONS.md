@@ -305,6 +305,135 @@ O en tu herramienta favorita de gestión de BD.
 | **Global Read** | `*:read` | NULL (global) | Analytics, BI tools |
 | **Super Admin** | `*:*` | NULL (global) | Administración, testing |
 
+### Recursos Disponibles y Sus Permisos
+
+#### Recursos Originales
+- `snapshot` - Snapshots/capturas de pantalla
+- `lead` - Leads/contactos generados
+- `company` - Empresas/compañías
+- `user` - Usuarios de la plataforma
+- `client` - Clientes API (API Clients)
+- `apikey` - API Keys
+- `device` - Dispositivos de visualización
+- `advice` - Consejos/avisos
+- `promotion` - Promociones
+
+#### Nuevos Recursos (Rediseño 2026)
+- `redemption` - Canjes de promociones (PromotionRedemption)
+  * `redemption:read` - Consultar canjes, buscar por cupón, por cliente, por promoción
+  * `redemption:write` - Crear canjes, actualizar, verificar, marcar como canjeado
+  * `redemption:delete` - Eliminar canjes
+  
+- `billing` - Configuración de facturación (CompanyBilling)
+  * `billing:read` - Consultar configuración, verificar límites de plan
+  * `billing:write` - Actualizar configuración (**Admin-only en mayoría de endpoints**)
+  * `billing:delete` - Eliminar configuración (**Admin-only**)
+  
+- `invoice` - Facturas mensuales
+  * `invoice:read` - Consultar facturas, ver items, buscar facturas vencidas
+  * `invoice:write` - Crear facturas, finalizar, marcar como pagado
+  * `invoice:delete` - Eliminar facturas
+  
+- `customer` - Clientes/consumidores finales
+  * `customer:read` - Consultar clientes, buscar por email/phone
+  * `customer:write` - Crear/actualizar clientes, añadir métodos de auth, verificar email/phone
+  * `customer:delete` - Eliminar clientes
+  
+- `useraction` - Historial de acciones de usuarios
+  * `useraction:read` - Consultar acciones, ver por cliente/dispositivo
+  * `useraction:write` - Registrar nuevas acciones (tracking)
+  * `useraction:delete` - Eliminar acciones (raramente usado)
+  
+- `billingevent` - Eventos de auditoría de facturación
+  * `billingevent:read` - Consultar eventos de facturación
+  * `billingevent:write` - Crear eventos de auditoría
+  
+- `dataexport` - Exportaciones de datos (GDPR, remarketing)
+  * `dataexport:read` - Consultar exportaciones, descargar archivos
+  * `dataexport:write` - Solicitar exportaciones, actualizar estado
+  * `dataexport:delete` - Eliminar exportaciones expiradas
+
+### Acciones Disponibles
+
+- `read` - Lectura/consulta (GET)
+- `create` - Creación (POST)
+- `write` - Escritura/actualización (POST, PUT, PATCH) - incluye create y update
+- `update` - Actualización específica (PUT, PATCH)
+- `delete` - Eliminación (DELETE)
+- `*` - Todas las acciones
+
+### Ejemplos de Configuración por Caso de Uso
+
+#### 1. Integración de Punto de Venta (POS)
+```sql
+-- Puede crear canjes y verificar cupones
+INSERT INTO api_key (key, client, active, permissions, company_scope, description)
+VALUES (
+    'sk_pos_integration_abc123',
+    1,
+    true,
+    'redemption:read,redemption:write',
+    42,
+    'POS Integration - Redemption Management'
+);
+```
+
+#### 2. Dashboard de Reporting
+```sql
+-- Solo lectura de todos los recursos
+INSERT INTO api_key (key, client, active, permissions, company_scope, description)
+VALUES (
+    'sk_reporting_readonly_xyz789',
+    2,
+    true,
+    '*:read',
+    NULL,  -- Acceso global
+    'Global Reporting Dashboard'
+);
+```
+
+#### 3. Sistema de Remarketing
+```sql
+-- Puede exportar datos de clientes
+INSERT INTO api_key (key, client, active, permissions, company_scope, description)
+VALUES (
+    'sk_remarketing_export_def456',
+    3,
+    true,
+    'customer:read,dataexport:*',
+    10,
+    'Remarketing System - Customer Export'
+);
+```
+
+#### 4. Webhook de Facturación
+```sql
+-- Registra eventos de facturación de Stripe
+INSERT INTO api_key (key, client, active, permissions, company_scope, description)
+VALUES (
+    'sk_stripe_webhook_ghi789',
+    4,
+    true,
+    'billingevent:write,invoice:read',
+    NULL,
+    'Stripe Webhook Handler'
+);
+```
+
+#### 5. App Móvil de Cliente
+```sql
+-- Cliente puede ver sus propios canjes y solicitar exportaciones GDPR
+INSERT INTO api_key (key, client, active, permissions, company_scope, description)
+VALUES (
+    'sk_mobile_customer_jkl012',
+    5,
+    true,
+    'redemption:read,customer:read,dataexport:write',
+    15,
+    'Mobile Customer App'
+);
+```
+
 ## 🛡️ Seguridad
 
 ### Buenas Prácticas

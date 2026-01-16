@@ -1,0 +1,463 @@
+{
+    "info": {
+        "_postman_id": "company-billing-collection-001",
+        "name": "ScreenLeads - 12. Company Billing",
+        "description": "Gestión de facturación de empresas - Soporta autenticación JWT y API Key (mayoría admin-only)",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "billing_path",
+            "value": "/company-billing",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "JWT Authentication",
+            "item": [
+                {
+                    "name": "Get All Company Billings (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{billing_path}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "company-billing"
+                            ]
+                        },
+                        "description": "Listar todas las configuraciones de facturación. SOLO ROLE_ADMIN"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Company Billing by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{billing_path}}/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "company-billing",
+                                "1"
+                            ]
+                        },
+                        "description": "Obtener configuración de facturación por ID. Requiere ROLE_ADMIN o permiso billing:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Company Billing by Company ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{billing_path}}/company/5",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "company-billing",
+                                "company",
+                                "5"
+                            ]
+                        },
+                        "description": "Obtener configuración de facturación por ID de empresa. Requiere ROLE_ADMIN o permiso billing:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Company Billing (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"companyId\": 5,\n  \"stripeCustomerId\": \"cus_NAbc123xyz789\",\n  \"stripeSubscriptionId\": \"sub_NAbc123xyz789\",\n  \"stripeSubscriptionItemId\": \"si_NAbc123xyz789\",\n  \"billingStatus\": \"ACTIVE\",\n  \"legalName\": \"Empresa Ejemplo S.L.\",\n  \"taxId\": \"B12345678\",\n  \"billingEmail\": \"facturacion@empresa.com\",\n  \"billingPhone\": \"+34912345678\",\n  \"billingAddress\": \"Calle Mayor 123\",\n  \"billingCity\": \"Madrid\",\n  \"billingPostalCode\": \"28001\",\n  \"billingCountry\": \"ES\",\n  \"planType\": \"METERED\",\n  \"basePrice\": 49.99,\n  \"pricePerLead\": 0.50,\n  \"monthlyLeadQuota\": 1000,\n  \"maxDevices\": 10,\n  \"maxPromotions\": 20,\n  \"active\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}{{billing_path}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "company-billing"
+                            ]
+                        },
+                        "description": "Crear nueva configuración de facturación. SOLO ROLE_ADMIN"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Company Billing (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"pricePerLead\": 0.45,\n  \"monthlyLeadQuota\": 1500,\n  \"maxDevices\": 15,\n  \"billingStatus\": \"ACTIVE\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}{{billing_path}}/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "company-billing",
+                                "1"
+                            ]
+                        },
+                        "description": "Actualizar configuración de facturación. SOLO ROLE_ADMIN"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Company Billing (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{billing_path}}/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "company-billing",
+                                "1"
+                            ]
+                        },
+                        "description": "Eliminar configuración de facturación. SOLO ROLE_ADMIN"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reset Current Period (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{billing_path}}/1/reset-period",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "company-billing",
+                                "1",
+                                "reset-period"
+                            ]
+                        },
+                        "description": "Resetear el periodo de facturación actual (leads y amount a 0). SOLO ROLE_ADMIN"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Check Device Limit Reached",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{billing_path}}/1/device-limit-reached",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "company-billing",
+                                "1",
+                                "device-limit-reached"
+                            ]
+                        },
+                        "description": "Verificar si la empresa alcanzó el límite de dispositivos. Requiere ROLE_ADMIN o permiso billing:read"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Check Promotion Limit Reached",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{jwt_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}{{billing_path}}/1/promotion-limit-reached",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "company-billing",
+                                "1",
+                                "promotion-limit-reached"
+                            ]
+                        },
+                        "description": "Verificar si la empresa alcanzó el límite de promociones. Requiere ROLE_ADMIN o permiso billing:read"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Endpoints usando autenticación JWT (Bearer Token)"
+        },
+        {
+            "name": "API Key Authentication",
+            "item": [
+                {
+                    "name": "Get All Company Billings (API Key - Admin Only)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key_admin}}",
+                                "type": "text",
+                                "description": "Requiere API Key con permisos de admin o billing:*"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}{{billing_path}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "company-billing"
+                            ]
+                        },
+                        "description": "Listar todas las configuraciones de facturación usando API Key. SOLO para API Keys con permisos de administrador.\n\nNOTA: Este endpoint es admin-only, no se puede acceder con permisos regulares de API Key."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Company Billing by ID (API Key)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}{{billing_path}}/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "company-billing",
+                                "1"
+                            ]
+                        },
+                        "description": "Obtener configuración por ID usando API Key. Requiere permiso: billing:read\n\nSi la API Key tiene company_scope configurado, solo podrá acceder a la facturación de esa compañía."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Company Billing by Company ID (API Key)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}{{billing_path}}/company/5",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "company-billing",
+                                "company",
+                                "5"
+                            ]
+                        },
+                        "description": "Obtener configuración por empresa usando API Key. Requiere permiso: billing:read\n\nEjemplo de configuración:\n```sql\nINSERT INTO api_key (key, client, active, permissions, company_scope, description)\nVALUES (\n    'sk_billing_readonly_abc123',\n    1,\n    true,\n    'billing:read',\n    5,  -- Solo compañía 5\n    'Billing read access for Company ID 5'\n);\n```"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Check Device Limit Reached (API Key)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}{{billing_path}}/1/device-limit-reached",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "company-billing",
+                                "1",
+                                "device-limit-reached"
+                            ]
+                        },
+                        "description": "Verificar límite de dispositivos usando API Key. Requiere permiso: billing:read\n\nÚtil para validaciones en tiempo real antes de crear nuevos dispositivos."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Check Promotion Limit Reached (API Key)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-CLIENT-ID",
+                                "value": "{{client_id}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}{{billing_path}}/1/promotion-limit-reached",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "company-billing",
+                                "1",
+                                "promotion-limit-reached"
+                            ]
+                        },
+                        "description": "Verificar límite de promociones usando API Key. Requiere permiso: billing:read\n\nÚtil para validaciones en tiempo real antes de crear nuevas promociones."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Endpoints usando autenticación con API Key\n\n### ⚠️ IMPORTANTE: Restricciones de Seguridad\n\nLa mayoría de los endpoints de Company Billing son **ADMIN-ONLY**:\n\n- ❌ **Create** - Solo ROLE_ADMIN (no disponible vía API Key regular)\n- ❌ **Update** - Solo ROLE_ADMIN (no disponible vía API Key regular)\n- ❌ **Delete** - Solo ROLE_ADMIN (no disponible vía API Key regular)\n- ❌ **Reset Period** - Solo ROLE_ADMIN (no disponible vía API Key regular)\n- ❌ **List All** - Solo ROLE_ADMIN (no disponible vía API Key regular)\n- ✅ **Get by ID** - ROLE_ADMIN o billing:read\n- ✅ **Get by Company ID** - ROLE_ADMIN o billing:read\n- ✅ **Check Limits** - ROLE_ADMIN o billing:read\n\n### Configuración de API Key para Lectura\n\nPara usar los endpoints de lectura disponibles:\n\n```sql\nINSERT INTO api_key (key, client, active, permissions, company_scope, description)\nVALUES (\n    'sk_billing_readonly_xyz789',\n    1,\n    true,\n    'billing:read',\n    42,  -- Solo compañía 42\n    'Read-only billing access for integrations'\n);\n```\n\n### Company Scope\n\nSi la API Key tiene `company_scope` configurado:\n- Solo puede acceder a datos de facturación de esa compañía\n- Se aplica filtro automático en Hibernate\n- Intento de acceder a otra compañía resultará en 403 Forbidden\n\n### Casos de Uso\n\n1. **Validación de Límites**: Apps pueden verificar límites antes de crear recursos\n2. **Dashboard Externo**: Mostrar info de facturación en sistemas terceros\n3. **Monitoreo**: Alertas cuando se acerca a límites de plan"
+        }
+    ]
+}

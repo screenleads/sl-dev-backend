@@ -1,27 +1,36 @@
 package com.screenleads.backend.app.application.service;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.screenleads.backend.app.domain.model.Customer;
-import com.screenleads.backend.app.domain.model.LeadIdentifierType;
+import com.screenleads.backend.app.domain.model.enums.AuthMethod;
+import com.screenleads.backend.app.web.dto.CustomerDTO;
 
 public interface CustomerService {
-
-    Customer create(Long companyId,
-                    LeadIdentifierType identifierType,
-                    String identifier,
-                    String firstName,
-                    String lastName);
-
-    Customer update(Long id,
-                    LeadIdentifierType identifierType,
-                    String identifier,
-                    String firstName,
-                    String lastName);
-
-    Customer get(Long id);
-
-    List<Customer> list(Long companyId, String search);
-
-    void delete(Long id);
+    
+    List<CustomerDTO> getAllCustomers();
+    
+    Optional<CustomerDTO> getCustomerById(Long id);
+    
+    Optional<CustomerDTO> getCustomerByEmail(String email);
+    
+    Optional<CustomerDTO> getCustomerByPhone(String phone);
+    
+    List<CustomerDTO> searchCustomers(String searchTerm);
+    
+    CustomerDTO createCustomer(CustomerDTO dto);
+    
+    CustomerDTO updateCustomer(Long id, CustomerDTO dto);
+    
+    void deleteCustomer(Long id);
+    
+    CustomerDTO addAuthMethod(Long id, AuthMethod authMethod);
+    
+    CustomerDTO incrementRedemptions(Long id);
+    
+    CustomerDTO verifyEmail(Long id);
+    
+    CustomerDTO verifyPhone(Long id);
+    
+    List<CustomerDTO> getMarketingEligibleCustomers();
 }
