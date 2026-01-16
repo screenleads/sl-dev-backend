@@ -23,7 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.screenleads.backend.app.domain.model.ApiKey;
-import com.screenleads.backend.app.domain.model.Client;
+import com.screenleads.backend.app.domain.model.ApiClient;
 import com.screenleads.backend.app.domain.repositories.ApiKeyRepository;
 import com.screenleads.backend.app.domain.repositories.ClientRepository;
 
@@ -40,12 +40,12 @@ class ApiKeyServiceImplTest {
     @InjectMocks
     private ApiKeyServiceImpl apiKeyService;
 
-    private Client testClient;
+    private ApiClient testClient;
     private ApiKey testApiKey;
 
     @BeforeEach
     void setUp() {
-        testClient = new Client();
+        testClient = new ApiClient();
         testClient.setId(1L);
         testClient.setClientId("client-123");
         testClient.setActive(true);
@@ -53,7 +53,7 @@ class ApiKeyServiceImplTest {
         testApiKey = new ApiKey();
         testApiKey.setId(1L);
         testApiKey.setKey("test-api-key-123");
-        testApiKey.setClient(testClient);
+        testApiKey.setApiClient(testClient);
         testApiKey.setPermissions("read,write");
         testApiKey.setActive(true);
         testApiKey.setCreatedAt(LocalDateTime.now());
@@ -73,7 +73,7 @@ class ApiKeyServiceImplTest {
 
         // Assert
         assertThat(result).isNotNull();
-        assertThat(result.getClient()).isEqualTo(testClient);
+        assertThat(result.getApiClient()).isEqualTo(testClient);
         verify(clientRepository, times(1)).findByClientIdAndActiveTrue("client-123");
         verify(apiKeyRepository, times(1)).save(any(ApiKey.class));
     }
@@ -182,7 +182,7 @@ class ApiKeyServiceImplTest {
 
         // Assert
         assertThat(result).isNotNull();
-        assertThat(result.getClient()).isEqualTo(testClient);
+        assertThat(result.getApiClient()).isEqualTo(testClient);
         verify(clientRepository, times(1)).findById(1L);
         verify(apiKeyRepository, times(1)).save(any(ApiKey.class));
     }
@@ -208,7 +208,7 @@ class ApiKeyServiceImplTest {
         ApiKey key2 = new ApiKey();
         key2.setId(2L);
         key2.setKey("another-key");
-        key2.setClient(testClient);
+        key2.setApiClient(testClient);
 
         when(apiKeyRepository.findAllByClient_Id(1L))
                 .thenReturn(Arrays.asList(testApiKey, key2));
