@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import com.screenleads.backend.app.domain.model.enums.RedemptionBillingStatus;
+import com.screenleads.backend.app.domain.model.RedemptionBillingStatus;
 import com.screenleads.backend.app.web.dto.PromotionRedemptionDTO;
 
 public interface PromotionRedemptionService {

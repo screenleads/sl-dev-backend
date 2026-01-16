@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.screenleads.backend.app.domain.model.InvoiceItem;
-import com.screenleads.backend.app.domain.model.enums.InvoiceItemType;
+import com.screenleads.backend.app.domain.model.InvoiceItemType;
 
 public interface InvoiceItemRepository extends JpaRepository<InvoiceItem, Long> {
     

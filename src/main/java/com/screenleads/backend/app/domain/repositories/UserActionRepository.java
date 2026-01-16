@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.screenleads.backend.app.domain.model.UserAction;
-import com.screenleads.backend.app.domain.model.enums.UserActionType;
+import com.screenleads.backend.app.domain.model.UserActionType;
 
 public interface UserActionRepository extends JpaRepository<UserAction, Long> {
     

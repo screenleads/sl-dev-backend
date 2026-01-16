@@ -18,16 +18,19 @@ public interface PromotionService {
 
     void deletePromotion(Long id);
 
-    // Leads
+    // Métodos legacy - DEPRECATED: Usar PromotionRedemptionService en su lugar
+    @Deprecated
     PromotionLeadDTO registerLead(Long promotionId, PromotionLeadDTO dto);
 
+    @Deprecated
     List<PromotionLeadDTO> listLeads(Long promotionId);
 
-    // Informes / export
+    @Deprecated
     String exportLeadsCsv(Long promotionId, ZonedDateTime from, ZonedDateTime to);
 
+    @Deprecated
     LeadSummaryDTO getLeadSummary(Long promotionId, ZonedDateTime from, ZonedDateTime to);
 
-    // Lead de prueba
+    @Deprecated
     PromotionLeadDTO createTestLead(Long promotionId, PromotionLeadDTO overrides);
 }

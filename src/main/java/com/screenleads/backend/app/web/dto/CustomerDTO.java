@@ -5,9 +5,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Set;
 
-import com.screenleads.backend.app.domain.model.enums.AuthMethod;
-import com.screenleads.backend.app.domain.model.enums.Gender;
-import com.screenleads.backend.app.domain.model.enums.UserSegment;
+import com.screenleads.backend.app.domain.model.AuthMethod;
+import com.screenleads.backend.app.domain.model.Gender;
+import com.screenleads.backend.app.domain.model.UserSegment;
 
 public record CustomerDTO(
     Long id,

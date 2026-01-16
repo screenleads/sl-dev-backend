@@ -3,7 +3,7 @@ package com.screenleads.backend.app.web.dto;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-import com.screenleads.backend.app.domain.model.enums.InvoiceItemType;
+import com.screenleads.backend.app.domain.model.InvoiceItemType;
 
 public record InvoiceItemDTO(
     Long id,

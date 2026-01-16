@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.screenleads.backend.app.domain.model.Customer;
-import com.screenleads.backend.app.domain.model.enums.UserSegment;
+import com.screenleads.backend.app.domain.model.UserSegment;
 
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
 

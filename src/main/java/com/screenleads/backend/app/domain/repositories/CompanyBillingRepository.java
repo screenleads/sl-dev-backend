@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.screenleads.backend.app.domain.model.CompanyBilling;
-import com.screenleads.backend.app.domain.model.enums.BillingStatus;
+import com.screenleads.backend.app.domain.model.BillingStatus;
 
 public interface CompanyBillingRepository extends JpaRepository<CompanyBilling, Long> {
     

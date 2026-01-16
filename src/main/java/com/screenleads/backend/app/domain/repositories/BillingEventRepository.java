@@ -9,8 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.screenleads.backend.app.domain.model.BillingEvent;
-import com.screenleads.backend.app.domain.model.enums.BillingEventStatus;
-import com.screenleads.backend.app.domain.model.enums.BillingEventType;
+import com.screenleads.backend.app.domain.model.BillingEventStatus;
+import com.screenleads.backend.app.domain.model.BillingEventType;
 
 public interface BillingEventRepository extends JpaRepository<BillingEvent, Long> {
     

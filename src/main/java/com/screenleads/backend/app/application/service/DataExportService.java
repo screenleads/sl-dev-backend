@@ -3,8 +3,8 @@ package com.screenleads.backend.app.application.service;
 import java.util.List;
 import java.util.Optional;
 
-import com.screenleads.backend.app.domain.model.enums.ExportFormat;
-import com.screenleads.backend.app.domain.model.enums.ExportType;
+import com.screenleads.backend.app.domain.model.ExportFormat;
+import com.screenleads.backend.app.domain.model.ExportType;
 import com.screenleads.backend.app.web.dto.DataExportDTO;
 
 public interface DataExportService {

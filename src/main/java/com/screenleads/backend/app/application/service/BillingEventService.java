@@ -2,7 +2,7 @@ package com.screenleads.backend.app.application.service;
 
 import java.util.List;
 
-import com.screenleads.backend.app.domain.model.enums.BillingEventType;
+import com.screenleads.backend.app.domain.model.BillingEventType;
 import com.screenleads.backend.app.web.dto.BillingEventDTO;
 
 public interface BillingEventService {

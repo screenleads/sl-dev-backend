@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.screenleads.backend.app.domain.model.DataExport;
-import com.screenleads.backend.app.domain.model.enums.ExportStatus;
-import com.screenleads.backend.app.domain.model.enums.ExportType;
+import com.screenleads.backend.app.domain.model.ExportStatus;
+import com.screenleads.backend.app.domain.model.ExportType;
 
 public interface DataExportRepository extends JpaRepository<DataExport, Long> {
     

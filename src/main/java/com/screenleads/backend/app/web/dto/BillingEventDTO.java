@@ -3,8 +3,8 @@ package com.screenleads.backend.app.web.dto;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-import com.screenleads.backend.app.domain.model.enums.BillingEventStatus;
-import com.screenleads.backend.app.domain.model.enums.BillingEventType;
+import com.screenleads.backend.app.domain.model.BillingEventStatus;
+import com.screenleads.backend.app.domain.model.BillingEventType;
 
 public record BillingEventDTO(
     Long id,

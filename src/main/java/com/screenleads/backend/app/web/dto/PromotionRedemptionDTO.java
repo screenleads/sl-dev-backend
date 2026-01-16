@@ -3,11 +3,11 @@ package com.screenleads.backend.app.web.dto;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-import com.screenleads.backend.app.domain.model.enums.AuthMethod;
-import com.screenleads.backend.app.domain.model.enums.CouponStatus;
-import com.screenleads.backend.app.domain.model.enums.FraudStatus;
-import com.screenleads.backend.app.domain.model.enums.RedemptionBillingStatus;
-import com.screenleads.backend.app.domain.model.enums.VerificationMethod;
+import com.screenleads.backend.app.domain.model.AuthMethod;
+import com.screenleads.backend.app.domain.model.CouponStatus;
+import com.screenleads.backend.app.domain.model.FraudStatus;
+import com.screenleads.backend.app.domain.model.RedemptionBillingStatus;
+import com.screenleads.backend.app.domain.model.VerificationMethod;
 
 public record PromotionRedemptionDTO(
     Long id,

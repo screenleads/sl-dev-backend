@@ -3,7 +3,7 @@ package com.screenleads.backend.app.application.service;
 import java.util.List;
 import java.util.Optional;
 
-import com.screenleads.backend.app.domain.model.enums.AuthMethod;
+import com.screenleads.backend.app.domain.model.AuthMethod;
 import com.screenleads.backend.app.web.dto.CustomerDTO;
 
 public interface CustomerService {

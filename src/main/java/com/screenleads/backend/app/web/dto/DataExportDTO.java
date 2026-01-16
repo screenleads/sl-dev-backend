@@ -2,9 +2,9 @@ package com.screenleads.backend.app.web.dto;
 
 import java.time.Instant;
 
-import com.screenleads.backend.app.domain.model.enums.ExportFormat;
-import com.screenleads.backend.app.domain.model.enums.ExportStatus;
-import com.screenleads.backend.app.domain.model.enums.ExportType;
+import com.screenleads.backend.app.domain.model.ExportFormat;
+import com.screenleads.backend.app.domain.model.ExportStatus;
+import com.screenleads.backend.app.domain.model.ExportType;
 
 public record DataExportDTO(
     Long id,

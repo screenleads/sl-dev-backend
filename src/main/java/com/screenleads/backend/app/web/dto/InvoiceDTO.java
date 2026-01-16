@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.screenleads.backend.app.domain.model.enums.InvoiceStatus;
+import com.screenleads.backend.app.domain.model.InvoiceStatus;
 
 public record InvoiceDTO(
     Long id,
