@@ -33,6 +33,7 @@ public class AudienceSegmentController {
      * Create a new audience segment
      */
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','create')")
     public ResponseEntity<?> createSegment(@Valid @RequestBody AudienceSegmentRequest request) {
         try {
             // Validate company exists
@@ -71,6 +72,7 @@ public class AudienceSegmentController {
      * Update an existing audience segment
      */
     @PutMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','update')")
     public ResponseEntity<?> updateSegment(@PathVariable Long id, 
                                           @Valid @RequestBody AudienceSegmentRequest request) {
         try {
@@ -109,6 +111,7 @@ public class AudienceSegmentController {
      * Delete an audience segment
      */
     @DeleteMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','delete')")
     public ResponseEntity<?> deleteSegment(@PathVariable Long id) {
         try {
             audienceSegmentService.deleteSegment(id);
@@ -125,6 +128,7 @@ public class AudienceSegmentController {
      * Get audience segment by ID
      */
     @GetMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<?> getSegmentById(@PathVariable Long id) {
         return audienceSegmentService.getSegmentById(id)
             .map(ResponseEntity::ok)
@@ -135,6 +139,7 @@ public class AudienceSegmentController {
      * Get all audience segments for a company
      */
     @GetMapping("/company/{companyId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<List<AudienceSegment>> getSegmentsByCompany(@PathVariable Long companyId,
                                                                        @RequestParam(defaultValue = "false") boolean activeOnly) {
         List<AudienceSegment> segments;
@@ -152,6 +157,7 @@ public class AudienceSegmentController {
      * Get customers matching a segment
      */
     @GetMapping("/{id}/customers")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<List<Customer>> getSegmentCustomers(@PathVariable Long id) {
         try {
             List<Customer> customers = audienceSegmentService.getCustomersInSegment(id);
@@ -167,6 +173,7 @@ public class AudienceSegmentController {
      * Preview customers that would match segment rules (without saving)
      */
     @PostMapping("/preview")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<?> previewSegment(@Valid @RequestBody AudienceSegmentRequest request) {
         try {
             AudienceSegment segment = AudienceSegment.builder()

@@ -29,6 +29,7 @@ public class AnalyticsDashboardController {
      * Get dashboard overview with key metrics
      */
     @GetMapping("/overview")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<Map<String, Object>> getDashboardOverview(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
@@ -57,6 +58,7 @@ public class AnalyticsDashboardController {
      * Get metrics for a specific promotion/advice
      */
     @GetMapping("/promotion/{adviceId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<Map<String, Object>> getPromotionMetrics(
             @PathVariable Long adviceId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -102,6 +104,7 @@ public class AnalyticsDashboardController {
      * Get metrics for a specific date
      */
     @GetMapping("/date/{date}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<List<PromotionMetrics>> getMetricsByDate(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         
@@ -113,6 +116,7 @@ public class AnalyticsDashboardController {
      * Get top performing promotions by conversion rate
      */
     @GetMapping("/top/conversion-rate")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<List<PromotionMetrics>> getTopByConversionRate(
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -135,6 +139,7 @@ public class AnalyticsDashboardController {
      * Get top performing promotions by total conversions
      */
     @GetMapping("/top/conversions")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<List<PromotionMetrics>> getTopByConversions(
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -157,6 +162,7 @@ public class AnalyticsDashboardController {
      * Manual trigger to calculate metrics for a specific date (admin endpoint)
      */
     @PostMapping("/calculate")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> calculateMetricsForDate(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         
@@ -187,6 +193,7 @@ public class AnalyticsDashboardController {
      * Get latest metric calculation date
      */
     @GetMapping("/latest-date")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<Map<String, Object>> getLatestMetricDate() {
         Optional<LocalDate> latestDate = promotionMetricsService.getLatestMetricDate();
         

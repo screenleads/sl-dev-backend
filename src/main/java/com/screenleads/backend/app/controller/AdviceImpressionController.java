@@ -39,6 +39,7 @@ public class AdviceImpressionController {
      * Track a new impression (when an Advice is displayed on a Device)
      */
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','write')")
     public ResponseEntity<?> trackImpression(@Valid @RequestBody TrackImpressionRequest request) {
         try {
             // Validate Advice exists
@@ -92,6 +93,7 @@ public class AdviceImpressionController {
      * Get all impressions for a specific Advice
      */
     @GetMapping("/advice/{adviceId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<List<AdviceImpression>> getImpressionsByAdvice(@PathVariable Long adviceId) {
         List<AdviceImpression> impressions = adviceImpressionService.getImpressionsByAdviceId(adviceId);
         return ResponseEntity.ok(impressions);
@@ -101,6 +103,7 @@ public class AdviceImpressionController {
      * Get impression statistics for an Advice
      */
     @GetMapping("/advice/{adviceId}/stats")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<Map<String, Object>> getImpressionStats(@PathVariable Long adviceId) {
         Long totalImpressions = adviceImpressionService.countImpressionsByAdviceId(adviceId);
         Long interactiveImpressions = adviceImpressionService.countInteractiveImpressionsByAdviceId(adviceId);
@@ -128,6 +131,7 @@ public class AdviceImpressionController {
      * Get impressions for a specific Device
      */
     @GetMapping("/device/{deviceId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<List<AdviceImpression>> getImpressionsByDevice(@PathVariable Long deviceId) {
         List<AdviceImpression> impressions = adviceImpressionService.getImpressionsByDeviceId(deviceId);
         return ResponseEntity.ok(impressions);
@@ -137,6 +141,7 @@ public class AdviceImpressionController {
      * Get impressions for a specific Customer
      */
     @GetMapping("/customer/{customerId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<List<AdviceImpression>> getImpressionsByCustomer(@PathVariable Long customerId) {
         List<AdviceImpression> impressions = adviceImpressionService.getImpressionsByCustomerId(customerId);
         return ResponseEntity.ok(impressions);
@@ -146,6 +151,7 @@ public class AdviceImpressionController {
      * Get impressions by session ID
      */
     @GetMapping("/session/{sessionId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<List<AdviceImpression>> getImpressionsBySession(@PathVariable String sessionId) {
         List<AdviceImpression> impressions = adviceImpressionService.getImpressionsBySessionId(sessionId);
         return ResponseEntity.ok(impressions);

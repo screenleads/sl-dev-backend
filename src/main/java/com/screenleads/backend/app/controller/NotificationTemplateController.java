@@ -30,6 +30,7 @@ public class NotificationTemplateController {
     private final CompanyRepository companyRepository;
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','create')")
     public ResponseEntity<?> createTemplate(@Valid @RequestBody NotificationTemplateRequest request) {
         try {
             Company company = companyRepository.findById(request.getCompanyId())
@@ -68,6 +69,7 @@ public class NotificationTemplateController {
     }
 
     @PutMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','update')")
     public ResponseEntity<?> updateTemplate(@PathVariable Long id, 
                                            @Valid @RequestBody NotificationTemplateRequest request) {
         try {
@@ -106,6 +108,7 @@ public class NotificationTemplateController {
     }
 
     @DeleteMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','delete')")
     public ResponseEntity<?> deleteTemplate(@PathVariable Long id) {
         try {
             notificationTemplateService.deleteTemplate(id);
@@ -119,6 +122,7 @@ public class NotificationTemplateController {
     }
 
     @GetMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<?> getTemplateById(@PathVariable Long id) {
         return notificationTemplateService.getTemplateById(id)
             .map(ResponseEntity::ok)
@@ -126,6 +130,7 @@ public class NotificationTemplateController {
     }
 
     @GetMapping("/company/{companyId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<List<NotificationTemplate>> getTemplatesByCompany(
             @PathVariable Long companyId,
             @RequestParam(required = false) NotificationChannel channel,
@@ -145,6 +150,7 @@ public class NotificationTemplateController {
     }
 
     @GetMapping("/company/{companyId}/most-used")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<List<NotificationTemplate>> getMostUsedTemplates(
             @PathVariable Long companyId,
             @RequestParam(defaultValue = "10") int limit) {
@@ -154,6 +160,7 @@ public class NotificationTemplateController {
     }
 
     @PostMapping("/{id}/preview")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<?> previewTemplate(@PathVariable Long id, 
                                             @RequestBody Map<String, String> sampleVariables) {
         try {
@@ -167,6 +174,7 @@ public class NotificationTemplateController {
     }
 
     @PatchMapping("/{id}/toggle")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','update')")
     public ResponseEntity<?> toggleTemplateActive(@PathVariable Long id, 
                                                   @RequestParam boolean active) {
         try {

@@ -22,6 +22,7 @@ public class FraudDetectionController {
     // ========== Rule Management ==========
 
     @PostMapping("/rules")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FraudRule> createRule(@RequestBody FraudRule rule) {
         log.info("POST /api/fraud/rules - Creating rule: {}", rule.getName());
         FraudRule created = fraudService.createRule(rule);
@@ -29,6 +30,7 @@ public class FraudDetectionController {
     }
 
     @PutMapping("/rules/{ruleId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FraudRule> updateRule(
             @PathVariable Long ruleId,
             @RequestBody FraudRule rule) {
@@ -38,6 +40,7 @@ public class FraudDetectionController {
     }
 
     @DeleteMapping("/rules/{ruleId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteRule(@PathVariable Long ruleId) {
         log.info("DELETE /api/fraud/rules/{}", ruleId);
         fraudService.deleteRule(ruleId);
@@ -45,12 +48,14 @@ public class FraudDetectionController {
     }
 
     @GetMapping("/rules/{ruleId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('fraud','read')")
     public ResponseEntity<FraudRule> getRule(@PathVariable Long ruleId) {
         FraudRule rule = fraudService.getRule(ruleId);
         return ResponseEntity.ok(rule);
     }
 
     @GetMapping("/rules/company/{companyId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('fraud','read')")
     public ResponseEntity<List<FraudRule>> getCompanyRules(
             @PathVariable Long companyId,
             @RequestParam(defaultValue = "false") boolean activeOnly) {
@@ -70,6 +75,7 @@ public class FraudDetectionController {
     }
 
     @PutMapping("/alerts/{alertId}/status")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FraudAlert> updateAlertStatus(
             @PathVariable Long alertId,
             @RequestBody AlertStatusUpdate statusUpdate) {
@@ -84,12 +90,14 @@ public class FraudDetectionController {
     }
 
     @GetMapping("/alerts/{alertId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('fraud','read')")
     public ResponseEntity<FraudAlert> getAlert(@PathVariable Long alertId) {
         FraudAlert alert = fraudService.getAlert(alertId);
         return ResponseEntity.ok(alert);
     }
 
     @GetMapping("/alerts/company/{companyId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('fraud','read')")
     public ResponseEntity<List<FraudAlert>> getCompanyAlerts(
             @PathVariable Long companyId,
             @RequestParam(defaultValue = "0") int page,
@@ -99,12 +107,14 @@ public class FraudDetectionController {
     }
 
     @GetMapping("/alerts/company/{companyId}/pending")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('fraud','read')")
     public ResponseEntity<List<FraudAlert>> getPendingAlerts(@PathVariable Long companyId) {
         List<FraudAlert> alerts = fraudService.getPendingAlerts(companyId);
         return ResponseEntity.ok(alerts);
     }
 
     @GetMapping("/alerts/company/{companyId}/stats")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('fraud','read')")
     public ResponseEntity<Map<String, Object>> getAlertStats(@PathVariable Long companyId) {
         Map<String, Object> stats = fraudService.getAlertStatistics(companyId);
         return ResponseEntity.ok(stats);
@@ -113,6 +123,7 @@ public class FraudDetectionController {
     // ========== Blacklist Management ==========
 
     @PostMapping("/blacklist")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Blacklist> addToBlacklist(@RequestBody Blacklist entry) {
         log.info("POST /api/fraud/blacklist - Type: {}, Value: {}", 
             entry.getBlacklistType(), entry.getValue());
@@ -121,6 +132,7 @@ public class FraudDetectionController {
     }
 
     @DeleteMapping("/blacklist/{blacklistId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> removeFromBlacklist(@PathVariable Long blacklistId) {
         log.info("DELETE /api/fraud/blacklist/{}", blacklistId);
         fraudService.removeFromBlacklist(blacklistId);
@@ -137,6 +149,7 @@ public class FraudDetectionController {
     }
 
     @GetMapping("/blacklist/company/{companyId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('fraud','read')")
     public ResponseEntity<List<Blacklist>> getCompanyBlacklist(@PathVariable Long companyId) {
         List<Blacklist> blacklist = fraudService.getBlacklistByCompany(companyId);
         return ResponseEntity.ok(blacklist);

@@ -31,6 +31,7 @@ public class MarketingCampaignController {
      * Crea una nueva campaña de marketing
      */
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','create')")
     public ResponseEntity<MarketingCampaign> createCampaign(
             @Valid @RequestBody MarketingCampaignRequest request,
             @RequestParam Long companyId) {
@@ -63,6 +64,7 @@ public class MarketingCampaignController {
      * Actualiza una campaña existente
      */
     @PutMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','update')")
     public ResponseEntity<MarketingCampaign> updateCampaign(
             @PathVariable Long id,
             @Valid @RequestBody MarketingCampaignRequest request) {
@@ -90,6 +92,7 @@ public class MarketingCampaignController {
      * Elimina una campaña (solo DRAFT)
      */
     @DeleteMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','delete')")
     public ResponseEntity<Void> deleteCampaign(@PathVariable Long id) {
         campaignService.deleteCampaign(id);
         return ResponseEntity.noContent().build();
@@ -99,6 +102,7 @@ public class MarketingCampaignController {
      * Obtiene una campaña por ID
      */
     @GetMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<MarketingCampaign> getCampaign(@PathVariable Long id) {
         return campaignService.getCampaignById(id)
             .map(ResponseEntity::ok)
@@ -109,6 +113,7 @@ public class MarketingCampaignController {
      * Obtiene todas las campañas de una compañía
      */
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<List<MarketingCampaign>> getCampaignsByCompany(@RequestParam Long companyId) {
         List<MarketingCampaign> campaigns = campaignService.getCampaignsByCompany(companyId);
         return ResponseEntity.ok(campaigns);
@@ -118,6 +123,7 @@ public class MarketingCampaignController {
      * Obtiene campañas por estado
      */
     @GetMapping("/status/{status}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<List<MarketingCampaign>> getCampaignsByStatus(
             @PathVariable CampaignStatus status,
             @RequestParam Long companyId) {
@@ -129,6 +135,7 @@ public class MarketingCampaignController {
      * Programa una campaña para ejecución futura
      */
     @PostMapping("/{id}/schedule")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MarketingCampaign> scheduleCampaign(
             @PathVariable Long id,
             @RequestBody Map<String, String> request) {
@@ -143,6 +150,7 @@ public class MarketingCampaignController {
      * Ejecuta una campaña inmediatamente
      */
     @PostMapping("/{id}/execute")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MarketingCampaign> executeCampaign(@PathVariable Long id) {
         MarketingCampaign executed = campaignService.executeCampaign(id);
         return ResponseEntity.ok(executed);
@@ -152,6 +160,7 @@ public class MarketingCampaignController {
      * Pausa una campaña en ejecución
      */
     @PostMapping("/{id}/pause")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MarketingCampaign> pauseCampaign(@PathVariable Long id) {
         MarketingCampaign paused = campaignService.pauseCampaign(id);
         return ResponseEntity.ok(paused);
@@ -161,6 +170,7 @@ public class MarketingCampaignController {
      * Resume una campaña pausada
      */
     @PostMapping("/{id}/resume")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MarketingCampaign> resumeCampaign(@PathVariable Long id) {
         MarketingCampaign resumed = campaignService.resumeCampaign(id);
         return ResponseEntity.ok(resumed);
@@ -170,6 +180,7 @@ public class MarketingCampaignController {
      * Cancela una campaña
      */
     @PostMapping("/{id}/cancel")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MarketingCampaign> cancelCampaign(@PathVariable Long id) {
         MarketingCampaign cancelled = campaignService.cancelCampaign(id);
         return ResponseEntity.ok(cancelled);
@@ -179,6 +190,7 @@ public class MarketingCampaignController {
      * Obtiene estadísticas de una campaña
      */
     @GetMapping("/{id}/statistics")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<Map<String, Object>> getCampaignStatistics(@PathVariable Long id) {
         MarketingCampaign campaign = campaignService.getCampaignStatistics(id);
         
@@ -203,6 +215,7 @@ public class MarketingCampaignController {
      * Obtiene las campañas más exitosas
      */
     @GetMapping("/top")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<List<MarketingCampaign>> getTopCampaigns(
             @RequestParam Long companyId,
             @RequestParam(defaultValue = "10") int limit) {

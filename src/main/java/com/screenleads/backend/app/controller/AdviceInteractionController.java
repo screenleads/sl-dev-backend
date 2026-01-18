@@ -36,6 +36,7 @@ public class AdviceInteractionController {
      * Track a new interaction (when a user interacts with an Advice after viewing it)
      */
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','write')")
     public ResponseEntity<?> trackInteraction(@Valid @RequestBody TrackInteractionRequest request) {
         try {
             // Validate Impression exists
@@ -84,6 +85,7 @@ public class AdviceInteractionController {
      * Get all interactions for a specific impression
      */
     @GetMapping("/impression/{impressionId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<List<AdviceInteraction>> getInteractionsByImpression(@PathVariable Long impressionId) {
         List<AdviceInteraction> interactions = adviceInteractionService.getInteractionsByImpressionId(impressionId);
         return ResponseEntity.ok(interactions);
@@ -93,6 +95,7 @@ public class AdviceInteractionController {
      * Get all interactions for a specific Advice
      */
     @GetMapping("/advice/{adviceId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<List<AdviceInteraction>> getInteractionsByAdvice(@PathVariable Long adviceId) {
         List<AdviceInteraction> interactions = adviceInteractionService.getInteractionsByAdviceId(adviceId);
         return ResponseEntity.ok(interactions);
@@ -102,6 +105,7 @@ public class AdviceInteractionController {
      * Get interaction statistics for an Advice
      */
     @GetMapping("/advice/{adviceId}/stats")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<Map<String, Object>> getInteractionStats(@PathVariable Long adviceId) {
         Long totalInteractions = adviceInteractionService.countInteractionsByAdviceId(adviceId);
         Long totalConversions = adviceInteractionService.countConversionsByAdviceId(adviceId);
@@ -139,6 +143,7 @@ public class AdviceInteractionController {
      * Get interactions for a specific Customer
      */
     @GetMapping("/customer/{customerId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<List<AdviceInteraction>> getInteractionsByCustomer(@PathVariable Long customerId) {
         List<AdviceInteraction> interactions = adviceInteractionService.getInteractionsByCustomerId(customerId);
         return ResponseEntity.ok(interactions);
@@ -148,6 +153,7 @@ public class AdviceInteractionController {
      * Get interactions by type
      */
     @GetMapping("/type/{type}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<List<AdviceInteraction>> getInteractionsByType(@PathVariable InteractionType type) {
         List<AdviceInteraction> interactions = adviceInteractionService.getInteractionsByType(type);
         return ResponseEntity.ok(interactions);

@@ -22,6 +22,7 @@ public class GeofenceController {
     // ========== Zone Management ==========
 
     @PostMapping("/zones")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('geofencing','create')")
     public ResponseEntity<GeofenceZone> createZone(@RequestBody GeofenceZone zone) {
         log.info("POST /api/geofence/zones - Creating zone: {}", zone.getName());
         GeofenceZone created = geofenceService.createZone(zone);
@@ -29,6 +30,7 @@ public class GeofenceController {
     }
 
     @PutMapping("/zones/{zoneId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('geofencing','update')")
     public ResponseEntity<GeofenceZone> updateZone(
             @PathVariable Long zoneId,
             @RequestBody GeofenceZone zone) {
@@ -38,6 +40,7 @@ public class GeofenceController {
     }
 
     @DeleteMapping("/zones/{zoneId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('geofencing','delete')")
     public ResponseEntity<Void> deleteZone(@PathVariable Long zoneId) {
         log.info("DELETE /api/geofence/zones/{}", zoneId);
         geofenceService.deleteZone(zoneId);
@@ -45,12 +48,14 @@ public class GeofenceController {
     }
 
     @GetMapping("/zones/{zoneId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('geofencing','read')")
     public ResponseEntity<GeofenceZone> getZone(@PathVariable Long zoneId) {
         GeofenceZone zone = geofenceService.getZone(zoneId);
         return ResponseEntity.ok(zone);
     }
 
     @GetMapping("/zones/company/{companyId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('geofencing','read')")
     public ResponseEntity<List<GeofenceZone>> getCompanyZones(
             @PathVariable Long companyId,
             @RequestParam(defaultValue = "false") boolean activeOnly) {
@@ -63,6 +68,7 @@ public class GeofenceController {
     // ========== Rule Management ==========
 
     @PostMapping("/rules")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('geofencing','create')")
     public ResponseEntity<GeofenceRule> createRule(@RequestBody GeofenceRule rule) {
         log.info("POST /api/geofence/rules - Creating rule for promotion: {}", 
             rule.getPromotion().getId());
@@ -71,6 +77,7 @@ public class GeofenceController {
     }
 
     @PutMapping("/rules/{ruleId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('geofencing','update')")
     public ResponseEntity<GeofenceRule> updateRule(
             @PathVariable Long ruleId,
             @RequestBody GeofenceRule rule) {
@@ -80,6 +87,7 @@ public class GeofenceController {
     }
 
     @DeleteMapping("/rules/{ruleId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('geofencing','delete')")
     public ResponseEntity<Void> deleteRule(@PathVariable Long ruleId) {
         log.info("DELETE /api/geofence/rules/{}", ruleId);
         geofenceService.deleteRule(ruleId);
@@ -87,18 +95,21 @@ public class GeofenceController {
     }
 
     @GetMapping("/rules/promotion/{promotionId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('geofencing','read')")
     public ResponseEntity<List<GeofenceRule>> getPromotionRules(@PathVariable Long promotionId) {
         List<GeofenceRule> rules = geofenceService.getRulesByPromotion(promotionId);
         return ResponseEntity.ok(rules);
     }
 
     @GetMapping("/rules/zone/{zoneId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('geofencing','read')")
     public ResponseEntity<List<GeofenceRule>> getZoneRules(@PathVariable Long zoneId) {
         List<GeofenceRule> rules = geofenceService.getRulesByZone(zoneId);
         return ResponseEntity.ok(rules);
     }
 
     @GetMapping("/rules/company/{companyId}")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('geofencing','read')")
     public ResponseEntity<List<GeofenceRule>> getCompanyRules(@PathVariable Long companyId) {
         List<GeofenceRule> rules = geofenceService.getActiveRulesByCompany(companyId);
         return ResponseEntity.ok(rules);
