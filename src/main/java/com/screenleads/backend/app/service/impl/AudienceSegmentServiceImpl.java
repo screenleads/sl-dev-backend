@@ -286,6 +286,13 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
         return excludeId != null && existing.get().getId().equals(excludeId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Long countCustomersInSegment(Long segmentId) {
+        List<Customer> customers = getCustomersInSegment(segmentId);
+        return (long) customers.size();
+    }
+
     // Helper methods
     private Integer getIntValue(Object value) {
         if (value == null) return null;

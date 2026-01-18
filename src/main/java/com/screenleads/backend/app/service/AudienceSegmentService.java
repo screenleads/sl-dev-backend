@@ -75,4 +75,9 @@ public interface AudienceSegmentService {
      * Check if segment name is unique for company
      */
     boolean isSegmentNameUnique(String name, Long companyId, Long excludeId);
+
+    /**
+     * Count customers in a segment
+     */
+    Long countCustomersInSegment(Long segmentId);
 }
