@@ -82,4 +82,26 @@ public interface AdviceInteractionRepository extends JpaRepository<AdviceInterac
     @Query("SELECT AVG(ai.durationSeconds) FROM AdviceInteraction ai " +
            "WHERE ai.impression.advice.id = :adviceId AND ai.durationSeconds IS NOT NULL")
     Double calculateAverageDurationByAdviceId(@Param("adviceId") Long adviceId);
-}
+    /**
+     * Count interactions for an Advice within a date range
+     */
+    @Query("SELECT COUNT(ai) FROM AdviceInteraction ai " +
+           "WHERE ai.impression.advice.id = :adviceId " +
+           "AND ai.timestamp BETWEEN :startDate AND :endDate")
+    Long countByAdviceIdAndDateRange(
+        @Param("adviceId") Long adviceId,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * Count conversions for an Advice within a date range
+     */
+    @Query("SELECT COUNT(ai) FROM AdviceInteraction ai " +
+           "WHERE ai.impression.advice.id = :adviceId AND ai.isConversion = true " +
+           "AND ai.timestamp BETWEEN :startDate AND :endDate")
+    Long countConversionsByAdviceIdAndDateRange(
+        @Param("adviceId") Long adviceId,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate
+    );}

@@ -66,4 +66,51 @@ public interface AdviceImpressionRepository extends JpaRepository<AdviceImpressi
     @Query("SELECT AVG(ai.durationSeconds) FROM AdviceImpression ai " +
            "WHERE ai.advice.id = :adviceId AND ai.durationSeconds IS NOT NULL")
     Double calculateAverageDurationByAdviceId(@Param("adviceId") Long adviceId);
+
+    /**
+     * Count impressions for an Advice within a date range
+     */
+    @Query("SELECT COUNT(ai) FROM AdviceImpression ai WHERE ai.advice.id = :adviceId " +
+           "AND ai.timestamp BETWEEN :startDate AND :endDate")
+    Long countByAdviceIdAndDateRange(
+        @Param("adviceId") Long adviceId,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * Count unique customers for an Advice within a date range
+     */
+    @Query("SELECT COUNT(DISTINCT ai.customer.id) FROM AdviceImpression ai " +
+           "WHERE ai.advice.id = :adviceId AND ai.customer IS NOT NULL " +
+           "AND ai.timestamp BETWEEN :startDate AND :endDate")
+    Long countUniqueCustomersByAdviceIdAndDateRange(
+        @Param("adviceId") Long adviceId,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * Count unique devices for an Advice within a date range
+     */
+    @Query("SELECT COUNT(DISTINCT ai.device.id) FROM AdviceImpression ai " +
+           "WHERE ai.advice.id = :adviceId AND ai.device IS NOT NULL " +
+           "AND ai.timestamp BETWEEN :startDate AND :endDate")
+    Long countUniqueDevicesByAdviceIdAndDateRange(
+        @Param("adviceId") Long adviceId,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * Calculate average duration for an Advice within a date range
+     */
+    @Query("SELECT AVG(ai.durationSeconds) FROM AdviceImpression ai " +
+           "WHERE ai.advice.id = :adviceId AND ai.durationSeconds IS NOT NULL " +
+           "AND ai.timestamp BETWEEN :startDate AND :endDate")
+    Double calculateAverageDurationByAdviceIdAndDateRange(
+        @Param("adviceId") Long adviceId,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate
+    );
 }
