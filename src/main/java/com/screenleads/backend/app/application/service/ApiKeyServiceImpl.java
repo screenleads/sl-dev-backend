@@ -78,7 +78,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     @Override
     public List<ApiKey> getApiKeysByClientDbId(Long clientDbId) {
         // Usar el método del repositorio para evitar errores de tipo
-        return apiKeyRepository.findAllByClient_Id(clientDbId);
+        return apiKeyRepository.findAllByApiClient_Id(clientDbId);
     }
 
     @Override

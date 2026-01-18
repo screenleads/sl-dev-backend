@@ -61,7 +61,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
                 ApiClient client = clientOpt.get();
                 log.info("✅ Cliente encontrado: ID={}, clientId={}", client.getId(), client.getClientId());
 
-                Optional<ApiKey> keyOpt = apiKeyRepository.findByKeyAndClientAndActiveTrue(apiKey, client);
+                Optional<ApiKey> keyOpt = apiKeyRepository.findByKeyAndApiClientAndActiveTrue(apiKey, client);
                 if (keyOpt.isPresent()) {
                     ApiKey key = keyOpt.get();
                     // Usar el ID de la API key como principal para identificar exactamente qué API

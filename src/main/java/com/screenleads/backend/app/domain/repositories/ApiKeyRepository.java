@@ -7,9 +7,9 @@ import java.util.Optional;
 
 public interface ApiKeyRepository extends JpaRepository<ApiKey, Long> {
     // Obtener todas las ApiKeys por id de cliente
-    java.util.List<ApiKey> findAllByClient_Id(Long clientId);
+    java.util.List<ApiKey> findAllByApiClient_Id(Long clientId);
 
-    Optional<ApiKey> findByKeyAndClientAndActiveTrue(String key, ApiClient client);
+    Optional<ApiKey> findByKeyAndApiClientAndActiveTrue(String key, ApiClient apiClient);
 
     Optional<ApiKey> findByKey(String key);
 }

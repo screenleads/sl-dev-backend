@@ -210,7 +210,7 @@ class ApiKeyServiceImplTest {
         key2.setKey("another-key");
         key2.setApiClient(testClient);
 
-        when(apiKeyRepository.findAllByClient_Id(1L))
+        when(apiKeyRepository.findAllByApiClient_Id(1L))
                 .thenReturn(Arrays.asList(testApiKey, key2));
 
         // Act
@@ -218,21 +218,21 @@ class ApiKeyServiceImplTest {
 
         // Assert
         assertThat(result).hasSize(2).contains(testApiKey, key2);
-        verify(apiKeyRepository, times(1)).findAllByClient_Id(1L);
+        verify(apiKeyRepository, times(1)).findAllByApiClient_Id(1L);
     }
 
     @Test
     @DisplayName("getApiKeysByClientDbId should return empty list when no keys exist")
     void whenGetApiKeysByClientDbIdWithNoKeys_thenReturnsEmptyList() {
         // Arrange
-        when(apiKeyRepository.findAllByClient_Id(999L)).thenReturn(Arrays.asList());
+        when(apiKeyRepository.findAllByApiClient_Id(999L)).thenReturn(Arrays.asList());
 
         // Act
         List<ApiKey> result = apiKeyService.getApiKeysByClientDbId(999L);
 
         // Assert
         assertThat(result).isEmpty();
-        verify(apiKeyRepository, times(1)).findAllByClient_Id(999L);
+        verify(apiKeyRepository, times(1)).findAllByApiClient_Id(999L);
     }
 
     @Test
