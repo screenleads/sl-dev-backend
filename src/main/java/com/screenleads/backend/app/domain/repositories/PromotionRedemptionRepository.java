@@ -51,4 +51,11 @@ public interface PromotionRedemptionRepository extends JpaRepository<PromotionRe
         @Param("startDate") Instant startDate,
         @Param("endDate") Instant endDate
     );
+    
+    // Fraud detection methods
+    @Query("SELECT COUNT(pr) FROM PromotionRedemption pr WHERE pr.device.id = :deviceId AND pr.createdAt >= :since")
+    long countByDevice_IdAndCreatedAtAfter(@Param("deviceId") Long deviceId, @Param("since") java.time.LocalDateTime since);
+    
+    @Query("SELECT COUNT(pr) FROM PromotionRedemption pr WHERE pr.device.id = :deviceId AND pr.promotion.id = :promotionId")
+    long countByDevice_IdAndPromotion_Id(@Param("deviceId") Long deviceId, @Param("promotionId") Long promotionId);
 }
