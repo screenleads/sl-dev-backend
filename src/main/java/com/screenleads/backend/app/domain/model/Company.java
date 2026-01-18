@@ -70,7 +70,7 @@ public class Company extends Auditable {
     private String stripeSubscriptionItemId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "billing_status", length = 32, nullable = false)
+    @Column(name = "billing_status", length = 32)
     @Builder.Default
     private BillingStatus billingStatus = BillingStatus.INCOMPLETE;
 
