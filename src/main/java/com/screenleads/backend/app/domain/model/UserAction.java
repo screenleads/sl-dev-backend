@@ -83,10 +83,10 @@ public class UserAction {
     */
 
     // === Geolocalización (opcional) ===
-    @Column(precision = 10, scale = 7)
+    @Column
     private Double latitude;
     
-    @Column(precision = 10, scale = 7)
+    @Column
     private Double longitude;
     
     @Column(length = 100)

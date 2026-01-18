@@ -75,10 +75,10 @@ public class Device extends Auditable {
     @Column(length = 2)
     private String country; // ISO 3166-1 alpha-2 (ES, PT, FR, etc.)
     
-    @Column(precision = 10, scale = 7)
+    @Column
     private Double latitude;
     
-    @Column(precision = 10, scale = 7)
+    @Column
     private Double longitude;
     
     @Column(length = 50)
