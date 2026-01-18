@@ -36,4 +36,10 @@ public interface CustomerRepository extends JpaRepository<Customer, Long>, JpaSp
     
     @Query("SELECT COUNT(c) FROM Customer c WHERE c.createdAt BETWEEN :startDate AND :endDate")
     Long countNewCustomersBetween(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
+    
+    // Query method for finding all customers belonging to a company
+    // Note: Customer doesn't have a direct company relationship, so this needs to be implemented
+    // based on your business logic (e.g., through redemptions or other relationships)
+    @Query("SELECT DISTINCT c FROM Customer c WHERE c.id IN (SELECT pr.customer.id FROM PromotionRedemption pr WHERE pr.company.id = :companyId)")
+    List<Customer> findByCompanyId(@Param("companyId") Long companyId);
 }
