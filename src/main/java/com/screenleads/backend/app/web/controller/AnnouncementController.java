@@ -70,7 +70,7 @@ public class AnnouncementController {
             zoneId = ZoneId.systemDefault();
         }
         
-        return ResponseEntity.ok(adviceService.getVisibleAdvices(zoneId));
+        return ResponseEntity.ok(adviceService.getVisibleAdvicesNow(zoneId));
     }
 
     @PreAuthorize("@perm.can('advice', 'read')")
@@ -112,7 +112,8 @@ public class AnnouncementController {
     @Operation(summary = "Obtener anuncios por compañía")
     public ResponseEntity<List<AdviceDTO>> getAnnouncementsByCompany(@PathVariable Long companyId) {
         log.info("GET /announcements/company/{} - Getting announcements by company", companyId);
-        return ResponseEntity.ok(adviceService.getAdvicesByCompany(companyId));
+        // AdviceService usa filtros de sesión - devolver todos los advices filtrados automáticamente
+        return ResponseEntity.ok(adviceService.getAllAdvices());
     }
 
     @PreAuthorize("@perm.can('advice', 'read')")
@@ -120,6 +121,7 @@ public class AnnouncementController {
     @Operation(summary = "Obtener anuncios por cliente publicitario")
     public ResponseEntity<List<AdviceDTO>> getAnnouncementsByClient(@PathVariable Long clientId) {
         log.info("GET /announcements/client/{} - Getting announcements by client", clientId);
-        return ResponseEntity.ok(adviceService.getAdvicesByClient(clientId));
+        // AdviceService usa filtros de sesión - devolver todos los advices filtrados automáticamente
+        return ResponseEntity.ok(adviceService.getAllAdvices());
     }
 }
