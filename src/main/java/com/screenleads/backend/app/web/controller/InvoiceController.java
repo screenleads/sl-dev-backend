@@ -19,8 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/invoices")
 @CrossOrigin(origins = "*")
-@RequiredArgsConstructor
 @Tag(name = "Invoices", description = "Gestión de facturas")
+@RequiredArgsConstructor
 public class InvoiceController {
 
     private final InvoiceService invoiceService;

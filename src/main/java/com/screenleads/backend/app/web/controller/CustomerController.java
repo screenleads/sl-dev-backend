@@ -39,6 +39,16 @@ public class CustomerController {
 
     // ========== CRUD básico ==========
 
+    @PreAuthorize("@perm.can('customer', 'read')")
+    @GetMapping
+    @Operation(summary = "Listar todos los customers")
+    public ResponseEntity<Page<CustomerDTO>> getAllCustomers(@PageableDefault(size = 50) Pageable pageable) {
+        log.info("GET /customers - Listing all customers");
+        // Usar searchCustomers con criterios vacíos para listar todos
+        Page<CustomerDTO> customers = customerService.searchCustomers(new CustomerSearchCriteria(), pageable);
+        return ResponseEntity.ok(customers);
+    }
+
     @PostMapping
     @Operation(summary = "Crear nuevo customer", description = "Público para que dispositivos registren customers al canjear")
     public ResponseEntity<CustomerDTO> createCustomer(@Valid @RequestBody CreateCustomerRequest request) {

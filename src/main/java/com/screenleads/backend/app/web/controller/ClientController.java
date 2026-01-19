@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/clients")
+@CrossOrigin(origins = "*")
 public class ClientController {
     private com.screenleads.backend.app.web.dto.ClientDTO toDTO(ApiClient client) {
         com.screenleads.backend.app.web.dto.ClientDTO dto = new com.screenleads.backend.app.web.dto.ClientDTO();
