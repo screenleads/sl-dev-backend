@@ -29,16 +29,16 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/customers")
-@CrossOrigin
+@RequestMapping("/customers")
+@CrossOrigin(origins = "*")
 @Tag(name = "Customers", description = "Gestión de clientes finales que canjean promociones")
 @RequiredArgsConstructor
 public class CustomerController {
-    
+
     private final CustomerService customerService;
-    
+
     // ========== CRUD básico ==========
-    
+
     @PostMapping
     @Operation(summary = "Crear nuevo customer", description = "Público para que dispositivos registren customers al canjear")
     public ResponseEntity<CustomerDTO> createCustomer(@Valid @RequestBody CreateCustomerRequest request) {
@@ -46,7 +46,7 @@ public class CustomerController {
         CustomerDTO created = customerService.createCustomer(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
-    
+
     @PreAuthorize("@perm.can('customer', 'read')")
     @GetMapping("/{id}")
     @Operation(summary = "Obtener customer por ID")
@@ -55,7 +55,7 @@ public class CustomerController {
         CustomerDTO customer = customerService.findById(id);
         return ResponseEntity.ok(customer);
     }
-    
+
     @PreAuthorize("@perm.can('customer', 'update')")
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar customer existente")
@@ -66,7 +66,7 @@ public class CustomerController {
         CustomerDTO updated = customerService.updateCustomer(id, request);
         return ResponseEntity.ok(updated);
     }
-    
+
     @PreAuthorize("@perm.can('customer', 'delete')")
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar customer")
@@ -75,9 +75,9 @@ public class CustomerController {
         customerService.deleteCustomer(id);
         return ResponseEntity.noContent().build();
     }
-    
+
     // ========== Búsqueda ==========
-    
+
     @PreAuthorize("@perm.can('customer', 'read')")
     @GetMapping("/email/{email}")
     @Operation(summary = "Buscar customer por email")
@@ -89,7 +89,7 @@ public class CustomerController {
         }
         return ResponseEntity.ok(customer);
     }
-    
+
     @PreAuthorize("@perm.can('customer', 'read')")
     @GetMapping("/phone/{phone}")
     @Operation(summary = "Buscar customer por teléfono")
@@ -101,7 +101,7 @@ public class CustomerController {
         }
         return ResponseEntity.ok(customer);
     }
-    
+
     @PreAuthorize("@perm.can('customer', 'read')")
     @PostMapping("/search")
     @Operation(summary = "Buscar customers con criterios y paginación")
@@ -112,9 +112,9 @@ public class CustomerController {
         Page<CustomerDTO> customers = customerService.searchCustomers(criteria, pageable);
         return ResponseEntity.ok(customers);
     }
-    
+
     // ========== Verificación ==========
-    
+
     @PostMapping("/{id}/verify-email")
     @Operation(summary = "Verificar email de customer", description = "Público para que el customer verifique su email")
     public ResponseEntity<Void> verifyEmail(
@@ -124,7 +124,7 @@ public class CustomerController {
         customerService.verifyEmail(id, token);
         return ResponseEntity.ok().build();
     }
-    
+
     @PostMapping("/{id}/verify-phone")
     @Operation(summary = "Verificar teléfono de customer", description = "Público para que el customer verifique su teléfono")
     public ResponseEntity<Void> verifyPhone(
@@ -134,9 +134,9 @@ public class CustomerController {
         customerService.verifyPhone(id, code);
         return ResponseEntity.ok().build();
     }
-    
+
     // ========== Segmentación y Tags ==========
-    
+
     @PreAuthorize("@perm.can('customer', 'update')")
     @PutMapping("/{id}/segment")
     @Operation(summary = "Actualizar segmento de customer")
@@ -147,7 +147,7 @@ public class CustomerController {
         customerService.updateSegment(id, segment);
         return ResponseEntity.ok().build();
     }
-    
+
     @PreAuthorize("@perm.can('customer', 'update')")
     @PostMapping("/{id}/tags")
     @Operation(summary = "Añadir tags a customer")
@@ -158,9 +158,9 @@ public class CustomerController {
         customerService.addTags(id, tags);
         return ResponseEntity.ok().build();
     }
-    
+
     // ========== Estadísticas ==========
-    
+
     @PreAuthorize("@perm.can('customer', 'read')")
     @GetMapping("/{id}/stats")
     @Operation(summary = "Obtener estadísticas de customer")
@@ -169,7 +169,7 @@ public class CustomerController {
         CustomerStatsDTO stats = customerService.getCustomerStats(id);
         return ResponseEntity.ok(stats);
     }
-    
+
     @PreAuthorize("@perm.can('customer', 'update')")
     @PostMapping("/{id}/recalculate-engagement")
     @Operation(summary = "Recalcular engagement score de customer")
@@ -178,7 +178,7 @@ public class CustomerController {
         customerService.recalculateEngagementScore(id);
         return ResponseEntity.ok().build();
     }
-    
+
     @PreAuthorize("@perm.can('customer', 'update')")
     @PostMapping("/{id}/update-lifetime-value")
     @Operation(summary = "Actualizar lifetime value de customer")

@@ -15,11 +15,11 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "advice_impressions", indexes = {
-    @Index(name = "idx_advice_impression_advice", columnList = "advice_id"),
-    @Index(name = "idx_advice_impression_device", columnList = "device_id"),
-    @Index(name = "idx_advice_impression_customer", columnList = "customer_id"),
-    @Index(name = "idx_advice_impression_timestamp", columnList = "timestamp"),
-    @Index(name = "idx_advice_impression_session", columnList = "session_id")
+        @Index(name = "idx_advice_impression_advice", columnList = "advice_id"),
+        @Index(name = "idx_advice_impression_device", columnList = "device_id"),
+        @Index(name = "idx_advice_impression_customer", columnList = "customer_id"),
+        @Index(name = "idx_advice_impression_timestamp", columnList = "timestamp"),
+        @Index(name = "idx_advice_impression_session", columnList = "session_id")
 })
 @Data
 @NoArgsConstructor
@@ -66,7 +66,8 @@ public class AdviceImpression {
     private Integer durationSeconds;
 
     /**
-     * Session identifier to group multiple impressions from the same customer session
+     * Session identifier to group multiple impressions from the same customer
+     * session
      */
     @Column(name = "session_id", length = 100)
     private String sessionId;
@@ -78,7 +79,8 @@ public class AdviceImpression {
     private String ipAddress;
 
     /**
-     * Whether the customer interacted with the promotion (clicked, viewed details, etc)
+     * Whether the customer interacted with the promotion (clicked, viewed details,
+     * etc)
      */
     @Column(name = "was_interactive")
     @Builder.Default

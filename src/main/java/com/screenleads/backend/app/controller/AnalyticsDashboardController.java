@@ -33,7 +33,7 @@ public class AnalyticsDashboardController {
     public ResponseEntity<Map<String, Object>> getDashboardOverview(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        
+
         // Default to last 30 days if not specified
         if (endDate == null) {
             endDate = LocalDate.now().minusDays(1); // Yesterday
@@ -48,7 +48,8 @@ public class AnalyticsDashboardController {
         overview.put("startDate", startDate);
         overview.put("endDate", endDate);
         overview.put("topConversions", promotionMetricsService.getTopPerformingByConversions(startDate, endDate, 10));
-        overview.put("topConversionRate", promotionMetricsService.getTopPerformingByConversionRate(startDate, endDate, 10));
+        overview.put("topConversionRate",
+                promotionMetricsService.getTopPerformingByConversionRate(startDate, endDate, 10));
         overview.put("latestMetricDate", promotionMetricsService.getLatestMetricDate().orElse(null));
 
         return ResponseEntity.ok(overview);
@@ -63,9 +64,9 @@ public class AnalyticsDashboardController {
             @PathVariable Long adviceId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        
+
         List<PromotionMetrics> metrics;
-        
+
         if (startDate != null && endDate != null) {
             metrics = promotionMetricsService.getMetricsByAdviceAndDateRange(adviceId, startDate, endDate);
         } else {
@@ -74,28 +75,28 @@ public class AnalyticsDashboardController {
 
         // Calculate totals
         Long totalImpressions = metrics.stream()
-            .mapToLong(PromotionMetrics::getTotalImpressions)
-            .sum();
-        
+                .mapToLong(PromotionMetrics::getTotalImpressions)
+                .sum();
+
         Long totalInteractions = metrics.stream()
-            .mapToLong(PromotionMetrics::getTotalInteractions)
-            .sum();
-        
+                .mapToLong(PromotionMetrics::getTotalInteractions)
+                .sum();
+
         Long totalConversions = metrics.stream()
-            .mapToLong(PromotionMetrics::getTotalConversions)
-            .sum();
+                .mapToLong(PromotionMetrics::getTotalConversions)
+                .sum();
 
         Map<String, Object> response = new HashMap<>();
         response.put("adviceId", adviceId);
         response.put("metrics", metrics);
         response.put("totals", Map.of(
-            "impressions", totalImpressions,
-            "interactions", totalInteractions,
-            "conversions", totalConversions,
-            "overallConversionRate", totalImpressions > 0 
-                ? Math.round((totalConversions.doubleValue() / totalImpressions.doubleValue()) * 10000.0) / 100.0
-                : 0.0
-        ));
+                "impressions", totalImpressions,
+                "interactions", totalInteractions,
+                "conversions", totalConversions,
+                "overallConversionRate", totalImpressions > 0
+                        ? Math.round((totalConversions.doubleValue() / totalImpressions.doubleValue()) * 10000.0)
+                                / 100.0
+                        : 0.0));
 
         return ResponseEntity.ok(response);
     }
@@ -107,7 +108,7 @@ public class AnalyticsDashboardController {
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<List<PromotionMetrics>> getMetricsByDate(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        
+
         List<PromotionMetrics> metrics = promotionMetricsService.getMetricsByDate(date);
         return ResponseEntity.ok(metrics);
     }
@@ -121,7 +122,7 @@ public class AnalyticsDashboardController {
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        
+
         if (endDate == null) {
             endDate = LocalDate.now().minusDays(1);
         }
@@ -129,9 +130,9 @@ public class AnalyticsDashboardController {
             startDate = endDate.minusDays(29);
         }
 
-        List<PromotionMetrics> topPerformers = 
-            promotionMetricsService.getTopPerformingByConversionRate(startDate, endDate, limit);
-        
+        List<PromotionMetrics> topPerformers = promotionMetricsService.getTopPerformingByConversionRate(startDate,
+                endDate, limit);
+
         return ResponseEntity.ok(topPerformers);
     }
 
@@ -144,7 +145,7 @@ public class AnalyticsDashboardController {
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        
+
         if (endDate == null) {
             endDate = LocalDate.now().minusDays(1);
         }
@@ -152,9 +153,9 @@ public class AnalyticsDashboardController {
             startDate = endDate.minusDays(29);
         }
 
-        List<PromotionMetrics> topPerformers = 
-            promotionMetricsService.getTopPerformingByConversions(startDate, endDate, limit);
-        
+        List<PromotionMetrics> topPerformers = promotionMetricsService.getTopPerformingByConversions(startDate, endDate,
+                limit);
+
         return ResponseEntity.ok(topPerformers);
     }
 
@@ -165,26 +166,26 @@ public class AnalyticsDashboardController {
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> calculateMetricsForDate(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        
+
         log.info("Manual trigger to calculate metrics for date: {}", date);
-        
+
         try {
             metricsCalculationScheduler.calculateMetricsForDate(date);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Metrics calculation completed for date: " + date);
             response.put("date", date);
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error calculating metrics for date {}: {}", date, e.getMessage(), e);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Error calculating metrics: " + e.getMessage());
             response.put("date", date);
-            
+
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -196,11 +197,11 @@ public class AnalyticsDashboardController {
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','read')")
     public ResponseEntity<Map<String, Object>> getLatestMetricDate() {
         Optional<LocalDate> latestDate = promotionMetricsService.getLatestMetricDate();
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("latestMetricDate", latestDate.orElse(null));
         response.put("hasMetrics", latestDate.isPresent());
-        
+
         return ResponseEntity.ok(response);
     }
 }

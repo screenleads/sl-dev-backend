@@ -27,12 +27,11 @@ public interface PromotionMetricsRepository extends JpaRepository<PromotionMetri
      * Get metrics for a specific advice within a date range
      */
     @Query("SELECT pm FROM PromotionMetrics pm WHERE pm.advice.id = :adviceId " +
-           "AND pm.metricDate BETWEEN :startDate AND :endDate ORDER BY pm.metricDate DESC")
+            "AND pm.metricDate BETWEEN :startDate AND :endDate ORDER BY pm.metricDate DESC")
     List<PromotionMetrics> findByAdviceIdAndDateRange(
-        @Param("adviceId") Long adviceId,
-        @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate
-    );
+            @Param("adviceId") Long adviceId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 
     /**
      * Get metrics for all promotions on a specific date
@@ -43,21 +42,19 @@ public interface PromotionMetricsRepository extends JpaRepository<PromotionMetri
      * Get top performing promotions by conversion rate within a date range
      */
     @Query("SELECT pm FROM PromotionMetrics pm WHERE pm.metricDate BETWEEN :startDate AND :endDate " +
-           "ORDER BY pm.conversionRate DESC, pm.totalConversions DESC")
+            "ORDER BY pm.conversionRate DESC, pm.totalConversions DESC")
     List<PromotionMetrics> findTopPerformingByConversionRate(
-        @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate
-    );
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 
     /**
      * Get top performing promotions by total conversions within a date range
      */
     @Query("SELECT pm FROM PromotionMetrics pm WHERE pm.metricDate BETWEEN :startDate AND :endDate " +
-           "ORDER BY pm.totalConversions DESC, pm.conversionRate DESC")
+            "ORDER BY pm.totalConversions DESC, pm.conversionRate DESC")
     List<PromotionMetrics> findTopPerformingByConversions(
-        @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate
-    );
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 
     /**
      * Get total impressions for a specific advice across all dates

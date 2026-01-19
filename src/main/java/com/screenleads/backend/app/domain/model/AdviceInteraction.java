@@ -14,14 +14,15 @@ import java.util.Map;
 
 /**
  * Entity representing a user interaction with an Advice (promotion).
- * Tracks specific actions taken after viewing a promotion (clicks, shares, redemptions, etc).
+ * Tracks specific actions taken after viewing a promotion (clicks, shares,
+ * redemptions, etc).
  */
 @Entity
 @Table(name = "advice_interactions", indexes = {
-    @Index(name = "idx_advice_interaction_impression", columnList = "impression_id"),
-    @Index(name = "idx_advice_interaction_customer", columnList = "customer_id"),
-    @Index(name = "idx_advice_interaction_type", columnList = "type"),
-    @Index(name = "idx_advice_interaction_timestamp", columnList = "timestamp")
+        @Index(name = "idx_advice_interaction_impression", columnList = "impression_id"),
+        @Index(name = "idx_advice_interaction_customer", columnList = "customer_id"),
+        @Index(name = "idx_advice_interaction_type", columnList = "type"),
+        @Index(name = "idx_advice_interaction_timestamp", columnList = "timestamp")
 })
 @Data
 @NoArgsConstructor

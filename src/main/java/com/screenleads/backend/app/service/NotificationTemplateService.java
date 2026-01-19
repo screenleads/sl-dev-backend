@@ -54,7 +54,8 @@ public interface NotificationTemplateService {
 
     /**
      * Render template with variable substitution
-     * @param template The template to render
+     * 
+     * @param template  The template to render
      * @param variables Map of variable names to values
      * @return Rendered content with variables replaced
      */

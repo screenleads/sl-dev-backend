@@ -16,8 +16,8 @@ import java.util.Map;
  */
 @Entity
 @Table(name = "notification_templates", indexes = {
-    @Index(name = "idx_notification_template_company", columnList = "company_id"),
-    @Index(name = "idx_notification_template_channel", columnList = "channel")
+        @Index(name = "idx_notification_template_company", columnList = "company_id"),
+        @Index(name = "idx_notification_template_channel", columnList = "channel")
 })
 @Data
 @NoArgsConstructor
@@ -64,7 +64,8 @@ public class NotificationTemplate {
 
     /**
      * Main body content of the notification
-     * Supports variables: {{customerName}}, {{promotionTitle}}, {{discountAmount}}, etc.
+     * Supports variables: {{customerName}}, {{promotionTitle}}, {{discountAmount}},
+     * etc.
      */
     @Column(name = "body", columnDefinition = "TEXT", nullable = false)
     private String body;

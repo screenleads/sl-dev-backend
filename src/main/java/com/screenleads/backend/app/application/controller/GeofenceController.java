@@ -59,9 +59,9 @@ public class GeofenceController {
     public ResponseEntity<List<GeofenceZone>> getCompanyZones(
             @PathVariable Long companyId,
             @RequestParam(defaultValue = "false") boolean activeOnly) {
-        List<GeofenceZone> zones = activeOnly 
-            ? geofenceService.getActiveZonesByCompany(companyId)
-            : geofenceService.getZonesByCompany(companyId);
+        List<GeofenceZone> zones = activeOnly
+                ? geofenceService.getActiveZonesByCompany(companyId)
+                : geofenceService.getZonesByCompany(companyId);
         return ResponseEntity.ok(zones);
     }
 
@@ -70,8 +70,8 @@ public class GeofenceController {
     @PostMapping("/rules")
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('geofencing','create')")
     public ResponseEntity<GeofenceRule> createRule(@RequestBody GeofenceRule rule) {
-        log.info("POST /api/geofence/rules - Creating rule for promotion: {}", 
-            rule.getPromotion().getId());
+        log.info("POST /api/geofence/rules - Creating rule for promotion: {}",
+                rule.getPromotion().getId());
         GeofenceRule created = geofenceService.createRule(rule);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -119,15 +119,14 @@ public class GeofenceController {
 
     @PostMapping("/check")
     public ResponseEntity<List<Promotion>> checkGeofence(@RequestBody GeofenceCheckRequest request) {
-        log.info("POST /api/geofence/check - Device: {}, Lat: {}, Lon: {}", 
-            request.getDeviceId(), request.getLatitude(), request.getLongitude());
-        
+        log.info("POST /api/geofence/check - Device: {}, Lat: {}, Lon: {}",
+                request.getDeviceId(), request.getLatitude(), request.getLongitude());
+
         List<Promotion> allowedPromotions = geofenceService.checkGeofenceRules(
-            request.getDeviceId(),
-            request.getLatitude(),
-            request.getLongitude()
-        );
-        
+                request.getDeviceId(),
+                request.getLatitude(),
+                request.getLongitude());
+
         return ResponseEntity.ok(allowedPromotions);
     }
 
@@ -137,8 +136,7 @@ public class GeofenceController {
             @RequestParam double latitude,
             @RequestParam double longitude) {
         List<GeofenceZone> zones = geofenceService.findZonesContainingPoint(
-            companyId, latitude, longitude
-        );
+                companyId, latitude, longitude);
         return ResponseEntity.ok(zones);
     }
 
@@ -155,8 +153,8 @@ public class GeofenceController {
 
     @PostMapping("/events")
     public ResponseEntity<GeofenceEvent> trackEvent(@RequestBody GeofenceEvent event) {
-        log.info("POST /api/geofence/events - Type: {}, Device: {}", 
-            event.getEventType(), event.getDevice().getId());
+        log.info("POST /api/geofence/events - Type: {}, Device: {}",
+                event.getEventType(), event.getDevice().getId());
         GeofenceEvent tracked = geofenceService.trackEvent(event);
         return ResponseEntity.status(HttpStatus.CREATED).body(tracked);
     }
@@ -200,13 +198,28 @@ public class GeofenceController {
         private double latitude;
         private double longitude;
 
-        public Long getDeviceId() { return deviceId; }
-        public void setDeviceId(Long deviceId) { this.deviceId = deviceId; }
-        
-        public double getLatitude() { return latitude; }
-        public void setLatitude(double latitude) { this.latitude = latitude; }
-        
-        public double getLongitude() { return longitude; }
-        public void setLongitude(double longitude) { this.longitude = longitude; }
+        public Long getDeviceId() {
+            return deviceId;
+        }
+
+        public void setDeviceId(Long deviceId) {
+            this.deviceId = deviceId;
+        }
+
+        public double getLatitude() {
+            return latitude;
+        }
+
+        public void setLatitude(double latitude) {
+            this.latitude = latitude;
+        }
+
+        public double getLongitude() {
+            return longitude;
+        }
+
+        public void setLongitude(double longitude) {
+            this.longitude = longitude;
+        }
     }
 }

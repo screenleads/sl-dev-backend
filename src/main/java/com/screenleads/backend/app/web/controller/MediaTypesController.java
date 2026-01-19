@@ -19,6 +19,7 @@ import com.screenleads.backend.app.application.service.MediaTypeService;
 import com.screenleads.backend.app.web.dto.MediaTypeDTO;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class MediaTypesController {
 

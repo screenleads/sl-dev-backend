@@ -20,29 +20,26 @@ public interface GeofenceEventRepository extends JpaRepository<GeofenceEvent, Lo
     Page<GeofenceEvent> findByZone_Id(Long zoneId, Pageable pageable);
 
     @Query("SELECT ge FROM GeofenceEvent ge " +
-           "WHERE ge.device.id = :deviceId " +
-           "AND ge.timestamp BETWEEN :startDate AND :endDate " +
-           "ORDER BY ge.timestamp DESC")
+            "WHERE ge.device.id = :deviceId " +
+            "AND ge.timestamp BETWEEN :startDate AND :endDate " +
+            "ORDER BY ge.timestamp DESC")
     List<GeofenceEvent> findDeviceEventsBetween(
-        @Param("deviceId") Long deviceId,
-        @Param("startDate") LocalDateTime startDate,
-        @Param("endDate") LocalDateTime endDate
-    );
+            @Param("deviceId") Long deviceId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 
     @Query("SELECT ge FROM GeofenceEvent ge " +
-           "WHERE ge.zone.id = :zoneId " +
-           "AND ge.eventType = :eventType " +
-           "AND ge.timestamp >= :since " +
-           "ORDER BY ge.timestamp DESC")
+            "WHERE ge.zone.id = :zoneId " +
+            "AND ge.eventType = :eventType " +
+            "AND ge.timestamp >= :since " +
+            "ORDER BY ge.timestamp DESC")
     List<GeofenceEvent> findZoneEventsByType(
-        @Param("zoneId") Long zoneId,
-        @Param("eventType") GeofenceEventType eventType,
-        @Param("since") LocalDateTime since
-    );
+            @Param("zoneId") Long zoneId,
+            @Param("eventType") GeofenceEventType eventType,
+            @Param("since") LocalDateTime since);
 
     long countByZone_IdAndEventTypeAndTimestampAfter(
-        Long zoneId, 
-        GeofenceEventType eventType, 
-        LocalDateTime timestamp
-    );
+            Long zoneId,
+            GeofenceEventType eventType,
+            LocalDateTime timestamp);
 }

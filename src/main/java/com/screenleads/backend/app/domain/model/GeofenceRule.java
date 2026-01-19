@@ -11,16 +11,13 @@ import java.time.LocalDateTime;
  * Regla de geofencing aplicada a una promoción
  */
 @Entity
-@Table(name = "geofence_rule",
-    indexes = {
+@Table(name = "geofence_rule", indexes = {
         @Index(name = "ix_gfrule_promotion", columnList = "promotion_id"),
         @Index(name = "ix_gfrule_zone", columnList = "zone_id"),
         @Index(name = "ix_gfrule_priority", columnList = "priority")
-    },
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uk_gfrule_promotion_zone", 
-            columnNames = {"promotion_id", "zone_id"})
-    })
+}, uniqueConstraints = {
+        @UniqueConstraint(name = "uk_gfrule_promotion_zone", columnNames = { "promotion_id", "zone_id" })
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -33,13 +30,11 @@ public class GeofenceRule {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "promotion_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_gfrule_promotion"))
+    @JoinColumn(name = "promotion_id", nullable = false, foreignKey = @ForeignKey(name = "fk_gfrule_promotion"))
     private Promotion promotion;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "zone_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_gfrule_zone"))
+    @JoinColumn(name = "zone_id", nullable = false, foreignKey = @ForeignKey(name = "fk_gfrule_zone"))
     private GeofenceZone zone;
 
     @Enumerated(EnumType.STRING)

@@ -13,29 +13,29 @@ import com.screenleads.backend.app.domain.model.BillingEventStatus;
 import com.screenleads.backend.app.domain.model.BillingEventType;
 
 public interface BillingEventRepository extends JpaRepository<BillingEvent, Long> {
-    
+
     Optional<BillingEvent> findByStripeEventId(String stripeEventId);
-    
+
     List<BillingEvent> findByCompanyBillingId(Long companyBillingId);
-    
+
     List<BillingEvent> findByRedemptionId(Long redemptionId);
-    
+
     List<BillingEvent> findByInvoiceId(Long invoiceId);
-    
+
     List<BillingEvent> findByEventType(BillingEventType eventType);
-    
+
     List<BillingEvent> findByStatus(BillingEventStatus status);
-    
+
     @Query("SELECT be FROM BillingEvent be WHERE be.companyBilling.id = :companyBillingId ORDER BY be.timestamp DESC")
     List<BillingEvent> findByCompanyBillingIdOrderByTimestampDesc(@Param("companyBillingId") Long companyBillingId);
-    
+
     @Query("SELECT be FROM BillingEvent be WHERE be.companyBilling.id = :companyBillingId AND be.timestamp BETWEEN :startDate AND :endDate")
     List<BillingEvent> findByCompanyBillingAndDateRange(
-        @Param("companyBillingId") Long companyBillingId,
-        @Param("startDate") Instant startDate,
-        @Param("endDate") Instant endDate
-    );
-    
+            @Param("companyBillingId") Long companyBillingId,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate);
+
     @Query("SELECT be FROM BillingEvent be WHERE be.status = :status AND be.eventType = :eventType")
-    List<BillingEvent> findByStatusAndEventType(@Param("status") BillingEventStatus status, @Param("eventType") BillingEventType eventType);
+    List<BillingEvent> findByStatusAndEventType(@Param("status") BillingEventStatus status,
+            @Param("eventType") BillingEventType eventType);
 }

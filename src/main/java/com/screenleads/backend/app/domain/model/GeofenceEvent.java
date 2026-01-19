@@ -11,13 +11,12 @@ import java.util.Map;
  * Evento de geofencing (entrada/salida/permanencia en zona)
  */
 @Entity
-@Table(name = "geofence_event",
-    indexes = {
+@Table(name = "geofence_event", indexes = {
         @Index(name = "ix_gfevent_device", columnList = "device_id"),
         @Index(name = "ix_gfevent_zone", columnList = "zone_id"),
         @Index(name = "ix_gfevent_timestamp", columnList = "timestamp"),
         @Index(name = "ix_gfevent_type", columnList = "event_type")
-    })
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,13 +29,11 @@ public class GeofenceEvent {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "device_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_gfevent_device"))
+    @JoinColumn(name = "device_id", nullable = false, foreignKey = @ForeignKey(name = "fk_gfevent_device"))
     private Device device;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "zone_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_gfevent_zone"))
+    @JoinColumn(name = "zone_id", nullable = false, foreignKey = @ForeignKey(name = "fk_gfevent_zone"))
     private GeofenceZone zone;
 
     @Enumerated(EnumType.STRING)

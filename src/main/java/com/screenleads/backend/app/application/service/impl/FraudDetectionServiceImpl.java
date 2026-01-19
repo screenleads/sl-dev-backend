@@ -37,7 +37,7 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
     @Override
     public FraudRule updateRule(Long ruleId, FraudRule updatedRule) {
         FraudRule existing = getRule(ruleId);
-        
+
         existing.setName(updatedRule.getName());
         existing.setDescription(updatedRule.getDescription());
         existing.setRuleType(updatedRule.getRuleType());
@@ -47,7 +47,7 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
         existing.setAutoAlert(updatedRule.getAutoAlert());
         existing.setAutoBlock(updatedRule.getAutoBlock());
         existing.setUpdatedAt(LocalDateTime.now());
-        
+
         return ruleRepository.save(existing);
     }
 
@@ -61,7 +61,7 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
     @Transactional(readOnly = true)
     public FraudRule getRule(Long ruleId) {
         return ruleRepository.findById(ruleId)
-            .orElseThrow(() -> new RuntimeException("Fraud rule not found: " + ruleId));
+                .orElseThrow(() -> new RuntimeException("Fraud rule not found: " + ruleId));
     }
 
     @Override
@@ -81,17 +81,17 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
         alert.setDetectedAt(LocalDateTime.now());
         alert.setCreatedAt(LocalDateTime.now());
         alert.setUpdatedAt(LocalDateTime.now());
-        
+
         log.warn("Fraud alert created: {} - Severity: {}", alert.getTitle(), alert.getSeverity());
-        
+
         FraudAlert saved = alertRepository.save(alert);
-        
+
         // Si la regla tiene auto-block, agregar a blacklist
         FraudRule rule = alert.getRule();
         if (rule != null && rule.getAutoBlock()) {
             autoBlockFromAlert(saved);
         }
-        
+
         return saved;
     }
 
@@ -100,38 +100,38 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
         if (evidence == null) {
             return;
         }
-        
+
         // Intentar bloquear IP si está en la evidencia
         if (evidence.containsKey("ipAddress")) {
             String ip = evidence.get("ipAddress").toString();
-            addToBlacklistIfNotExists(alert.getCompany(), BlacklistType.IP_ADDRESS, ip, 
-                "Auto-blocked by fraud rule: " + alert.getRule().getName(), alert);
+            addToBlacklistIfNotExists(alert.getCompany(), BlacklistType.IP_ADDRESS, ip,
+                    "Auto-blocked by fraud rule: " + alert.getRule().getName(), alert);
         }
-        
+
         // Intentar bloquear Device ID si está en la evidencia
         if (evidence.containsKey("deviceId")) {
             String deviceId = evidence.get("deviceId").toString();
             addToBlacklistIfNotExists(alert.getCompany(), BlacklistType.DEVICE_ID, deviceId,
-                "Auto-blocked by fraud rule: " + alert.getRule().getName(), alert);
+                    "Auto-blocked by fraud rule: " + alert.getRule().getName(), alert);
         }
     }
 
-    private void addToBlacklistIfNotExists(Company company, BlacklistType type, String value, 
-                                          String reason, FraudAlert alert) {
+    private void addToBlacklistIfNotExists(Company company, BlacklistType type, String value,
+            String reason, FraudAlert alert) {
         Optional<Blacklist> existing = blacklistRepository
-            .findEffectiveBlacklist(company.getId(), type, value, LocalDateTime.now());
-        
+                .findEffectiveBlacklist(company.getId(), type, value, LocalDateTime.now());
+
         if (existing.isEmpty()) {
             Blacklist blacklist = Blacklist.builder()
-                .company(company)
-                .blacklistType(type)
-                .value(value)
-                .reason(reason)
-                .isActive(true)
-                .alert(alert)
-                .createdAt(LocalDateTime.now())
-                .build();
-            
+                    .company(company)
+                    .blacklistType(type)
+                    .value(value)
+                    .reason(reason)
+                    .isActive(true)
+                    .alert(alert)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
             blacklistRepository.save(blacklist);
             log.info("Auto-added to blacklist: {} - {}", type, value);
         }
@@ -140,15 +140,15 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
     @Override
     public FraudAlert updateAlertStatus(Long alertId, FraudAlertStatus status, String notes) {
         FraudAlert alert = getAlert(alertId);
-        
+
         alert.setStatus(status);
         alert.setResolutionNotes(notes);
         alert.setUpdatedAt(LocalDateTime.now());
-        
+
         if (status == FraudAlertStatus.RESOLVED || status == FraudAlertStatus.FALSE_POSITIVE) {
             alert.setResolvedAt(LocalDateTime.now());
         }
-        
+
         return alertRepository.save(alert);
     }
 
@@ -156,16 +156,15 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
     @Transactional(readOnly = true)
     public FraudAlert getAlert(Long alertId) {
         return alertRepository.findById(alertId)
-            .orElseThrow(() -> new RuntimeException("Fraud alert not found: " + alertId));
+                .orElseThrow(() -> new RuntimeException("Fraud alert not found: " + alertId));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<FraudAlert> getAlertsByCompany(Long companyId, int page, int size) {
         Page<FraudAlert> alerts = alertRepository.findByCompany_Id(
-            companyId, 
-            PageRequest.of(page, size)
-        );
+                companyId,
+                PageRequest.of(page, size));
         return alerts.getContent();
     }
 
@@ -173,9 +172,8 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
     @Transactional(readOnly = true)
     public List<FraudAlert> getPendingAlerts(Long companyId) {
         return alertRepository.findAlertsByStatuses(
-            companyId,
-            Arrays.asList(FraudAlertStatus.PENDING, FraudAlertStatus.INVESTIGATING)
-        );
+                companyId,
+                Arrays.asList(FraudAlertStatus.PENDING, FraudAlertStatus.INVESTIGATING));
     }
 
     @Override
@@ -184,13 +182,13 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
         long pending = alertRepository.countByCompany_IdAndStatus(companyId, FraudAlertStatus.PENDING);
         long investigating = alertRepository.countByCompany_IdAndStatus(companyId, FraudAlertStatus.INVESTIGATING);
         long confirmed = alertRepository.countByCompany_IdAndStatus(companyId, FraudAlertStatus.CONFIRMED);
-        
+
         long critical = alertRepository.countByCompany_IdAndSeverity(companyId, FraudSeverity.CRITICAL);
         long high = alertRepository.countByCompany_IdAndSeverity(companyId, FraudSeverity.HIGH);
-        
+
         LocalDateTime last24h = LocalDateTime.now().minusHours(24);
         long recent = alertRepository.countRecentAlerts(companyId, last24h);
-        
+
         Map<String, Object> stats = new HashMap<>();
         stats.put("companyId", companyId);
         stats.put("pendingAlerts", pending);
@@ -199,7 +197,7 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
         stats.put("criticalAlerts", critical);
         stats.put("highAlerts", high);
         stats.put("alertsLast24h", recent);
-        
+
         return stats;
     }
 
@@ -220,7 +218,7 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
     @Transactional(readOnly = true)
     public boolean isBlacklisted(Long companyId, BlacklistType type, String value) {
         Optional<Blacklist> entry = blacklistRepository
-            .findEffectiveBlacklist(companyId, type, value, LocalDateTime.now());
+                .findEffectiveBlacklist(companyId, type, value, LocalDateTime.now());
         return entry.isPresent();
     }
 
@@ -234,12 +232,12 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
     @Scheduled(cron = "0 0 3 * * ?") // Ejecuta a las 3 AM diariamente
     public void expireOldBlacklists() {
         List<Blacklist> expired = blacklistRepository.findExpiredBlacklists(LocalDateTime.now());
-        
+
         for (Blacklist entry : expired) {
             entry.setIsActive(false);
             blacklistRepository.save(entry);
         }
-        
+
         if (!expired.isEmpty()) {
             log.info("Expired {} blacklist entries", expired.size());
         }
@@ -247,14 +245,14 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FraudAlert> checkForFraud(Long companyId, String entityType, Long entityId, 
-                                         Map<String, Object> context) {
+    public List<FraudAlert> checkForFraud(Long companyId, String entityType, Long entityId,
+            Map<String, Object> context) {
         List<FraudRule> rules = getActiveRulesByCompany(companyId);
         List<FraudAlert> alerts = new ArrayList<>();
-        
+
         for (FraudRule rule : rules) {
             boolean fraudDetected = false;
-            
+
             switch (rule.getRuleType()) {
                 case VELOCITY:
                     fraudDetected = evaluateVelocityRule(rule, context);
@@ -271,31 +269,31 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
                 default:
                     break;
             }
-            
+
             if (fraudDetected && rule.getAutoAlert()) {
                 FraudAlert alert = createFraudAlert(rule, entityType, entityId, context);
                 alerts.add(alert);
             }
         }
-        
+
         return alerts;
     }
 
-    private FraudAlert createFraudAlert(FraudRule rule, String entityType, Long entityId, 
-                                       Map<String, Object> context) {
+    private FraudAlert createFraudAlert(FraudRule rule, String entityType, Long entityId,
+            Map<String, Object> context) {
         return FraudAlert.builder()
-            .company(rule.getCompany())
-            .rule(rule)
-            .severity(rule.getSeverity())
-            .status(FraudAlertStatus.PENDING)
-            .title("Fraud detected: " + rule.getName())
-            .description(rule.getDescription())
-            .relatedEntityType(entityType)
-            .relatedEntityId(entityId)
-            .evidence(context)
-            .detectedAt(LocalDateTime.now())
-            .confidenceScore(calculateConfidence(rule, context))
-            .build();
+                .company(rule.getCompany())
+                .rule(rule)
+                .severity(rule.getSeverity())
+                .status(FraudAlertStatus.PENDING)
+                .title("Fraud detected: " + rule.getName())
+                .description(rule.getDescription())
+                .relatedEntityType(entityType)
+                .relatedEntityId(entityId)
+                .evidence(context)
+                .detectedAt(LocalDateTime.now())
+                .confidenceScore(calculateConfidence(rule, context))
+                .build();
     }
 
     private int calculateConfidence(FraudRule rule, Map<String, Object> context) {
@@ -314,18 +312,18 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
         if (config == null) {
             return false;
         }
-        
+
         Integer maxRedemptions = getIntValue(config, "maxRedemptions", 10);
         Integer timeWindowMinutes = getIntValue(config, "timeWindowMinutes", 60);
-        
+
         Long deviceId = getLongValue(context, "deviceId");
         if (deviceId == null) {
             return false;
         }
-        
+
         LocalDateTime since = LocalDateTime.now().minusMinutes(timeWindowMinutes);
         long recentCount = redemptionRepository.countByDevice_IdAndCreatedAtAfter(deviceId, since);
-        
+
         return recentCount >= maxRedemptions;
     }
 
@@ -335,18 +333,18 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
         if (config == null) {
             return false;
         }
-        
+
         Integer maxRedemptionsPerDevice = getIntValue(config, "maxRedemptionsPerDevice", 3);
-        
+
         Long deviceId = getLongValue(context, "deviceId");
         Long promotionId = getLongValue(context, "promotionId");
-        
+
         if (deviceId == null || promotionId == null) {
             return false;
         }
-        
+
         long count = redemptionRepository.countByDevice_IdAndPromotion_Id(deviceId, promotionId);
-        
+
         return count >= maxRedemptionsPerDevice;
     }
 
@@ -356,63 +354,63 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
         if (config == null) {
             return false;
         }
-        
+
         Integer maxDistanceKm = getIntValue(config, "maxDistanceKm", 100);
         Integer timeWindowMinutes = getIntValue(config, "timeWindowMinutes", 5);
-        
+
         // Implementación simplificada - requeriría tracking de ubicaciones previas
         Double lastLatitude = getDoubleValue(context, "lastLatitude");
         Double lastLongitude = getDoubleValue(context, "lastLongitude");
         Double currentLatitude = getDoubleValue(context, "currentLatitude");
         Double currentLongitude = getDoubleValue(context, "currentLongitude");
-        
-        if (lastLatitude == null || lastLongitude == null || 
-            currentLatitude == null || currentLongitude == null) {
+
+        if (lastLatitude == null || lastLongitude == null ||
+                currentLatitude == null || currentLongitude == null) {
             return false;
         }
-        
-        double distance = calculateDistance(lastLatitude, lastLongitude, 
-                                           currentLatitude, currentLongitude);
-        
+
+        double distance = calculateDistance(lastLatitude, lastLongitude,
+                currentLatitude, currentLongitude);
+
         return distance / 1000 > maxDistanceKm; // Convertir metros a km
     }
 
     private boolean evaluateBlacklistRule(FraudRule rule, Map<String, Object> context) {
         Long companyId = rule.getCompany().getId();
-        
+
         // Revisar IP
         String ipAddress = getStringValue(context, "ipAddress");
         if (ipAddress != null && isBlacklisted(companyId, BlacklistType.IP_ADDRESS, ipAddress)) {
             return true;
         }
-        
+
         // Revisar Device ID
         String deviceId = getStringValue(context, "deviceId");
         if (deviceId != null && isBlacklisted(companyId, BlacklistType.DEVICE_ID, deviceId)) {
             return true;
         }
-        
+
         // Revisar Email
         String email = getStringValue(context, "email");
         if (email != null && isBlacklisted(companyId, BlacklistType.EMAIL, email)) {
             return true;
         }
-        
+
         return false;
     }
 
     private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
         final int R = 6371000; // Radio de la Tierra en metros
-        
+
         double latDistance = Math.toRadians(lat2 - lat1);
         double lonDistance = Math.toRadians(lon2 - lon1);
-        
+
         double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
                 + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-        
+                        * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        
+
         return R * c;
     }
 

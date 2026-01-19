@@ -28,14 +28,14 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
     @Override
     @Transactional
     public AudienceSegment createSegment(AudienceSegment segment) {
-        log.info("Creating new audience segment: {} for company ID: {}", 
-                 segment.getName(), segment.getCompany().getId());
-        
+        log.info("Creating new audience segment: {} for company ID: {}",
+                segment.getName(), segment.getCompany().getId());
+
         AudienceSegment saved = audienceSegmentRepository.save(segment);
-        
+
         // Calculate initial customer count
         updateSegmentCustomerCount(saved.getId());
-        
+
         return saved;
     }
 
@@ -43,21 +43,21 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
     @Transactional
     public AudienceSegment updateSegment(Long id, AudienceSegment segment) {
         AudienceSegment existing = audienceSegmentRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Audience segment not found: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("Audience segment not found: " + id));
+
         log.info("Updating audience segment ID: {}", id);
-        
+
         existing.setName(segment.getName());
         existing.setDescription(segment.getDescription());
         existing.setFilterRules(segment.getFilterRules());
         existing.setIsActive(segment.getIsActive());
         existing.setMetadata(segment.getMetadata());
-        
+
         AudienceSegment updated = audienceSegmentRepository.save(existing);
-        
+
         // Recalculate customer count if filter rules changed
         updateSegmentCustomerCount(updated.getId());
-        
+
         return updated;
     }
 
@@ -94,11 +94,12 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
         }
 
         Map<String, Object> rules = segment.getFilterRules();
-        
+
         // Check minimum redemptions (totalRedemptions)
         if (rules.containsKey("minRedemptions")) {
             Integer minRedemptions = getIntValue(rules.get("minRedemptions"));
-            if (minRedemptions != null && (customer.getTotalRedemptions() == null || customer.getTotalRedemptions() < minRedemptions)) {
+            if (minRedemptions != null
+                    && (customer.getTotalRedemptions() == null || customer.getTotalRedemptions() < minRedemptions)) {
                 return false;
             }
         }
@@ -106,7 +107,8 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
         // Check minimum lifetime value (lifetimeValue)
         if (rules.containsKey("minLifetimeValue")) {
             Double minValue = getDoubleValue(rules.get("minLifetimeValue"));
-            if (minValue != null && (customer.getLifetimeValue() == null || customer.getLifetimeValue().doubleValue() < minValue)) {
+            if (minValue != null
+                    && (customer.getLifetimeValue() == null || customer.getLifetimeValue().doubleValue() < minValue)) {
                 return false;
             }
         }
@@ -151,13 +153,15 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
         // Check engagement score range
         if (rules.containsKey("minEngagementScore")) {
             Integer minScore = getIntValue(rules.get("minEngagementScore"));
-            if (minScore != null && (customer.getEngagementScore() == null || customer.getEngagementScore() < minScore)) {
+            if (minScore != null
+                    && (customer.getEngagementScore() == null || customer.getEngagementScore() < minScore)) {
                 return false;
             }
         }
         if (rules.containsKey("maxEngagementScore")) {
             Integer maxScore = getIntValue(rules.get("maxEngagementScore"));
-            if (maxScore != null && (customer.getEngagementScore() == null || customer.getEngagementScore() > maxScore)) {
+            if (maxScore != null
+                    && (customer.getEngagementScore() == null || customer.getEngagementScore() > maxScore)) {
                 return false;
             }
         }
@@ -165,7 +169,7 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
         // Check age range (calculated from birthDate)
         if (customer.getBirthDate() != null) {
             int age = java.time.Period.between(customer.getBirthDate(), java.time.LocalDate.now()).getYears();
-            
+
             if (rules.containsKey("minAge")) {
                 Integer minAge = getIntValue(rules.get("minAge"));
                 if (minAge != null && age < minAge) {
@@ -207,28 +211,28 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
     @Transactional(readOnly = true)
     public List<Customer> getCustomersInSegment(Long segmentId) {
         AudienceSegment segment = audienceSegmentRepository.findById(segmentId)
-            .orElseThrow(() -> new RuntimeException("Audience segment not found: " + segmentId));
-        
+                .orElseThrow(() -> new RuntimeException("Audience segment not found: " + segmentId));
+
         List<Customer> allCustomers = customerRepository.findByCompanyId(segment.getCompany().getId());
-        
+
         return allCustomers.stream()
-            .filter(customer -> customerMatchesSegment(customer, segment))
-            .collect(Collectors.toList());
+                .filter(customer -> customerMatchesSegment(customer, segment))
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public void updateSegmentCustomerCount(Long segmentId) {
         AudienceSegment segment = audienceSegmentRepository.findById(segmentId)
-            .orElseThrow(() -> new RuntimeException("Audience segment not found: " + segmentId));
-        
+                .orElseThrow(() -> new RuntimeException("Audience segment not found: " + segmentId));
+
         List<Customer> matchingCustomers = getCustomersInSegment(segmentId);
-        
+
         segment.setCustomerCount((long) matchingCustomers.size());
         segment.setLastCalculatedAt(LocalDateTime.now());
-        
+
         audienceSegmentRepository.save(segment);
-        
+
         log.debug("Updated customer count for segment ID {}: {} customers", segmentId, matchingCustomers.size());
     }
 
@@ -236,11 +240,11 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
     @Transactional
     public void recalculateAllSegmentCounts() {
         log.info("Starting recalculation of segment customer counts");
-        
+
         List<AudienceSegment> segments = audienceSegmentRepository.findSegmentsNeedingRecalculation();
-        
+
         log.info("Found {} segments needing recalculation", segments.size());
-        
+
         for (AudienceSegment segment : segments) {
             try {
                 updateSegmentCustomerCount(segment.getId());
@@ -248,7 +252,7 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
                 log.error("Error recalculating count for segment ID {}: {}", segment.getId(), e.getMessage());
             }
         }
-        
+
         log.info("Completed segment count recalculation");
     }
 
@@ -256,19 +260,19 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
     @Transactional(readOnly = true)
     public List<Customer> previewSegmentMatch(Long companyId, AudienceSegment segment) {
         List<Customer> allCustomers = customerRepository.findByCompanyId(companyId);
-        
+
         return allCustomers.stream()
-            .filter(customer -> customerMatchesSegment(customer, segment))
-            .limit(100) // Limit preview to 100 customers
-            .collect(Collectors.toList());
+                .filter(customer -> customerMatchesSegment(customer, segment))
+                .limit(100) // Limit preview to 100 customers
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public AudienceSegment toggleSegmentActive(Long id, boolean active) {
         AudienceSegment segment = audienceSegmentRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Audience segment not found: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("Audience segment not found: " + id));
+
         segment.setIsActive(active);
         return audienceSegmentRepository.save(segment);
     }
@@ -277,11 +281,11 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
     @Transactional(readOnly = true)
     public boolean isSegmentNameUnique(String name, Long companyId, Long excludeId) {
         Optional<AudienceSegment> existing = audienceSegmentRepository.findByNameAndCompany_Id(name, companyId);
-        
+
         if (existing.isEmpty()) {
             return true;
         }
-        
+
         // If updating, check if it's the same segment
         return excludeId != null && existing.get().getId().equals(excludeId);
     }
@@ -295,9 +299,12 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
 
     // Helper methods
     private Integer getIntValue(Object value) {
-        if (value == null) return null;
-        if (value instanceof Integer) return (Integer) value;
-        if (value instanceof Number) return ((Number) value).intValue();
+        if (value == null)
+            return null;
+        if (value instanceof Integer)
+            return (Integer) value;
+        if (value instanceof Number)
+            return ((Number) value).intValue();
         try {
             return Integer.parseInt(value.toString());
         } catch (NumberFormatException e) {
@@ -306,9 +313,12 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
     }
 
     private Double getDoubleValue(Object value) {
-        if (value == null) return null;
-        if (value instanceof Double) return (Double) value;
-        if (value instanceof Number) return ((Number) value).doubleValue();
+        if (value == null)
+            return null;
+        if (value instanceof Double)
+            return (Double) value;
+        if (value instanceof Number)
+            return ((Number) value).doubleValue();
         try {
             return Double.parseDouble(value.toString());
         } catch (NumberFormatException e) {

@@ -22,7 +22,7 @@ public class ApiKeyMapper {
         dto.setCreatedAt(apiKey.getCreatedAt());
         dto.setExpiresAt(apiKey.getExpiresAt());
         dto.setPermissions(apiKey.getPermissions());
-        
+
         // Map clientId from the Client relationship
         if (apiKey.getApiClient() != null) {
             dto.setClientId(apiKey.getApiClient().getId());

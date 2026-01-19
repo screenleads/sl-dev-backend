@@ -12,14 +12,13 @@ import java.util.Map;
  * Alerta de detección de fraude
  */
 @Entity
-@Table(name = "fraud_alert",
-    indexes = {
+@Table(name = "fraud_alert", indexes = {
         @Index(name = "ix_falert_company", columnList = "company_id"),
         @Index(name = "ix_falert_rule", columnList = "rule_id"),
         @Index(name = "ix_falert_status", columnList = "status"),
         @Index(name = "ix_falert_severity", columnList = "severity"),
         @Index(name = "ix_falert_detected", columnList = "detected_at")
-    })
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,13 +31,11 @@ public class FraudAlert {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "company_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_falert_company"))
+    @JoinColumn(name = "company_id", nullable = false, foreignKey = @ForeignKey(name = "fk_falert_company"))
     private Company company;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "rule_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_falert_rule"))
+    @JoinColumn(name = "rule_id", nullable = false, foreignKey = @ForeignKey(name = "fk_falert_rule"))
     private FraudRule rule;
 
     @Enumerated(EnumType.STRING)
@@ -80,8 +77,7 @@ public class FraudAlert {
     private LocalDateTime resolvedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "resolved_by",
-        foreignKey = @ForeignKey(name = "fk_falert_resolver"))
+    @JoinColumn(name = "resolved_by", foreignKey = @ForeignKey(name = "fk_falert_resolver"))
     private User resolvedBy;
 
     @Column(name = "resolution_notes", columnDefinition = "TEXT")

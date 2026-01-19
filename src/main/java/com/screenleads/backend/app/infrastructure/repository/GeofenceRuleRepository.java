@@ -18,19 +18,19 @@ public interface GeofenceRuleRepository extends JpaRepository<GeofenceRule, Long
     List<GeofenceRule> findByIsActiveTrue();
 
     @Query("SELECT gr FROM GeofenceRule gr " +
-           "JOIN FETCH gr.zone gz " +
-           "JOIN FETCH gr.promotion p " +
-           "WHERE p.company.id = :companyId " +
-           "AND gr.isActive = true " +
-           "AND gz.isActive = true " +
-           "ORDER BY gr.priority DESC")
+            "JOIN FETCH gr.zone gz " +
+            "JOIN FETCH gr.promotion p " +
+            "WHERE p.company.id = :companyId " +
+            "AND gr.isActive = true " +
+            "AND gz.isActive = true " +
+            "ORDER BY gr.priority DESC")
     List<GeofenceRule> findActiveRulesByCompany(@Param("companyId") Long companyId);
 
     @Query("SELECT gr FROM GeofenceRule gr " +
-           "JOIN FETCH gr.zone gz " +
-           "JOIN FETCH gr.promotion p " +
-           "WHERE p.id = :promotionId " +
-           "AND gr.isActive = true " +
-           "ORDER BY gr.priority DESC")
+            "JOIN FETCH gr.zone gz " +
+            "JOIN FETCH gr.promotion p " +
+            "WHERE p.id = :promotionId " +
+            "AND gr.isActive = true " +
+            "ORDER BY gr.priority DESC")
     List<GeofenceRule> findActiveRulesByPromotion(@Param("promotionId") Long promotionId);
 }

@@ -46,10 +46,9 @@ public interface AdviceInteractionService {
      * Get interactions for an Advice within a date range
      */
     List<AdviceInteraction> getInteractionsByAdviceIdAndDateRange(
-        Long adviceId,
-        LocalDateTime startDate,
-        LocalDateTime endDate
-    );
+            Long adviceId,
+            LocalDateTime startDate,
+            LocalDateTime endDate);
 
     /**
      * Count total interactions for an Advice

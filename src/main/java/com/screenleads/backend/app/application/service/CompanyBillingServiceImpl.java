@@ -37,7 +37,8 @@ public class CompanyBillingServiceImpl implements CompanyBillingService {
 
     @Override
     public Optional<CompanyBillingDTO> getCompanyBillingByStripeCustomerId(String stripeCustomerId) {
-        log.warn("getCompanyBillingByStripeCustomerId({}) no implementado - retornando Optional.empty()", stripeCustomerId);
+        log.warn("getCompanyBillingByStripeCustomerId({}) no implementado - retornando Optional.empty()",
+                stripeCustomerId);
         return Optional.empty();
     }
 
@@ -61,7 +62,8 @@ public class CompanyBillingServiceImpl implements CompanyBillingService {
 
     @Override
     public CompanyBillingDTO incrementCurrentPeriodUsage(Long id, Integer leadCount) {
-        log.error("incrementCurrentPeriodUsage({}, {}) no implementado - lanzando UnsupportedOperationException", id, leadCount);
+        log.error("incrementCurrentPeriodUsage({}, {}) no implementado - lanzando UnsupportedOperationException", id,
+                leadCount);
         throw new UnsupportedOperationException("CompanyBillingService.incrementCurrentPeriodUsage() no implementado");
     }
 

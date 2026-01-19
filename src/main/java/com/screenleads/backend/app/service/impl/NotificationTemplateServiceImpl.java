@@ -28,9 +28,9 @@ public class NotificationTemplateServiceImpl implements NotificationTemplateServ
     @Override
     @Transactional
     public NotificationTemplate createTemplate(NotificationTemplate template) {
-        log.info("Creating new notification template: {} for company ID: {}", 
-                 template.getName(), template.getCompany().getId());
-        
+        log.info("Creating new notification template: {} for company ID: {}",
+                template.getName(), template.getCompany().getId());
+
         return notificationTemplateRepository.save(template);
     }
 
@@ -38,10 +38,10 @@ public class NotificationTemplateServiceImpl implements NotificationTemplateServ
     @Transactional
     public NotificationTemplate updateTemplate(Long id, NotificationTemplate template) {
         NotificationTemplate existing = notificationTemplateRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Notification template not found: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("Notification template not found: " + id));
+
         log.info("Updating notification template ID: {}", id);
-        
+
         existing.setName(template.getName());
         existing.setDescription(template.getDescription());
         existing.setChannel(template.getChannel());
@@ -53,7 +53,7 @@ public class NotificationTemplateServiceImpl implements NotificationTemplateServ
         existing.setSender(template.getSender());
         existing.setReplyTo(template.getReplyTo());
         existing.setMetadata(template.getMetadata());
-        
+
         return notificationTemplateRepository.save(existing);
     }
 
@@ -86,16 +86,16 @@ public class NotificationTemplateServiceImpl implements NotificationTemplateServ
     @Transactional(readOnly = true)
     public List<NotificationTemplate> getTemplatesByCompanyAndChannel(Long companyId, NotificationChannel channel) {
         return notificationTemplateRepository.findByCompany_IdAndChannelAndIsActiveTrueOrderByCreatedAtDesc(
-            companyId, channel);
+                companyId, channel);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<NotificationTemplate> getMostUsedTemplates(Long companyId, int limit) {
         return notificationTemplateRepository.findMostUsedByCompanyId(companyId)
-            .stream()
-            .limit(limit)
-            .collect(Collectors.toList());
+                .stream()
+                .limit(limit)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -120,11 +120,11 @@ public class NotificationTemplateServiceImpl implements NotificationTemplateServ
     @Transactional
     public void incrementUsageCount(Long templateId) {
         NotificationTemplate template = notificationTemplateRepository.findById(templateId)
-            .orElseThrow(() -> new RuntimeException("Template not found: " + templateId));
-        
+                .orElseThrow(() -> new RuntimeException("Template not found: " + templateId));
+
         template.setUsageCount(template.getUsageCount() + 1);
         template.setLastUsedAt(LocalDateTime.now());
-        
+
         notificationTemplateRepository.save(template);
     }
 
@@ -132,8 +132,8 @@ public class NotificationTemplateServiceImpl implements NotificationTemplateServ
     @Transactional
     public NotificationTemplate toggleTemplateActive(Long id, boolean active) {
         NotificationTemplate template = notificationTemplateRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Notification template not found: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("Notification template not found: " + id));
+
         template.setIsActive(active);
         return notificationTemplateRepository.save(template);
     }
@@ -141,13 +141,13 @@ public class NotificationTemplateServiceImpl implements NotificationTemplateServ
     @Override
     @Transactional(readOnly = true)
     public boolean isTemplateNameUnique(String name, Long companyId, Long excludeId) {
-        Optional<NotificationTemplate> existing = 
-            notificationTemplateRepository.findByNameAndCompany_Id(name, companyId);
-        
+        Optional<NotificationTemplate> existing = notificationTemplateRepository.findByNameAndCompany_Id(name,
+                companyId);
+
         if (existing.isEmpty()) {
             return true;
         }
-        
+
         // If updating, check if it's the same template
         return excludeId != null && existing.get().getId().equals(excludeId);
     }
@@ -156,16 +156,16 @@ public class NotificationTemplateServiceImpl implements NotificationTemplateServ
     @Transactional(readOnly = true)
     public Map<String, String> previewTemplate(Long templateId, Map<String, String> sampleVariables) {
         NotificationTemplate template = notificationTemplateRepository.findById(templateId)
-            .orElseThrow(() -> new RuntimeException("Template not found: " + templateId));
-        
+                .orElseThrow(() -> new RuntimeException("Template not found: " + templateId));
+
         Map<String, String> preview = new HashMap<>();
         preview.put("subject", renderTemplateSubject(template, sampleVariables));
         preview.put("body", renderTemplateBody(template, sampleVariables));
-        
+
         if (template.getHtmlBody() != null && !template.getHtmlBody().isEmpty()) {
             preview.put("htmlBody", replaceVariables(template.getHtmlBody(), sampleVariables));
         }
-        
+
         return preview;
     }
 
@@ -186,7 +186,7 @@ public class NotificationTemplateServiceImpl implements NotificationTemplateServ
             String replacement = variables.getOrDefault(variableName, "{{" + variableName + "}}");
             matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
         }
-        
+
         matcher.appendTail(result);
         return result.toString();
     }

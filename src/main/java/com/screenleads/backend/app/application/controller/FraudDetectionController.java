@@ -60,8 +60,8 @@ public class FraudDetectionController {
             @PathVariable Long companyId,
             @RequestParam(defaultValue = "false") boolean activeOnly) {
         List<FraudRule> rules = activeOnly
-            ? fraudService.getActiveRulesByCompany(companyId)
-            : fraudService.getRulesByCompany(companyId);
+                ? fraudService.getActiveRulesByCompany(companyId)
+                : fraudService.getRulesByCompany(companyId);
         return ResponseEntity.ok(rules);
     }
 
@@ -79,13 +79,12 @@ public class FraudDetectionController {
     public ResponseEntity<FraudAlert> updateAlertStatus(
             @PathVariable Long alertId,
             @RequestBody AlertStatusUpdate statusUpdate) {
-        log.info("PUT /api/fraud/alerts/{}/status - New status: {}", 
-            alertId, statusUpdate.getStatus());
+        log.info("PUT /api/fraud/alerts/{}/status - New status: {}",
+                alertId, statusUpdate.getStatus());
         FraudAlert updated = fraudService.updateAlertStatus(
-            alertId, 
-            statusUpdate.getStatus(), 
-            statusUpdate.getNotes()
-        );
+                alertId,
+                statusUpdate.getStatus(),
+                statusUpdate.getNotes());
         return ResponseEntity.ok(updated);
     }
 
@@ -125,8 +124,8 @@ public class FraudDetectionController {
     @PostMapping("/blacklist")
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Blacklist> addToBlacklist(@RequestBody Blacklist entry) {
-        log.info("POST /api/fraud/blacklist - Type: {}, Value: {}", 
-            entry.getBlacklistType(), entry.getValue());
+        log.info("POST /api/fraud/blacklist - Type: {}, Value: {}",
+                entry.getBlacklistType(), entry.getValue());
         Blacklist created = fraudService.addToBlacklist(entry);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -159,21 +158,20 @@ public class FraudDetectionController {
 
     @PostMapping("/check")
     public ResponseEntity<FraudCheckResponse> checkForFraud(@RequestBody FraudCheckRequest request) {
-        log.info("POST /api/fraud/check - Entity: {}, ID: {}", 
-            request.getEntityType(), request.getEntityId());
-        
+        log.info("POST /api/fraud/check - Entity: {}, ID: {}",
+                request.getEntityType(), request.getEntityId());
+
         List<FraudAlert> alerts = fraudService.checkForFraud(
-            request.getCompanyId(),
-            request.getEntityType(),
-            request.getEntityId(),
-            request.getContext()
-        );
-        
+                request.getCompanyId(),
+                request.getEntityType(),
+                request.getEntityId(),
+                request.getContext());
+
         FraudCheckResponse response = new FraudCheckResponse();
         response.setFraudDetected(!alerts.isEmpty());
         response.setAlerts(alerts);
         response.setAlertCount(alerts.size());
-        
+
         return ResponseEntity.ok(response);
     }
 
@@ -183,11 +181,21 @@ public class FraudDetectionController {
         private FraudAlertStatus status;
         private String notes;
 
-        public FraudAlertStatus getStatus() { return status; }
-        public void setStatus(FraudAlertStatus status) { this.status = status; }
-        
-        public String getNotes() { return notes; }
-        public void setNotes(String notes) { this.notes = notes; }
+        public FraudAlertStatus getStatus() {
+            return status;
+        }
+
+        public void setStatus(FraudAlertStatus status) {
+            this.status = status;
+        }
+
+        public String getNotes() {
+            return notes;
+        }
+
+        public void setNotes(String notes) {
+            this.notes = notes;
+        }
     }
 
     public static class FraudCheckRequest {
@@ -196,17 +204,37 @@ public class FraudDetectionController {
         private Long entityId;
         private Map<String, Object> context;
 
-        public Long getCompanyId() { return companyId; }
-        public void setCompanyId(Long companyId) { this.companyId = companyId; }
-        
-        public String getEntityType() { return entityType; }
-        public void setEntityType(String entityType) { this.entityType = entityType; }
-        
-        public Long getEntityId() { return entityId; }
-        public void setEntityId(Long entityId) { this.entityId = entityId; }
-        
-        public Map<String, Object> getContext() { return context; }
-        public void setContext(Map<String, Object> context) { this.context = context; }
+        public Long getCompanyId() {
+            return companyId;
+        }
+
+        public void setCompanyId(Long companyId) {
+            this.companyId = companyId;
+        }
+
+        public String getEntityType() {
+            return entityType;
+        }
+
+        public void setEntityType(String entityType) {
+            this.entityType = entityType;
+        }
+
+        public Long getEntityId() {
+            return entityId;
+        }
+
+        public void setEntityId(Long entityId) {
+            this.entityId = entityId;
+        }
+
+        public Map<String, Object> getContext() {
+            return context;
+        }
+
+        public void setContext(Map<String, Object> context) {
+            this.context = context;
+        }
     }
 
     public static class FraudCheckResponse {
@@ -214,13 +242,28 @@ public class FraudDetectionController {
         private int alertCount;
         private List<FraudAlert> alerts;
 
-        public boolean isFraudDetected() { return fraudDetected; }
-        public void setFraudDetected(boolean fraudDetected) { this.fraudDetected = fraudDetected; }
-        
-        public int getAlertCount() { return alertCount; }
-        public void setAlertCount(int alertCount) { this.alertCount = alertCount; }
-        
-        public List<FraudAlert> getAlerts() { return alerts; }
-        public void setAlerts(List<FraudAlert> alerts) { this.alerts = alerts; }
+        public boolean isFraudDetected() {
+            return fraudDetected;
+        }
+
+        public void setFraudDetected(boolean fraudDetected) {
+            this.fraudDetected = fraudDetected;
+        }
+
+        public int getAlertCount() {
+            return alertCount;
+        }
+
+        public void setAlertCount(int alertCount) {
+            this.alertCount = alertCount;
+        }
+
+        public List<FraudAlert> getAlerts() {
+            return alerts;
+        }
+
+        public void setAlerts(List<FraudAlert> alerts) {
+            this.alerts = alerts;
+        }
     }
 }

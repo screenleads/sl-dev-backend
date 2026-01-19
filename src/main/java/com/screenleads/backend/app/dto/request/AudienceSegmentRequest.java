@@ -31,12 +31,12 @@ public class AudienceSegmentRequest {
     /**
      * Filter rules as JSON object
      * Example: {
-     *   "minPurchases": 5,
-     *   "minSpent": 100.0,
-     *   "lastVisitDays": 30,
-     *   "minAge": 18,
-     *   "maxAge": 65,
-     *   "isActive": true
+     * "minPurchases": 5,
+     * "minSpent": 100.0,
+     * "lastVisitDays": 30,
+     * "minAge": 18,
+     * "maxAge": 65,
+     * "isActive": true
      * }
      */
     private Map<String, Object> filterRules;

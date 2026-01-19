@@ -38,23 +38,23 @@ public class AudienceSegmentController {
         try {
             // Validate company exists
             Company company = companyRepository.findById(request.getCompanyId())
-                .orElseThrow(() -> new RuntimeException("Company not found: " + request.getCompanyId()));
+                    .orElseThrow(() -> new RuntimeException("Company not found: " + request.getCompanyId()));
 
             // Check name uniqueness
             if (!audienceSegmentService.isSegmentNameUnique(request.getName(), request.getCompanyId(), null)) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Segment name already exists for this company"));
+                        .body(Map.of("error", "Segment name already exists for this company"));
             }
 
             AudienceSegment segment = AudienceSegment.builder()
-                .company(company)
-                .name(request.getName())
-                .description(request.getDescription())
-                .filterRules(request.getFilterRules())
-                .isActive(request.getIsActive())
-                .createdBy(request.getCreatedBy())
-                .metadata(request.getMetadata())
-                .build();
+                    .company(company)
+                    .name(request.getName())
+                    .description(request.getDescription())
+                    .filterRules(request.getFilterRules())
+                    .isActive(request.getIsActive())
+                    .createdBy(request.getCreatedBy())
+                    .metadata(request.getMetadata())
+                    .build();
 
             AudienceSegment created = audienceSegmentService.createSegment(segment);
 
@@ -73,27 +73,27 @@ public class AudienceSegmentController {
      */
     @PutMapping("/{id}")
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','update')")
-    public ResponseEntity<?> updateSegment(@PathVariable Long id, 
-                                          @Valid @RequestBody AudienceSegmentRequest request) {
+    public ResponseEntity<?> updateSegment(@PathVariable Long id,
+            @Valid @RequestBody AudienceSegmentRequest request) {
         try {
             // Validate segment exists
             AudienceSegment existing = audienceSegmentService.getSegmentById(id)
-                .orElseThrow(() -> new RuntimeException("Audience segment not found: " + id));
+                    .orElseThrow(() -> new RuntimeException("Audience segment not found: " + id));
 
             // Check name uniqueness
-            if (!audienceSegmentService.isSegmentNameUnique(request.getName(), 
-                                                           existing.getCompany().getId(), id)) {
+            if (!audienceSegmentService.isSegmentNameUnique(request.getName(),
+                    existing.getCompany().getId(), id)) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Segment name already exists for this company"));
+                        .body(Map.of("error", "Segment name already exists for this company"));
             }
 
             AudienceSegment segment = AudienceSegment.builder()
-                .name(request.getName())
-                .description(request.getDescription())
-                .filterRules(request.getFilterRules())
-                .isActive(request.getIsActive())
-                .metadata(request.getMetadata())
-                .build();
+                    .name(request.getName())
+                    .description(request.getDescription())
+                    .filterRules(request.getFilterRules())
+                    .isActive(request.getIsActive())
+                    .metadata(request.getMetadata())
+                    .build();
 
             AudienceSegment updated = audienceSegmentService.updateSegment(id, segment);
 
@@ -131,8 +131,8 @@ public class AudienceSegmentController {
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<?> getSegmentById(@PathVariable Long id) {
         return audienceSegmentService.getSegmentById(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -141,15 +141,15 @@ public class AudienceSegmentController {
     @GetMapping("/company/{companyId}")
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<List<AudienceSegment>> getSegmentsByCompany(@PathVariable Long companyId,
-                                                                       @RequestParam(defaultValue = "false") boolean activeOnly) {
+            @RequestParam(defaultValue = "false") boolean activeOnly) {
         List<AudienceSegment> segments;
-        
+
         if (activeOnly) {
             segments = audienceSegmentService.getActiveSegmentsByCompany(companyId);
         } else {
             segments = audienceSegmentService.getSegmentsByCompany(companyId);
         }
-        
+
         return ResponseEntity.ok(segments);
     }
 
@@ -177,11 +177,11 @@ public class AudienceSegmentController {
     public ResponseEntity<?> previewSegment(@Valid @RequestBody AudienceSegmentRequest request) {
         try {
             AudienceSegment segment = AudienceSegment.builder()
-                .filterRules(request.getFilterRules())
-                .build();
+                    .filterRules(request.getFilterRules())
+                    .build();
 
             List<Customer> matchingCustomers = audienceSegmentService.previewSegmentMatch(
-                request.getCompanyId(), segment);
+                    request.getCompanyId(), segment);
 
             Map<String, Object> response = new HashMap<>();
             response.put("matchingCustomers", matchingCustomers);
@@ -203,9 +203,9 @@ public class AudienceSegmentController {
     public ResponseEntity<?> recalculateSegmentCount(@PathVariable Long id) {
         try {
             audienceSegmentService.updateSegmentCustomerCount(id);
-            
+
             AudienceSegment updated = audienceSegmentService.getSegmentById(id)
-                .orElseThrow(() -> new RuntimeException("Segment not found"));
+                    .orElseThrow(() -> new RuntimeException("Segment not found"));
 
             Map<String, Object> response = new HashMap<>();
             response.put("segmentId", id);
@@ -225,11 +225,11 @@ public class AudienceSegmentController {
      * Toggle segment active status
      */
     @PatchMapping("/{id}/toggle")
-    public ResponseEntity<?> toggleSegmentActive(@PathVariable Long id, 
-                                                 @RequestParam boolean active) {
+    public ResponseEntity<?> toggleSegmentActive(@PathVariable Long id,
+            @RequestParam boolean active) {
         try {
             AudienceSegment updated = audienceSegmentService.toggleSegmentActive(id, active);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("segmentId", id);
             response.put("isActive", updated.getIsActive());
@@ -250,16 +250,16 @@ public class AudienceSegmentController {
     public ResponseEntity<Map<String, Object>> recalculateAllSegments() {
         try {
             audienceSegmentService.recalculateAllSegmentCounts();
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("message", "All segment counts recalculated successfully");
-            
+
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             log.error("Error recalculating all segments: {}", e.getMessage());
             return ResponseEntity.status(500)
-                .body(Map.of("error", "Failed to recalculate segments: " + e.getMessage()));
+                    .body(Map.of("error", "Failed to recalculate segments: " + e.getMessage()));
         }
     }
 }

@@ -8,7 +8,8 @@ public interface CouponService {
     // Lista todos los cupones (leads de promoción)
     List<PromotionRedemption> getAllCoupons();
 
-    // Emite un cupón (crea un lead histórico) para un customer dado desde un device específico
+    // Emite un cupón (crea un lead histórico) para un customer dado desde un device
+    // específico
     PromotionRedemption issueCoupon(Long promotionId, Long customerId, Long deviceId);
 
     // Validación por código (verifica fechas/estado y devuelve el lead)

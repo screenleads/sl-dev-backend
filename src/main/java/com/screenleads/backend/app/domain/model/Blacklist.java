@@ -10,17 +10,15 @@ import java.time.LocalDateTime;
  * Lista negra de IPs, dispositivos, emails, etc.
  */
 @Entity
-@Table(name = "blacklist",
-    indexes = {
+@Table(name = "blacklist", indexes = {
         @Index(name = "ix_blacklist_type", columnList = "blacklist_type"),
         @Index(name = "ix_blacklist_value", columnList = "value"),
         @Index(name = "ix_blacklist_company", columnList = "company_id"),
         @Index(name = "ix_blacklist_active", columnList = "is_active")
-    },
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uk_blacklist_type_value_company",
-            columnNames = {"blacklist_type", "value", "company_id"})
-    })
+}, uniqueConstraints = {
+        @UniqueConstraint(name = "uk_blacklist_type_value_company", columnNames = { "blacklist_type", "value",
+                "company_id" })
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -33,8 +31,7 @@ public class Blacklist {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "company_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_blacklist_company"))
+    @JoinColumn(name = "company_id", nullable = false, foreignKey = @ForeignKey(name = "fk_blacklist_company"))
     private Company company;
 
     @Enumerated(EnumType.STRING)
@@ -62,16 +59,14 @@ public class Blacklist {
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by",
-        foreignKey = @ForeignKey(name = "fk_blacklist_creator"))
+    @JoinColumn(name = "created_by", foreignKey = @ForeignKey(name = "fk_blacklist_creator"))
     private User createdBy;
 
     /**
      * Referencia a la alerta que generó este bloqueo (si aplica)
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "alert_id",
-        foreignKey = @ForeignKey(name = "fk_blacklist_alert"))
+    @JoinColumn(name = "alert_id", foreignKey = @ForeignKey(name = "fk_blacklist_alert"))
     private FraudAlert alert;
 
     /**

@@ -24,7 +24,7 @@ public class AdviceInteractionServiceImpl implements AdviceInteractionService {
     @Override
     public AdviceInteraction createInteraction(AdviceInteraction interaction) {
         log.debug("Creating new interaction type {} for impression ID: {}",
-            interaction.getType(), interaction.getImpression().getId());
+                interaction.getType(), interaction.getImpression().getId());
         return adviceInteractionRepository.save(interaction);
     }
 

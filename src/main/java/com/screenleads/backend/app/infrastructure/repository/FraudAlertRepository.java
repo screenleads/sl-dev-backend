@@ -23,24 +23,22 @@ public interface FraudAlertRepository extends JpaRepository<FraudAlert, Long> {
     Page<FraudAlert> findByCompany_IdAndSeverity(Long companyId, FraudSeverity severity, Pageable pageable);
 
     List<FraudAlert> findByCompany_IdAndStatusAndSeverityOrderByDetectedAtDesc(
-        Long companyId, 
-        FraudAlertStatus status, 
-        FraudSeverity severity
-    );
+            Long companyId,
+            FraudAlertStatus status,
+            FraudSeverity severity);
 
     @Query("SELECT fa FROM FraudAlert fa WHERE fa.company.id = :companyId " +
-           "AND fa.status IN :statuses " +
-           "ORDER BY fa.detectedAt DESC")
+            "AND fa.status IN :statuses " +
+            "ORDER BY fa.detectedAt DESC")
     List<FraudAlert> findAlertsByStatuses(
-        @Param("companyId") Long companyId,
-        @Param("statuses") List<FraudAlertStatus> statuses
-    );
+            @Param("companyId") Long companyId,
+            @Param("statuses") List<FraudAlertStatus> statuses);
 
     long countByCompany_IdAndStatus(Long companyId, FraudAlertStatus status);
 
     long countByCompany_IdAndSeverity(Long companyId, FraudSeverity severity);
 
     @Query("SELECT COUNT(fa) FROM FraudAlert fa WHERE fa.company.id = :companyId " +
-           "AND fa.detectedAt >= :since")
+            "AND fa.detectedAt >= :since")
     long countRecentAlerts(@Param("companyId") Long companyId, @Param("since") LocalDateTime since);
 }

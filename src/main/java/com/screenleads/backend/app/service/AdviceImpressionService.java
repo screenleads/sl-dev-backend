@@ -45,10 +45,9 @@ public interface AdviceImpressionService {
      * Get impressions for an Advice within a date range
      */
     List<AdviceImpression> getImpressionsByAdviceIdAndDateRange(
-        Long adviceId,
-        LocalDateTime startDate,
-        LocalDateTime endDate
-    );
+            Long adviceId,
+            LocalDateTime startDate,
+            LocalDateTime endDate);
 
     /**
      * Count total impressions for an Advice

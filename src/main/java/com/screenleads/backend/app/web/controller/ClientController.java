@@ -76,7 +76,8 @@ public class ClientController {
         ApiClient saved = clientRepository.save(client);
         // Crear la primera API Key con permisos básicos de lectura
         String defaultPermissions = "device:read,customer:read,promotion:read,advice:read,media:read";
-        com.screenleads.backend.app.domain.model.ApiKey defaultApiKey = apiKeyService.createApiKeyByDbId(saved.getId(), defaultPermissions, 365);
+        com.screenleads.backend.app.domain.model.ApiKey defaultApiKey = apiKeyService.createApiKeyByDbId(saved.getId(),
+                defaultPermissions, 365);
         // Establecer nombre y descripción por defecto
         defaultApiKey.setName("API Key Principal - " + saved.getName());
         defaultApiKey.setDescription("API Key generada automáticamente al crear el cliente");
@@ -85,7 +86,8 @@ public class ClientController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<com.screenleads.backend.app.web.dto.ClientDTO> updateClient(@PathVariable Long id, @RequestBody ApiClient client) {
+    public ResponseEntity<com.screenleads.backend.app.web.dto.ClientDTO> updateClient(@PathVariable Long id,
+            @RequestBody ApiClient client) {
         return clientRepository.findById(id)
                 .map(existing -> {
                     existing.setName(client.getName());

@@ -31,7 +31,7 @@ public interface AudienceSegmentRepository extends JpaRepository<AudienceSegment
      * Find segments that need customer count recalculation
      */
     @Query("SELECT a FROM AudienceSegment a WHERE a.isActive = true " +
-           "AND (a.lastCalculatedAt IS NULL OR a.lastCalculatedAt < CURRENT_TIMESTAMP - 1 HOUR)")
+            "AND (a.lastCalculatedAt IS NULL OR a.lastCalculatedAt < CURRENT_TIMESTAMP - 1 HOUR)")
     List<AudienceSegment> findSegmentsNeedingRecalculation();
 
     /**
@@ -53,6 +53,6 @@ public interface AudienceSegmentRepository extends JpaRepository<AudienceSegment
      * Get total customer count across all active segments for a company
      */
     @Query("SELECT COALESCE(SUM(a.customerCount), 0) FROM AudienceSegment a " +
-           "WHERE a.company.id = :companyId AND a.isActive = true")
+            "WHERE a.company.id = :companyId AND a.isActive = true")
     Long getTotalCustomerCountByCompanyId(@Param("companyId") Long companyId);
 }

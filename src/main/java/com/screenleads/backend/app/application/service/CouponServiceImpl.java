@@ -65,7 +65,8 @@ public class CouponServiceImpl implements CouponService {
             }
         } else if (limit == RedemptionLimitType.DAILY_PER_USER) {
             Instant since = now.minus(24, ChronoUnit.HOURS);
-            List<PromotionRedemption> recent = promotionRedemptionRepository.findRecentRedemptionsByPromotionAndCustomer(promotionId, customerId, since);
+            List<PromotionRedemption> recent = promotionRedemptionRepository
+                    .findRecentRedemptionsByPromotionAndCustomer(promotionId, customerId, since);
             if (!recent.isEmpty()) {
                 throw new IllegalStateException("Limit reached: DAILY_PER_USER");
             }

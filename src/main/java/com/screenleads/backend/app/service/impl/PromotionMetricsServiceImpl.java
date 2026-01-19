@@ -51,42 +51,42 @@ public class PromotionMetricsServiceImpl implements PromotionMetricsService {
             }
         }
 
-        log.info("Completed daily metrics calculation for date: {}. Calculated metrics for {} promotions.", 
-                 date, calculatedCount);
+        log.info("Completed daily metrics calculation for date: {}. Calculated metrics for {} promotions.",
+                date, calculatedCount);
     }
 
     @Transactional
-    protected void calculateMetricsForAdvice(Advice advice, LocalDate date, 
-                                            LocalDateTime startOfDay, LocalDateTime endOfDay) {
+    protected void calculateMetricsForAdvice(Advice advice, LocalDate date,
+            LocalDateTime startOfDay, LocalDateTime endOfDay) {
         Long adviceId = advice.getId();
 
         // Count impressions for this day
         Long totalImpressions = adviceImpressionRepository.countByAdviceIdAndDateRange(
-            adviceId, startOfDay, endOfDay);
+                adviceId, startOfDay, endOfDay);
 
         // Count interactions for this day
         Long totalInteractions = adviceInteractionRepository.countByAdviceIdAndDateRange(
-            adviceId, startOfDay, endOfDay);
+                adviceId, startOfDay, endOfDay);
 
         // Count conversions for this day
         Long totalConversions = adviceInteractionRepository.countConversionsByAdviceIdAndDateRange(
-            adviceId, startOfDay, endOfDay);
+                adviceId, startOfDay, endOfDay);
 
         // Count unique customers
         Long uniqueCustomers = adviceImpressionRepository.countUniqueCustomersByAdviceIdAndDateRange(
-            adviceId, startOfDay, endOfDay);
+                adviceId, startOfDay, endOfDay);
 
         // Count unique devices
         Long uniqueDevices = adviceImpressionRepository.countUniqueDevicesByAdviceIdAndDateRange(
-            adviceId, startOfDay, endOfDay);
+                adviceId, startOfDay, endOfDay);
 
         // Calculate average view duration
         Double avgViewDuration = adviceImpressionRepository.calculateAverageDurationByAdviceIdAndDateRange(
-            adviceId, startOfDay, endOfDay);
+                adviceId, startOfDay, endOfDay);
 
         // Check if metrics already exist for this date
-        Optional<PromotionMetrics> existingMetrics = 
-            promotionMetricsRepository.findByAdvice_IdAndMetricDate(adviceId, date);
+        Optional<PromotionMetrics> existingMetrics = promotionMetricsRepository.findByAdvice_IdAndMetricDate(adviceId,
+                date);
 
         PromotionMetrics metrics;
         if (existingMetrics.isPresent()) {
@@ -96,9 +96,9 @@ public class PromotionMetricsServiceImpl implements PromotionMetricsService {
         } else {
             // Create new metrics
             metrics = PromotionMetrics.builder()
-                .advice(advice)
-                .metricDate(date)
-                .build();
+                    .advice(advice)
+                    .metricDate(date)
+                    .build();
             log.debug("Creating new metrics for advice ID {} on date {}", adviceId, date);
         }
 
@@ -116,10 +116,10 @@ public class PromotionMetricsServiceImpl implements PromotionMetricsService {
 
         // Save metrics
         promotionMetricsRepository.save(metrics);
-        
-        log.debug("Saved metrics for advice ID {}: impressions={}, interactions={}, conversions={}, CR={}%", 
-                 adviceId, totalImpressions, totalInteractions, totalConversions, 
-                 metrics.getConversionRate());
+
+        log.debug("Saved metrics for advice ID {}: impressions={}, interactions={}, conversions={}, CR={}%",
+                adviceId, totalImpressions, totalInteractions, totalConversions,
+                metrics.getConversionRate());
     }
 
     @Override
@@ -144,7 +144,8 @@ public class PromotionMetricsServiceImpl implements PromotionMetricsService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PromotionMetrics> getMetricsByAdviceAndDateRange(Long adviceId, LocalDate startDate, LocalDate endDate) {
+    public List<PromotionMetrics> getMetricsByAdviceAndDateRange(Long adviceId, LocalDate startDate,
+            LocalDate endDate) {
         return promotionMetricsRepository.findByAdviceIdAndDateRange(adviceId, startDate, endDate);
     }
 
@@ -158,18 +159,18 @@ public class PromotionMetricsServiceImpl implements PromotionMetricsService {
     @Transactional(readOnly = true)
     public List<PromotionMetrics> getTopPerformingByConversionRate(LocalDate startDate, LocalDate endDate, int limit) {
         return promotionMetricsRepository.findTopPerformingByConversionRate(startDate, endDate)
-            .stream()
-            .limit(limit)
-            .collect(Collectors.toList());
+                .stream()
+                .limit(limit)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PromotionMetrics> getTopPerformingByConversions(LocalDate startDate, LocalDate endDate, int limit) {
         return promotionMetricsRepository.findTopPerformingByConversions(startDate, endDate)
-            .stream()
-            .limit(limit)
-            .collect(Collectors.toList());
+                .stream()
+                .limit(limit)
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -45,8 +45,8 @@ public class MetricsCalculationScheduler {
             promotionMetricsService.calculateDailyMetrics(date);
             log.info("=== Completed manual metrics calculation for date: {} ===", date);
         } catch (Exception e) {
-            log.error("=== Error during manual metrics calculation for date {}: {} ===", 
-                     date, e.getMessage(), e);
+            log.error("=== Error during manual metrics calculation for date {}: {} ===",
+                    date, e.getMessage(), e);
         }
     }
 }

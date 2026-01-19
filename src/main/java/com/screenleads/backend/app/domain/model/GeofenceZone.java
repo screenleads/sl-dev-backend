@@ -12,11 +12,10 @@ import java.util.Map;
  * Zona geográfica para geofencing de promociones
  */
 @Entity
-@Table(name = "geofence_zone",
-    indexes = {
+@Table(name = "geofence_zone", indexes = {
         @Index(name = "ix_geofence_company", columnList = "company_id"),
         @Index(name = "ix_geofence_active", columnList = "is_active")
-    })
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -29,8 +28,7 @@ public class GeofenceZone {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "company_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_geofence_company"))
+    @JoinColumn(name = "company_id", nullable = false, foreignKey = @ForeignKey(name = "fk_geofence_company"))
     private Company company;
 
     @Column(nullable = false, length = 150)
@@ -46,8 +44,10 @@ public class GeofenceZone {
     /**
      * Geometría en formato JSON
      * CIRCLE: {"center": {"lat": 40.4168, "lon": -3.7038}, "radius": 1000}
-     * POLYGON: {"coordinates": [{"lat": 40.4, "lon": -3.7}, {"lat": 40.5, "lon": -3.6}, ...]}
-     * RECTANGLE: {"sw": {"lat": 40.4, "lon": -3.7}, "ne": {"lat": 40.5, "lon": -3.6}}
+     * POLYGON: {"coordinates": [{"lat": 40.4, "lon": -3.7}, {"lat": 40.5, "lon":
+     * -3.6}, ...]}
+     * RECTANGLE: {"sw": {"lat": 40.4, "lon": -3.7}, "ne": {"lat": 40.5, "lon":
+     * -3.6}}
      */
     @Column(columnDefinition = "jsonb", nullable = false)
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
@@ -102,7 +102,7 @@ public class GeofenceZone {
         @SuppressWarnings("unchecked")
         Map<String, Double> center = (Map<String, Double>) geometry.get("center");
         Number radiusNum = (Number) geometry.get("radius");
-        
+
         if (center == null || radiusNum == null) {
             return false;
         }
@@ -126,7 +126,7 @@ public class GeofenceZone {
         Map<String, Double> sw = (Map<String, Double>) geometry.get("sw");
         @SuppressWarnings("unchecked")
         Map<String, Double> ne = (Map<String, Double>) geometry.get("ne");
-        
+
         if (sw == null || ne == null) {
             return false;
         }
@@ -149,9 +149,9 @@ public class GeofenceZone {
         double lonDistance = Math.toRadians(lon2 - lon1);
         double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
                 + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+                        * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        
+
         return R * c;
     }
 }

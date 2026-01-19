@@ -12,12 +12,11 @@ import java.util.Map;
  * Regla de detección de fraude
  */
 @Entity
-@Table(name = "fraud_rule",
-    indexes = {
+@Table(name = "fraud_rule", indexes = {
         @Index(name = "ix_frule_company", columnList = "company_id"),
         @Index(name = "ix_frule_type", columnList = "rule_type"),
         @Index(name = "ix_frule_active", columnList = "is_active")
-    })
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,8 +29,7 @@ public class FraudRule {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "company_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_frule_company"))
+    @JoinColumn(name = "company_id", nullable = false, foreignKey = @ForeignKey(name = "fk_frule_company"))
     private Company company;
 
     @Column(nullable = false, length = 100)
@@ -85,7 +83,6 @@ public class FraudRule {
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by",
-        foreignKey = @ForeignKey(name = "fk_frule_creator"))
+    @JoinColumn(name = "created_by", foreignKey = @ForeignKey(name = "fk_frule_creator"))
     private User createdBy;
 }

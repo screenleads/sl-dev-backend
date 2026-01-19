@@ -41,10 +41,9 @@ public interface MarketingCampaignRepository extends JpaRepository<MarketingCamp
      */
     @Query("SELECT c FROM MarketingCampaign c WHERE c.company.id = :companyId AND c.status = 'COMPLETED' AND c.completedAt BETWEEN :startDate AND :endDate")
     List<MarketingCampaign> findCompletedCampaignsBetween(
-        @Param("companyId") Long companyId,
-        @Param("startDate") LocalDateTime startDate,
-        @Param("endDate") LocalDateTime endDate
-    );
+            @Param("companyId") Long companyId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 
     /**
      * Cuenta campañas por estado para una compañía

@@ -8,17 +8,17 @@ public enum RuleType {
      * Mostrar promoción solo dentro de la zona
      */
     SHOW_INSIDE,
-    
+
     /**
      * Ocultar promoción fuera de la zona
      */
     HIDE_OUTSIDE,
-    
+
     /**
      * Mostrar con prioridad alta dentro de la zona
      */
     PRIORITIZE_INSIDE,
-    
+
     /**
      * Bloquear completamente fuera de la zona
      */

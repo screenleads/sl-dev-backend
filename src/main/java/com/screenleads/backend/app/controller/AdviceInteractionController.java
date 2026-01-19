@@ -33,7 +33,8 @@ public class AdviceInteractionController {
     private final CustomerRepository customerRepository;
 
     /**
-     * Track a new interaction (when a user interacts with an Advice after viewing it)
+     * Track a new interaction (when a user interacts with an Advice after viewing
+     * it)
      */
     @PostMapping
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('analytics','write')")
@@ -41,31 +42,31 @@ public class AdviceInteractionController {
         try {
             // Validate Impression exists
             AdviceImpression impression = adviceImpressionRepository.findById(request.getImpressionId())
-                .orElseThrow(() -> new RuntimeException("Impression not found: " + request.getImpressionId()));
+                    .orElseThrow(() -> new RuntimeException("Impression not found: " + request.getImpressionId()));
 
             // Optional: Validate Customer if provided
             Customer customer = null;
             if (request.getCustomerId() != null) {
                 customer = customerRepository.findById(request.getCustomerId())
-                    .orElse(null);
+                        .orElse(null);
             }
 
             // Create interaction
             AdviceInteraction interaction = AdviceInteraction.builder()
-                .impression(impression)
-                .customer(customer)
-                .type(request.getType())
-                .details(request.getDetails())
-                .durationSeconds(request.getDurationSeconds())
-                .ipAddress(request.getIpAddress())
-                .userAgent(request.getUserAgent())
-                .isConversion(request.getIsConversion())
-                .build();
+                    .impression(impression)
+                    .customer(customer)
+                    .type(request.getType())
+                    .details(request.getDetails())
+                    .durationSeconds(request.getDurationSeconds())
+                    .ipAddress(request.getIpAddress())
+                    .userAgent(request.getUserAgent())
+                    .isConversion(request.getIsConversion())
+                    .build();
 
             AdviceInteraction savedInteraction = adviceInteractionService.createInteraction(interaction);
 
             log.info("Tracked interaction ID {} type {} for impression ID {}",
-                savedInteraction.getId(), request.getType(), request.getImpressionId());
+                    savedInteraction.getId(), request.getType(), request.getImpressionId());
 
             Map<String, Object> response = new HashMap<>();
             response.put("interactionId", savedInteraction.getId());
@@ -128,7 +129,7 @@ public class AdviceInteractionController {
         stats.put("uniqueCustomers", uniqueCustomers);
         stats.put("averageDurationSeconds", avgDuration);
         stats.put("byType", byType);
-        
+
         if (totalInteractions > 0) {
             double conversionRate = (totalConversions.doubleValue() / totalInteractions.doubleValue()) * 100;
             stats.put("conversionRatePercent", Math.round(conversionRate * 100.0) / 100.0);

@@ -10,16 +10,13 @@ import lombok.*;
  * Permite tracking completo del comportamiento y análisis de patrones.
  */
 @Entity
-@Table(
-    name = "user_action",
-    indexes = {
+@Table(name = "user_action", indexes = {
         @Index(name = "ix_useraction_customer", columnList = "customer_id"),
         @Index(name = "ix_useraction_type", columnList = "action_type"),
         @Index(name = "ix_useraction_timestamp", columnList = "timestamp"),
         @Index(name = "ix_useraction_device", columnList = "device_id"),
         @Index(name = "ix_useraction_session", columnList = "session_id")
-    }
-)
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,13 +29,11 @@ public class UserAction {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "customer_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_useraction_customer"))
+    @JoinColumn(name = "customer_id", nullable = false, foreignKey = @ForeignKey(name = "fk_useraction_customer"))
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "device_id",
-        foreignKey = @ForeignKey(name = "fk_useraction_device"))
+    @JoinColumn(name = "device_id", foreignKey = @ForeignKey(name = "fk_useraction_device"))
     private Device device;
 
     @Column(nullable = false)
@@ -70,60 +65,62 @@ public class UserAction {
     @Lob
     @Column(columnDefinition = "TEXT")
     private String details; // JSON con información adicional
-    
-    /* Ejemplos de details JSON:
-    {
-      "previousPage": "/promotions",
-      "formData": {"step": 2},
-      "duration": 45,
-      "interactionCount": 3,
-      "scrollDepth": 0.75,
-      "errorCode": "INVALID_EMAIL"
-    }
-    */
+
+    /*
+     * Ejemplos de details JSON:
+     * {
+     * "previousPage": "/promotions",
+     * "formData": {"step": 2},
+     * "duration": 45,
+     * "interactionCount": 3,
+     * "scrollDepth": 0.75,
+     * "errorCode": "INVALID_EMAIL"
+     * }
+     */
 
     // === Geolocalización (opcional) ===
     @Column
     private Double latitude;
-    
+
     @Column
     private Double longitude;
-    
+
     @Column(length = 100)
     private String city;
-    
+
     @Column(length = 100)
     private String country;
-    
+
     // === Métodos helper ===
-    
+
     /**
      * Crea una acción de visualización de promoción
      */
     public static UserAction viewPromotion(Customer customer, Promotion promotion, Device device, String sessionId) {
         return UserAction.builder()
-            .customer(customer)
-            .device(device)
-            .timestamp(Instant.now())
-            .actionType(UserActionType.VIEW_PROMOTION)
-            .entityType("Promotion")
-            .entityId(promotion.getId())
-            .sessionId(sessionId)
-            .build();
+                .customer(customer)
+                .device(device)
+                .timestamp(Instant.now())
+                .actionType(UserActionType.VIEW_PROMOTION)
+                .entityType("Promotion")
+                .entityId(promotion.getId())
+                .sessionId(sessionId)
+                .build();
     }
-    
+
     /**
      * Crea una acción de canje de promoción
      */
-    public static UserAction redeemPromotion(Customer customer, PromotionRedemption redemption, Device device, String sessionId) {
+    public static UserAction redeemPromotion(Customer customer, PromotionRedemption redemption, Device device,
+            String sessionId) {
         return UserAction.builder()
-            .customer(customer)
-            .device(device)
-            .timestamp(Instant.now())
-            .actionType(UserActionType.REDEEM_PROMOTION)
-            .entityType("PromotionRedemption")
-            .entityId(redemption.getId())
-            .sessionId(sessionId)
-            .build();
+                .customer(customer)
+                .device(device)
+                .timestamp(Instant.now())
+                .actionType(UserActionType.REDEEM_PROMOTION)
+                .entityType("PromotionRedemption")
+                .entityId(redemption.getId())
+                .sessionId(sessionId)
+                .build();
     }
 }

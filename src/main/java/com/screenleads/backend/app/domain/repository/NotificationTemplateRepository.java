@@ -26,13 +26,14 @@ public interface NotificationTemplateRepository extends JpaRepository<Notificati
     /**
      * Find templates by channel for a company
      */
-    List<NotificationTemplate> findByCompany_IdAndChannelOrderByCreatedAtDesc(Long companyId, NotificationChannel channel);
+    List<NotificationTemplate> findByCompany_IdAndChannelOrderByCreatedAtDesc(Long companyId,
+            NotificationChannel channel);
 
     /**
      * Find active templates by channel for a company
      */
     List<NotificationTemplate> findByCompany_IdAndChannelAndIsActiveTrueOrderByCreatedAtDesc(
-        Long companyId, NotificationChannel channel);
+            Long companyId, NotificationChannel channel);
 
     /**
      * Find template by name and company
@@ -48,7 +49,7 @@ public interface NotificationTemplateRepository extends JpaRepository<Notificati
      * Find most used templates for a company
      */
     @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.company.id = :companyId " +
-           "AND nt.isActive = true ORDER BY nt.usageCount DESC, nt.lastUsedAt DESC")
+            "AND nt.isActive = true ORDER BY nt.usageCount DESC, nt.lastUsedAt DESC")
     List<NotificationTemplate> findMostUsedByCompanyId(@Param("companyId") Long companyId);
 
     /**

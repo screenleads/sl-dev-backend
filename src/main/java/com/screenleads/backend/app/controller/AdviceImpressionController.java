@@ -44,37 +44,37 @@ public class AdviceImpressionController {
         try {
             // Validate Advice exists
             Advice advice = adviceRepository.findById(request.getAdviceId())
-                .orElseThrow(() -> new RuntimeException("Advice not found: " + request.getAdviceId()));
+                    .orElseThrow(() -> new RuntimeException("Advice not found: " + request.getAdviceId()));
 
             // Validate Device exists
             Device device = deviceRepository.findById(request.getDeviceId())
-                .orElseThrow(() -> new RuntimeException("Device not found: " + request.getDeviceId()));
+                    .orElseThrow(() -> new RuntimeException("Device not found: " + request.getDeviceId()));
 
             // Optional: Validate Customer if provided
             Customer customer = null;
             if (request.getCustomerId() != null) {
                 customer = customerRepository.findById(request.getCustomerId())
-                    .orElse(null);
+                        .orElse(null);
             }
 
             // Create impression
             AdviceImpression impression = AdviceImpression.builder()
-                .advice(advice)
-                .device(device)
-                .customer(customer)
-                .durationSeconds(request.getDurationSeconds())
-                .sessionId(request.getSessionId())
-                .ipAddress(request.getIpAddress())
-                .wasInteractive(request.getWasInteractive())
-                .userAgent(request.getUserAgent())
-                .latitude(request.getLatitude())
-                .longitude(request.getLongitude())
-                .build();
+                    .advice(advice)
+                    .device(device)
+                    .customer(customer)
+                    .durationSeconds(request.getDurationSeconds())
+                    .sessionId(request.getSessionId())
+                    .ipAddress(request.getIpAddress())
+                    .wasInteractive(request.getWasInteractive())
+                    .userAgent(request.getUserAgent())
+                    .latitude(request.getLatitude())
+                    .longitude(request.getLongitude())
+                    .build();
 
             AdviceImpression savedImpression = adviceImpressionService.createImpression(impression);
 
             log.info("Tracked impression ID {} for advice ID {} on device ID {}",
-                savedImpression.getId(), request.getAdviceId(), request.getDeviceId());
+                    savedImpression.getId(), request.getAdviceId(), request.getDeviceId());
 
             Map<String, Object> response = new HashMap<>();
             response.put("impressionId", savedImpression.getId());
@@ -116,7 +116,7 @@ public class AdviceImpressionController {
         stats.put("interactiveImpressions", interactiveImpressions);
         stats.put("uniqueCustomers", uniqueCustomers);
         stats.put("averageDurationSeconds", avgDuration);
-        
+
         if (totalImpressions > 0) {
             double interactionRate = (interactiveImpressions.doubleValue() / totalImpressions.doubleValue()) * 100;
             stats.put("interactionRatePercent", Math.round(interactionRate * 100.0) / 100.0);

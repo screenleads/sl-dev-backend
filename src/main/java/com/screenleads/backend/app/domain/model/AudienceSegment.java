@@ -11,13 +11,14 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
- * Entity for audience segmentation - defines groups of customers based on criteria
+ * Entity for audience segmentation - defines groups of customers based on
+ * criteria
  * Used for targeted marketing campaigns and personalized promotions
  */
 @Entity
 @Table(name = "audience_segments", indexes = {
-    @Index(name = "idx_audience_segment_company", columnList = "company_id"),
-    @Index(name = "idx_audience_segment_active", columnList = "is_active")
+        @Index(name = "idx_audience_segment_company", columnList = "company_id"),
+        @Index(name = "idx_audience_segment_active", columnList = "is_active")
 })
 @Data
 @NoArgsConstructor
@@ -51,11 +52,11 @@ public class AudienceSegment {
     /**
      * JSON object containing filter rules for segment membership
      * Example: {
-     *   "minPurchases": 5,
-     *   "minSpent": 100.00,
-     *   "lastVisitDays": 30,
-     *   "favoriteCategories": ["Electronics", "Fashion"],
-     *   "locations": ["New York", "Los Angeles"]
+     * "minPurchases": 5,
+     * "minSpent": 100.00,
+     * "lastVisitDays": 30,
+     * "favoriteCategories": ["Electronics", "Fashion"],
+     * "locations": ["New York", "Los Angeles"]
      * }
      */
     @JdbcTypeCode(SqlTypes.JSON)

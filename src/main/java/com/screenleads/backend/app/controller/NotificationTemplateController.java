@@ -34,28 +34,28 @@ public class NotificationTemplateController {
     public ResponseEntity<?> createTemplate(@Valid @RequestBody NotificationTemplateRequest request) {
         try {
             Company company = companyRepository.findById(request.getCompanyId())
-                .orElseThrow(() -> new RuntimeException("Company not found: " + request.getCompanyId()));
+                    .orElseThrow(() -> new RuntimeException("Company not found: " + request.getCompanyId()));
 
             if (!notificationTemplateService.isTemplateNameUnique(request.getName(), request.getCompanyId(), null)) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Template name already exists for this company"));
+                        .body(Map.of("error", "Template name already exists for this company"));
             }
 
             NotificationTemplate template = NotificationTemplate.builder()
-                .company(company)
-                .name(request.getName())
-                .description(request.getDescription())
-                .channel(request.getChannel())
-                .subject(request.getSubject())
-                .body(request.getBody())
-                .htmlBody(request.getHtmlBody())
-                .availableVariables(request.getAvailableVariables())
-                .isActive(request.getIsActive())
-                .sender(request.getSender())
-                .replyTo(request.getReplyTo())
-                .createdBy(request.getCreatedBy())
-                .metadata(request.getMetadata())
-                .build();
+                    .company(company)
+                    .name(request.getName())
+                    .description(request.getDescription())
+                    .channel(request.getChannel())
+                    .subject(request.getSubject())
+                    .body(request.getBody())
+                    .htmlBody(request.getHtmlBody())
+                    .availableVariables(request.getAvailableVariables())
+                    .isActive(request.getIsActive())
+                    .sender(request.getSender())
+                    .replyTo(request.getReplyTo())
+                    .createdBy(request.getCreatedBy())
+                    .metadata(request.getMetadata())
+                    .build();
 
             NotificationTemplate created = notificationTemplateService.createTemplate(template);
             log.info("Created notification template ID {} for company ID {}", created.getId(), request.getCompanyId());
@@ -70,31 +70,31 @@ public class NotificationTemplateController {
 
     @PutMapping("/{id}")
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','update')")
-    public ResponseEntity<?> updateTemplate(@PathVariable Long id, 
-                                           @Valid @RequestBody NotificationTemplateRequest request) {
+    public ResponseEntity<?> updateTemplate(@PathVariable Long id,
+            @Valid @RequestBody NotificationTemplateRequest request) {
         try {
             NotificationTemplate existing = notificationTemplateService.getTemplateById(id)
-                .orElseThrow(() -> new RuntimeException("Notification template not found: " + id));
+                    .orElseThrow(() -> new RuntimeException("Notification template not found: " + id));
 
-            if (!notificationTemplateService.isTemplateNameUnique(request.getName(), 
-                                                                 existing.getCompany().getId(), id)) {
+            if (!notificationTemplateService.isTemplateNameUnique(request.getName(),
+                    existing.getCompany().getId(), id)) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Template name already exists for this company"));
+                        .body(Map.of("error", "Template name already exists for this company"));
             }
 
             NotificationTemplate template = NotificationTemplate.builder()
-                .name(request.getName())
-                .description(request.getDescription())
-                .channel(request.getChannel())
-                .subject(request.getSubject())
-                .body(request.getBody())
-                .htmlBody(request.getHtmlBody())
-                .availableVariables(request.getAvailableVariables())
-                .isActive(request.getIsActive())
-                .sender(request.getSender())
-                .replyTo(request.getReplyTo())
-                .metadata(request.getMetadata())
-                .build();
+                    .name(request.getName())
+                    .description(request.getDescription())
+                    .channel(request.getChannel())
+                    .subject(request.getSubject())
+                    .body(request.getBody())
+                    .htmlBody(request.getHtmlBody())
+                    .availableVariables(request.getAvailableVariables())
+                    .isActive(request.getIsActive())
+                    .sender(request.getSender())
+                    .replyTo(request.getReplyTo())
+                    .metadata(request.getMetadata())
+                    .build();
 
             NotificationTemplate updated = notificationTemplateService.updateTemplate(id, template);
             log.info("Updated notification template ID {}", id);
@@ -125,8 +125,8 @@ public class NotificationTemplateController {
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<?> getTemplateById(@PathVariable Long id) {
         return notificationTemplateService.getTemplateById(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/company/{companyId}")
@@ -135,9 +135,9 @@ public class NotificationTemplateController {
             @PathVariable Long companyId,
             @RequestParam(required = false) NotificationChannel channel,
             @RequestParam(defaultValue = "false") boolean activeOnly) {
-        
+
         List<NotificationTemplate> templates;
-        
+
         if (channel != null) {
             templates = notificationTemplateService.getTemplatesByCompanyAndChannel(companyId, channel);
         } else if (activeOnly) {
@@ -145,7 +145,7 @@ public class NotificationTemplateController {
         } else {
             templates = notificationTemplateService.getTemplatesByCompany(companyId);
         }
-        
+
         return ResponseEntity.ok(templates);
     }
 
@@ -154,15 +154,15 @@ public class NotificationTemplateController {
     public ResponseEntity<List<NotificationTemplate>> getMostUsedTemplates(
             @PathVariable Long companyId,
             @RequestParam(defaultValue = "10") int limit) {
-        
+
         List<NotificationTemplate> templates = notificationTemplateService.getMostUsedTemplates(companyId, limit);
         return ResponseEntity.ok(templates);
     }
 
     @PostMapping("/{id}/preview")
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
-    public ResponseEntity<?> previewTemplate(@PathVariable Long id, 
-                                            @RequestBody Map<String, String> sampleVariables) {
+    public ResponseEntity<?> previewTemplate(@PathVariable Long id,
+            @RequestBody Map<String, String> sampleVariables) {
         try {
             Map<String, String> preview = notificationTemplateService.previewTemplate(id, sampleVariables);
             return ResponseEntity.ok(preview);
@@ -175,11 +175,11 @@ public class NotificationTemplateController {
 
     @PatchMapping("/{id}/toggle")
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','update')")
-    public ResponseEntity<?> toggleTemplateActive(@PathVariable Long id, 
-                                                  @RequestParam boolean active) {
+    public ResponseEntity<?> toggleTemplateActive(@PathVariable Long id,
+            @RequestParam boolean active) {
         try {
             NotificationTemplate updated = notificationTemplateService.toggleTemplateActive(id, active);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("templateId", id);
             response.put("isActive", updated.getIsActive());

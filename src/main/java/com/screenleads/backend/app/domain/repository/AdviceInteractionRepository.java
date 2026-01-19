@@ -38,13 +38,12 @@ public interface AdviceInteractionRepository extends JpaRepository<AdviceInterac
      * Find interactions for an Advice within a date range
      */
     @Query("SELECT ai FROM AdviceInteraction ai " +
-           "WHERE ai.impression.advice.id = :adviceId " +
-           "AND ai.timestamp BETWEEN :startDate AND :endDate")
+            "WHERE ai.impression.advice.id = :adviceId " +
+            "AND ai.timestamp BETWEEN :startDate AND :endDate")
     List<AdviceInteraction> findByAdviceIdAndDateRange(
-        @Param("adviceId") Long adviceId,
-        @Param("startDate") LocalDateTime startDate,
-        @Param("endDate") LocalDateTime endDate
-    );
+            @Param("adviceId") Long adviceId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 
     /**
      * Count total interactions for an Advice
@@ -56,52 +55,51 @@ public interface AdviceInteractionRepository extends JpaRepository<AdviceInterac
      * Count interactions by type for an Advice
      */
     @Query("SELECT COUNT(ai) FROM AdviceInteraction ai " +
-           "WHERE ai.impression.advice.id = :adviceId AND ai.type = :type")
+            "WHERE ai.impression.advice.id = :adviceId AND ai.type = :type")
     Long countByAdviceIdAndType(
-        @Param("adviceId") Long adviceId,
-        @Param("type") InteractionType type
-    );
+            @Param("adviceId") Long adviceId,
+            @Param("type") InteractionType type);
 
     /**
      * Count conversion interactions for an Advice
      */
     @Query("SELECT COUNT(ai) FROM AdviceInteraction ai " +
-           "WHERE ai.impression.advice.id = :adviceId AND ai.isConversion = true")
+            "WHERE ai.impression.advice.id = :adviceId AND ai.isConversion = true")
     Long countConversionsByAdviceId(@Param("adviceId") Long adviceId);
 
     /**
      * Get unique customers who interacted with an Advice
      */
     @Query("SELECT DISTINCT ai.customer.id FROM AdviceInteraction ai " +
-           "WHERE ai.impression.advice.id = :adviceId AND ai.customer IS NOT NULL")
+            "WHERE ai.impression.advice.id = :adviceId AND ai.customer IS NOT NULL")
     List<Long> findUniqueCustomerIdsByAdviceId(@Param("adviceId") Long adviceId);
 
     /**
      * Calculate average interaction duration for an Advice
      */
     @Query("SELECT AVG(ai.durationSeconds) FROM AdviceInteraction ai " +
-           "WHERE ai.impression.advice.id = :adviceId AND ai.durationSeconds IS NOT NULL")
+            "WHERE ai.impression.advice.id = :adviceId AND ai.durationSeconds IS NOT NULL")
     Double calculateAverageDurationByAdviceId(@Param("adviceId") Long adviceId);
+
     /**
      * Count interactions for an Advice within a date range
      */
     @Query("SELECT COUNT(ai) FROM AdviceInteraction ai " +
-           "WHERE ai.impression.advice.id = :adviceId " +
-           "AND ai.timestamp BETWEEN :startDate AND :endDate")
+            "WHERE ai.impression.advice.id = :adviceId " +
+            "AND ai.timestamp BETWEEN :startDate AND :endDate")
     Long countByAdviceIdAndDateRange(
-        @Param("adviceId") Long adviceId,
-        @Param("startDate") LocalDateTime startDate,
-        @Param("endDate") LocalDateTime endDate
-    );
+            @Param("adviceId") Long adviceId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 
     /**
      * Count conversions for an Advice within a date range
      */
     @Query("SELECT COUNT(ai) FROM AdviceInteraction ai " +
-           "WHERE ai.impression.advice.id = :adviceId AND ai.isConversion = true " +
-           "AND ai.timestamp BETWEEN :startDate AND :endDate")
+            "WHERE ai.impression.advice.id = :adviceId AND ai.isConversion = true " +
+            "AND ai.timestamp BETWEEN :startDate AND :endDate")
     Long countConversionsByAdviceIdAndDateRange(
-        @Param("adviceId") Long adviceId,
-        @Param("startDate") LocalDateTime startDate,
-        @Param("endDate") LocalDateTime endDate
-    );}
+            @Param("adviceId") Long adviceId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+}

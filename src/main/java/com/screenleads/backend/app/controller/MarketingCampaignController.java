@@ -35,28 +35,30 @@ public class MarketingCampaignController {
     public ResponseEntity<MarketingCampaign> createCampaign(
             @Valid @RequestBody MarketingCampaignRequest request,
             @RequestParam Long companyId) {
-        
+
         AudienceSegment segment = audienceSegmentRepository.findById(request.getAudienceSegmentId())
-            .orElseThrow(() -> new RuntimeException("Audience segment not found: " + request.getAudienceSegmentId()));
-        
+                .orElseThrow(
+                        () -> new RuntimeException("Audience segment not found: " + request.getAudienceSegmentId()));
+
         NotificationTemplate template = notificationTemplateRepository.findById(request.getNotificationTemplateId())
-            .orElseThrow(() -> new RuntimeException("Notification template not found: " + request.getNotificationTemplateId()));
-        
+                .orElseThrow(() -> new RuntimeException(
+                        "Notification template not found: " + request.getNotificationTemplateId()));
+
         Company company = new Company();
         company.setId(companyId);
-        
+
         MarketingCampaign campaign = MarketingCampaign.builder()
-            .company(company)
-            .name(request.getName())
-            .description(request.getDescription())
-            .audienceSegment(segment)
-            .notificationTemplate(template)
-            .scheduledAt(request.getScheduledAt())
-            .metadata(request.getMetadata())
-            .build();
-        
+                .company(company)
+                .name(request.getName())
+                .description(request.getDescription())
+                .audienceSegment(segment)
+                .notificationTemplate(template)
+                .scheduledAt(request.getScheduledAt())
+                .metadata(request.getMetadata())
+                .build();
+
         MarketingCampaign created = campaignService.createCampaign(campaign);
-        
+
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
@@ -68,23 +70,25 @@ public class MarketingCampaignController {
     public ResponseEntity<MarketingCampaign> updateCampaign(
             @PathVariable Long id,
             @Valid @RequestBody MarketingCampaignRequest request) {
-        
+
         AudienceSegment segment = audienceSegmentRepository.findById(request.getAudienceSegmentId())
-            .orElseThrow(() -> new RuntimeException("Audience segment not found: " + request.getAudienceSegmentId()));
-        
+                .orElseThrow(
+                        () -> new RuntimeException("Audience segment not found: " + request.getAudienceSegmentId()));
+
         NotificationTemplate template = notificationTemplateRepository.findById(request.getNotificationTemplateId())
-            .orElseThrow(() -> new RuntimeException("Notification template not found: " + request.getNotificationTemplateId()));
-        
+                .orElseThrow(() -> new RuntimeException(
+                        "Notification template not found: " + request.getNotificationTemplateId()));
+
         MarketingCampaign campaign = MarketingCampaign.builder()
-            .name(request.getName())
-            .description(request.getDescription())
-            .audienceSegment(segment)
-            .notificationTemplate(template)
-            .metadata(request.getMetadata())
-            .build();
-        
+                .name(request.getName())
+                .description(request.getDescription())
+                .audienceSegment(segment)
+                .notificationTemplate(template)
+                .metadata(request.getMetadata())
+                .build();
+
         MarketingCampaign updated = campaignService.updateCampaign(id, campaign);
-        
+
         return ResponseEntity.ok(updated);
     }
 
@@ -105,8 +109,8 @@ public class MarketingCampaignController {
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<MarketingCampaign> getCampaign(@PathVariable Long id) {
         return campaignService.getCampaignById(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -139,10 +143,10 @@ public class MarketingCampaignController {
     public ResponseEntity<MarketingCampaign> scheduleCampaign(
             @PathVariable Long id,
             @RequestBody Map<String, String> request) {
-        
+
         LocalDateTime scheduledAt = LocalDateTime.parse(request.get("scheduledAt"));
         MarketingCampaign scheduled = campaignService.scheduleCampaign(id, scheduledAt);
-        
+
         return ResponseEntity.ok(scheduled);
     }
 
@@ -193,7 +197,7 @@ public class MarketingCampaignController {
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
     public ResponseEntity<Map<String, Object>> getCampaignStatistics(@PathVariable Long id) {
         MarketingCampaign campaign = campaignService.getCampaignStatistics(id);
-        
+
         Map<String, Object> stats = new java.util.HashMap<>();
         stats.put("campaignId", campaign.getId());
         stats.put("name", campaign.getName());
@@ -207,7 +211,7 @@ public class MarketingCampaignController {
         stats.put("successRate", campaign.getSuccessRate());
         stats.put("openRate", campaign.getOpenRate());
         stats.put("clickRate", campaign.getClickRate());
-        
+
         return ResponseEntity.ok(stats);
     }
 

@@ -12,13 +12,12 @@ import java.util.Map;
  * utilizando plantillas de notificación personalizadas
  */
 @Entity
-@Table(name = "marketing_campaign",
-    indexes = {
+@Table(name = "marketing_campaign", indexes = {
         @Index(name = "ix_campaign_company", columnList = "company_id"),
         @Index(name = "ix_campaign_status", columnList = "status"),
         @Index(name = "ix_campaign_scheduled", columnList = "scheduled_at"),
         @Index(name = "ix_campaign_segment", columnList = "audience_segment_id")
-    })
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,8 +30,7 @@ public class MarketingCampaign {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "company_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_campaign_company"))
+    @JoinColumn(name = "company_id", nullable = false, foreignKey = @ForeignKey(name = "fk_campaign_company"))
     private Company company;
 
     @Column(nullable = false, length = 150)
@@ -42,15 +40,13 @@ public class MarketingCampaign {
     private String description;
 
     // === Configuración de la campaña ===
-    
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "audience_segment_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_campaign_segment"))
+    @JoinColumn(name = "audience_segment_id", nullable = false, foreignKey = @ForeignKey(name = "fk_campaign_segment"))
     private AudienceSegment audienceSegment;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "notification_template_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_campaign_template"))
+    @JoinColumn(name = "notification_template_id", nullable = false, foreignKey = @ForeignKey(name = "fk_campaign_template"))
     private NotificationTemplate notificationTemplate;
 
     @Enumerated(EnumType.STRING)
@@ -59,7 +55,7 @@ public class MarketingCampaign {
     private CampaignStatus status = CampaignStatus.DRAFT;
 
     // === Programación ===
-    
+
     @Column(name = "scheduled_at")
     private LocalDateTime scheduledAt;
 
@@ -70,7 +66,7 @@ public class MarketingCampaign {
     private LocalDateTime completedAt;
 
     // === Métricas de ejecución ===
-    
+
     @Column(name = "target_audience_size")
     @Builder.Default
     private Long targetAudienceSize = 0L;
@@ -96,18 +92,18 @@ public class MarketingCampaign {
     private Long clickCount = 0L;
 
     // === Metadata adicional (JSONB) ===
-    
+
     @Column(columnDefinition = "jsonb")
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     private Map<String, Object> metadata;
 
     // === Resultado de la ejecución ===
-    
+
     @Column(name = "execution_error", length = 2000)
     private String executionError;
 
     // === Auditoría ===
-    
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @org.hibernate.annotations.CreationTimestamp
     private LocalDateTime createdAt;
@@ -126,9 +122,9 @@ public class MarketingCampaign {
      * Verifica si la campaña puede ser ejecutada
      */
     public boolean canBeExecuted() {
-        return status == CampaignStatus.SCHEDULED && 
-               scheduledAt != null && 
-               scheduledAt.isBefore(LocalDateTime.now());
+        return status == CampaignStatus.SCHEDULED &&
+                scheduledAt != null &&
+                scheduledAt.isBefore(LocalDateTime.now());
     }
 
     /**
@@ -142,9 +138,9 @@ public class MarketingCampaign {
      * Verifica si la campaña está completada o cancelada
      */
     public boolean isFinalized() {
-        return status == CampaignStatus.COMPLETED || 
-               status == CampaignStatus.CANCELLED || 
-               status == CampaignStatus.FAILED;
+        return status == CampaignStatus.COMPLETED ||
+                status == CampaignStatus.CANCELLED ||
+                status == CampaignStatus.FAILED;
     }
 
     /**
