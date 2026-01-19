@@ -4,6 +4,7 @@ import com.screenleads.backend.app.domain.model.ApiClient;
 import com.screenleads.backend.app.domain.repositories.ClientRepository;
 import com.screenleads.backend.app.application.service.ApiKeyService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -54,6 +55,7 @@ public class ClientController {
         this.apiKeyService = apiKeyService;
     }
 
+    @PreAuthorize("@perm.can('client', 'read')")
     @GetMapping
     public ResponseEntity<java.util.List<com.screenleads.backend.app.web.dto.ClientDTO>> listClients() {
         java.util.List<ApiClient> clients = clientRepository.findAll();
@@ -61,6 +63,7 @@ public class ClientController {
         return ResponseEntity.ok(dtos);
     }
 
+    @PreAuthorize("@perm.can('client', 'read')")
     @GetMapping("/{id}")
     public ResponseEntity<com.screenleads.backend.app.web.dto.ClientDTO> getClient(@PathVariable Long id) {
         return clientRepository.findById(id)
