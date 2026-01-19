@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/clients")
+@RequestMapping("/api-clients")
 @CrossOrigin(origins = "*")
 public class ClientController {
     private com.screenleads.backend.app.web.dto.ClientDTO toDTO(ApiClient client) {
