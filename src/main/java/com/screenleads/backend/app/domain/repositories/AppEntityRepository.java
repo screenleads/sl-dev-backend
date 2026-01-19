@@ -12,6 +12,8 @@ public interface AppEntityRepository extends JpaRepository<AppEntity, Long> {
 
     Optional<AppEntity> findByResource(String resource);
 
+    Optional<AppEntity> findByEndpointBase(String endpointBase);
+
     // Para reordenamiento de menú
     List<AppEntity> findByVisibleInMenuTrueOrderBySortOrderAsc();
 

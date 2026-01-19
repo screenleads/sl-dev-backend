@@ -232,7 +232,14 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         private void upsertAppEntity(AppEntityConfig config) {
+                // First try to find by resource
                 Optional<AppEntity> opt = appEntityRepository.findByResource(config.resource());
+                
+                // If not found by resource, try to find by endpoint_base (to handle existing entries)
+                if (opt.isEmpty() && config.endpointBase() != null) {
+                        opt = appEntityRepository.findByEndpointBase(config.endpointBase());
+                }
+                
                 AppEntity e = opt.orElseGet(() -> AppEntity.builder().resource(config.resource()).build());
 
                 boolean changed = updateEntityFields(e, config);
