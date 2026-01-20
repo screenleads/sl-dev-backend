@@ -212,8 +212,8 @@ public class DataInitializer implements CommandLineRunner {
                                 "API Keys", "vpn_key", 13));
 
                 upsertAppEntity(new AppEntityConfig("client", "ApiClient",
-                                "com.screenleads.backend.app.domain.model.ApiClient", "api_client", "Long",
-                                "/api-clients", 1, 3, 2, 2, true, null,
+                                "com.screenleads.backend.app.domain.model.ApiClient", "client", "Long",
+                                "/clients", 1, 3, 2, 2, true, null,
                                 "API Clients", "integration_instructions", 14));
 
                 // AppEntity (metamodelo) visible en el menú -> sortOrder único (pasa null o

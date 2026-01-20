@@ -8,7 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api-clients")
+@RequestMapping("/clients")
 @CrossOrigin(origins = "*")
 public class ClientController {
     private com.screenleads.backend.app.web.dto.ClientDTO toDTO(ApiClient client) {

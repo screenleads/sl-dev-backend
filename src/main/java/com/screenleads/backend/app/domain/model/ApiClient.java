@@ -10,7 +10,7 @@ import java.util.List;
  * No confundir con Customer (cliente final que canjea promociones).
  */
 @Entity
-@Table(name = "api_clients")
+@Table(name = "client")
 public class ApiClient extends Auditable {
 
     @Id
