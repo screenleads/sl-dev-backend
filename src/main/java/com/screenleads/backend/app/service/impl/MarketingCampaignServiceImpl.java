@@ -204,14 +204,14 @@ public class MarketingCampaignServiceImpl implements MarketingCampaignService {
                     NotificationResponse response = notificationService.sendFromTemplate(
                             template.getId(),
                             recipient,
-                            variables
-                    );
+                            variables);
 
                     if (response.isSuccess()) {
                         log.debug("Sent {} notification to {}: {}", channel, recipient, response.getNotificationId());
                         successCount++;
                     } else {
-                        log.error("Failed to send {} notification to {}: {}", channel, recipient, response.getErrorMessage());
+                        log.error("Failed to send {} notification to {}: {}", channel, recipient,
+                                response.getErrorMessage());
                         failedCount++;
                     }
 

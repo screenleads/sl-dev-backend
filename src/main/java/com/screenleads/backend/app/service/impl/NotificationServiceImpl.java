@@ -108,7 +108,8 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public List<NotificationResponse> sendBulk(Long templateId, List<String> recipients, Map<String, String> variables) {
+    public List<NotificationResponse> sendBulk(Long templateId, List<String> recipients,
+            Map<String, String> variables) {
         log.info("📬 Sending bulk notifications from template {} to {} recipients", templateId, recipients.size());
 
         List<NotificationResponse> responses = new ArrayList<>();
@@ -125,10 +126,13 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public NotificationResponse scheduleNotification(Long templateId, String recipient, Map<String, String> variables, Long scheduledAt) {
-        log.info("⏰ Scheduling notification from template {} for recipient {} at {}", templateId, recipient, scheduledAt);
+    public NotificationResponse scheduleNotification(Long templateId, String recipient, Map<String, String> variables,
+            Long scheduledAt) {
+        log.info("⏰ Scheduling notification from template {} for recipient {} at {}", templateId, recipient,
+                scheduledAt);
 
-        // TODO: Implement actual scheduling (e.g., using Spring @Scheduled or job queue)
+        // TODO: Implement actual scheduling (e.g., using Spring @Scheduled or job
+        // queue)
         // For now, return a SCHEDULED status
         return NotificationResponse.builder()
                 .notificationId(UUID.randomUUID().toString())
@@ -233,7 +237,8 @@ public class NotificationServiceImpl implements NotificationService {
 
     /**
      * Replace template variables with actual values
-     * Example: "Hello {{name}}, your code is {{code}}" with {name: "John", code: "123"}
+     * Example: "Hello {{name}}, your code is {{code}}" with {name: "John", code:
+     * "123"}
      * becomes "Hello John, your code is 123"
      */
     private String replaceVariables(String template, Map<String, String> variables) {

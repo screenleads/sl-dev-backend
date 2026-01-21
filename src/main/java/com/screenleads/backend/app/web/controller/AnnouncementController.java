@@ -19,7 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Controlador de Announcements (Anuncios) - Alias para AdvicesController
- * Este controlador existe para mantener compatibilidad con el dashboard que usa /announcements
+ * Este controlador existe para mantener compatibilidad con el dashboard que usa
+ * /announcements
  * internamente llama al servicio de Advices (advices = announcements)
  */
 @Slf4j
@@ -45,16 +46,13 @@ public class AnnouncementController {
 
     @PreAuthorize("@perm.can('advice', 'read')")
     @GetMapping("/visibles")
-    @Operation(
-        summary = "Anuncios visibles ahora",
-        description = "Devuelve anuncios activos en la zona horaria del cliente (headers X-Timezone o X-Timezone-Offset)"
-    )
+    @Operation(summary = "Anuncios visibles ahora", description = "Devuelve anuncios activos en la zona horaria del cliente (headers X-Timezone o X-Timezone-Offset)")
     public ResponseEntity<List<AdviceDTO>> getVisibleAnnouncements(
             @Parameter(description = "IANA Timezone, ej: 'Europe/Madrid'") @RequestHeader(value = "X-Timezone", required = false) String tzName,
             @Parameter(description = "Offset en minutos al ESTE de UTC, ej: 120") @RequestHeader(value = "X-Timezone-Offset", required = false) Integer offsetMinutes) {
-        
+
         log.info("GET /announcements/visibles - timezone={}, offset={}", tzName, offsetMinutes);
-        
+
         ZoneId zoneId = null;
         if (tzName != null && !tzName.isBlank()) {
             try {
@@ -69,7 +67,7 @@ public class AnnouncementController {
         if (zoneId == null) {
             zoneId = ZoneId.systemDefault();
         }
-        
+
         return ResponseEntity.ok(adviceService.getVisibleAdvicesNow(zoneId));
     }
 
@@ -112,7 +110,8 @@ public class AnnouncementController {
     @Operation(summary = "Obtener anuncios por compañía")
     public ResponseEntity<List<AdviceDTO>> getAnnouncementsByCompany(@PathVariable Long companyId) {
         log.info("GET /announcements/company/{} - Getting announcements by company", companyId);
-        // AdviceService usa filtros de sesión - devolver todos los advices filtrados automáticamente
+        // AdviceService usa filtros de sesión - devolver todos los advices filtrados
+        // automáticamente
         return ResponseEntity.ok(adviceService.getAllAdvices());
     }
 
@@ -121,7 +120,8 @@ public class AnnouncementController {
     @Operation(summary = "Obtener anuncios por cliente publicitario")
     public ResponseEntity<List<AdviceDTO>> getAnnouncementsByClient(@PathVariable Long clientId) {
         log.info("GET /announcements/client/{} - Getting announcements by client", clientId);
-        // AdviceService usa filtros de sesión - devolver todos los advices filtrados automáticamente
+        // AdviceService usa filtros de sesión - devolver todos los advices filtrados
+        // automáticamente
         return ResponseEntity.ok(adviceService.getAllAdvices());
     }
 }

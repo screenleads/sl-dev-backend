@@ -234,24 +234,28 @@ public class DataInitializer implements CommandLineRunner {
         private void upsertAppEntity(AppEntityConfig config) {
                 // First try to find by resource
                 Optional<AppEntity> opt = appEntityRepository.findByResource(config.resource());
-                
-                // If not found by resource, try to find by endpoint_base (to handle existing entries)
+
+                // If not found by resource, try to find by endpoint_base (to handle existing
+                // entries)
                 if (opt.isEmpty() && config.endpointBase() != null) {
                         opt = appEntityRepository.findByEndpointBase(config.endpointBase());
                 }
-                
-                // If found by resource but endpoint_base changed, check if new endpoint_base already exists
-                if (opt.isPresent() && config.endpointBase() != null 
-                        && !config.endpointBase().equals(opt.get().getEndpointBase())) {
+
+                // If found by resource but endpoint_base changed, check if new endpoint_base
+                // already exists
+                if (opt.isPresent() && config.endpointBase() != null
+                                && !config.endpointBase().equals(opt.get().getEndpointBase())) {
                         Optional<AppEntity> conflicting = appEntityRepository.findByEndpointBase(config.endpointBase());
                         if (conflicting.isPresent() && !conflicting.get().getId().equals(opt.get().getId())) {
-                                // Endpoint already exists in another record, skip update to avoid constraint violation
+                                // Endpoint already exists in another record, skip update to avoid constraint
+                                // violation
                                 log.warn("⚠️  Skipping update for resource '{}': endpoint_base '{}' already used by resource '{}'",
-                                        config.resource(), config.endpointBase(), conflicting.get().getResource());
+                                                config.resource(), config.endpointBase(),
+                                                conflicting.get().getResource());
                                 return;
                         }
                 }
-                
+
                 AppEntity e = opt.orElseGet(() -> AppEntity.builder().resource(config.resource()).build());
 
                 boolean changed = updateEntityFields(e, config);
@@ -661,42 +665,42 @@ public class DataInitializer implements CommandLineRunner {
                         Company company = companyRepository.findByName(SCREENLEADS).orElse(null);
                         if (company != null && adviceRepository.count() == 0) {
                                 log.info("[MOCK] Creando anuncio de test por inicialización...");
-                                
+
                                 // Buscar o crear media
                                 String mediaSrc = "https://storage.googleapis.com/screenleads-e7e0b.firebasestorage.app/media/videos/compressed-e69233c4-260a-4b3c-8ba6-876c34989725-tv_desayunos_1.mp4";
                                 Media media = mediaRepository.findBySrc(mediaSrc).orElse(null);
-                                
+
                                 // Crear anuncio directamente con el builder
                                 Advice advice = Advice.builder()
-                                        .description("Anuncio de test")
-                                        .customInterval(false)
-                                        .interval(null)
-                                        .company(company)
-                                        .media(media)
-                                        .promotion(null)
-                                        .build();
-                                
+                                                .description("Anuncio de test")
+                                                .customInterval(false)
+                                                .interval(null)
+                                                .company(company)
+                                                .media(media)
+                                                .promotion(null)
+                                                .build();
+
                                 // Crear schedule con time windows
                                 AdviceSchedule schedule = new AdviceSchedule();
                                 schedule.setAdvice(advice);
                                 schedule.setStartDate(LocalDate.of(2025, 9, 30));
                                 schedule.setEndDate(LocalDate.of(2025, 10, 30));
-                                
+
                                 AdviceTimeWindow windowMonday = new AdviceTimeWindow();
                                 windowMonday.setSchedule(schedule);
                                 windowMonday.setWeekday(DayOfWeek.MONDAY);
                                 windowMonday.setFromTime(LocalTime.of(0, 0));
                                 windowMonday.setToTime(LocalTime.of(23, 59));
-                                
+
                                 AdviceTimeWindow windowSunday = new AdviceTimeWindow();
                                 windowSunday.setSchedule(schedule);
                                 windowSunday.setWeekday(DayOfWeek.SUNDAY);
                                 windowSunday.setFromTime(LocalTime.of(0, 0));
                                 windowSunday.setToTime(LocalTime.of(23, 59));
-                                
+
                                 schedule.setWindows(Arrays.asList(windowMonday, windowSunday));
                                 advice.setSchedules(Arrays.asList(schedule));
-                                
+
                                 // Guardar (cascade guardará los schedules y windows)
                                 adviceRepository.save(advice);
                                 log.info("[MOCK] ✅ Anuncio de test creado exitosamente");

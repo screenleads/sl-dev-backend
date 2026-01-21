@@ -80,4 +80,9 @@ public interface AudienceSegmentService {
      * Count customers in a segment
      */
     Long countCustomersInSegment(Long segmentId);
+
+    /**
+     * Rebuild segment by recalculating all members based on filter criteria
+     */
+    void rebuildSegment(Long segmentId);
 }

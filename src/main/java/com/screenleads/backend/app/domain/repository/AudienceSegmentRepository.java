@@ -55,4 +55,9 @@ public interface AudienceSegmentRepository extends JpaRepository<AudienceSegment
     @Query("SELECT COALESCE(SUM(a.customerCount), 0) FROM AudienceSegment a " +
             "WHERE a.company.id = :companyId AND a.isActive = true")
     Long getTotalCustomerCountByCompanyId(@Param("companyId") Long companyId);
+
+    /**
+     * Find all segments with auto-update enabled
+     */
+    List<AudienceSegment> findByIsAutoUpdateTrue();
 }

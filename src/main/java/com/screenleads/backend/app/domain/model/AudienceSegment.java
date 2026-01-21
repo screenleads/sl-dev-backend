@@ -71,6 +71,13 @@ public class AudienceSegment {
     private Boolean isActive = true;
 
     /**
+     * Whether this segment should be automatically updated by scheduled jobs
+     */
+    @Column(name = "is_auto_update", nullable = false)
+    @Builder.Default
+    private Boolean isAutoUpdate = false;
+
+    /**
      * Cached count of customers matching this segment (updated periodically)
      */
     @Column(name = "customer_count")

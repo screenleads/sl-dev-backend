@@ -18,7 +18,8 @@ public interface NotificationService {
      *
      * @param templateId ID of the template to use
      * @param recipient  Email, phone, or device token depending on channel
-     * @param variables  Variables to replace in template (e.g., {"couponCode": "ABC123"})
+     * @param variables  Variables to replace in template (e.g., {"couponCode":
+     *                   "ABC123"})
      * @return Response with delivery status
      */
     NotificationResponse sendFromTemplate(Long templateId, String recipient, Map<String, String> variables);
@@ -50,7 +51,8 @@ public interface NotificationService {
      * @param scheduledAt Unix timestamp for scheduled delivery
      * @return Response with scheduled status
      */
-    NotificationResponse scheduleNotification(Long templateId, String recipient, Map<String, String> variables, Long scheduledAt);
+    NotificationResponse scheduleNotification(Long templateId, String recipient, Map<String, String> variables,
+            Long scheduledAt);
 
     /**
      * Test template rendering without sending

@@ -297,6 +297,21 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
         return (long) customers.size();
     }
 
+    @Override
+    @Transactional
+    public void rebuildSegment(Long segmentId) {
+        AudienceSegment segment = audienceSegmentRepository.findById(segmentId)
+                .orElseThrow(() -> new RuntimeException("Audience segment not found: " + segmentId));
+
+        log.info("Rebuilding audience segment: {} (ID: {})", segment.getName(), segmentId);
+
+        // Recalculate customer count
+        updateSegmentCustomerCount(segmentId);
+
+        log.info("Segment {} rebuilt successfully with {} members", 
+            segment.getName(), segment.getCustomerCount());
+    }
+
     // Helper methods
     private Integer getIntValue(Object value) {
         if (value == null)
