@@ -1,6 +1,7 @@
 package com.screenleads.backend.app.domain.model;
 
 import jakarta.persistence.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,12 +23,32 @@ public class ApiClient {
     @Column(nullable = false, length = 255)
     private String name; // Nombre de la aplicación/cliente
 
+    @Column(length = 500)
+    private String description;
+
     @Column(nullable = false)
     private Boolean active = true;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
     // Relación con API Keys
     @OneToMany(mappedBy = "apiClient", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ApiKey> apiKeys = new ArrayList<>();
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
+    }
 
     // Constructors
     public ApiClient() {
@@ -64,12 +85,36 @@ public class ApiClient {
         this.name = name;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public Boolean getActive() {
         return active;
     }
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     public List<ApiKey> getApiKeys() {
