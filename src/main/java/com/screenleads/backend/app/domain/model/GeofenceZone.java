@@ -116,9 +116,88 @@ public class GeofenceZone {
     }
 
     private boolean containsPointInPolygon(double lat, double lon) {
-        // Implementación simplificada - Ray casting algorithm
-        // En producción usar PostGIS ST_Contains
-        return false; // TODO: Implementar algoritmo completo
+        // Ray casting algorithm for point-in-polygon test
+        // Casts a ray from the point to infinity and counts edge crossings
+        // Odd number of crossings = inside, even = outside
+
+        Object coordsObj = geometry.get("coordinates");
+        if (coordsObj == null) {
+            return false;
+        }
+
+        // Convert coordinates to array
+        Object[] coordinates;
+        if (coordsObj instanceof Object[]) {
+            coordinates = (Object[]) coordsObj;
+        } else {
+            return false;
+        }
+
+        if (coordinates.length < 3) {
+            return false; // Need at least 3 points for a polygon
+        }
+
+        int crossings = 0;
+        int n = coordinates.length;
+
+        for (int i = 0; i < n - 1; i++) {
+            // Get current edge (p1 -> p2)
+            double[] p1 = getCoordinatePair(coordinates[i]);
+            double[] p2 = getCoordinatePair(coordinates[i + 1]);
+
+            if (p1 == null || p2 == null) {
+                continue;
+            }
+
+            double x1 = p1[1]; // longitude
+            double y1 = p1[0]; // latitude
+            double x2 = p2[1];
+            double y2 = p2[0];
+
+            // Check if point is on the horizontal ray to the right
+            // Ray is cast from (lon, lat) to (∞, lat)
+            
+            // Skip if both vertices are above or below the point
+            if ((y1 > lat && y2 > lat) || (y1 < lat && y2 < lat)) {
+                continue;
+            }
+
+            // Check if edge crosses the ray
+            // Calculate x-coordinate of intersection point
+            double xIntersection = x1 + (lat - y1) / (y2 - y1) * (x2 - x1);
+
+            // If intersection is to the right of the point, count it
+            if (xIntersection > lon) {
+                crossings++;
+            }
+        }
+
+        // Odd number of crossings = inside
+        return crossings % 2 == 1;
+    }
+
+    /**
+     * Helper method to extract coordinate pair from various formats
+     */
+    private double[] getCoordinatePair(Object coord) {
+        if (coord instanceof double[]) {
+            double[] pair = (double[]) coord;
+            if (pair.length >= 2) {
+                return pair;
+            }
+        } else if (coord instanceof Object[]) {
+            Object[] pair = (Object[]) coord;
+            if (pair.length >= 2) {
+                try {
+                    double lat = ((Number) pair[0]).doubleValue();
+                    double lon = ((Number) pair[1]).doubleValue();
+                    return new double[]{lat, lon};
+                } catch (ClassCastException | NullPointerException e) {
+                    return null;
+                }
+            }
+        }
+        return null;
     }
 
     private boolean containsPointInRectangle(double lat, double lon) {

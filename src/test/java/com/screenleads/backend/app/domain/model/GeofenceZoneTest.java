@@ -161,10 +161,7 @@ class GeofenceZoneTest {
     void testPolygonContainsPoint_Inside() {
         // Point inside the triangle (centroid approximately)
         boolean result = polygonZone.containsPoint(40.417, -3.703);
-        // Currently will fail because polygon is not implemented (returns false)
-        // TODO: Uncomment when polygon algorithm is implemented
-        // assertTrue(result, "Point inside polygon should return true");
-        assertFalse(result, "Polygon containment not yet implemented - expected false");
+        assertTrue(result, "Point inside polygon should return true");
     }
 
     @Test
@@ -178,9 +175,7 @@ class GeofenceZoneTest {
     void testPolygonContainsPoint_OnVertex() {
         // Point on one of the vertices
         boolean result = polygonZone.containsPoint(40.417, -3.704);
-        // TODO: Uncomment when polygon algorithm is implemented
-        // assertTrue(result, "Point on vertex should return true");
-        assertFalse(result, "Polygon containment not yet implemented - expected false");
+        assertTrue(result, "Point on vertex should return true");
     }
 
     // ==================== EDGE CASES ====================
