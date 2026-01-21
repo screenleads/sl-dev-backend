@@ -4,7 +4,9 @@ import com.screenleads.backend.app.domain.model.*;
 import com.screenleads.backend.app.domain.repository.MarketingCampaignRepository;
 import com.screenleads.backend.app.service.AudienceSegmentService;
 import com.screenleads.backend.app.service.MarketingCampaignService;
+import com.screenleads.backend.app.service.NotificationService;
 import com.screenleads.backend.app.service.NotificationTemplateService;
+import com.screenleads.backend.app.web.dto.NotificationResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ public class MarketingCampaignServiceImpl implements MarketingCampaignService {
     private final MarketingCampaignRepository campaignRepository;
     private final AudienceSegmentService audienceSegmentService;
     private final NotificationTemplateService notificationTemplateService;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -172,23 +175,45 @@ public class MarketingCampaignServiceImpl implements MarketingCampaignService {
                     variables.put("companyName", campaign.getCompany().getName());
                     variables.put("campaignName", campaign.getName());
 
-                    // Renderizar contenido
-                    NotificationTemplate fullTemplate = notificationTemplateService.getTemplateById(template.getId())
-                            .orElseThrow(() -> new RuntimeException("Template not found: " + template.getId()));
-                    String renderedBody = notificationTemplateService.renderTemplateBody(fullTemplate, variables);
-                    String renderedSubject = fullTemplate.getSubject();
-                    if (renderedSubject != null) {
-                        for (var entry : variables.entrySet()) {
-                            renderedSubject = renderedSubject.replace("{{" + entry.getKey() + "}}", entry.getValue());
-                        }
+                    // Determinar recipient según el canal
+                    String recipient = null;
+                    NotificationChannel channel = template.getChannel();
+                    switch (channel) {
+                        case EMAIL:
+                            recipient = customer.getEmail();
+                            break;
+                        case SMS:
+                            recipient = customer.getPhone();
+                            break;
+                        case PUSH_NOTIFICATION:
+                            // TODO: Get device token from customer
+                            log.warn("Push notifications not yet implemented for customer {}", customer.getId());
+                            continue;
+                        default:
+                            log.warn("Unsupported channel {} for customer {}", channel, customer.getId());
+                            continue;
                     }
 
-                    // Aquí se enviaría la notificación real según el canal (EMAIL, SMS, etc.)
-                    // Por ahora solo logueamos
-                    log.debug("Sending {} notification to customer {}: Subject='{}', Body length={}",
-                            template.getChannel(), customer.getId(), renderedSubject, renderedBody.length());
+                    if (recipient == null || recipient.isEmpty()) {
+                        log.warn("No recipient found for customer {} with channel {}", customer.getId(), channel);
+                        failedCount++;
+                        continue;
+                    }
 
-                    successCount++;
+                    // Enviar notificación usando el nuevo NotificationService
+                    NotificationResponse response = notificationService.sendFromTemplate(
+                            template.getId(),
+                            recipient,
+                            variables
+                    );
+
+                    if (response.isSuccess()) {
+                        log.debug("Sent {} notification to {}: {}", channel, recipient, response.getNotificationId());
+                        successCount++;
+                    } else {
+                        log.error("Failed to send {} notification to {}: {}", channel, recipient, response.getErrorMessage());
+                        failedCount++;
+                    }
 
                 } catch (Exception e) {
                     log.error("Failed to send notification to customer {}: {}", customer.getId(), e.getMessage());

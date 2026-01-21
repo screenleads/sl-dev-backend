@@ -182,17 +182,17 @@ class AppVersionServiceImplTest {
     }
 
     @Test
-    @DisplayName("getLatestVersion should throw exception when no version for platform")
-    void whenGetLatestVersionNotExists_thenThrowsException() {
+    @DisplayName("getLatestVersion should return null when no version for platform")
+    void whenGetLatestVersionNotExists_thenReturnsNull() {
         // Arrange
         when(repository.findTopByPlatformOrderByIdDesc("Windows"))
                 .thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThatThrownBy(() -> appVersionService.getLatestVersion("Windows"))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("No version found for platform Windows");
+        // Act
+        AppVersionDTO result = appVersionService.getLatestVersion("Windows");
 
+        // Assert
+        assertThat(result).isNull();
         verify(repository, times(1)).findTopByPlatformOrderByIdDesc("Windows");
     }
 

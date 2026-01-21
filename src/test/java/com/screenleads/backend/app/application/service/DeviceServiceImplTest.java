@@ -276,23 +276,22 @@ class DeviceServiceImplTest {
         }
 
         @Test
-        @DisplayName("saveDevice should set company to null when not provided")
-        void whenSaveDeviceWithoutCompany_thenCompanyIsNull() {
+        @DisplayName("saveDevice should throw exception when company not provided")
+        void whenSaveDeviceWithoutCompany_thenThrowsException() {
             // Arrange
             DeviceTypeDTO typeDTO = new DeviceTypeDTO(1L, "TABLET", true);
             DeviceDTO inputDTO = new DeviceDTO(null, "new-uuid", "New Device", 1920.0, 1080.0, typeDTO, null);
 
-            when(deviceRepository.findOptionalByUuid("new-uuid")).thenReturn(Optional.empty());
             when(deviceTypeRepository.findById(1L)).thenReturn(Optional.of(testDeviceType));
-            when(deviceRepository.save(any(Device.class))).thenReturn(testDevice);
+            when(deviceRepository.findOptionalByUuid("new-uuid")).thenReturn(Optional.empty());
 
-            // Act
-            DeviceDTO result = deviceService.saveDevice(inputDTO);
+            // Act & Assert
+            assertThatThrownBy(() -> deviceService.saveDevice(inputDTO))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining("Company is required for device creation");
 
-            // Assert
-            assertThat(result).isNotNull();
             verify(companyRepository, never()).findById(anyLong());
-            verify(deviceRepository, times(1)).save(any(Device.class));
+            verify(deviceRepository, never()).save(any(Device.class));
         }
     }
 
