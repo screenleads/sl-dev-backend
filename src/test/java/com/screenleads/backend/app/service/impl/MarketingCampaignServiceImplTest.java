@@ -126,9 +126,7 @@ class MarketingCampaignServiceImplTest {
         when(campaignRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                campaignService.updateCampaign(999L, new MarketingCampaign())
-        );
+        assertThrows(RuntimeException.class, () -> campaignService.updateCampaign(999L, new MarketingCampaign()));
     }
 
     @Test
@@ -138,9 +136,7 @@ class MarketingCampaignServiceImplTest {
         when(campaignRepository.findById(1L)).thenReturn(Optional.of(campaign));
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                campaignService.updateCampaign(1L, new MarketingCampaign())
-        );
+        assertThrows(RuntimeException.class, () -> campaignService.updateCampaign(1L, new MarketingCampaign()));
     }
 
     @Test
@@ -186,9 +182,7 @@ class MarketingCampaignServiceImplTest {
         when(campaignRepository.findById(1L)).thenReturn(Optional.of(campaign));
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                campaignService.deleteCampaign(1L)
-        );
+        assertThrows(RuntimeException.class, () -> campaignService.deleteCampaign(1L));
         verify(campaignRepository, never()).delete(any());
     }
 
@@ -269,9 +263,8 @@ class MarketingCampaignServiceImplTest {
         when(campaignRepository.findById(1L)).thenReturn(Optional.of(campaign));
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                campaignService.scheduleCampaign(1L, LocalDateTime.now().plusDays(1))
-        );
+        assertThrows(RuntimeException.class,
+                () -> campaignService.scheduleCampaign(1L, LocalDateTime.now().plusDays(1)));
     }
 
     @Test
@@ -282,9 +275,7 @@ class MarketingCampaignServiceImplTest {
         when(campaignRepository.findById(1L)).thenReturn(Optional.of(campaign));
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                campaignService.scheduleCampaign(1L, pastDate)
-        );
+        assertThrows(RuntimeException.class, () -> campaignService.scheduleCampaign(1L, pastDate));
     }
 
     @Test
@@ -321,9 +312,7 @@ class MarketingCampaignServiceImplTest {
         when(campaignRepository.findById(1L)).thenReturn(Optional.of(campaign));
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                campaignService.executeCampaign(1L)
-        );
+        assertThrows(RuntimeException.class, () -> campaignService.executeCampaign(1L));
     }
 
     @Test
@@ -488,9 +477,7 @@ class MarketingCampaignServiceImplTest {
         when(campaignRepository.findById(1L)).thenReturn(Optional.of(campaign));
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                campaignService.pauseCampaign(1L)
-        );
+        assertThrows(RuntimeException.class, () -> campaignService.pauseCampaign(1L));
     }
 
     @Test
@@ -515,9 +502,7 @@ class MarketingCampaignServiceImplTest {
         when(campaignRepository.findById(1L)).thenReturn(Optional.of(campaign));
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                campaignService.resumeCampaign(1L)
-        );
+        assertThrows(RuntimeException.class, () -> campaignService.resumeCampaign(1L));
     }
 
     @Test
@@ -557,9 +542,7 @@ class MarketingCampaignServiceImplTest {
         when(campaignRepository.findById(1L)).thenReturn(Optional.of(campaign));
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                campaignService.cancelCampaign(1L)
-        );
+        assertThrows(RuntimeException.class, () -> campaignService.cancelCampaign(1L));
     }
 
     @Test
@@ -686,10 +669,10 @@ class MarketingCampaignServiceImplTest {
         verify(notificationService).sendFromTemplate(eq(1L), eq("test@example.com"), argThat(variables -> {
             Map<String, String> vars = (Map<String, String>) variables;
             return vars.containsKey("customerName") &&
-                   vars.containsKey("email") &&
-                   vars.containsKey("companyName") &&
-                   vars.containsKey("campaignName") &&
-                   vars.get("email").equals("test@example.com");
+                    vars.containsKey("email") &&
+                    vars.containsKey("companyName") &&
+                    vars.containsKey("campaignName") &&
+                    vars.get("email").equals("test@example.com");
         }));
     }
 }

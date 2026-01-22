@@ -76,7 +76,7 @@ public class FraudRuleServiceImpl implements FraudRuleService {
     public FraudRule updateRule(Long id, FraudRule ruleDetails) {
         log.info("Updating fraud rule: {}", id);
         FraudRule rule = fraudRuleRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Fraud rule not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Fraud rule not found with id: " + id));
 
         if (ruleDetails.getName() != null) {
             rule.setName(ruleDetails.getName());
@@ -116,8 +116,8 @@ public class FraudRuleServiceImpl implements FraudRuleService {
     public FraudRule toggleRuleActive(Long id) {
         log.info("Toggling fraud rule active status: {}", id);
         FraudRule rule = fraudRuleRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Fraud rule not found with id: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("Fraud rule not found with id: " + id));
+
         rule.setIsActive(!rule.getIsActive());
         return fraudRuleRepository.save(rule);
     }

@@ -34,7 +34,7 @@ public class AudienceSegmentScheduler {
         try {
             // Find all segments with auto-update enabled
             List<AudienceSegment> autoUpdateSegments = audienceSegmentRepository.findByIsAutoUpdateTrue();
-            
+
             if (autoUpdateSegments.isEmpty()) {
                 log.info("No segments with auto-update enabled found");
                 return;
@@ -51,17 +51,17 @@ public class AudienceSegmentScheduler {
                     log.debug("Rebuilding segment: {} (ID: {})", segment.getName(), segment.getId());
                     audienceSegmentService.rebuildSegment(segment.getId());
                     successCount++;
-                    log.info("Successfully rebuilt segment: {} with {} members", 
-                        segment.getName(), segment.getCustomerCount());
+                    log.info("Successfully rebuilt segment: {} with {} members",
+                            segment.getName(), segment.getCustomerCount());
                 } catch (Exception e) {
                     failureCount++;
-                    log.error("Error rebuilding segment {} (ID: {}): {}", 
-                        segment.getName(), segment.getId(), e.getMessage(), e);
+                    log.error("Error rebuilding segment {} (ID: {}): {}",
+                            segment.getName(), segment.getId(), e.getMessage(), e);
                 }
             }
 
             log.info("Completed scheduled rebuild: {} successful, {} failed out of {} segments",
-                successCount, failureCount, autoUpdateSegments.size());
+                    successCount, failureCount, autoUpdateSegments.size());
 
         } catch (Exception e) {
             log.error("Critical error during scheduled audience segment rebuild: {}", e.getMessage(), e);
@@ -78,7 +78,7 @@ public class AudienceSegmentScheduler {
 
         try {
             List<AudienceSegment> staleSegments = audienceSegmentRepository.findSegmentsNeedingRecalculation();
-            
+
             if (staleSegments.isEmpty()) {
                 log.debug("No stale segments found");
                 return;

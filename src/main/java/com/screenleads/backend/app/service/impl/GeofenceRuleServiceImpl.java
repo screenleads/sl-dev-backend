@@ -22,8 +22,8 @@ public class GeofenceRuleServiceImpl implements GeofenceRuleService {
     @Override
     @Transactional
     public GeofenceRule createRule(GeofenceRule rule) {
-        log.info("Creating new geofence rule for promotion ID: {} and zone ID: {}", 
-            rule.getPromotion().getId(), rule.getZone().getId());
+        log.info("Creating new geofence rule for promotion ID: {} and zone ID: {}",
+                rule.getPromotion().getId(), rule.getZone().getId());
         return geofenceRuleRepository.save(rule);
     }
 
@@ -96,10 +96,10 @@ public class GeofenceRuleServiceImpl implements GeofenceRuleService {
     @Transactional(readOnly = true)
     public List<GeofenceRule> findApplicableRules(Long zoneId) {
         log.debug("Finding applicable rules for zone {}", zoneId);
-        
+
         // Get active rules for the zone
         List<GeofenceRule> rules = getActiveRulesByZone(zoneId);
-        
+
         // Return sorted by priority
         return rules.stream()
                 .sorted((r1, r2) -> Integer.compare(r2.getPriority(), r1.getPriority()))

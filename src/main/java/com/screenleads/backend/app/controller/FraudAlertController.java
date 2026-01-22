@@ -56,8 +56,8 @@ public class FraudAlertController {
     public ResponseEntity<List<FraudAlert>> getAlertsByStatus(
             @PathVariable Long companyId,
             @PathVariable FraudAlertStatus status) {
-        log.info("GET /api/fraud-alerts/company/{}/status/{} - Getting alerts by status", 
-                 companyId, status);
+        log.info("GET /api/fraud-alerts/company/{}/status/{} - Getting alerts by status",
+                companyId, status);
         List<FraudAlert> alerts = fraudAlertService.getAlertsByStatus(companyId, status);
         return ResponseEntity.ok(alerts);
     }
@@ -70,8 +70,8 @@ public class FraudAlertController {
     public ResponseEntity<List<FraudAlert>> getAlertsBySeverity(
             @PathVariable Long companyId,
             @PathVariable FraudSeverity severity) {
-        log.info("GET /api/fraud-alerts/company/{}/severity/{} - Getting alerts by severity", 
-                 companyId, severity);
+        log.info("GET /api/fraud-alerts/company/{}/severity/{} - Getting alerts by severity",
+                companyId, severity);
         List<FraudAlert> alerts = fraudAlertService.getAlertsBySeverity(companyId, severity);
         return ResponseEntity.ok(alerts);
     }
@@ -95,8 +95,8 @@ public class FraudAlertController {
     public ResponseEntity<List<FraudAlert>> getRecentAlertsByCompany(
             @PathVariable Long companyId,
             @RequestParam(defaultValue = "7") int days) {
-        log.info("GET /api/fraud-alerts/company/{}/recent?days={} - Getting recent alerts", 
-                 companyId, days);
+        log.info("GET /api/fraud-alerts/company/{}/recent?days={} - Getting recent alerts",
+                companyId, days);
         List<FraudAlert> alerts = fraudAlertService.getRecentAlertsByCompany(companyId, days);
         return ResponseEntity.ok(alerts);
     }
@@ -107,8 +107,8 @@ public class FraudAlertController {
     @GetMapping("/company/{companyId}/high-priority")
     @PreAuthorize("hasAuthority('fraud-alerts:read')")
     public ResponseEntity<List<FraudAlert>> getHighPriorityAlertsByCompany(@PathVariable Long companyId) {
-        log.info("GET /api/fraud-alerts/company/{}/high-priority - Getting high priority alerts", 
-                 companyId);
+        log.info("GET /api/fraud-alerts/company/{}/high-priority - Getting high priority alerts",
+                companyId);
         List<FraudAlert> alerts = fraudAlertService.getHighPriorityAlertsByCompany(companyId);
         return ResponseEntity.ok(alerts);
     }
@@ -122,11 +122,10 @@ public class FraudAlertController {
             @PathVariable Long companyId,
             @PathVariable String entityType,
             @PathVariable Long entityId) {
-        log.info("GET /api/fraud-alerts/company/{}/entity/{}/{} - Getting alerts by entity", 
-                 companyId, entityType, entityId);
+        log.info("GET /api/fraud-alerts/company/{}/entity/{}/{} - Getting alerts by entity",
+                companyId, entityType, entityId);
         List<FraudAlert> alerts = fraudAlertService.getAlertsByRelatedEntity(
-            companyId, entityType, entityId
-        );
+                companyId, entityType, entityId);
         return ResponseEntity.ok(alerts);
     }
 
@@ -175,10 +174,10 @@ public class FraudAlertController {
             @PathVariable Long id,
             @RequestBody Map<String, Object> payload) {
         log.info("POST /api/fraud-alerts/{}/resolve - Resolving fraud alert", id);
-        
+
         Long userId = ((Number) payload.get("userId")).longValue();
         String resolutionNotes = (String) payload.get("resolutionNotes");
-        
+
         FraudAlert resolvedAlert = fraudAlertService.resolveAlert(id, userId, resolutionNotes);
         return ResponseEntity.ok(resolvedAlert);
     }
@@ -226,8 +225,8 @@ public class FraudAlertController {
     public ResponseEntity<Long> countAlertsByStatus(
             @PathVariable Long companyId,
             @PathVariable FraudAlertStatus status) {
-        log.info("GET /api/fraud-alerts/company/{}/count/status/{} - Counting alerts", 
-                 companyId, status);
+        log.info("GET /api/fraud-alerts/company/{}/count/status/{} - Counting alerts",
+                companyId, status);
         long count = fraudAlertService.countAlertsByStatus(companyId, status);
         return ResponseEntity.ok(count);
     }
@@ -240,8 +239,8 @@ public class FraudAlertController {
     public ResponseEntity<Long> countAlertsBySeverity(
             @PathVariable Long companyId,
             @PathVariable FraudSeverity severity) {
-        log.info("GET /api/fraud-alerts/company/{}/count/severity/{} - Counting alerts", 
-                 companyId, severity);
+        log.info("GET /api/fraud-alerts/company/{}/count/severity/{} - Counting alerts",
+                companyId, severity);
         long count = fraudAlertService.countAlertsBySeverity(companyId, severity);
         return ResponseEntity.ok(count);
     }

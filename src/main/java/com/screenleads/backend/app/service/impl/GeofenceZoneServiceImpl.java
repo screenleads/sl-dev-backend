@@ -22,8 +22,8 @@ public class GeofenceZoneServiceImpl implements GeofenceZoneService {
     @Override
     @Transactional
     public GeofenceZone createZone(GeofenceZone zone) {
-        log.info("Creating new geofence zone: {} for company ID: {}", 
-            zone.getName(), zone.getCompany().getId());
+        log.info("Creating new geofence zone: {} for company ID: {}",
+                zone.getName(), zone.getCompany().getId());
         return geofenceZoneRepository.save(zone);
     }
 
@@ -75,9 +75,9 @@ public class GeofenceZoneServiceImpl implements GeofenceZoneService {
     @Transactional(readOnly = true)
     public List<GeofenceZone> findZonesContainingPoint(Long companyId, double latitude, double longitude) {
         log.debug("Finding zones containing point ({}, {}) for company {}", latitude, longitude, companyId);
-        
+
         List<GeofenceZone> activeZones = getActiveZonesByCompany(companyId);
-        
+
         return activeZones.stream()
                 .filter(zone -> zone.containsPoint(latitude, longitude))
                 .collect(Collectors.toList());

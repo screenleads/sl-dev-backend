@@ -49,7 +49,7 @@ class FraudRuleServiceImplTest {
         rule.setIsActive(true);
         rule.setAutoAlert(true);
         rule.setAutoBlock(false);
-        
+
         Map<String, Object> config = new HashMap<>();
         config.put("maxTransactions", 10);
         config.put("timeWindow", 60);
@@ -162,7 +162,7 @@ class FraudRuleServiceImplTest {
         updateData.setIsActive(false);
         updateData.setAutoAlert(false);
         updateData.setAutoBlock(true);
-        
+
         Map<String, Object> newConfig = new HashMap<>();
         newConfig.put("maxDevices", 5);
         updateData.setConfiguration(newConfig);
@@ -221,7 +221,7 @@ class FraudRuleServiceImplTest {
     @Test
     void testToggleRuleActive_FromInactiveToActive() {
         rule.setIsActive(false);
-        
+
         when(fraudRuleRepository.findById(1L)).thenReturn(Optional.of(rule));
         when(fraudRuleRepository.save(any(FraudRule.class))).thenReturn(rule);
 

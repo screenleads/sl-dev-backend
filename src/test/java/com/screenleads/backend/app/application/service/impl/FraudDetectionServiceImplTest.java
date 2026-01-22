@@ -62,7 +62,7 @@ class FraudDetectionServiceImplTest {
         rule.setIsActive(true);
         rule.setAutoAlert(true);
         rule.setAutoBlock(false);
-        
+
         Map<String, Object> config = new HashMap<>();
         config.put("maxTransactions", 10);
         config.put("timeWindow", 60);
@@ -112,7 +112,7 @@ class FraudDetectionServiceImplTest {
         updatedData.setIsActive(false);
         updatedData.setAutoAlert(false);
         updatedData.setAutoBlock(true);
-        
+
         Map<String, Object> newConfig = new HashMap<>();
         newConfig.put("maxDevices", 5);
         updatedData.setConfiguration(newConfig);
@@ -251,7 +251,7 @@ class FraudDetectionServiceImplTest {
     @Test
     void testGetAlertStatistics() {
         LocalDateTime last24h = LocalDateTime.now().minusHours(24);
-        
+
         when(alertRepository.countByCompany_IdAndStatus(1L, FraudAlertStatus.PENDING)).thenReturn(5L);
         when(alertRepository.countByCompany_IdAndStatus(1L, FraudAlertStatus.INVESTIGATING)).thenReturn(2L);
         when(alertRepository.countByCompany_IdAndStatus(1L, FraudAlertStatus.CONFIRMED)).thenReturn(3L);

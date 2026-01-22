@@ -81,7 +81,8 @@ class AudienceSegmentServiceImplTest {
         // Assert
         assertNotNull(created);
         assertEquals("Test Segment", created.getName());
-        verify(audienceSegmentRepository, times(2)).save(any(AudienceSegment.class)); // Once for create, once for count update
+        verify(audienceSegmentRepository, times(2)).save(any(AudienceSegment.class)); // Once for create, once for count
+                                                                                      // update
         verify(customerRepository).findByCompanyId(1L);
     }
 
@@ -112,9 +113,7 @@ class AudienceSegmentServiceImplTest {
         when(audienceSegmentRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                audienceSegmentService.updateSegment(999L, new AudienceSegment())
-        );
+        assertThrows(RuntimeException.class, () -> audienceSegmentService.updateSegment(999L, new AudienceSegment()));
     }
 
     @Test
@@ -340,8 +339,7 @@ class AudienceSegmentServiceImplTest {
         // Arrange
         segment.setFilterRules(Map.of(
                 "minEngagementScore", 50,
-                "maxEngagementScore", 100
-        ));
+                "maxEngagementScore", 100));
         customer.setEngagementScore(75);
 
         // Act
@@ -369,8 +367,7 @@ class AudienceSegmentServiceImplTest {
         // Arrange
         segment.setFilterRules(Map.of(
                 "minAge", 25,
-                "maxAge", 40
-        ));
+                "maxAge", 40));
         customer.setBirthDate(LocalDate.now().minusYears(30));
 
         // Act
@@ -439,8 +436,7 @@ class AudienceSegmentServiceImplTest {
                 "minRedemptions", 3,
                 "minLifetimeValue", 50.0,
                 "emailVerified", true,
-                "segment", "WARM"
-        ));
+                "segment", "WARM"));
         customer.setTotalRedemptions(5);
         customer.setLifetimeValue(BigDecimal.valueOf(100.0));
         customer.setEmailVerified(true);
@@ -633,7 +629,8 @@ class AudienceSegmentServiceImplTest {
         audienceSegmentService.rebuildSegment(1L);
 
         // Assert
-        verify(audienceSegmentRepository, atLeast(1)).findById(1L); // rebuild calls updateSegmentCustomerCount which calls getCustomersInSegment
+        verify(audienceSegmentRepository, atLeast(1)).findById(1L); // rebuild calls updateSegmentCustomerCount which
+                                                                    // calls getCustomersInSegment
         verify(audienceSegmentRepository, times(1)).save(any(AudienceSegment.class));
         verify(customerRepository).findByCompanyId(1L);
     }
@@ -644,8 +641,6 @@ class AudienceSegmentServiceImplTest {
         when(audienceSegmentRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                audienceSegmentService.rebuildSegment(999L)
-        );
+        assertThrows(RuntimeException.class, () -> audienceSegmentService.rebuildSegment(999L));
     }
 }

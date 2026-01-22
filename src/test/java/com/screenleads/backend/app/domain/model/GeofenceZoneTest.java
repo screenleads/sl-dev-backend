@@ -49,11 +49,11 @@ class GeofenceZoneTest {
         polygonZone = new GeofenceZone();
         polygonZone.setType(GeofenceType.POLYGON);
         Map<String, Object> polygonGeometry = new HashMap<>();
-        Object[] coordinates = new Object[]{
-                new double[]{40.417, -3.704},
-                new double[]{40.418, -3.703},
-                new double[]{40.416, -3.702},
-                new double[]{40.417, -3.704} // Close the polygon
+        Object[] coordinates = new Object[] {
+                new double[] { 40.417, -3.704 },
+                new double[] { 40.418, -3.703 },
+                new double[] { 40.416, -3.702 },
+                new double[] { 40.417, -3.704 } // Close the polygon
         };
         polygonGeometry.put("coordinates", coordinates);
         polygonZone.setGeometry(polygonGeometry);

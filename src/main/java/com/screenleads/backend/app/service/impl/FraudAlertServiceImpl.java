@@ -73,11 +73,10 @@ public class FraudAlertServiceImpl implements FraudAlertService {
     @Override
     @Transactional(readOnly = true)
     public List<FraudAlert> getAlertsByRelatedEntity(Long companyId, String entityType, Long entityId) {
-        log.debug("Getting fraud alerts for company: {}, entityType: {}, entityId: {}", 
-                  companyId, entityType, entityId);
+        log.debug("Getting fraud alerts for company: {}, entityType: {}, entityId: {}",
+                companyId, entityType, entityId);
         return fraudAlertRepository.findByCompany_IdAndRelatedEntityTypeAndRelatedEntityId(
-            companyId, entityType, entityId
-        );
+                companyId, entityType, entityId);
     }
 
     @Override
@@ -113,22 +112,22 @@ public class FraudAlertServiceImpl implements FraudAlertService {
             Long relatedEntityId,
             Map<String, Object> evidence,
             Integer confidenceScore) {
-        
+
         log.info("Creating fraud alert from rule: {} for company: {}", rule.getName(), companyId);
-        
+
         FraudAlert alert = FraudAlert.builder()
-            .rule(rule)
-            .company(rule.getCompany())
-            .severity(rule.getSeverity())
-            .status(FraudAlertStatus.PENDING)
-            .title(title)
-            .description(description)
-            .relatedEntityType(relatedEntityType)
-            .relatedEntityId(relatedEntityId)
-            .evidence(evidence)
-            .confidenceScore(confidenceScore)
-            .detectedAt(LocalDateTime.now())
-            .build();
+                .rule(rule)
+                .company(rule.getCompany())
+                .severity(rule.getSeverity())
+                .status(FraudAlertStatus.PENDING)
+                .title(title)
+                .description(description)
+                .relatedEntityType(relatedEntityType)
+                .relatedEntityId(relatedEntityId)
+                .evidence(evidence)
+                .confidenceScore(confidenceScore)
+                .detectedAt(LocalDateTime.now())
+                .build();
 
         return fraudAlertRepository.save(alert);
     }
@@ -137,8 +136,8 @@ public class FraudAlertServiceImpl implements FraudAlertService {
     public FraudAlert updateAlertStatus(Long id, FraudAlertStatus newStatus) {
         log.info("Updating fraud alert status: {} to {}", id, newStatus);
         FraudAlert alert = fraudAlertRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Fraud alert not found with id: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("Fraud alert not found with id: " + id));
+
         alert.setStatus(newStatus);
         return fraudAlertRepository.save(alert);
     }
@@ -147,16 +146,16 @@ public class FraudAlertServiceImpl implements FraudAlertService {
     public FraudAlert resolveAlert(Long id, Long userId, String resolutionNotes) {
         log.info("Resolving fraud alert: {} by user: {}", id, userId);
         FraudAlert alert = fraudAlertRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Fraud alert not found with id: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("Fraud alert not found with id: " + id));
+
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-        
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
         alert.setStatus(FraudAlertStatus.RESOLVED);
         alert.setResolvedAt(LocalDateTime.now());
         alert.setResolvedBy(user);
         alert.setResolutionNotes(resolutionNotes);
-        
+
         return fraudAlertRepository.save(alert);
     }
 
@@ -164,7 +163,7 @@ public class FraudAlertServiceImpl implements FraudAlertService {
     public FraudAlert updateAlert(Long id, FraudAlert alertDetails) {
         log.info("Updating fraud alert: {}", id);
         FraudAlert alert = fraudAlertRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Fraud alert not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Fraud alert not found with id: " + id));
 
         if (alertDetails.getTitle() != null) {
             alert.setTitle(alertDetails.getTitle());
@@ -212,22 +211,22 @@ public class FraudAlertServiceImpl implements FraudAlertService {
     @Transactional(readOnly = true)
     public Map<String, Long> getAlertStatistics(Long companyId) {
         log.debug("Getting fraud alert statistics for company: {}", companyId);
-        
+
         Map<String, Long> stats = new HashMap<>();
-        
+
         // Count by status
         stats.put("pending", countAlertsByStatus(companyId, FraudAlertStatus.PENDING));
         stats.put("investigating", countAlertsByStatus(companyId, FraudAlertStatus.INVESTIGATING));
         stats.put("confirmed", countAlertsByStatus(companyId, FraudAlertStatus.CONFIRMED));
         stats.put("falsePositive", countAlertsByStatus(companyId, FraudAlertStatus.FALSE_POSITIVE));
         stats.put("resolved", countAlertsByStatus(companyId, FraudAlertStatus.RESOLVED));
-        
+
         // Count by severity
         stats.put("low", countAlertsBySeverity(companyId, FraudSeverity.LOW));
         stats.put("medium", countAlertsBySeverity(companyId, FraudSeverity.MEDIUM));
         stats.put("high", countAlertsBySeverity(companyId, FraudSeverity.HIGH));
         stats.put("critical", countAlertsBySeverity(companyId, FraudSeverity.CRITICAL));
-        
+
         return stats;
     }
 }

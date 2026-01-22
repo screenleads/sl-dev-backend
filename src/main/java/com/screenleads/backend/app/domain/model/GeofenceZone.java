@@ -156,7 +156,7 @@ public class GeofenceZone {
 
             // Check if point is on the horizontal ray to the right
             // Ray is cast from (lon, lat) to (∞, lat)
-            
+
             // Skip if both vertices are above or below the point
             if ((y1 > lat && y2 > lat) || (y1 < lat && y2 < lat)) {
                 continue;
@@ -191,7 +191,7 @@ public class GeofenceZone {
                 try {
                     double lat = ((Number) pair[0]).doubleValue();
                     double lon = ((Number) pair[1]).doubleValue();
-                    return new double[]{lat, lon};
+                    return new double[] { lat, lon };
                 } catch (ClassCastException | NullPointerException e) {
                     return null;
                 }

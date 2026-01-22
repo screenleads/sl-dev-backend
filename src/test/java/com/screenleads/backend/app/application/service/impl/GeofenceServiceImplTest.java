@@ -155,9 +155,7 @@ class GeofenceServiceImplTest {
         when(zoneRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                geofenceService.updateZone(999L, new GeofenceZone())
-        );
+        assertThrows(RuntimeException.class, () -> geofenceService.updateZone(999L, new GeofenceZone()));
     }
 
     @Test
@@ -188,9 +186,7 @@ class GeofenceServiceImplTest {
         when(zoneRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                geofenceService.getZone(999L)
-        );
+        assertThrows(RuntimeException.class, () -> geofenceService.getZone(999L));
     }
 
     @Test
@@ -317,7 +313,8 @@ class GeofenceServiceImplTest {
 
         // Assert - Should contain the point (center of circle)
         assertNotNull(result);
-        // Note: Actual containment test depends on GeofenceZone.containsPoint implementation
+        // Note: Actual containment test depends on GeofenceZone.containsPoint
+        // implementation
     }
 
     @Test

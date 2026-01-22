@@ -38,10 +38,10 @@ public class AdvancedAnalyticsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "7") int periodDays) {
-        
+
         log.info("GET /api/analytics/advanced/company/{}/cohort", companyId);
         Map<String, Object> cohortData = advancedAnalyticsService.getCohortAnalysis(
-            companyId, startDate, endDate, periodDays);
+                companyId, startDate, endDate, periodDays);
         return ResponseEntity.ok(cohortData);
     }
 
@@ -54,10 +54,10 @@ public class AdvancedAnalyticsController {
             @PathVariable Long companyId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        
+
         log.info("GET /api/analytics/advanced/company/{}/funnel", companyId);
         Map<String, Object> funnelData = advancedAnalyticsService.getFunnelAnalysis(
-            companyId, startDate, endDate);
+                companyId, startDate, endDate);
         return ResponseEntity.ok(funnelData);
     }
 
@@ -71,10 +71,10 @@ public class AdvancedAnalyticsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "LAST_TOUCH") String model) {
-        
+
         log.info("GET /api/analytics/advanced/company/{}/attribution?model={}", companyId, model);
         Map<String, Object> attributionData = advancedAnalyticsService.getAttributionAnalysis(
-            companyId, startDate, endDate, model);
+                companyId, startDate, endDate, model);
         return ResponseEntity.ok(attributionData);
     }
 
@@ -89,11 +89,11 @@ public class AdvancedAnalyticsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
             @RequestParam(defaultValue = "DAILY") String granularity) {
-        
-        log.info("GET /api/analytics/advanced/company/{}/time-series?metric={}&granularity={}", 
-                 companyId, metric, granularity);
+
+        log.info("GET /api/analytics/advanced/company/{}/time-series?metric={}&granularity={}",
+                companyId, metric, granularity);
         List<Map<String, Object>> timeSeriesData = advancedAnalyticsService.getTimeSeriesData(
-            companyId, metric, startDate, endDate, granularity);
+                companyId, metric, startDate, endDate, granularity);
         return ResponseEntity.ok(timeSeriesData);
     }
 
@@ -105,10 +105,10 @@ public class AdvancedAnalyticsController {
     public ResponseEntity<Map<String, Object>> getCustomerLifetimeValue(
             @PathVariable Long companyId,
             @RequestParam(required = false) Long customerId) {
-        
+
         log.info("GET /api/analytics/advanced/company/{}/clv?customerId={}", companyId, customerId);
         Map<String, Object> clvData = advancedAnalyticsService.getCustomerLifetimeValue(
-            companyId, customerId);
+                companyId, customerId);
         return ResponseEntity.ok(clvData);
     }
 
@@ -122,10 +122,10 @@ public class AdvancedAnalyticsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "5") int maxPathLength) {
-        
+
         log.info("GET /api/analytics/advanced/company/{}/conversion-paths", companyId);
         List<Map<String, Object>> paths = advancedAnalyticsService.getConversionPaths(
-            companyId, startDate, endDate, maxPathLength);
+                companyId, startDate, endDate, maxPathLength);
         return ResponseEntity.ok(paths);
     }
 
@@ -138,10 +138,10 @@ public class AdvancedAnalyticsController {
             @PathVariable Long companyId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        
+
         log.info("GET /api/analytics/advanced/company/{}/device-performance", companyId);
         Map<String, Object> deviceData = advancedAnalyticsService.getDevicePerformance(
-            companyId, startDate, endDate);
+                companyId, startDate, endDate);
         return ResponseEntity.ok(deviceData);
     }
 
@@ -154,10 +154,10 @@ public class AdvancedAnalyticsController {
             @PathVariable Long companyId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        
+
         log.info("GET /api/analytics/advanced/company/{}/promotion-comparison", companyId);
         List<Map<String, Object>> comparisonData = advancedAnalyticsService.getPromotionComparison(
-            companyId, startDate, endDate);
+                companyId, startDate, endDate);
         return ResponseEntity.ok(comparisonData);
     }
 
@@ -182,17 +182,17 @@ public class AdvancedAnalyticsController {
             @RequestParam String reportType,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        
+
         log.info("GET /api/analytics/advanced/company/{}/export?reportType={}", companyId, reportType);
-        
+
         byte[] csvData = advancedAnalyticsService.exportAnalyticsToCsv(
-            companyId, reportType, startDate, endDate);
-        
+                companyId, reportType, startDate, endDate);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("text/csv"));
-        headers.setContentDispositionFormData("attachment", 
-            String.format("analytics_%s_%s.csv", reportType, LocalDate.now()));
-        
+        headers.setContentDispositionFormData("attachment",
+                String.format("analytics_%s_%s.csv", reportType, LocalDate.now()));
+
         return new ResponseEntity<>(csvData, headers, HttpStatus.OK);
     }
 }

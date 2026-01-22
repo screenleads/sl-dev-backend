@@ -23,7 +23,8 @@ public interface GeofenceRuleRepository extends JpaRepository<GeofenceRule, Long
      */
     @Query("SELECT r FROM GeofenceRule r WHERE r.zone.company.id = :companyId " +
             "AND r.isActive = true ORDER BY r.priority DESC, r.createdAt DESC")
-    List<GeofenceRule> findByCompany_IdAndIsActiveTrueOrderByPriorityDescCreatedAtDesc(@Param("companyId") Long companyId);
+    List<GeofenceRule> findByCompany_IdAndIsActiveTrueOrderByPriorityDescCreatedAtDesc(
+            @Param("companyId") Long companyId);
 
     /**
      * Find rules for a specific zone

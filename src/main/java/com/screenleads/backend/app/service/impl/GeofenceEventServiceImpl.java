@@ -29,19 +29,19 @@ public class GeofenceEventServiceImpl implements GeofenceEventService {
     @Override
     @Transactional
     public GeofenceEvent recordEvent(GeofenceEvent event) {
-        log.info("Recording geofence event: {} for device ID: {} in zone ID: {}", 
-            event.getEventType(), event.getDevice().getId(), event.getZone().getId());
-        
+        log.info("Recording geofence event: {} for device ID: {} in zone ID: {}",
+                event.getEventType(), event.getDevice().getId(), event.getZone().getId());
+
         if (event.getTimestamp() == null) {
             event.setTimestamp(LocalDateTime.now());
         }
-        
+
         return geofenceEventRepository.save(event);
     }
 
     @Override
     @Transactional
-    public List<GeofenceEvent> processLocationUpdate(Long deviceId, 
+    public List<GeofenceEvent> processLocationUpdate(Long deviceId,
             double latitude, double longitude) {
         log.debug("Processing location update for device {}: ({}, {})", deviceId, latitude, longitude);
 
@@ -104,7 +104,7 @@ public class GeofenceEventServiceImpl implements GeofenceEventService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<GeofenceEvent> getEventsByTypeAndDateRange(GeofenceEventType eventType, 
+    public List<GeofenceEvent> getEventsByTypeAndDateRange(GeofenceEventType eventType,
             LocalDateTime startDate, LocalDateTime endDate) {
         return geofenceEventRepository.findByEventTypeAndCreatedAtBetweenOrderByCreatedAtDesc(
                 eventType, startDate, endDate);

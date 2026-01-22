@@ -149,7 +149,8 @@ class NotificationServiceImplTest {
         // When
         NotificationResponse response = notificationService.sendFromTemplate(templateId, recipient, variables);
 
-        // Then - verify that variables were replaced (this is implicit in the mock behavior)
+        // Then - verify that variables were replaced (this is implicit in the mock
+        // behavior)
         assertTrue(response.isSuccess());
     }
 
@@ -235,7 +236,7 @@ class NotificationServiceImplTest {
         // Given
         Long templateId = 1L;
         List<String> recipients = Arrays.asList("user1@test.com", "user2@test.com");
-        
+
         // First call succeeds, second call fails
         when(templateRepository.findById(templateId))
                 .thenReturn(Optional.of(emailTemplate))

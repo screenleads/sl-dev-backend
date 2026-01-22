@@ -51,8 +51,7 @@ public class GeofenceEventController {
         List<GeofenceEvent> events = geofenceEventService.processLocationUpdate(
                 request.getDeviceId(),
                 request.getLatitude(),
-                request.getLongitude()
-        );
+                request.getLongitude());
         return ResponseEntity.ok(events);
     }
 
@@ -133,10 +132,10 @@ public class GeofenceEventController {
     public static class LocationUpdateRequest {
         @NotNull
         private Long deviceId;
-        
+
         @NotNull
         private Double latitude;
-        
+
         @NotNull
         private Double longitude;
     }

@@ -44,4 +44,5 @@ public interface GeofenceEventRepository extends JpaRepository<GeofenceEvent, Lo
     /**
      * Find events for a specific zone and device
      */
-    List<GeofenceEvent> findByZone_IdAndDevice_IdOrderByCreatedAtDesc(Long zoneId, Long deviceId);}
+    List<GeofenceEvent> findByZone_IdAndDevice_IdOrderByCreatedAtDesc(Long zoneId, Long deviceId);
+}

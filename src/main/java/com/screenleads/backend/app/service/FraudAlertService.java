@@ -69,15 +69,14 @@ public interface FraudAlertService {
      * Create a fraud alert from a rule trigger
      */
     FraudAlert createAlertFromRule(
-        FraudRule rule,
-        Long companyId,
-        String title,
-        String description,
-        String relatedEntityType,
-        Long relatedEntityId,
-        Map<String, Object> evidence,
-        Integer confidenceScore
-    );
+            FraudRule rule,
+            Long companyId,
+            String title,
+            String description,
+            String relatedEntityType,
+            Long relatedEntityId,
+            Map<String, Object> evidence,
+            Integer confidenceScore);
 
     /**
      * Update fraud alert status

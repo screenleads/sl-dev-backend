@@ -308,8 +308,8 @@ public class AudienceSegmentServiceImpl implements AudienceSegmentService {
         // Recalculate customer count
         updateSegmentCustomerCount(segmentId);
 
-        log.info("Segment {} rebuilt successfully with {} members", 
-            segment.getName(), segment.getCustomerCount());
+        log.info("Segment {} rebuilt successfully with {} members",
+                segment.getName(), segment.getCustomerCount());
     }
 
     // Helper methods

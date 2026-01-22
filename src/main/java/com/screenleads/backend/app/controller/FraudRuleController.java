@@ -55,8 +55,8 @@ public class FraudRuleController {
     public ResponseEntity<List<FraudRule>> getRulesByType(
             @PathVariable Long companyId,
             @PathVariable FraudRuleType ruleType) {
-        log.info("GET /api/fraud-rules/company/{}/type/{} - Getting fraud rules by type", 
-                 companyId, ruleType);
+        log.info("GET /api/fraud-rules/company/{}/type/{} - Getting fraud rules by type",
+                companyId, ruleType);
         List<FraudRule> rules = fraudRuleService.getRulesByType(companyId, ruleType);
         return ResponseEntity.ok(rules);
     }
@@ -69,8 +69,8 @@ public class FraudRuleController {
     public ResponseEntity<List<FraudRule>> getRulesBySeverity(
             @PathVariable Long companyId,
             @PathVariable FraudSeverity severity) {
-        log.info("GET /api/fraud-rules/company/{}/severity/{} - Getting fraud rules by severity", 
-                 companyId, severity);
+        log.info("GET /api/fraud-rules/company/{}/severity/{} - Getting fraud rules by severity",
+                companyId, severity);
         List<FraudRule> rules = fraudRuleService.getRulesBySeverity(companyId, severity);
         return ResponseEntity.ok(rules);
     }
@@ -163,8 +163,8 @@ public class FraudRuleController {
     public ResponseEntity<Boolean> ruleNameExists(
             @PathVariable Long companyId,
             @RequestParam String name) {
-        log.info("GET /api/fraud-rules/company/{}/exists?name={} - Checking if rule name exists", 
-                 companyId, name);
+        log.info("GET /api/fraud-rules/company/{}/exists?name={} - Checking if rule name exists",
+                companyId, name);
         boolean exists = fraudRuleService.ruleNameExists(name, companyId);
         return ResponseEntity.ok(exists);
     }

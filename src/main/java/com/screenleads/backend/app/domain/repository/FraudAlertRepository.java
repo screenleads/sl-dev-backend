@@ -41,29 +41,27 @@ public interface FraudAlertRepository extends JpaRepository<FraudAlert, Long> {
      * Find pending alerts (PENDING or INVESTIGATING)
      */
     @Query("SELECT a FROM FraudAlert a WHERE a.company.id = :companyId " +
-           "AND a.status IN ('PENDING', 'INVESTIGATING') " +
-           "ORDER BY a.severity DESC, a.detectedAt DESC")
+            "AND a.status IN ('PENDING', 'INVESTIGATING') " +
+            "ORDER BY a.severity DESC, a.detectedAt DESC")
     List<FraudAlert> findPendingAlertsByCompany(@Param("companyId") Long companyId);
 
     /**
      * Find recent alerts (last N days)
      */
     @Query("SELECT a FROM FraudAlert a WHERE a.company.id = :companyId " +
-           "AND a.detectedAt >= :since " +
-           "ORDER BY a.detectedAt DESC")
+            "AND a.detectedAt >= :since " +
+            "ORDER BY a.detectedAt DESC")
     List<FraudAlert> findRecentAlertsByCompany(
-        @Param("companyId") Long companyId, 
-        @Param("since") LocalDateTime since
-    );
+            @Param("companyId") Long companyId,
+            @Param("since") LocalDateTime since);
 
     /**
      * Find alerts by related entity
      */
     List<FraudAlert> findByCompany_IdAndRelatedEntityTypeAndRelatedEntityId(
-        Long companyId, 
-        String relatedEntityType, 
-        Long relatedEntityId
-    );
+            Long companyId,
+            String relatedEntityType,
+            Long relatedEntityId);
 
     /**
      * Count alerts by status
@@ -76,11 +74,12 @@ public interface FraudAlertRepository extends JpaRepository<FraudAlert, Long> {
     long countByCompany_IdAndSeverity(Long companyId, FraudSeverity severity);
 
     /**
-     * Find high priority alerts (HIGH or CRITICAL severity, PENDING or INVESTIGATING status)
+     * Find high priority alerts (HIGH or CRITICAL severity, PENDING or
+     * INVESTIGATING status)
      */
     @Query("SELECT a FROM FraudAlert a WHERE a.company.id = :companyId " +
-           "AND a.severity IN ('HIGH', 'CRITICAL') " +
-           "AND a.status IN ('PENDING', 'INVESTIGATING') " +
-           "ORDER BY a.severity DESC, a.detectedAt DESC")
+            "AND a.severity IN ('HIGH', 'CRITICAL') " +
+            "AND a.status IN ('PENDING', 'INVESTIGATING') " +
+            "ORDER BY a.severity DESC, a.detectedAt DESC")
     List<FraudAlert> findHighPriorityAlertsByCompany(@Param("companyId") Long companyId);
 }
