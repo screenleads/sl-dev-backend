@@ -50,8 +50,7 @@ class GeofenceZoneServiceImplTest {
                 .geometry(Map.of(
                         "center_lat", 40.7128,
                         "center_lng", -74.0060,
-                        "radius", 1000.0
-                ))
+                        "radius", 1000.0))
                 .isActive(true)
                 .color("#FF0000")
                 .build();
@@ -67,8 +66,7 @@ class GeofenceZoneServiceImplTest {
                         "north", 40.75,
                         "south", 40.70,
                         "east", -73.95,
-                        "west", -74.05
-                ))
+                        "west", -74.05))
                 .isActive(true)
                 .color("#00FF00")
                 .build();
@@ -84,9 +82,7 @@ class GeofenceZoneServiceImplTest {
                         "coordinates", Arrays.asList(
                                 Map.of("lat", 40.71, "lng", -74.01),
                                 Map.of("lat", 40.72, "lng", -74.00),
-                                Map.of("lat", 40.71, "lng", -73.99)
-                        )
-                ))
+                                Map.of("lat", 40.71, "lng", -73.99))))
                 .isActive(false)
                 .color("#0000FF")
                 .build();
@@ -175,8 +171,7 @@ class GeofenceZoneServiceImplTest {
                 .thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                geofenceZoneService.updateZone(999L, circleZone));
+        assertThrows(RuntimeException.class, () -> geofenceZoneService.updateZone(999L, circleZone));
         verify(geofenceZoneRepository).findById(999L);
         verify(geofenceZoneRepository, never()).save(any());
     }
@@ -287,7 +282,7 @@ class GeofenceZoneServiceImplTest {
         double testLat = 40.7128;
         double testLng = -74.0060;
         List<GeofenceZone> activeZones = Arrays.asList(circleZone, rectangleZone);
-        
+
         when(geofenceZoneRepository.findByCompany_IdAndIsActiveTrueOrderByCreatedAtDesc(1L))
                 .thenReturn(activeZones);
 
@@ -358,8 +353,7 @@ class GeofenceZoneServiceImplTest {
                 .thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                geofenceZoneService.toggleZoneActive(999L, true));
+        assertThrows(RuntimeException.class, () -> geofenceZoneService.toggleZoneActive(999L, true));
         verify(geofenceZoneRepository).findById(999L);
         verify(geofenceZoneRepository, never()).save(any());
     }

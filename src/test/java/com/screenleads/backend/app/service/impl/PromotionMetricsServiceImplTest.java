@@ -378,7 +378,8 @@ class PromotionMetricsServiceImplTest {
                 .thenReturn(metricsList);
 
         // Act
-        List<PromotionMetrics> result = promotionMetricsService.getTopPerformingByConversionRate(startDate, endDate, limit);
+        List<PromotionMetrics> result = promotionMetricsService.getTopPerformingByConversionRate(startDate, endDate,
+                limit);
 
         // Assert
         assertEquals(2, result.size());
@@ -396,7 +397,8 @@ class PromotionMetricsServiceImplTest {
                 .thenReturn(metricsList);
 
         // Act
-        List<PromotionMetrics> result = promotionMetricsService.getTopPerformingByConversionRate(startDate, endDate, limit);
+        List<PromotionMetrics> result = promotionMetricsService.getTopPerformingByConversionRate(startDate, endDate,
+                limit);
 
         // Assert
         assertEquals(1, result.size());
@@ -414,7 +416,8 @@ class PromotionMetricsServiceImplTest {
                 .thenReturn(metricsList);
 
         // Act
-        List<PromotionMetrics> result = promotionMetricsService.getTopPerformingByConversions(startDate, endDate, limit);
+        List<PromotionMetrics> result = promotionMetricsService.getTopPerformingByConversions(startDate, endDate,
+                limit);
 
         // Assert
         assertEquals(2, result.size());
@@ -432,7 +435,8 @@ class PromotionMetricsServiceImplTest {
                 .thenReturn(metricsList);
 
         // Act
-        List<PromotionMetrics> result = promotionMetricsService.getTopPerformingByConversions(startDate, endDate, limit);
+        List<PromotionMetrics> result = promotionMetricsService.getTopPerformingByConversions(startDate, endDate,
+                limit);
 
         // Assert
         assertEquals(1, result.size());

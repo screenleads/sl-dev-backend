@@ -172,8 +172,7 @@ class NotificationTemplateServiceImplTest {
                 .thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                notificationTemplateService.updateTemplate(999L, emailTemplate));
+        assertThrows(RuntimeException.class, () -> notificationTemplateService.updateTemplate(999L, emailTemplate));
         verify(notificationTemplateRepository).findById(999L);
         verify(notificationTemplateRepository, never()).save(any());
     }
@@ -352,8 +351,7 @@ class NotificationTemplateServiceImplTest {
         Map<String, String> variables = Map.of(
                 "customerName", "John Doe",
                 "companyName", "ACME Inc",
-                "code", "WELCOME123"
-        );
+                "code", "WELCOME123");
 
         // Act
         String result = notificationTemplateService.renderTemplateBody(emailTemplate, variables);
@@ -431,7 +429,7 @@ class NotificationTemplateServiceImplTest {
         // Assert
         ArgumentCaptor<NotificationTemplate> captor = ArgumentCaptor.forClass(NotificationTemplate.class);
         verify(notificationTemplateRepository).save(captor.capture());
-        
+
         NotificationTemplate saved = captor.getValue();
         assertEquals(originalCount + 1, saved.getUsageCount());
         assertNotNull(saved.getLastUsedAt());
@@ -444,8 +442,7 @@ class NotificationTemplateServiceImplTest {
                 .thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                notificationTemplateService.incrementUsageCount(999L));
+        assertThrows(RuntimeException.class, () -> notificationTemplateService.incrementUsageCount(999L));
         verify(notificationTemplateRepository).findById(999L);
         verify(notificationTemplateRepository, never()).save(any());
     }
@@ -495,8 +492,7 @@ class NotificationTemplateServiceImplTest {
                 .thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                notificationTemplateService.toggleTemplateActive(999L, true));
+        assertThrows(RuntimeException.class, () -> notificationTemplateService.toggleTemplateActive(999L, true));
         verify(notificationTemplateRepository).findById(999L);
         verify(notificationTemplateRepository, never()).save(any());
     }
@@ -552,8 +548,7 @@ class NotificationTemplateServiceImplTest {
         Map<String, String> sampleVariables = Map.of(
                 "customerName", "Preview User",
                 "companyName", "Preview Company",
-                "code", "PREVIEW123"
-        );
+                "code", "PREVIEW123");
 
         // Act
         Map<String, String> result = notificationTemplateService.previewTemplate(1L, sampleVariables);
@@ -592,8 +587,7 @@ class NotificationTemplateServiceImplTest {
                 .thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () ->
-                notificationTemplateService.previewTemplate(999L, Map.of()));
+        assertThrows(RuntimeException.class, () -> notificationTemplateService.previewTemplate(999L, Map.of()));
         verify(notificationTemplateRepository).findById(999L);
     }
 
