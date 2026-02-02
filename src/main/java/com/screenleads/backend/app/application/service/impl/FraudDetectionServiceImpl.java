@@ -3,7 +3,9 @@ package com.screenleads.backend.app.application.service.impl;
 import com.screenleads.backend.app.application.service.FraudDetectionService;
 import com.screenleads.backend.app.domain.model.*;
 import com.screenleads.backend.app.domain.repositories.PromotionRedemptionRepository;
-import com.screenleads.backend.app.infrastructure.repository.*;
+import com.screenleads.backend.app.domain.repository.FraudRuleRepository;
+import com.screenleads.backend.app.domain.repository.FraudAlertRepository;
+import com.screenleads.backend.app.domain.repository.BlacklistRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -73,7 +75,7 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
     @Override
     @Transactional(readOnly = true)
     public List<FraudRule> getActiveRulesByCompany(Long companyId) {
-        return ruleRepository.findByCompany_IdAndIsActiveTrue(companyId);
+        return ruleRepository.findActiveRulesByCompany(companyId);
     }
 
     @Override
@@ -162,10 +164,10 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
     @Override
     @Transactional(readOnly = true)
     public List<FraudAlert> getAlertsByCompany(Long companyId, int page, int size) {
-        Page<FraudAlert> alerts = alertRepository.findByCompany_Id(
-                companyId,
-                PageRequest.of(page, size));
-        return alerts.getContent();
+        List<FraudAlert> allAlerts = alertRepository.findByCompany_Id(companyId);
+        int start = page * size;
+        int end = Math.min(start + size, allAlerts.size());
+        return start < allAlerts.size() ? allAlerts.subList(start, end) : List.of();
     }
 
     @Override

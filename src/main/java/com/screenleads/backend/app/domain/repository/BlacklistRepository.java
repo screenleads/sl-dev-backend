@@ -1,4 +1,4 @@
-package com.screenleads.backend.app.infrastructure.repository;
+package com.screenleads.backend.app.domain.repository;
 
 import com.screenleads.backend.app.domain.model.Blacklist;
 import com.screenleads.backend.app.domain.model.BlacklistType;
@@ -14,18 +14,16 @@ import java.util.Optional;
 @Repository
 public interface BlacklistRepository extends JpaRepository<Blacklist, Long> {
 
-    Optional<Blacklist> findByCompany_IdAndBlacklistTypeAndValueAndIsActiveTrue(
-            Long companyId,
-            BlacklistType blacklistType,
-            String value);
-
-    List<Blacklist> findByCompany_IdAndBlacklistType(Long companyId, BlacklistType blacklistType);
-
+    /**
+     * Find active blacklist entries for a company
+     */
     List<Blacklist> findByCompany_IdAndIsActiveTrue(Long companyId);
 
+    /**
+     * Find effective blacklist entry (active and not expired)
+     */
     @Query("SELECT b FROM Blacklist b WHERE b.company.id = :companyId " +
-            "AND b.blacklistType = :type " +
-            "AND b.value = :value " +
+            "AND b.blacklistType = :type AND b.value = :value " +
             "AND b.isActive = true " +
             "AND (b.expiresAt IS NULL OR b.expiresAt > :now)")
     Optional<Blacklist> findEffectiveBlacklist(
@@ -34,10 +32,16 @@ public interface BlacklistRepository extends JpaRepository<Blacklist, Long> {
             @Param("value") String value,
             @Param("now") LocalDateTime now);
 
+    /**
+     * Find expired blacklist entries
+     */
     @Query("SELECT b FROM Blacklist b WHERE b.isActive = true " +
-            "AND b.expiresAt IS NOT NULL " +
-            "AND b.expiresAt <= :now")
+            "AND b.expiresAt IS NOT NULL AND b.expiresAt < :now")
     List<Blacklist> findExpiredBlacklists(@Param("now") LocalDateTime now);
 
-    long countByCompany_IdAndIsActiveTrue(Long companyId);
+    /**
+     * Find by blacklist type and value
+     */
+    Optional<Blacklist> findByBlacklistTypeAndValueAndCompany_Id(
+            BlacklistType type, String value, Long companyId);
 }

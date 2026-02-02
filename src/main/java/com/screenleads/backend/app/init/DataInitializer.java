@@ -211,11 +211,6 @@ public class DataInitializer implements CommandLineRunner {
                                 "/api-keys", 1, 3, 2, 2, true, null,
                                 "API Keys", "vpn_key", 13));
 
-                upsertAppEntity(new AppEntityConfig("client", "ApiClient",
-                                "com.screenleads.backend.app.domain.model.ApiClient", "client", "Long",
-                                "/clients", 1, 3, 2, 2, true, null,
-                                "API Clients", "integration_instructions", 14));
-
                 // AppEntity (metamodelo) visible en el menú -> sortOrder único (pasa null o
                 // repetido, se corrige)
                 upsertAppEntity(new AppEntityConfig("app_entity", "AppEntity",
@@ -232,30 +227,7 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         private void upsertAppEntity(AppEntityConfig config) {
-                // First try to find by resource
                 Optional<AppEntity> opt = appEntityRepository.findByResource(config.resource());
-
-                // If not found by resource, try to find by endpoint_base (to handle existing
-                // entries)
-                if (opt.isEmpty() && config.endpointBase() != null) {
-                        opt = appEntityRepository.findByEndpointBase(config.endpointBase());
-                }
-
-                // If found by resource but endpoint_base changed, check if new endpoint_base
-                // already exists
-                if (opt.isPresent() && config.endpointBase() != null
-                                && !config.endpointBase().equals(opt.get().getEndpointBase())) {
-                        Optional<AppEntity> conflicting = appEntityRepository.findByEndpointBase(config.endpointBase());
-                        if (conflicting.isPresent() && !conflicting.get().getId().equals(opt.get().getId())) {
-                                // Endpoint already exists in another record, skip update to avoid constraint
-                                // violation
-                                log.warn("⚠️  Skipping update for resource '{}': endpoint_base '{}' already used by resource '{}'",
-                                                config.resource(), config.endpointBase(),
-                                                conflicting.get().getResource());
-                                return;
-                        }
-                }
-
                 AppEntity e = opt.orElseGet(() -> AppEntity.builder().resource(config.resource()).build());
 
                 boolean changed = updateEntityFields(e, config);

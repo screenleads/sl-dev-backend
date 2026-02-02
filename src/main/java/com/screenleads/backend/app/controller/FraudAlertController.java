@@ -30,7 +30,7 @@ public class FraudAlertController {
      * Get all fraud alerts by company
      */
     @GetMapping("/company/{companyId}")
-    @PreAuthorize("hasAuthority('fraud-alerts:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<List<FraudAlert>> getAlertsByCompany(@PathVariable Long companyId) {
         log.info("GET /api/fraud-alerts/company/{} - Getting fraud alerts", companyId);
         List<FraudAlert> alerts = fraudAlertService.getAlertsByCompany(companyId);
@@ -41,7 +41,7 @@ public class FraudAlertController {
      * Get fraud alerts by rule
      */
     @GetMapping("/rule/{ruleId}")
-    @PreAuthorize("hasAuthority('fraud-alerts:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<List<FraudAlert>> getAlertsByRule(@PathVariable Long ruleId) {
         log.info("GET /api/fraud-alerts/rule/{} - Getting fraud alerts by rule", ruleId);
         List<FraudAlert> alerts = fraudAlertService.getAlertsByRule(ruleId);
@@ -52,7 +52,7 @@ public class FraudAlertController {
      * Get fraud alerts by status
      */
     @GetMapping("/company/{companyId}/status/{status}")
-    @PreAuthorize("hasAuthority('fraud-alerts:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<List<FraudAlert>> getAlertsByStatus(
             @PathVariable Long companyId,
             @PathVariable FraudAlertStatus status) {
@@ -66,7 +66,7 @@ public class FraudAlertController {
      * Get fraud alerts by severity
      */
     @GetMapping("/company/{companyId}/severity/{severity}")
-    @PreAuthorize("hasAuthority('fraud-alerts:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<List<FraudAlert>> getAlertsBySeverity(
             @PathVariable Long companyId,
             @PathVariable FraudSeverity severity) {
@@ -80,7 +80,7 @@ public class FraudAlertController {
      * Get pending fraud alerts
      */
     @GetMapping("/company/{companyId}/pending")
-    @PreAuthorize("hasAuthority('fraud-alerts:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<List<FraudAlert>> getPendingAlertsByCompany(@PathVariable Long companyId) {
         log.info("GET /api/fraud-alerts/company/{}/pending - Getting pending alerts", companyId);
         List<FraudAlert> alerts = fraudAlertService.getPendingAlertsByCompany(companyId);
@@ -91,7 +91,7 @@ public class FraudAlertController {
      * Get recent fraud alerts (last N days)
      */
     @GetMapping("/company/{companyId}/recent")
-    @PreAuthorize("hasAuthority('fraud-alerts:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<List<FraudAlert>> getRecentAlertsByCompany(
             @PathVariable Long companyId,
             @RequestParam(defaultValue = "7") int days) {
@@ -105,7 +105,7 @@ public class FraudAlertController {
      * Get high priority fraud alerts
      */
     @GetMapping("/company/{companyId}/high-priority")
-    @PreAuthorize("hasAuthority('fraud-alerts:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<List<FraudAlert>> getHighPriorityAlertsByCompany(@PathVariable Long companyId) {
         log.info("GET /api/fraud-alerts/company/{}/high-priority - Getting high priority alerts",
                 companyId);
@@ -117,7 +117,7 @@ public class FraudAlertController {
      * Get alerts by related entity
      */
     @GetMapping("/company/{companyId}/entity/{entityType}/{entityId}")
-    @PreAuthorize("hasAuthority('fraud-alerts:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<List<FraudAlert>> getAlertsByRelatedEntity(
             @PathVariable Long companyId,
             @PathVariable String entityType,
@@ -133,7 +133,7 @@ public class FraudAlertController {
      * Get fraud alert by ID
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('fraud-alerts:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<FraudAlert> getAlertById(@PathVariable Long id) {
         log.info("GET /api/fraud-alerts/{} - Getting fraud alert", id);
         return fraudAlertService.getAlertById(id)
@@ -145,7 +145,7 @@ public class FraudAlertController {
      * Create a new fraud alert
      */
     @PostMapping
-    @PreAuthorize("hasAuthority('fraud-alerts:create')")
+    @PreAuthorize("@perm.can('fraud_detection', 'create')")
     public ResponseEntity<FraudAlert> createAlert(@RequestBody FraudAlert alert) {
         log.info("POST /api/fraud-alerts - Creating fraud alert");
         FraudAlert createdAlert = fraudAlertService.createAlert(alert);
@@ -156,7 +156,7 @@ public class FraudAlertController {
      * Update fraud alert status
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAuthority('fraud-alerts:update')")
+    @PreAuthorize("@perm.can('fraud_detection', 'update')")
     public ResponseEntity<FraudAlert> updateAlertStatus(
             @PathVariable Long id,
             @RequestParam FraudAlertStatus status) {
@@ -169,7 +169,7 @@ public class FraudAlertController {
      * Resolve a fraud alert
      */
     @PostMapping("/{id}/resolve")
-    @PreAuthorize("hasAuthority('fraud-alerts:update')")
+    @PreAuthorize("@perm.can('fraud_detection', 'update')")
     public ResponseEntity<FraudAlert> resolveAlert(
             @PathVariable Long id,
             @RequestBody Map<String, Object> payload) {
@@ -186,7 +186,7 @@ public class FraudAlertController {
      * Update a fraud alert
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('fraud-alerts:update')")
+    @PreAuthorize("@perm.can('fraud_detection', 'update')")
     public ResponseEntity<FraudAlert> updateAlert(
             @PathVariable Long id,
             @RequestBody FraudAlert alertDetails) {
@@ -199,7 +199,7 @@ public class FraudAlertController {
      * Delete a fraud alert
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('fraud-alerts:delete')")
+    @PreAuthorize("@perm.can('fraud_detection', 'delete')")
     public ResponseEntity<Void> deleteAlert(@PathVariable Long id) {
         log.info("DELETE /api/fraud-alerts/{} - Deleting fraud alert", id);
         fraudAlertService.deleteAlert(id);
@@ -210,7 +210,7 @@ public class FraudAlertController {
      * Get alert statistics
      */
     @GetMapping("/company/{companyId}/statistics")
-    @PreAuthorize("hasAuthority('fraud-alerts:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<Map<String, Long>> getAlertStatistics(@PathVariable Long companyId) {
         log.info("GET /api/fraud-alerts/company/{}/statistics - Getting alert statistics", companyId);
         Map<String, Long> stats = fraudAlertService.getAlertStatistics(companyId);
@@ -221,7 +221,7 @@ public class FraudAlertController {
      * Count alerts by status
      */
     @GetMapping("/company/{companyId}/count/status/{status}")
-    @PreAuthorize("hasAuthority('fraud-alerts:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<Long> countAlertsByStatus(
             @PathVariable Long companyId,
             @PathVariable FraudAlertStatus status) {
@@ -235,7 +235,7 @@ public class FraudAlertController {
      * Count alerts by severity
      */
     @GetMapping("/company/{companyId}/count/severity/{severity}")
-    @PreAuthorize("hasAuthority('fraud-alerts:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<Long> countAlertsBySeverity(
             @PathVariable Long companyId,
             @PathVariable FraudSeverity severity) {

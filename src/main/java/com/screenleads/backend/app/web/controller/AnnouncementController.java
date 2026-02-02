@@ -4,13 +4,16 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.screenleads.backend.app.application.service.AdviceService;
+import com.screenleads.backend.app.application.service.DeviceService;
 import com.screenleads.backend.app.web.dto.AdviceDTO;
+import com.screenleads.backend.app.web.dto.DeviceDTO;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,9 +34,11 @@ import lombok.extern.slf4j.Slf4j;
 public class AnnouncementController {
 
     private final AdviceService adviceService;
+    private final DeviceService deviceService;
 
-    public AnnouncementController(AdviceService adviceService) {
+    public AnnouncementController(AdviceService adviceService, DeviceService deviceService) {
         this.adviceService = adviceService;
+        this.deviceService = deviceService;
     }
 
     @PreAuthorize("@perm.can('advice', 'read')")
@@ -123,5 +128,35 @@ public class AnnouncementController {
         // AdviceService usa filtros de sesión - devolver todos los advices filtrados
         // automáticamente
         return ResponseEntity.ok(adviceService.getAllAdvices());
+    }
+
+    @PreAuthorize("@perm.can('advice', 'read')")
+    @GetMapping("/{announcementId}/devices")
+    @Operation(summary = "Obtener dispositivos asignados a un anuncio")
+    public ResponseEntity<List<DeviceDTO>> getDevicesForAnnouncement(@PathVariable Long announcementId) {
+        log.info("GET /announcements/{}/devices - Getting assigned devices", announcementId);
+        return ResponseEntity.ok(adviceService.getDevicesForAdvice(announcementId));
+    }
+
+    @PreAuthorize("@perm.can('advice', 'update')")
+    @PostMapping("/{announcementId}/devices/{deviceId}")
+    @Operation(summary = "Asignar un dispositivo a un anuncio")
+    public ResponseEntity<Void> assignDeviceToAnnouncement(
+            @PathVariable Long announcementId,
+            @PathVariable Long deviceId) {
+        log.info("POST /announcements/{}/devices/{} - Assigning device to announcement", announcementId, deviceId);
+        adviceService.assignDeviceToAdvice(announcementId, deviceId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("@perm.can('advice', 'update')")
+    @DeleteMapping("/{announcementId}/devices/{deviceId}")
+    @Operation(summary = "Desasignar un dispositivo de un anuncio")
+    public ResponseEntity<Void> unassignDeviceFromAnnouncement(
+            @PathVariable Long announcementId,
+            @PathVariable Long deviceId) {
+        log.info("DELETE /announcements/{}/devices/{} - Unassigning device from announcement", announcementId, deviceId);
+        adviceService.unassignDeviceFromAdvice(announcementId, deviceId);
+        return ResponseEntity.noContent().build();
     }
 }

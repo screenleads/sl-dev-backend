@@ -29,7 +29,7 @@ public class FraudRuleController {
      * Get all fraud rules by company
      */
     @GetMapping("/company/{companyId}")
-    @PreAuthorize("hasAuthority('fraud-rules:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<List<FraudRule>> getRulesByCompany(@PathVariable Long companyId) {
         log.info("GET /api/fraud-rules/company/{} - Getting fraud rules", companyId);
         List<FraudRule> rules = fraudRuleService.getRulesByCompany(companyId);
@@ -40,7 +40,7 @@ public class FraudRuleController {
      * Get active fraud rules by company
      */
     @GetMapping("/company/{companyId}/active")
-    @PreAuthorize("hasAuthority('fraud-rules:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<List<FraudRule>> getActiveRulesByCompany(@PathVariable Long companyId) {
         log.info("GET /api/fraud-rules/company/{}/active - Getting active fraud rules", companyId);
         List<FraudRule> rules = fraudRuleService.getActiveRulesByCompany(companyId);
@@ -51,7 +51,7 @@ public class FraudRuleController {
      * Get fraud rules by type
      */
     @GetMapping("/company/{companyId}/type/{ruleType}")
-    @PreAuthorize("hasAuthority('fraud-rules:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<List<FraudRule>> getRulesByType(
             @PathVariable Long companyId,
             @PathVariable FraudRuleType ruleType) {
@@ -65,7 +65,7 @@ public class FraudRuleController {
      * Get fraud rules by severity
      */
     @GetMapping("/company/{companyId}/severity/{severity}")
-    @PreAuthorize("hasAuthority('fraud-rules:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<List<FraudRule>> getRulesBySeverity(
             @PathVariable Long companyId,
             @PathVariable FraudSeverity severity) {
@@ -79,7 +79,7 @@ public class FraudRuleController {
      * Get auto-block rules by company
      */
     @GetMapping("/company/{companyId}/auto-block")
-    @PreAuthorize("hasAuthority('fraud-rules:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<List<FraudRule>> getAutoBlockRulesByCompany(@PathVariable Long companyId) {
         log.info("GET /api/fraud-rules/company/{}/auto-block - Getting auto-block rules", companyId);
         List<FraudRule> rules = fraudRuleService.getAutoBlockRulesByCompany(companyId);
@@ -90,7 +90,7 @@ public class FraudRuleController {
      * Get fraud rule by ID
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('fraud-rules:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<FraudRule> getRuleById(@PathVariable Long id) {
         log.info("GET /api/fraud-rules/{} - Getting fraud rule", id);
         return fraudRuleService.getRuleById(id)
@@ -102,7 +102,7 @@ public class FraudRuleController {
      * Create a new fraud rule
      */
     @PostMapping
-    @PreAuthorize("hasAuthority('fraud-rules:create')")
+    @PreAuthorize("@perm.can('fraud_detection', 'create')")
     public ResponseEntity<FraudRule> createRule(@RequestBody FraudRule rule) {
         log.info("POST /api/fraud-rules - Creating fraud rule: {}", rule.getName());
         FraudRule createdRule = fraudRuleService.createRule(rule);
@@ -113,7 +113,7 @@ public class FraudRuleController {
      * Update an existing fraud rule
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('fraud-rules:update')")
+    @PreAuthorize("@perm.can('fraud_detection', 'update')")
     public ResponseEntity<FraudRule> updateRule(
             @PathVariable Long id,
             @RequestBody FraudRule ruleDetails) {
@@ -126,7 +126,7 @@ public class FraudRuleController {
      * Delete a fraud rule
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('fraud-rules:delete')")
+    @PreAuthorize("@perm.can('fraud_detection', 'delete')")
     public ResponseEntity<Void> deleteRule(@PathVariable Long id) {
         log.info("DELETE /api/fraud-rules/{} - Deleting fraud rule", id);
         fraudRuleService.deleteRule(id);
@@ -137,7 +137,7 @@ public class FraudRuleController {
      * Toggle fraud rule active status
      */
     @PatchMapping("/{id}/toggle-active")
-    @PreAuthorize("hasAuthority('fraud-rules:update')")
+    @PreAuthorize("@perm.can('fraud_detection', 'update')")
     public ResponseEntity<FraudRule> toggleRuleActive(@PathVariable Long id) {
         log.info("PATCH /api/fraud-rules/{}/toggle-active - Toggling rule active status", id);
         FraudRule updatedRule = fraudRuleService.toggleRuleActive(id);
@@ -148,7 +148,7 @@ public class FraudRuleController {
      * Count active rules by company
      */
     @GetMapping("/company/{companyId}/count")
-    @PreAuthorize("hasAuthority('fraud-rules:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<Long> countActiveRulesByCompany(@PathVariable Long companyId) {
         log.info("GET /api/fraud-rules/company/{}/count - Counting active fraud rules", companyId);
         long count = fraudRuleService.countActiveRulesByCompany(companyId);
@@ -159,7 +159,7 @@ public class FraudRuleController {
      * Check if rule name exists
      */
     @GetMapping("/company/{companyId}/exists")
-    @PreAuthorize("hasAuthority('fraud-rules:read')")
+    @PreAuthorize("@perm.can('fraud_detection', 'read')")
     public ResponseEntity<Boolean> ruleNameExists(
             @PathVariable Long companyId,
             @RequestParam String name) {

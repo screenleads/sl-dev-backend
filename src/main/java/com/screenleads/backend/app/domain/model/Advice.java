@@ -2,6 +2,7 @@ package com.screenleads.backend.app.domain.model;
 
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.hibernate.annotations.Filter;
@@ -71,5 +72,6 @@ private List<AdviceSchedule> schedules;
 
 @ManyToMany(mappedBy = "advices")
 @JsonIgnore
-private Set<Device> devices;
+@Builder.Default
+private Set<Device> devices = new HashSet<>();
 }

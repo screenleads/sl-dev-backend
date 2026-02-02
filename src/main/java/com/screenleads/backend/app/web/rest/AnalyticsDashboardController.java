@@ -24,6 +24,41 @@ public class AnalyticsDashboardController {
     private final AnalyticsDashboardService analyticsDashboardService;
 
     /**
+     * GET /api/analytics/dashboard/overview
+     * Get dashboard overview with top metrics (used by analytics dashboard
+     * component)
+     */
+    @GetMapping("/overview")
+    public ResponseEntity<Map<String, Object>> getDashboardOverview(
+            @RequestParam(required = false) Long companyId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        // Si no se proporciona companyId, usar la del usuario actual (ID 1 por defecto)
+        Long effectiveCompanyId = companyId != null ? companyId : 1L;
+
+        log.debug("REST request to get dashboard overview for company: {}, period: {} to {}",
+                effectiveCompanyId, startDate, endDate);
+
+        // Obtener top conversiones y top conversion rate
+        List<TopPromotionDTO> topConversions = analyticsDashboardService
+                .getTopPromotionsByConversion(effectiveCompanyId, startDate, endDate, 10);
+
+        // Para topConversionRate usamos el mismo método por ahora
+        List<TopPromotionDTO> topConversionRate = analyticsDashboardService
+                .getTopPromotionsByConversion(effectiveCompanyId, startDate, endDate, 10);
+
+        Map<String, Object> overview = Map.of(
+                "startDate", startDate.toString(),
+                "endDate", endDate.toString(),
+                "topConversions", topConversions,
+                "topConversionRate", topConversionRate,
+                "latestMetricDate", endDate.toString());
+
+        return ResponseEntity.ok(overview);
+    }
+
+    /**
      * GET /api/analytics/dashboard/summary
      * Get overall dashboard summary with key metrics
      */

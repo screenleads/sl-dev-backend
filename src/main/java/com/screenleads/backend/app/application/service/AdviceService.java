@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.screenleads.backend.app.web.dto.AdviceDTO;
+import com.screenleads.backend.app.web.dto.DeviceDTO;
 
 public interface AdviceService {
     List<AdviceDTO> getAllAdvices();
@@ -19,4 +20,11 @@ public interface AdviceService {
     AdviceDTO updateAdvice(Long id, AdviceDTO dto);
 
     void deleteAdvice(Long id);
+
+    /** Gestión de asignación de dispositivos a advices */
+    List<DeviceDTO> getDevicesForAdvice(Long adviceId);
+
+    void assignDeviceToAdvice(Long adviceId, Long deviceId);
+
+    void unassignDeviceFromAdvice(Long adviceId, Long deviceId);
 }

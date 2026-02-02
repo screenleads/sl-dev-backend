@@ -2,7 +2,9 @@ package com.screenleads.backend.app.application.service.impl;
 
 import com.screenleads.backend.app.application.service.GeofenceService;
 import com.screenleads.backend.app.domain.model.*;
-import com.screenleads.backend.app.infrastructure.repository.*;
+import com.screenleads.backend.app.domain.repository.GeofenceRuleRepository;
+import com.screenleads.backend.app.domain.repository.GeofenceZoneRepository;
+import com.screenleads.backend.app.domain.repository.GeofenceEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -64,13 +66,13 @@ public class GeofenceServiceImpl implements GeofenceService {
     @Override
     @Transactional(readOnly = true)
     public List<GeofenceZone> getZonesByCompany(Long companyId) {
-        return zoneRepository.findByCompany_Id(companyId);
+        return zoneRepository.findByCompany_IdOrderByCreatedAtDesc(companyId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<GeofenceZone> getActiveZonesByCompany(Long companyId) {
-        return zoneRepository.findByCompany_IdAndIsActiveTrue(companyId);
+        return zoneRepository.findByCompany_IdAndIsActiveTrueOrderByCreatedAtDesc(companyId);
     }
 
     @Override
@@ -109,13 +111,13 @@ public class GeofenceServiceImpl implements GeofenceService {
     @Override
     @Transactional(readOnly = true)
     public List<GeofenceRule> getRulesByZone(Long zoneId) {
-        return ruleRepository.findByZone_Id(zoneId);
+        return ruleRepository.findByZone_IdOrderByPriorityDesc(zoneId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<GeofenceRule> getActiveRulesByCompany(Long companyId) {
-        return ruleRepository.findActiveRulesByCompany(companyId);
+        return ruleRepository.findByCompany_IdAndIsActiveTrueOrderByPriorityDescCreatedAtDesc(companyId);
     }
 
     @Override
@@ -123,7 +125,7 @@ public class GeofenceServiceImpl implements GeofenceService {
     public List<Promotion> checkGeofenceRules(Long deviceId, double latitude, double longitude) {
         // Obtener todas las reglas activas (todas las compañías por ahora)
         // En producción, debería filtrarse por la compañía del device
-        List<GeofenceRule> rules = ruleRepository.findByIsActiveTrue();
+        List<GeofenceRule> rules = ruleRepository.findByIsActiveTrueOrderByPriorityDesc();
 
         // Filtrar promociones según las reglas de geofencing
         return rules.stream()
@@ -165,19 +167,19 @@ public class GeofenceServiceImpl implements GeofenceService {
     @Override
     @Transactional(readOnly = true)
     public List<GeofenceEvent> getDeviceEvents(Long deviceId, int page, int size) {
-        Page<GeofenceEvent> events = eventRepository.findByDevice_Id(
-                deviceId,
-                PageRequest.of(page, size));
-        return events.getContent();
+        List<GeofenceEvent> allEvents = eventRepository.findByDevice_IdOrderByCreatedAtDesc(deviceId);
+        int start = page * size;
+        int end = Math.min(start + size, allEvents.size());
+        return start < allEvents.size() ? allEvents.subList(start, end) : List.of();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<GeofenceEvent> getZoneEvents(Long zoneId, int page, int size) {
-        Page<GeofenceEvent> events = eventRepository.findByZone_Id(
-                zoneId,
-                PageRequest.of(page, size));
-        return events.getContent();
+        List<GeofenceEvent> allEvents = eventRepository.findByZone_IdOrderByCreatedAtDesc(zoneId);
+        int start = page * size;
+        int end = Math.min(start + size, allEvents.size());
+        return start < allEvents.size() ? allEvents.subList(start, end) : List.of();
     }
 
     @Override
@@ -186,14 +188,14 @@ public class GeofenceServiceImpl implements GeofenceService {
         GeofenceZone zone = getZone(zoneId);
         LocalDateTime last7Days = LocalDateTime.now().minusDays(7);
 
-        long enterEvents = eventRepository.countByZone_IdAndEventTypeAndTimestampAfter(
-                zoneId, GeofenceEventType.ENTER, last7Days);
+        long enterEvents = eventRepository.countByZone_IdAndEventType(
+                zoneId, GeofenceEventType.ENTER);
 
-        long exitEvents = eventRepository.countByZone_IdAndEventTypeAndTimestampAfter(
-                zoneId, GeofenceEventType.EXIT, last7Days);
+        long exitEvents = eventRepository.countByZone_IdAndEventType(
+                zoneId, GeofenceEventType.EXIT);
 
-        long dwellEvents = eventRepository.countByZone_IdAndEventTypeAndTimestampAfter(
-                zoneId, GeofenceEventType.DWELL, last7Days);
+        long dwellEvents = eventRepository.countByZone_IdAndEventType(
+                zoneId, GeofenceEventType.DWELL);
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("zoneId", zoneId);
@@ -210,7 +212,8 @@ public class GeofenceServiceImpl implements GeofenceService {
     @Override
     @Transactional(readOnly = true)
     public Map<String, Object> getCompanyGeofenceStats(Long companyId) {
-        long totalZones = zoneRepository.countByCompany_Id(companyId);
+        List<GeofenceZone> allZones = zoneRepository.findByCompany_IdOrderByCreatedAtDesc(companyId);
+        long totalZones = allZones.size();
         long activeZones = zoneRepository.countByCompany_IdAndIsActiveTrue(companyId);
 
         List<GeofenceZone> zones = getActiveZonesByCompany(companyId);

@@ -2,7 +2,9 @@ package com.screenleads.backend.app.application.service.impl;
 
 import com.screenleads.backend.app.application.service.GeofenceService;
 import com.screenleads.backend.app.domain.model.*;
-import com.screenleads.backend.app.infrastructure.repository.*;
+import com.screenleads.backend.app.domain.repository.GeofenceRuleRepository;
+import com.screenleads.backend.app.domain.repository.GeofenceZoneRepository;
+import com.screenleads.backend.app.domain.repository.GeofenceEventRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -192,14 +194,14 @@ class GeofenceServiceImplTest {
     @Test
     void testGetZonesByCompany() {
         // Arrange
-        when(zoneRepository.findByCompany_Id(1L)).thenReturn(List.of(circleZone, rectangleZone));
+        when(zoneRepository.findByCompany_IdOrderByCreatedAtDesc(1L)).thenReturn(List.of(circleZone, rectangleZone));
 
         // Act
         List<GeofenceZone> result = geofenceService.getZonesByCompany(1L);
 
         // Assert
         assertEquals(2, result.size());
-        verify(zoneRepository).findByCompany_Id(1L);
+        verify(zoneRepository).findByCompany_IdOrderByCreatedAtDesc(1L);
     }
 
     @Test
@@ -207,7 +209,7 @@ class GeofenceServiceImplTest {
         // Arrange
         circleZone.setIsActive(true);
         rectangleZone.setIsActive(false);
-        when(zoneRepository.findByCompany_IdAndIsActiveTrue(1L)).thenReturn(List.of(circleZone));
+        when(zoneRepository.findByCompany_IdAndIsActiveTrueOrderByCreatedAtDesc(1L)).thenReturn(List.of(circleZone));
 
         // Act
         List<GeofenceZone> result = geofenceService.getActiveZonesByCompany(1L);
@@ -262,7 +264,7 @@ class GeofenceServiceImplTest {
     @Test
     void testGetRulesByZone() {
         // Arrange
-        when(ruleRepository.findByZone_Id(1L)).thenReturn(List.of(rule));
+        when(ruleRepository.findByZone_IdOrderByPriorityDesc(1L)).thenReturn(List.of(rule));
 
         // Act
         List<GeofenceRule> result = geofenceService.getRulesByZone(1L);
@@ -288,7 +290,7 @@ class GeofenceServiceImplTest {
     @Test
     void testGetActiveRulesByCompany() {
         // Arrange
-        when(ruleRepository.findActiveRulesByCompany(1L))
+        when(ruleRepository.findByCompany_IdAndIsActiveTrueOrderByPriorityDescCreatedAtDesc(1L))
                 .thenReturn(List.of(rule));
 
         // Act
@@ -305,7 +307,7 @@ class GeofenceServiceImplTest {
         double testLat = 40.4168; // Madrid center
         double testLon = -3.7038;
 
-        when(zoneRepository.findByCompany_IdAndIsActiveTrue(1L))
+        when(zoneRepository.findByCompany_IdAndIsActiveTrueOrderByCreatedAtDesc(1L))
                 .thenReturn(List.of(circleZone));
 
         // Act
@@ -323,7 +325,7 @@ class GeofenceServiceImplTest {
         double testLat = 40.42; // Inside rectangle
         double testLon = -3.70;
 
-        when(zoneRepository.findByCompany_IdAndIsActiveTrue(1L))
+        when(zoneRepository.findByCompany_IdAndIsActiveTrueOrderByCreatedAtDesc(1L))
                 .thenReturn(List.of(rectangleZone));
 
         // Act
@@ -339,7 +341,7 @@ class GeofenceServiceImplTest {
         double testLat = 40.42;
         double testLon = -3.70;
 
-        when(zoneRepository.findByCompany_IdAndIsActiveTrue(1L))
+        when(zoneRepository.findByCompany_IdAndIsActiveTrueOrderByCreatedAtDesc(1L))
                 .thenReturn(List.of(rectangleZone));
 
         // Act
@@ -353,7 +355,7 @@ class GeofenceServiceImplTest {
     @Test
     void testIsInsideAnyZone_False_NoZones() {
         // Arrange
-        when(zoneRepository.findByCompany_IdAndIsActiveTrue(1L))
+        when(zoneRepository.findByCompany_IdAndIsActiveTrueOrderByCreatedAtDesc(1L))
                 .thenReturn(Collections.emptyList());
 
         // Act
@@ -380,9 +382,8 @@ class GeofenceServiceImplTest {
     @Test
     void testGetDeviceEvents() {
         // Arrange
-        Page<GeofenceEvent> page = new PageImpl<>(List.of(event));
-        when(eventRepository.findByDevice_Id(eq(1L), any(PageRequest.class)))
-                .thenReturn(page);
+        when(eventRepository.findByDevice_IdOrderByCreatedAtDesc(1L))
+                .thenReturn(List.of(event));
 
         // Act
         List<GeofenceEvent> result = geofenceService.getDeviceEvents(1L, 0, 10);
@@ -395,9 +396,8 @@ class GeofenceServiceImplTest {
     @Test
     void testGetZoneEvents() {
         // Arrange
-        Page<GeofenceEvent> page = new PageImpl<>(List.of(event));
-        when(eventRepository.findByZone_Id(eq(1L), any(PageRequest.class)))
-                .thenReturn(page);
+        when(eventRepository.findByZone_IdOrderByCreatedAtDesc(1L))
+                .thenReturn(List.of(event));
 
         // Act
         List<GeofenceEvent> result = geofenceService.getZoneEvents(1L, 0, 10);
@@ -412,14 +412,14 @@ class GeofenceServiceImplTest {
         // Arrange
         LocalDateTime last7Days = LocalDateTime.now().minusDays(7);
         when(zoneRepository.findById(1L)).thenReturn(Optional.of(circleZone));
-        when(eventRepository.countByZone_IdAndEventTypeAndTimestampAfter(
-                eq(1L), eq(GeofenceEventType.ENTER), any(LocalDateTime.class)))
+        when(eventRepository.countByZone_IdAndEventType(
+                eq(1L), eq(GeofenceEventType.ENTER)))
                 .thenReturn(10L);
-        when(eventRepository.countByZone_IdAndEventTypeAndTimestampAfter(
-                eq(1L), eq(GeofenceEventType.EXIT), any(LocalDateTime.class)))
+        when(eventRepository.countByZone_IdAndEventType(
+                eq(1L), eq(GeofenceEventType.EXIT)))
                 .thenReturn(8L);
-        when(eventRepository.countByZone_IdAndEventTypeAndTimestampAfter(
-                eq(1L), eq(GeofenceEventType.DWELL), any(LocalDateTime.class)))
+        when(eventRepository.countByZone_IdAndEventType(
+                eq(1L), eq(GeofenceEventType.DWELL)))
                 .thenReturn(5L);
 
         // Act
@@ -438,9 +438,9 @@ class GeofenceServiceImplTest {
     @Test
     void testGetCompanyGeofenceStats() {
         // Arrange
-        when(zoneRepository.countByCompany_Id(1L)).thenReturn(5L);
+        when(zoneRepository.findByCompany_IdOrderByCreatedAtDesc(1L)).thenReturn(List.of(circleZone, rectangleZone, circleZone, rectangleZone, circleZone));
         when(zoneRepository.countByCompany_IdAndIsActiveTrue(1L)).thenReturn(3L);
-        when(zoneRepository.findByCompany_IdAndIsActiveTrue(1L))
+        when(zoneRepository.findByCompany_IdAndIsActiveTrueOrderByCreatedAtDesc(1L))
                 .thenReturn(List.of(circleZone, rectangleZone));
 
         // Act
@@ -458,8 +458,8 @@ class GeofenceServiceImplTest {
     void testGetZoneStatistics_NoEvents() {
         // Arrange
         when(zoneRepository.findById(1L)).thenReturn(Optional.of(circleZone));
-        when(eventRepository.countByZone_IdAndEventTypeAndTimestampAfter(
-                anyLong(), any(GeofenceEventType.class), any(LocalDateTime.class)))
+        when(eventRepository.countByZone_IdAndEventType(
+                anyLong(), any(GeofenceEventType.class)))
                 .thenReturn(0L);
 
         // Act
@@ -520,7 +520,7 @@ class GeofenceServiceImplTest {
 
         rule.setPriority(1);
 
-        when(ruleRepository.findActiveRulesByCompany(1L))
+        when(ruleRepository.findByCompany_IdAndIsActiveTrueOrderByPriorityDescCreatedAtDesc(1L))
                 .thenReturn(List.of(rule2, rule));
 
         // Act
@@ -537,7 +537,7 @@ class GeofenceServiceImplTest {
         double testLat = 40.42;
         double testLon = -3.70;
 
-        when(zoneRepository.findByCompany_IdAndIsActiveTrue(1L))
+        when(zoneRepository.findByCompany_IdAndIsActiveTrueOrderByCreatedAtDesc(1L))
                 .thenReturn(List.of(circleZone, rectangleZone));
 
         // Act
@@ -545,7 +545,7 @@ class GeofenceServiceImplTest {
 
         // Assert
         assertNotNull(result);
-        verify(zoneRepository).findByCompany_IdAndIsActiveTrue(1L);
+        verify(zoneRepository).findByCompany_IdAndIsActiveTrueOrderByCreatedAtDesc(1L);
     }
 
     @Test
@@ -559,9 +559,8 @@ class GeofenceServiceImplTest {
             events.add(e);
         }
 
-        Page<GeofenceEvent> page = new PageImpl<>(events.subList(0, 10));
-        when(eventRepository.findByDevice_Id(eq(1L), any(PageRequest.class)))
-                .thenReturn(page);
+        when(eventRepository.findByDevice_IdOrderByCreatedAtDesc(1L))
+                .thenReturn(events.subList(0, 10));
 
         // Act
         List<GeofenceEvent> result = geofenceService.getDeviceEvents(1L, 0, 10);
@@ -573,9 +572,8 @@ class GeofenceServiceImplTest {
     @Test
     void testGetZoneEvents_EmptyResult() {
         // Arrange
-        Page<GeofenceEvent> emptyPage = new PageImpl<>(Collections.emptyList());
-        when(eventRepository.findByZone_Id(eq(999L), any(PageRequest.class)))
-                .thenReturn(emptyPage);
+        when(eventRepository.findByZone_IdOrderByCreatedAtDesc(999L))
+                .thenReturn(Collections.emptyList());
 
         // Act
         List<GeofenceEvent> result = geofenceService.getZoneEvents(999L, 0, 10);

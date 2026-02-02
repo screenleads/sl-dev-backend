@@ -119,6 +119,9 @@ JWT_EXPIRATION=86400000
 # Con Maven
 mvn spring-boot:run
 
+# Con Maven (sin compilar ni ejecutar tests)
+mvn spring-boot:run -Dmaven.test.skip=true
+
 # Con perfil específico
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 

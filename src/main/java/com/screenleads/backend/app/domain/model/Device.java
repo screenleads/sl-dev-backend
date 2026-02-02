@@ -1,6 +1,7 @@
 package com.screenleads.backend.app.domain.model;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Set;
 import jakarta.persistence.*;
 import lombok.*;
@@ -51,7 +52,8 @@ public class Device extends Auditable {
 
     @ManyToMany
     @JoinTable(name = "device_advice", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "advice_id"))
-    private Set<Advice> advices;
+    @Builder.Default
+    private Set<Advice> advices = new HashSet<>();
 
     // === Ubicación física ===
     @Column(name = "location_name", length = 255)

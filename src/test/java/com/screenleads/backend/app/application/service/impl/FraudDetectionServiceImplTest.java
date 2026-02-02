@@ -2,7 +2,9 @@ package com.screenleads.backend.app.application.service.impl;
 
 import com.screenleads.backend.app.domain.model.*;
 import com.screenleads.backend.app.domain.repositories.PromotionRedemptionRepository;
-import com.screenleads.backend.app.infrastructure.repository.*;
+import com.screenleads.backend.app.domain.repository.FraudRuleRepository;
+import com.screenleads.backend.app.domain.repository.FraudAlertRepository;
+import com.screenleads.backend.app.domain.repository.BlacklistRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -161,7 +163,7 @@ class FraudDetectionServiceImplTest {
 
     @Test
     void testGetActiveRulesByCompany() {
-        when(ruleRepository.findByCompany_IdAndIsActiveTrue(1L)).thenReturn(List.of(rule));
+        when(ruleRepository.findActiveRulesByCompany(1L)).thenReturn(List.of(rule));
 
         List<FraudRule> result = fraudService.getActiveRulesByCompany(1L);
 
@@ -228,13 +230,12 @@ class FraudDetectionServiceImplTest {
 
     @Test
     void testGetAlertsByCompany_WithPagination() {
-        Page<FraudAlert> page = new PageImpl<>(List.of(alert));
-        when(alertRepository.findByCompany_Id(eq(1L), any(PageRequest.class))).thenReturn(page);
+        when(alertRepository.findByCompany_Id(eq(1L))).thenReturn(List.of(alert));
 
         List<FraudAlert> result = fraudService.getAlertsByCompany(1L, 0, 10);
 
         assertEquals(1, result.size());
-        verify(alertRepository).findByCompany_Id(eq(1L), any(PageRequest.class));
+        verify(alertRepository).findByCompany_Id(eq(1L));
     }
 
     @Test
@@ -332,14 +333,14 @@ class FraudDetectionServiceImplTest {
         context.put("deviceId", 123L);
         context.put("timestamp", LocalDateTime.now());
 
-        when(ruleRepository.findByCompany_IdAndIsActiveTrue(1L)).thenReturn(List.of(rule));
+        when(ruleRepository.findActiveRulesByCompany(1L)).thenReturn(List.of(rule));
         when(redemptionRepository.countByDevice_IdAndCreatedAtAfter(
                 anyLong(), any(LocalDateTime.class))).thenReturn(5L);
 
         List<FraudAlert> alerts = fraudService.checkForFraud(1L, "REDEMPTION", 100L, context);
 
         assertNotNull(alerts);
-        verify(ruleRepository).findByCompany_IdAndIsActiveTrue(1L);
+        verify(ruleRepository).findActiveRulesByCompany(1L);
     }
 
     @Test
@@ -413,7 +414,7 @@ class FraudDetectionServiceImplTest {
     @Test
     void testCheckForFraud_NoActiveRules() {
         Map<String, Object> context = new HashMap<>();
-        when(ruleRepository.findByCompany_IdAndIsActiveTrue(1L)).thenReturn(List.of());
+        when(ruleRepository.findActiveRulesByCompany(1L)).thenReturn(List.of());
 
         List<FraudAlert> alerts = fraudService.checkForFraud(1L, "REDEMPTION", 100L, context);
 
@@ -432,8 +433,7 @@ class FraudDetectionServiceImplTest {
 
     @Test
     void testGetAlertsByCompany_EmptyResults() {
-        Page<FraudAlert> emptyPage = new PageImpl<>(List.of());
-        when(alertRepository.findByCompany_Id(eq(1L), any(PageRequest.class))).thenReturn(emptyPage);
+        when(alertRepository.findByCompany_Id(eq(1L))).thenReturn(List.of());
 
         List<FraudAlert> result = fraudService.getAlertsByCompany(1L, 0, 10);
 

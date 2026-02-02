@@ -29,8 +29,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/customers")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/customers")
+@CrossOrigin
 @Tag(name = "Customers", description = "Gestión de clientes finales que canjean promociones")
 @RequiredArgsConstructor
 public class CustomerController {
@@ -38,16 +38,6 @@ public class CustomerController {
     private final CustomerService customerService;
 
     // ========== CRUD básico ==========
-
-    @PreAuthorize("@perm.can('customer', 'read')")
-    @GetMapping
-    @Operation(summary = "Listar todos los customers")
-    public ResponseEntity<Page<CustomerDTO>> getAllCustomers(@PageableDefault(size = 50) Pageable pageable) {
-        log.info("GET /customers - Listing all customers");
-        // Usar searchCustomers con criterios vacíos para listar todos
-        Page<CustomerDTO> customers = customerService.searchCustomers(new CustomerSearchCriteria(), pageable);
-        return ResponseEntity.ok(customers);
-    }
 
     @PostMapping
     @Operation(summary = "Crear nuevo customer", description = "Público para que dispositivos registren customers al canjear")

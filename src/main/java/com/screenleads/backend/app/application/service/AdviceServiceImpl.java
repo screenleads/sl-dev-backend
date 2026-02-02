@@ -20,7 +20,9 @@ import com.screenleads.backend.app.domain.repositories.MediaRepository;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.screenleads.backend.app.domain.repositories.UserRepository;
 import com.screenleads.backend.app.domain.repositories.MediaTypeRepository;
+import com.screenleads.backend.app.domain.repositories.DeviceRepository;
 import com.screenleads.backend.app.web.dto.*;
+import com.screenleads.backend.app.web.mapper.DeviceMapper;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -34,6 +36,7 @@ public class AdviceServiceImpl implements AdviceService {
     private final UserRepository userRepository;
     private final MediaTypeRepository mediaTypeRepository;
     private final CompanyRepository companyRepository;
+    private final DeviceRepository deviceRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -42,12 +45,14 @@ public class AdviceServiceImpl implements AdviceService {
             MediaRepository mediaRepository,
             UserRepository userRepository,
             MediaTypeRepository mediaTypeRepository,
-            CompanyRepository companyRepository) {
+            CompanyRepository companyRepository,
+            DeviceRepository deviceRepository) {
         this.adviceRepository = adviceRepository;
         this.mediaRepository = mediaRepository;
         this.userRepository = userRepository;
         this.mediaTypeRepository = mediaTypeRepository;
         this.companyRepository = companyRepository;
+        this.deviceRepository = deviceRepository;
     }
 
     // ======================= LECTURAS =======================
@@ -571,5 +576,53 @@ public class AdviceServiceImpl implements AdviceService {
                     .orElse(null);
         }
         return null;
+    }
+
+    // ======================= DEVICE ASSIGNMENT =======================
+
+    @Override
+    @Transactional
+    public List<DeviceDTO> getDevicesForAdvice(Long adviceId) {
+        enableCompanyFilterIfNeeded();
+        Advice advice = adviceRepository.findById(adviceId)
+                .orElseThrow(() -> new RuntimeException(ADVICE_NOT_FOUND + adviceId));
+
+        return advice.getDevices().stream()
+                .map(DeviceMapper::toDTO)
+                .sorted(Comparator.comparing(DeviceDTO::id, Comparator.nullsLast(Long::compareTo)))
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void assignDeviceToAdvice(Long adviceId, Long deviceId) {
+        enableCompanyFilterIfNeeded();
+        Advice advice = adviceRepository.findById(adviceId)
+                .orElseThrow(() -> new RuntimeException(ADVICE_NOT_FOUND + adviceId));
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found: " + deviceId));
+
+        // Device es el dueño de la relación (tiene @JoinTable)
+        // Agregar advice al device y actualizar ambos lados
+        device.getAdvices().add(advice);
+        advice.getDevices().add(device);
+        deviceRepository.save(device);
+        log.info("Device {} assigned to advice {}", deviceId, adviceId);
+    }
+
+    @Override
+    @Transactional
+    public void unassignDeviceFromAdvice(Long adviceId, Long deviceId) {
+        enableCompanyFilterIfNeeded();
+        Advice advice = adviceRepository.findById(adviceId)
+                .orElseThrow(() -> new RuntimeException(ADVICE_NOT_FOUND + adviceId));
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found: " + deviceId));
+
+        // Remover de ambos lados de la relación
+        device.getAdvices().remove(advice);
+        advice.getDevices().remove(device);
+        deviceRepository.save(device);
+        log.info("Device {} unassigned from advice {}", deviceId, adviceId);
     }
 }
