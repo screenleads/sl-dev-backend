@@ -49,6 +49,7 @@ public class PermissionServiceImpl implements PermissionService {
                         required = p.getCreateLevel();
                         break;
                     case "update":
+                    case "write":  // 'write' es alias para 'update'
                         required = p.getUpdateLevel();
                         break;
                     case "delete":
