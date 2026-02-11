@@ -197,6 +197,24 @@ public class CompaniesServiceImpl implements CompaniesService {
         return convertToDTO(updatedCompany);
     }
 
+    @Override
+    @Transactional
+    public String createCheckoutSession(Long companyId) throws BillingException {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalArgumentException(COMPANY_NOT_FOUND_WITH_ID + companyId));
+        
+        return stripeBillingService.createCheckoutSession(company);
+    }
+
+    @Override
+    @Transactional
+    public String createBillingPortalSession(Long companyId) throws BillingException {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalArgumentException(COMPANY_NOT_FOUND_WITH_ID + companyId));
+        
+        return stripeBillingService.createBillingPortalSession(company);
+    }
+
     // ===================== MAPPING =====================
 
     private CompanyDTO convertToDTO(Company company) {

@@ -79,6 +79,36 @@ public class CompanyController {
         }
     }
 
-    // DTO para respuestas de error
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'write')")
+    @PostMapping("/{id}/create-checkout-session")
+    @Operation(summary = "Crear sesión de Stripe Checkout", description = "Genera URL de Stripe Checkout para configurar método de pago")
+    public ResponseEntity<?> createCheckoutSession(@PathVariable Long id) {
+        try {
+            String sessionId = companiesService.createCheckoutSession(id);
+            return ResponseEntity.ok(new CheckoutResponse(sessionId));
+        } catch (BillingException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'write')")
+    @PostMapping("/{id}/create-billing-portal")
+    @Operation(summary = "Crear sesión del Billing Portal", description = "Genera URL del portal de facturación de Stripe")
+    public ResponseEntity<?> createBillingPortal(@PathVariable Long id) {
+        try {
+            String portalUrl = companiesService.createBillingPortalSession(id);
+            return ResponseEntity.ok(new BillingPortalResponse(portalUrl));
+        } catch (BillingException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // DTOs para respuestas
     private record ErrorResponse(String message) {}
+    private record CheckoutResponse(String sessionId) {}
+    private record BillingPortalResponse(String portalUrl) {}
 }

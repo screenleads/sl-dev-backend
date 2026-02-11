@@ -17,4 +17,8 @@ public interface CompaniesService {
     void deleteCompany(Long id);
 
     CompanyDTO syncStripeData(Long companyId) throws BillingException;
+
+    String createCheckoutSession(Long companyId) throws BillingException;
+
+    String createBillingPortalSession(Long companyId) throws BillingException;
 }
