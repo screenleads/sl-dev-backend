@@ -128,6 +128,8 @@ public class StripeBillingServiceImpl implements StripeBillingService {
     @Override
     public Company syncStripeData(Company company) throws BillingException {
         try {
+            Customer customer;
+            
             // 1. Buscar customer en Stripe por nombre de empresa
             CustomerSearchParams searchParams = CustomerSearchParams.builder()
                     .setQuery(String.format("name:'%s'", company.getName().replace("'", "\\'")))
@@ -136,11 +138,19 @@ public class StripeBillingServiceImpl implements StripeBillingService {
             CustomerSearchResult customers = Customer.search(searchParams);
             
             if (customers.getData().isEmpty()) {
-                throw new BillingException("No se encontró customer en Stripe con nombre: " + company.getName());
+                // No existe el customer, crearlo automáticamente
+                CustomerCreateParams createParams = CustomerCreateParams.builder()
+                        .setName(company.getName())
+                        .setDescription("Customer creado automáticamente desde ScreenLeads Dashboard")
+                        .putMetadata("companyId", String.valueOf(company.getId()))
+                        .build();
+                
+                customer = Customer.create(createParams);
+            } else {
+                // Tomar el primer resultado
+                customer = customers.getData().get(0);
             }
             
-            // Tomar el primer resultado
-            Customer customer = customers.getData().get(0);
             company.setStripeCustomerId(customer.getId());
             
             // 2. Buscar subscripción activa del customer
@@ -172,8 +182,6 @@ public class StripeBillingServiceImpl implements StripeBillingService {
             // 4. Guardar y retornar
             return companyRepo.save(company);
             
-        } catch (BillingException e) {
-            throw e;
         } catch (Exception e) {
             throw new BillingException("Error al sincronizar datos de Stripe: " + e.getMessage(), e);
         }
