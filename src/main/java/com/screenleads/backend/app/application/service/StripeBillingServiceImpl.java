@@ -65,8 +65,8 @@ public class StripeBillingServiceImpl implements StripeBillingService {
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
                     .setCustomer(customerId)
-                    .setSuccessUrl(frontendUrl + "/companies?checkout=success")
-                    .setCancelUrl(frontendUrl + "/companies?checkout=cancel")
+                    .setSuccessUrl(frontendUrl + "/companies/edit/" + c.getId() + "?checkout=success")
+                    .setCancelUrl(frontendUrl + "/companies/edit/" + c.getId() + "?checkout=cancel")
                     .addLineItem(
                             SessionCreateParams.LineItem.builder()
                                     .setPrice(priceId)
