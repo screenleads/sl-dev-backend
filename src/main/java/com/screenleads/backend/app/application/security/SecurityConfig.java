@@ -75,8 +75,9 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/devices").permitAll()
                                                 .requestMatchers(HttpMethod.GET, "/devices/uuid/**").permitAll()
 
-                                // App versions: permitir consulta pública para verificación de actualizaciones
-                                .requestMatchers(HttpMethod.GET, "/app-versions/latest/**").permitAll()
+                                                // App versions: permitir consulta pública para verificación de
+                                                // actualizaciones
+                                                .requestMatchers(HttpMethod.GET, "/app-versions/latest/**").permitAll()
 
                                                 .requestMatchers("/actuator/health").permitAll()
 

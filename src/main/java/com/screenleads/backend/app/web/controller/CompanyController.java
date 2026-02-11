@@ -1,6 +1,7 @@
 // src/main/java/com/screenleads/backend/app/web/controller/CompanyController.java
 package com.screenleads.backend.app.web.controller;
 
+import com.screenleads.backend.app.application.service.BillingException;
 import com.screenleads.backend.app.application.service.CompaniesService;
 import com.screenleads.backend.app.web.dto.CompanyDTO;
 
@@ -63,4 +64,21 @@ public class CompanyController {
         companiesService.deleteCompany(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @perm.can('company', 'write')")
+    @PostMapping("/{id}/sync-stripe")
+    @Operation(summary = "Sincronizar datos de Stripe", description = "Busca el customer en Stripe y sincroniza subscripción")
+    public ResponseEntity<?> syncStripeData(@PathVariable Long id) {
+        try {
+            CompanyDTO updatedCompany = companiesService.syncStripeData(id);
+            return ResponseEntity.ok(updatedCompany);
+        } catch (BillingException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // DTO para respuestas de error
+    private record ErrorResponse(String message) {}
 }

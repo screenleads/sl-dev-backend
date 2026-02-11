@@ -3,7 +3,12 @@ package com.screenleads.backend.app.application.service;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.stripe.model.Customer;
+import com.stripe.model.CustomerSearchResult;
+import com.stripe.model.Subscription;
+import com.stripe.model.SubscriptionCollection;
 import com.stripe.param.CustomerCreateParams;
+import com.stripe.param.CustomerSearchParams;
+import com.stripe.param.SubscriptionListParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -116,6 +121,61 @@ public class StripeBillingServiceImpl implements StripeBillingService {
             }
         } catch (Exception e) {
             throw new BillingException("Failed to report lead usage", e);
+        }
+    }
+
+    // 5) Sincronizar datos de Stripe al Company
+    @Override
+    public Company syncStripeData(Company company) throws BillingException {
+        try {
+            // 1. Buscar customer en Stripe por nombre de empresa
+            CustomerSearchParams searchParams = CustomerSearchParams.builder()
+                    .setQuery(String.format("name:'%s'", company.getName().replace("'", "\\'")))
+                    .build();
+            
+            CustomerSearchResult customers = Customer.search(searchParams);
+            
+            if (customers.getData().isEmpty()) {
+                throw new BillingException("No se encontró customer en Stripe con nombre: " + company.getName());
+            }
+            
+            // Tomar el primer resultado
+            Customer customer = customers.getData().get(0);
+            company.setStripeCustomerId(customer.getId());
+            
+            // 2. Buscar subscripción activa del customer
+            SubscriptionListParams subParams = SubscriptionListParams.builder()
+                    .setCustomer(customer.getId())
+                    .setStatus(SubscriptionListParams.Status.ACTIVE)
+                    .setLimit(1L)
+                    .build();
+            
+            SubscriptionCollection subscriptions = Subscription.list(subParams);
+            
+            if (!subscriptions.getData().isEmpty()) {
+                Subscription subscription = subscriptions.getData().get(0);
+                company.setStripeSubscriptionId(subscription.getId());
+                company.setBillingStatus(Company.BillingStatus.ACTIVE.name());
+                
+                // 3. Obtener subscription item ID (para usage-based billing)
+                if (!subscription.getItems().getData().isEmpty()) {
+                    String subscriptionItemId = subscription.getItems().getData().get(0).getId();
+                    company.setStripeSubscriptionItemId(subscriptionItemId);
+                }
+            } else {
+                // Customer existe pero no tiene subscripción activa
+                company.setStripeSubscriptionId(null);
+                company.setStripeSubscriptionItemId(null);
+                company.setBillingStatus(Company.BillingStatus.INCOMPLETE.name());
+            }
+            
+            // 4. Guardar y retornar
+            return companyRepo.save(company);
+            
+        } catch (BillingException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BillingException("Error al sincronizar datos de Stripe: " + e.getMessage(), e);
         }
     }
 }

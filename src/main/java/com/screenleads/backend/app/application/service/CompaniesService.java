@@ -15,4 +15,6 @@ public interface CompaniesService {
     CompanyDTO updateCompany(Long id, CompanyDTO dto);
 
     void deleteCompany(Long id);
+
+    CompanyDTO syncStripeData(Long companyId) throws BillingException;
 }

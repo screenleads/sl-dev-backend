@@ -10,4 +10,6 @@ public interface StripeBillingService {
     String createBillingPortalSession(Company c) throws BillingException;
 
     void reportLeadUsage(Company c, long quantity, long unixTs) throws BillingException;
+
+    Company syncStripeData(Company company) throws BillingException;
 }

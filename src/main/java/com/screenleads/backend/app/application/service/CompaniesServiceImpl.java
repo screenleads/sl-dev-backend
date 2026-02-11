@@ -30,13 +30,16 @@ public class CompaniesServiceImpl implements CompaniesService {
     private final MediaTypeRepository mediaTypeRepository;
     private final CompanyRepository companyRepository;
     private final MediaRepository mediaRepository;
+    private final StripeBillingService stripeBillingService;
 
     public CompaniesServiceImpl(CompanyRepository companyRepository,
             MediaRepository mediaRepository,
-            MediaTypeRepository mediaTypeRepository) {
+            MediaTypeRepository mediaTypeRepository,
+            StripeBillingService stripeBillingService) {
         this.companyRepository = companyRepository;
         this.mediaRepository = mediaRepository;
         this.mediaTypeRepository = mediaTypeRepository;
+        this.stripeBillingService = stripeBillingService;
     }
 
     // ===================== READ =====================
@@ -182,6 +185,16 @@ public class CompaniesServiceImpl implements CompaniesService {
     @Transactional
     public void deleteCompany(Long id) {
         companyRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public CompanyDTO syncStripeData(Long companyId) throws BillingException {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalArgumentException(COMPANY_NOT_FOUND_WITH_ID + companyId));
+        
+        Company updatedCompany = stripeBillingService.syncStripeData(company);
+        return convertToDTO(updatedCompany);
     }
 
     // ===================== MAPPING =====================
