@@ -52,39 +52,53 @@ public class StripeBillingServiceImpl implements StripeBillingService {
     // 2) Checkout Session para suscripción metered
     public String createCheckoutSession(Company c) throws BillingException {
         try {
-            String customerId = ensureCustomer(c);
+            // Asegurar que existe el customer (sincronizar si no existe)
+            if (c.getStripeCustomerId() == null) {
+                c = syncStripeData(c);
+            }
+            
+            String customerId = c.getStripeCustomerId();
+            if (customerId == null) {
+                throw new BillingException("No se pudo obtener el Customer ID de Stripe. Intenta sincronizar primero.");
+            }
+            
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
                     .setCustomer(customerId)
-                    .setSuccessUrl(frontendUrl + "/billing/success?session_id={CHECKOUT_SESSION_ID}")
-                    .setCancelUrl(frontendUrl + "/billing/cancel")
+                    .setSuccessUrl(frontendUrl + "/companies?checkout=success")
+                    .setCancelUrl(frontendUrl + "/companies?checkout=cancel")
                     .addLineItem(
                             SessionCreateParams.LineItem.builder()
                                     .setPrice(priceId)
-                                    .setQuantity(1L)
                                     .build())
                     .build();
             com.stripe.model.checkout.Session session = com.stripe.model.checkout.Session.create(params);
-            return session.getId();
+            return session.getUrl();  // Retornar URL directamente en lugar de session ID
         } catch (BillingException e) {
             throw e;
         } catch (Exception e) {
-            throw new BillingException("Failed to create checkout session", e);
+            throw new BillingException("Error al crear sesión de checkout: " + e.getMessage(), e);
         }
     }
 
     // 3) Crear sesión del Billing Portal
     public String createBillingPortalSession(Company c) throws BillingException {
         try {
+            if (c.getStripeCustomerId() == null) {
+                throw new BillingException("La empresa no tiene un Customer ID de Stripe. Sincroniza primero con Stripe.");
+            }
+            
             com.stripe.param.billingportal.SessionCreateParams params = com.stripe.param.billingportal.SessionCreateParams
                     .builder()
                     .setCustomer(c.getStripeCustomerId())
-                    .setReturnUrl(frontendUrl + "/billing")
+                    .setReturnUrl(frontendUrl + "/companies")
                     .build();
             com.stripe.model.billingportal.Session portal = com.stripe.model.billingportal.Session.create(params);
             return portal.getUrl();
+        } catch (BillingException e) {
+            throw e;
         } catch (Exception e) {
-            throw new BillingException("Failed to create billing portal session", e);
+            throw new BillingException("Error al crear sesión del portal de facturación: " + e.getMessage(), e);
         }
     }
 

@@ -84,8 +84,8 @@ public class CompanyController {
     @Operation(summary = "Crear sesión de Stripe Checkout", description = "Genera URL de Stripe Checkout para configurar método de pago")
     public ResponseEntity<?> createCheckoutSession(@PathVariable Long id) {
         try {
-            String sessionId = companiesService.createCheckoutSession(id);
-            return ResponseEntity.ok(new CheckoutResponse(sessionId));
+            String checkoutUrl = companiesService.createCheckoutSession(id);
+            return ResponseEntity.ok(new CheckoutResponse(checkoutUrl));
         } catch (BillingException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         } catch (IllegalArgumentException e) {
@@ -109,6 +109,6 @@ public class CompanyController {
 
     // DTOs para respuestas
     private record ErrorResponse(String message) {}
-    private record CheckoutResponse(String sessionId) {}
+    private record CheckoutResponse(String checkoutUrl) {}
     private record BillingPortalResponse(String portalUrl) {}
 }
