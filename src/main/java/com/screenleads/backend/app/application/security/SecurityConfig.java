@@ -68,8 +68,12 @@ public class SecurityConfig {
                                                 .requestMatchers("/auth/forgot-password", "/auth/verify-reset-token",
                                                                 "/auth/reset-password")
                                                 .permitAll()
+                                                .requestMatchers("/auth/accept-invitation").permitAll()
                                                 // /auth/me requiere autenticación
                                                 .requestMatchers("/auth/me").authenticated()
+
+                                                // Invitations: verify es público, el resto requiere auth
+                                                .requestMatchers(HttpMethod.GET, "/api/invitations/verify").permitAll()
 
                                                 // Device registration: permitir POST público para auto-registro
                                                 .requestMatchers(HttpMethod.POST, "/devices").permitAll()
