@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.screenleads.backend.app.web.dto.CompanyDTO;
 import com.screenleads.backend.app.web.dto.MediaSlimDTO;
 import com.screenleads.backend.app.domain.model.BillingStatus;
+import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Media;
 import com.screenleads.backend.app.domain.model.MediaType;
 import com.screenleads.backend.app.domain.repositories.*;
