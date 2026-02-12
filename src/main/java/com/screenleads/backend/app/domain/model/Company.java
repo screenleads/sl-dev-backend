@@ -20,12 +20,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Company extends Auditable {
-    public enum BillingStatus {
-        INCOMPLETE,
-        ACTIVE,
-        PAST_DUE,
-        CANCELED
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,5 +1,6 @@
 package com.screenleads.backend.app.application.service;
 
+import com.screenleads.backend.app.domain.model.BillingStatus;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.repositories.CompanyRepository;
 import com.stripe.model.Customer;
@@ -179,7 +180,7 @@ public class StripeBillingServiceImpl implements StripeBillingService {
             if (!subscriptions.getData().isEmpty()) {
                 Subscription subscription = subscriptions.getData().get(0);
                 company.setStripeSubscriptionId(subscription.getId());
-                company.setBillingStatus(Company.BillingStatus.ACTIVE.name());
+                company.setBillingStatus(BillingStatus.ACTIVE.name());
                 
                 // 3. Obtener subscription item ID (para usage-based billing)
                 if (!subscription.getItems().getData().isEmpty()) {
@@ -190,7 +191,7 @@ public class StripeBillingServiceImpl implements StripeBillingService {
                 // Customer existe pero no tiene subscripción activa
                 company.setStripeSubscriptionId(null);
                 company.setStripeSubscriptionItemId(null);
-                company.setBillingStatus(Company.BillingStatus.INCOMPLETE.name());
+                company.setBillingStatus(BillingStatus.INCOMPLETE.name());
             }
             
             // 4. Guardar y retornar

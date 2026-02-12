@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.screenleads.backend.app.domain.model.AppEntity;
 import com.screenleads.backend.app.domain.model.AppEntityAttribute;
+import com.screenleads.backend.app.domain.model.BillingStatus;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.DeviceType;
 import com.screenleads.backend.app.domain.model.Media;
@@ -600,7 +601,7 @@ public class DataInitializer implements CommandLineRunner {
                                                         .stripeCustomerId(null)
                                                         .stripeSubscriptionId(null)
                                                         .stripeSubscriptionItemId(null)
-                                                        .billingStatus(Company.BillingStatus.INCOMPLETE)
+                                                        .billingStatus(BillingStatus.INCOMPLETE)
                                                         .build());
                 }
         }

@@ -2,6 +2,7 @@ package com.screenleads.backend.app.application.security;
 
 import com.screenleads.backend.app.application.security.jwt.JwtService;
 import com.screenleads.backend.app.application.service.EmailService;
+import com.screenleads.backend.app.application.service.UserInvitationService;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.PasswordResetToken;
 import com.screenleads.backend.app.domain.model.Role;
@@ -43,6 +44,7 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
+    private final UserInvitationService invitationService;
 
     public JwtResponse register(RegisterRequest request) {
         User user = new User();
@@ -241,5 +243,47 @@ public class AuthenticationService {
         passwordResetTokenRepository.save(resetToken);
 
         log.info("Password successfully reset for user: {}", user.getUsername());
+    }
+
+    /**
+     * Aceptar invitación y crear cuenta de usuario
+     */
+    @Transactional
+    public JwtResponse acceptInvitation(AcceptInvitationRequest request) {
+        // Convertir AcceptInvitationRequest a AcceptInvitationRequest del servicio
+        com.screenleads.backend.app.application.dto.AcceptInvitationRequest serviceRequest = 
+            new com.screenleads.backend.app.application.dto.AcceptInvitationRequest();
+        serviceRequest.setToken(request.getToken());
+        serviceRequest.setEmail(request.getEmail());
+        serviceRequest.setName(request.getName());
+        serviceRequest.setLastName(request.getLastName());
+        serviceRequest.setUsername(request.getUsername());
+        serviceRequest.setPassword(request.getPassword());
+
+        // Aceptar invitación (crea el usuario)
+        invitationService.acceptInvitation(serviceRequest);
+
+        // Autenticar al nuevo usuario
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
+        } catch (AuthenticationException e) {
+            log.error("Authentication failed for newly created user: {}", request.getUsername(), e);
+            throw new RuntimeException("Error en la autenticación del usuario recién creado");
+        }
+
+        // Generar y retornar JWT
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND_MSG));
+
+        String accessToken = jwtService.generateToken(user);
+
+        log.info("User successfully registered via invitation: {}", user.getUsername());
+
+        return JwtResponse.builder()
+                .accessToken(accessToken)
+                .user(UserMapper.toDto(user))
+                .build();
     }
 }

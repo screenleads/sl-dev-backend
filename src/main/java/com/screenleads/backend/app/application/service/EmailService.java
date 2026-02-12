@@ -140,6 +140,116 @@ public class EmailService {
     }
 
     /**
+     * Enviar email de invitación de usuario
+     */
+    public void sendUserInvitationEmail(String toEmail, String inviterName, String companyName, 
+                                       String roleName, String token, String customMessage) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject(inviterName + " te invita a unirte a " + companyName + " en ScreenLeads");
+
+            String acceptLink = frontendUrl + "/accept-invitation?token=" + token;
+            String htmlContent = buildInvitationEmailTemplate(toEmail, inviterName, companyName, 
+                                                              roleName, acceptLink, customMessage);
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            log.info("User invitation email sent successfully to: {}", toEmail);
+
+        } catch (MessagingException e) {
+            log.error("Failed to send invitation email to: {}", toEmail, e);
+            throw new RuntimeException("Error al enviar el correo de invitación", e);
+        }
+    }
+
+    /**
+     * Template HTML para el email de invitación de usuario
+     */
+    private String buildInvitationEmailTemplate(String email, String inviterName, String companyName,
+                                               String roleName, String acceptLink, String customMessage) {
+        String messageSection = "";
+        if (customMessage != null && !customMessage.isBlank()) {
+            messageSection = """
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <p style="margin: 0; color: #495057; font-style: italic;">
+                            <strong>Mensaje del invitador:</strong><br>
+                            "%s"
+                        </p>
+                    </div>
+                    """.formatted(customMessage);
+        }
+
+        return """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                </head>
+                <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                        <h1 style="color: white; margin: 0; font-size: 28px;">📧 Invitación a ScreenLeads</h1>
+                    </div>
+                    
+                    <div style="background-color: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
+                        <p style="font-size: 16px; margin-bottom: 20px;">Hola,</p>
+                        
+                        <p style="font-size: 16px; margin-bottom: 20px;">
+                            <strong>%s</strong> te ha invitado a unirte a <strong>%s</strong> en ScreenLeads.
+                        </p>
+                        
+                        %s
+                        
+                        <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                            <p style="margin: 0 0 10px 0; color: #1976d2;"><strong>📧 Email de registro:</strong></p>
+                            <p style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold;">%s</p>
+                            
+                            <p style="margin: 0 0 10px 0; color: #1976d2;"><strong>🎭 Rol asignado:</strong></p>
+                            <p style="margin: 0; font-size: 16px; font-weight: bold;">%s</p>
+                        </div>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="%s" 
+                               style="display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); 
+                                      color: white; text-decoration: none; border-radius: 8px; font-weight: bold; 
+                                      font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                                ✅ Aceptar Invitación
+                            </a>
+                        </div>
+                        
+                        <div style="background-color: #fff3e0; padding: 15px; border-radius: 8px; margin-top: 25px;">
+                            <p style="margin: 0; font-size: 14px; color: #e65100;">
+                                ⚠️ <strong>Importante:</strong> Debes registrarte con el email <strong>%s</strong>
+                            </p>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #666; margin-top: 25px;">
+                            Este enlace expira en 7 días. Si no solicitaste esta invitación, puedes ignorar este email.
+                        </p>
+                        
+                        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+                        
+                        <p style="font-size: 14px; color: #999; text-align: center; margin: 0;">
+                            Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
+                            <a href="%s" style="color: #667eea; word-break: break-all;">%s</a>
+                        </p>
+                        
+                        <p style="font-size: 12px; color: #999; text-align: center; margin-top: 20px;">
+                            © 2026 ScreenLeads. Todos los derechos reservados.
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """.formatted(inviterName, companyName, messageSection, email, roleName, 
+                            acceptLink, email, acceptLink, acceptLink);
+    }
+
+    /**
      * Método genérico para enviar emails HTML
      */
     public void sendHtmlEmail(String to, String subject, String htmlContent) {

@@ -4,8 +4,7 @@ import java.util.List;
 
 import com.screenleads.backend.app.domain.model.Advice;
 import com.screenleads.backend.app.domain.model.Device;
-
-import com.screenleads.backend.app.domain.model.Company;
+import com.screenleads.backend.app.domain.model.BillingStatus;
 
 public record CompanyDTO(
         Long id,
@@ -20,5 +19,5 @@ public record CompanyDTO(
         String stripeCustomerId,
         String stripeSubscriptionId,
         String stripeSubscriptionItemId,
-        Company.BillingStatus billingStatus) {
+        BillingStatus billingStatus) {
 }

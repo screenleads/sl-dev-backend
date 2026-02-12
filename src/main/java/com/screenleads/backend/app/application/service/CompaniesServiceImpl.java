@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.screenleads.backend.app.domain.model.Advice;
+import com.screenleads.backend.app.domain.model.BillingStatus;
 import com.screenleads.backend.app.domain.model.Company;
 import com.screenleads.backend.app.domain.model.Device;
 import com.screenleads.backend.app.domain.model.Media;
@@ -285,7 +286,7 @@ public class CompaniesServiceImpl implements CompaniesService {
         if (dto.billingStatus() != null) {
             c.setBillingStatus(dto.billingStatus().toString());
         } else {
-            c.setBillingStatus(Company.BillingStatus.INCOMPLETE.name());
+            c.setBillingStatus(BillingStatus.INCOMPLETE.name());
         }
 
         // Logo: si viene id en el DTO slim, enlazamos; si no, se creará en save/update

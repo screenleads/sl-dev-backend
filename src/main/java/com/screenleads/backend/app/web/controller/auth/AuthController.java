@@ -54,6 +54,12 @@ public class AuthController {
         return ResponseEntity.ok(authenticationService.refreshToken());
     }
 
+    @PostMapping("/accept-invitation")
+    @Operation(summary = "Aceptar invitación y crear cuenta", description = "Completa el registro usando un token de invitación válido", security = {})
+    public ResponseEntity<JwtResponse> acceptInvitation(@RequestBody AcceptInvitationRequest request) {
+        return ResponseEntity.ok(authenticationService.acceptInvitation(request));
+    }
+
     @PostMapping("/forgot-password")
     @Operation(summary = "Solicitar recuperación de contraseña", description = "Envía un email con enlace para restablecer contraseña", security = {})
     public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
