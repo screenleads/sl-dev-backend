@@ -34,7 +34,7 @@ public class UserInvitationController {
      * Solo accesible para usuarios con level <= 2
      */
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMPANY_ADMIN', 'COMPANY_MANAGER')")
     public ResponseEntity<?> createInvitation(
             @Valid @RequestBody CreateInvitationRequest request,
             Authentication authentication) {
@@ -64,7 +64,7 @@ public class UserInvitationController {
      * Obtener todas las invitaciones de la compañía del usuario actual
      */
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMPANY_ADMIN', 'COMPANY_MANAGER')")
     public ResponseEntity<?> getCompanyInvitations(Authentication authentication) {
         try {
             String username = authentication.getName();
@@ -93,7 +93,7 @@ public class UserInvitationController {
      * Obtener invitación por ID
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMPANY_ADMIN', 'COMPANY_MANAGER')")
     public ResponseEntity<?> getInvitation(
             @PathVariable Long id,
             Authentication authentication) {
@@ -168,7 +168,7 @@ public class UserInvitationController {
      * Reenviar invitación (regenera token y actualiza fecha de expiración)
      */
     @PostMapping("/{id}/resend")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMPANY_ADMIN', 'COMPANY_MANAGER')")
     public ResponseEntity<?> resendInvitation(
             @PathVariable Long id,
             Authentication authentication) {
@@ -198,7 +198,7 @@ public class UserInvitationController {
      * Cancelar invitación
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMPANY_ADMIN', 'COMPANY_MANAGER')")
     public ResponseEntity<?> cancelInvitation(
             @PathVariable Long id,
             Authentication authentication) {
