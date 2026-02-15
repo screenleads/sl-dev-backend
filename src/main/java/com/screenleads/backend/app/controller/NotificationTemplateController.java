@@ -160,7 +160,7 @@ public class NotificationTemplateController {
     }
 
     @PostMapping("/{id}/preview")
-    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
+    @org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> previewTemplate(@PathVariable Long id,
             @RequestBody Map<String, String> sampleVariables) {
         try {
