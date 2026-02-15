@@ -434,18 +434,6 @@ public class EmailService {
     }
 
     /**
-     * Renderizar variables en formato {{variable}} dentro de un texto
-     */
-    private String renderVariables(String template, Map<String, String> variables) {
-        String result = template;
-        for (Map.Entry<String, String> entry : variables.entrySet()) {
-            String placeholder = "{{" + entry.getKey() + "}}";
-            result = result.replace(placeholder, entry.getValue() != null ? entry.getValue() : "");
-        }
-        return result;
-    }
-
-    /**
      * Plantilla HTML predeterminada para email de bienvenida de clientes
      */
     private String buildDefaultCustomerWelcomeEmailTemplate(com.screenleads.backend.app.domain.model.Customer customer) {
