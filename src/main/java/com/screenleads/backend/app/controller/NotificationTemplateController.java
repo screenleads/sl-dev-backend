@@ -173,6 +173,49 @@ public class NotificationTemplateController {
         }
     }
 
+    @PostMapping("/preview")
+    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
+    public ResponseEntity<?> previewTemplateContent(@RequestBody Map<String, Object> request) {
+        try {
+            String subject = (String) request.get("subject");
+            String body = (String) request.get("body");
+            @SuppressWarnings("unchecked")
+            Map<String, String> variables = (Map<String, String>) request.get("variables");
+
+            if (body == null || body.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Body is required"));
+            }
+
+            // Replace variables in subject and body
+            String processedSubject = subject != null ? replaceVariables(subject, variables) : "";
+            String processedBody = replaceVariables(body, variables);
+
+            Map<String, String> preview = new HashMap<>();
+            preview.put("subject", processedSubject);
+            preview.put("body", processedBody);
+            preview.put("htmlBody", processedBody); // Same content for now
+
+            return ResponseEntity.ok(preview);
+
+        } catch (Exception e) {
+            log.error("Error previewing template content: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    private String replaceVariables(String content, Map<String, String> variables) {
+        if (content == null || variables == null) {
+            return content;
+        }
+        
+        String result = content;
+        for (Map.Entry<String, String> entry : variables.entrySet()) {
+            String placeholder = "{{" + entry.getKey() + "}}";
+            result = result.replace(placeholder, entry.getValue());
+        }
+        return result;
+    }
+
     @PatchMapping("/{id}/toggle")
     @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','update')")
     public ResponseEntity<?> toggleTemplateActive(@PathVariable Long id,
