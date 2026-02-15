@@ -157,7 +157,8 @@ public class SecurityConfig {
                                 "Accept-Language",
                                 "X-API-KEY",
                                 "client_id",
-                                "client-id"));
+                                "client-id",
+                                "skip-auth"));
 
                 // (Opcional) Headers expuestos al frontend si necesitas leerlos
                 config.setExposedHeaders(List.of(
