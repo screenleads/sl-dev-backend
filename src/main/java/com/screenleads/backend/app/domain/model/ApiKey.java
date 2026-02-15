@@ -9,8 +9,15 @@ public class ApiKey {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String key;
+    // SEGURIDAD: Ya no almacenamos la key en texto plano
+    // Solo guardamos el hash BCrypt de la key
+    @Column(name = "key_hash", nullable = false, length = 60)
+    private String keyHash;
+
+    // Prefijo visible de la key (primeros 12 caracteres) para identificarla
+    // Ejemplo: "sk_live_abc1"
+    @Column(name = "key_prefix", nullable = false, length = 15)
+    private String keyPrefix;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client", nullable = false)
@@ -19,16 +26,41 @@ public class ApiKey {
     @Column(nullable = false)
     private boolean active = true;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+    
+    @Column(name = "expires_at")
     private LocalDateTime expiresAt;
+    
+    @Column(name = "last_used_at")
+    private LocalDateTime lastUsedAt;
 
-    private String permissions; // Puedes usar un Set<String> o relación si lo prefieres
+    // Scopes separados por coma: "customers:read,customers:write,campaigns:read"
+    @Column(length = 500)
+    private String scopes;
 
     @Column(name = "company_scope")
     private Long companyScope; // NULL = acceso global, ID = compañía específica
 
     private String name; // Nombre descriptivo de la API Key
+    
+    @Column(length = 1000)
     private String description; // Descripción de la API Key
+
+    // ===== CAMPOS DE REVOCACIÓN =====
+    @Column(name = "revoked_at")
+    private LocalDateTime revokedAt;
+    
+    @Column(name = "revoked_reason", length = 500)
+    private String revokedReason;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "revoked_by")
+    private User revokedBy;
+
+    // Contador de usos
+    @Column(name = "usage_count")
+    private Integer usageCount = 0;
 
     // Getters y setters
     public Long getId() {
@@ -39,12 +71,20 @@ public class ApiKey {
         this.id = id;
     }
 
-    public String getKey() {
-        return key;
+    public String getKeyHash() {
+        return keyHash;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setKeyHash(String keyHash) {
+        this.keyHash = keyHash;
+    }
+
+    public String getKeyPrefix() {
+        return keyPrefix;
+    }
+
+    public void setKeyPrefix(String keyPrefix) {
+        this.keyPrefix = keyPrefix;
     }
 
     public ApiClient getApiClient() {
@@ -79,12 +119,20 @@ public class ApiKey {
         this.expiresAt = expiresAt;
     }
 
-    public String getPermissions() {
-        return permissions;
+    public LocalDateTime getLastUsedAt() {
+        return lastUsedAt;
     }
 
-    public void setPermissions(String permissions) {
-        this.permissions = permissions;
+    public void setLastUsedAt(LocalDateTime lastUsedAt) {
+        this.lastUsedAt = lastUsedAt;
+    }
+
+    public String getScopes() {
+        return scopes;
+    }
+
+    public void setScopes(String scopes) {
+        this.scopes = scopes;
     }
 
     public Long getCompanyScope() {
@@ -109,5 +157,69 @@ public class ApiKey {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public LocalDateTime getRevokedAt() {
+        return revokedAt;
+    }
+
+    public void setRevokedAt(LocalDateTime revokedAt) {
+        this.revokedAt = revokedAt;
+    }
+
+    public String getRevokedReason() {
+        return revokedReason;
+    }
+
+    public void setRevokedReason(String revokedReason) {
+        this.revokedReason = revokedReason;
+    }
+
+    public User getRevokedBy() {
+        return revokedBy;
+    }
+
+    public void setRevokedBy(User revokedBy) {
+        this.revokedBy = revokedBy;
+    }
+
+    public Integer getUsageCount() {
+        return usageCount;
+    }
+
+    public void setUsageCount(Integer usageCount) {
+        this.usageCount = usageCount;
+    }
+
+    /**
+     * Verifica si la API key está revocada
+     */
+    public boolean isRevoked() {
+        return revokedAt != null;
+    }
+
+    /**
+     * Verifica si la API key ha expirado
+     */
+    public boolean isExpired() {
+        return expiresAt != null && LocalDateTime.now().isAfter(expiresAt);
+    }
+
+    /**
+     * Verifica si la API key es válida (activa, no revocada, no expirada)
+     */
+    public boolean isValid() {
+        return active && !isRevoked() && !isExpired();
+    }
+
+    /**
+     * Incrementa el contador de uso
+     */
+    public void incrementUsage() {
+        if (this.usageCount == null) {
+            this.usageCount = 0;
+        }
+        this.usageCount++;
+        this.lastUsedAt = LocalDateTime.now();
     }
 }

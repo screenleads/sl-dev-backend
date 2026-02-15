@@ -1,12 +1,16 @@
 package com.screenleads.backend.app.web.controller;
 
 import com.screenleads.backend.app.application.service.ApiKeyService;
+import com.screenleads.backend.app.application.service.ApiKeyService.ApiKeyCreationResult;
 import com.screenleads.backend.app.domain.model.ApiKey;
 import com.screenleads.backend.app.web.dto.ApiKeyDTO;
 import com.screenleads.backend.app.web.mapper.ApiKeyMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api-keys")
@@ -34,7 +38,7 @@ public class ApiKeyController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiKeyDTO> createApiKey(@RequestBody ApiKeyDTO apiKeyDTO) {
+    public ResponseEntity<Map<String, Object>> createApiKey(@RequestBody ApiKeyDTO apiKeyDTO) {
         if (apiKeyDTO.getClientId() == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -48,21 +52,29 @@ public class ApiKeyController {
             );
         }
         
-        ApiKey key = apiKeyService.createApiKeyByDbId(
+        // Determinar si es live o test (por defecto live)
+        boolean isLive = apiKeyDTO.isLive() != null ? apiKeyDTO.isLive() : true;
+        
+        ApiKeyCreationResult result = apiKeyService.createApiKeyByDbId(
             apiKeyDTO.getClientId(), 
-            apiKeyDTO.getPermissions(), 
-            daysValid
+            apiKeyDTO.getScopes(), 
+            daysValid,
+            isLive
         );
         
         if (apiKeyDTO.getName() != null) {
-            key.setName(apiKeyDTO.getName());
+            result.getApiKey().setName(apiKeyDTO.getName());
         }
         if (apiKeyDTO.getDescription() != null) {
-            key.setDescription(apiKeyDTO.getDescription());
+            result.getApiKey().setDescription(apiKeyDTO.getDescription());
         }
-        key = apiKeyService.saveApiKey(key);
+        ApiKey saved = apiKeyService.saveApiKey(result.getApiKey());
         
-        return ResponseEntity.ok(ApiKeyMapper.toDto(key));
+        // IMPORTANTE: Devolver la key en texto plano SOLO al crear
+        return ResponseEntity.ok(Map.of(
+            "apiKey", ApiKeyMapper.toDto(saved),
+            "rawKey", result.getRawKey() // Solo visible una vez
+        ));
     }
 
     @PutMapping("/{id}")
@@ -72,8 +84,8 @@ public class ApiKeyController {
                 if (apiKeyDTO.getName() != null) {
                     existingKey.setName(apiKeyDTO.getName());
                 }
-                if (apiKeyDTO.getPermissions() != null) {
-                    existingKey.setPermissions(apiKeyDTO.getPermissions());
+                if (apiKeyDTO.getScopes() != null) {
+                    existingKey.setScopes(apiKeyDTO.getScopes());
                 }
                 if (apiKeyDTO.getDescription() != null) {
                     existingKey.setDescription(apiKeyDTO.getDescription());
@@ -115,9 +127,9 @@ public class ApiKeyController {
                 .toList());
     }
 
-    @PatchMapping("/{id}/permissions")
-    public ResponseEntity<ApiKeyDTO> updatePermissions(@PathVariable Long id, @RequestParam String permissions) {
-        ApiKey updated = apiKeyService.updatePermissions(id, permissions);
+    @PatchMapping("/{id}/scopes")
+    public ResponseEntity<ApiKeyDTO> updateScopes(@PathVariable Long id, @RequestParam String scopes) {
+        ApiKey updated = apiKeyService.updateScopes(id, scopes);
         return ResponseEntity.ok(ApiKeyMapper.toDto(updated));
     }
 
@@ -132,5 +144,40 @@ public class ApiKeyController {
             @RequestParam(required = false) Long companyScope) {
         ApiKey updated = apiKeyService.updateCompanyScope(id, companyScope);
         return ResponseEntity.ok(ApiKeyMapper.toDto(updated));
+    }
+
+    /**
+     * Revoca permanentemente una API key
+     */
+    @PostMapping("/{id}/revoke")
+    public ResponseEntity<ApiKeyDTO> revokeApiKey(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body,
+            Authentication authentication) {
+        
+        String reason = body.getOrDefault("reason", "No especificado");
+        
+        // Obtener ID del usuario autenticado (si existe)
+        Long userId = null;
+        if (authentication != null && authentication.getPrincipal() instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
+            // Extraer ID del usuario si está disponible
+            // Ajustar según tu implementación de UserDetails
+        }
+        
+        ApiKey revoked = apiKeyService.revokeApiKey(id, reason, userId);
+        return ResponseEntity.ok(ApiKeyMapper.toDto(revoked));
+    }
+
+    /**
+     * Rota una API key (crea nueva y revoca la vieja)
+     */
+    @PostMapping("/{id}/rotate")
+    public ResponseEntity<Map<String, Object>> rotateApiKey(@PathVariable Long id) {
+        ApiKeyCreationResult result = apiKeyService.rotateApiKey(id, 365); // 1 año default
+        
+        return ResponseEntity.ok(Map.of(
+            "apiKey", ApiKeyMapper.toDto(result.getApiKey()),
+            "rawKey", result.getRawKey() // Nueva key en texto plano
+        ));
     }
 }

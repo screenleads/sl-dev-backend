@@ -1,0 +1,3 @@
+INSERT INTO app_entity (resource, read_level, create_level, update_level, delete_level, write_level) VALUES ('analytics', 1, 1, 1, 1, 1) ON CONFLICT (resource) DO UPDATE SET read_level = 1, create_level = 1, update_level = 1, delete_level = 1, write_level = 1;
+INSERT INTO app_entity (resource, read_level, create_level, update_level, delete_level, write_level) VALUES ('fraud_detection', 1, 1, 1, 1, 1) ON CONFLICT (resource) DO UPDATE SET read_level = 1, create_level = 1, update_level = 1, delete_level = 1, write_level = 1;
+SELECT resource, read_level, write_level FROM app_entity WHERE resource IN ('analytics', 'fraud_detection') ORDER BY resource;
