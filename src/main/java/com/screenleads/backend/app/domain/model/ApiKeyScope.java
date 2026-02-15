@@ -9,6 +9,9 @@ public enum ApiKeyScope {
     CUSTOMERS_READ("customers:read", "Leer información de clientes"),
     CUSTOMERS_WRITE("customers:write", "Crear y actualizar clientes"),
     CUSTOMERS_DELETE("customers:delete", "Eliminar clientes"),
+    CUSTOMER_READ("customer:read", "Leer información de clientes (alias)"),
+    CUSTOMER_UPDATE("customer:update", "Actualizar clientes (alias)"),
+    CUSTOMER_DELETE("customer:delete", "Eliminar clientes (alias)"),
     
     // Campaign Management
     CAMPAIGNS_READ("campaigns:read", "Leer campañas y promociones"),
@@ -40,7 +43,29 @@ public enum ApiKeyScope {
     
     // Snapshot Management
     SNAPSHOTS_READ("snapshots:read", "Leer snapshots de tracking"),
-    SNAPSHOTS_WRITE("snapshots:write", "Crear snapshots");
+    SNAPSHOTS_WRITE("snapshots:write", "Crear snapshots"),
+    
+    // Media Management
+    MEDIA_READ("media:read", "Leer archivos multimedia"),
+    MEDIA_WRITE("media:write", "Subir y editar archivos multimedia"),
+    MEDIA_DELETE("media:delete", "Eliminar archivos multimedia"),
+    
+    // Remarketing & Audiences
+    REMARKETING_READ("remarketing:read", "Leer segmentos de audiencia"),
+    REMARKETING_CREATE("remarketing:create", "Crear segmentos de audiencia"),
+    REMARKETING_UPDATE("remarketing:update", "Actualizar segmentos de audiencia"),
+    REMARKETING_DELETE("remarketing:delete", "Eliminar segmentos de audiencia"),
+    
+    // Fraud Detection
+    FRAUD_DETECTION_READ("fraud_detection:read", "Leer reglas de detección de fraude"),
+    FRAUD_DETECTION_CREATE("fraud_detection:create", "Crear reglas de detección de fraude"),
+    FRAUD_DETECTION_UPDATE("fraud_detection:update", "Actualizar reglas de detección de fraude"),
+    FRAUD_DETECTION_DELETE("fraud_detection:delete", "Eliminar reglas de detección de fraude"),
+    
+    // Announcements/Advice
+    ADVICE_READ("advice:read", "Leer anuncios y avisos"),
+    ADVICE_WRITE("advice:write", "Crear y editar anuncios"),
+    ADVICE_DELETE("advice:delete", "Eliminar anuncios");
 
     private final String value;
     private final String description;

@@ -281,10 +281,10 @@ public class Promotion extends Auditable {
      * Calcula la tasa de conversión (redemptions / clicks)
      */
     public BigDecimal getConversionRate() {
-        if (clickCount == 0) {
+        if (clickCount == null || clickCount == 0) {
             return BigDecimal.ZERO;
         }
-        return BigDecimal.valueOf(redemptionCount)
+        return BigDecimal.valueOf(redemptionCount != null ? redemptionCount : 0)
             .divide(BigDecimal.valueOf(clickCount), 4, RoundingMode.HALF_UP);
     }
     
@@ -292,10 +292,10 @@ public class Promotion extends Auditable {
      * Calcula el CTR (Click-Through Rate): clicks / impressions
      */
     public BigDecimal getCTR() {
-        if (impressionCount == 0) {
+        if (impressionCount == null || impressionCount == 0) {
             return BigDecimal.ZERO;
         }
-        return BigDecimal.valueOf(clickCount)
+        return BigDecimal.valueOf(clickCount != null ? clickCount : 0)
             .divide(BigDecimal.valueOf(impressionCount), 4, RoundingMode.HALF_UP);
     }
     
