@@ -80,8 +80,8 @@ public class ClientController {
         ApiClient saved = clientRepository.save(client);
         // Crear la primera API Key con permisos básicos de lectura
         String defaultScopes = "customers:read,campaigns:read,leads:read,analytics:read";
-        com.screenleads.backend.app.domain.model.ApiKey defaultApiKey = apiKeyService.createApiKeyByDbId(saved.getId(),
-                defaultScopes, 365, true);
+        var result = apiKeyService.createApiKeyByDbId(saved.getId(), defaultScopes, 365, true);
+        com.screenleads.backend.app.domain.model.ApiKey defaultApiKey = result.apiKey();
         // Establecer nombre y descripción por defecto
         defaultApiKey.setName("API Key Principal - " + saved.getName());
         defaultApiKey.setDescription("API Key generada automáticamente al crear el cliente");
