@@ -187,6 +187,16 @@ public class UserInvitationServiceImpl implements UserInvitationService {
         
         log.info("User created successfully from invitation: {}", newUser.getUsername());
         
+        // 6. Enviar email de bienvenida al nuevo usuario
+        try {
+            emailService.sendWelcomeEmail(newUser);
+            log.info("Welcome email sent to new user: {}", newUser.getEmail());
+        } catch (Exception e) {
+            // No fallar el proceso de registro si el email de bienvenida falla
+            log.error("Failed to send welcome email to new user: {} - Error: {}", 
+                     newUser.getEmail(), e.getMessage());
+        }
+        
         return newUser;
     }
 
