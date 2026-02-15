@@ -1,5 +1,6 @@
 package com.screenleads.backend.app.application.security;
 
+import com.screenleads.backend.app.application.util.ApiKeyGenerator;
 import com.screenleads.backend.app.domain.model.ApiKey;
 import com.screenleads.backend.app.domain.repositories.ApiKeyRepository;
 import com.screenleads.backend.app.domain.model.ApiClient;
@@ -26,10 +27,14 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     private final ApiKeyRepository apiKeyRepository;
     private final ClientRepository clientRepository;
+    private final ApiKeyGenerator apiKeyGenerator;
 
-    public ApiKeyAuthenticationFilter(ApiKeyRepository apiKeyRepository, ClientRepository clientRepository) {
+    public ApiKeyAuthenticationFilter(ApiKeyRepository apiKeyRepository, 
+                                     ClientRepository clientRepository,
+                                     ApiKeyGenerator apiKeyGenerator) {
         this.apiKeyRepository = apiKeyRepository;
         this.clientRepository = clientRepository;
+        this.apiKeyGenerator = apiKeyGenerator;
     }
 
     @Override
@@ -61,24 +66,43 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
                 ApiClient client = clientOpt.get();
                 log.info("✅ Cliente encontrado: ID={}, clientId={}", client.getId(), client.getClientId());
 
-                Optional<ApiKey> keyOpt = apiKeyRepository.findByKeyAndApiClientAndActiveTrue(apiKey, client);
-                if (keyOpt.isPresent()) {
-                    ApiKey key = keyOpt.get();
-                    // Usar el ID de la API key como principal para identificar exactamente qué API
-                    // key se está usando
-                    Long apiKeyId = key.getId();
-                    log.info("✅ API Key válida encontrada - ID: {}, ClientDbId: {}, Scopes: {}",
-                            apiKeyId, client.getId(), key.getScopes());
+                // Extraer el prefijo de la API key para buscar en BD
+                try {
+                    String keyPrefix = apiKeyGenerator.extractPrefix(apiKey);
+                    log.debug("🔑 Prefijo extraído: {}", keyPrefix);
+                    
+                    // Buscar la API key por prefijo y cliente
+                    Optional<ApiKey> keyOpt = apiKeyRepository.findByKeyPrefixAndApiClientAndActiveTrue(keyPrefix, client);
+                    
+                    if (keyOpt.isPresent()) {
+                        ApiKey key = keyOpt.get();
+                        
+                        // Verificar que el hash coincida con la key proporcionada
+                        if (apiKeyGenerator.matchesHash(apiKey, key.getKeyHash())) {
+                            // Validar que no esté expirada ni revocada
+                            if (!key.isValid()) {
+                                log.warn("❌ API Key inválida (expirada o revocada): keyPrefix={}", keyPrefix);
+                            } else {
+                                Long apiKeyId = key.getId();
+                                log.info("✅ API Key válida encontrada - ID: {}, ClientDbId: {}, Scopes: {}",
+                                        apiKeyId, client.getId(), key.getScopes());
 
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            apiKeyId,
-                            null,
-                            List.of(new SimpleGrantedAuthority("API_CLIENT")));
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                    log.info("✅ Autenticación establecida para apiKeyId: {}", apiKeyId);
-                } else {
-                    log.warn("❌ API Key no encontrada o inactiva");
+                                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                        apiKeyId,
+                                        null,
+                                        List.of(new SimpleGrantedAuthority("API_CLIENT")));
+                                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                                SecurityContextHolder.getContext().setAuthentication(authToken);
+                                log.info("✅ Autenticación establecida para apiKeyId: {}", apiKeyId);
+                            }
+                        } else {
+                            log.warn("❌ Hash de API Key no coincide: keyPrefix={}", keyPrefix);
+                        }
+                    } else {
+                        log.warn("❌ API Key no encontrada con prefijo: {}", keyPrefix);
+                    }
+                } catch (IllegalArgumentException e) {
+                    log.warn("❌ Formato de API Key inválido: {}", e.getMessage());
                 }
             } else {
                 log.warn("❌ Cliente no encontrado o inactivo con clientId: {}", clientId);
