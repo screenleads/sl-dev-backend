@@ -28,13 +28,16 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
     private final ApiKeyRepository apiKeyRepository;
     private final ClientRepository clientRepository;
     private final ApiKeyGenerator apiKeyGenerator;
+    private final RateLimitService rateLimitService;
 
     public ApiKeyAuthenticationFilter(ApiKeyRepository apiKeyRepository, 
                                      ClientRepository clientRepository,
-                                     ApiKeyGenerator apiKeyGenerator) {
+                                     ApiKeyGenerator apiKeyGenerator,
+                                     RateLimitService rateLimitService) {
         this.apiKeyRepository = apiKeyRepository;
         this.clientRepository = clientRepository;
         this.apiKeyGenerator = apiKeyGenerator;
+        this.rateLimitService = rateLimitService;
     }
 
     @Override
@@ -84,8 +87,39 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
                                 log.warn("❌ API Key inválida (expirada o revocada): keyPrefix={}", keyPrefix);
                             } else {
                                 Long apiKeyId = key.getId();
-                                log.info("✅ API Key válida encontrada - ID: {}, ClientDbId: {}, Scopes: {}",
-                                        apiKeyId, client.getId(), key.getScopes());
+                                boolean isLive = key.isLive();
+                                
+                                // ⏱️ RATE LIMITING: Verificar límite de peticiones
+                                if (!rateLimitService.allowRequest(apiKeyId, isLive)) {
+                                    RateLimitService.RateLimitInfo info = rateLimitService.getRateLimitInfo(apiKeyId, isLive);
+                                    
+                                    log.warn("🚫 Rate limit excedido - apiKeyId: {}, isLive: {}, limit: {}/min", 
+                                            apiKeyId, isLive, info.getLimit());
+                                    
+                                    // Agregar headers de rate limit
+                                    response.setHeader("X-RateLimit-Limit", String.valueOf(info.getLimit()));
+                                    response.setHeader("X-RateLimit-Remaining", "0");
+                                    response.setHeader("X-RateLimit-Reset", String.valueOf(info.getResetIn()));
+                                    response.setHeader("Retry-After", String.valueOf(info.getResetIn()));
+                                    
+                                    response.setStatus(429); // Too Many Requests
+                                    response.setContentType("application/json");
+                                    response.getWriter().write(String.format(
+                                        "{\"error\":\"Rate limit exceeded\",\"message\":\"Límite de %d peticiones/minuto excedido. Reintenta en %d segundos.\",\"limit\":%d,\"resetIn\":%d}",
+                                        info.getLimit(), info.getResetIn(), info.getLimit(), info.getResetIn()
+                                    ));
+                                    return; // No continuar con el filter chain
+                                }
+                                
+                                // Agregar headers informativos de rate limit
+                                RateLimitService.RateLimitInfo info = rateLimitService.getRateLimitInfo(apiKeyId, isLive);
+                                response.setHeader("X-RateLimit-Limit", String.valueOf(info.getLimit()));
+                                response.setHeader("X-RateLimit-Remaining", String.valueOf(info.getRemaining()));
+                                response.setHeader("X-RateLimit-Reset", String.valueOf(info.getResetIn()));
+                                
+                                log.info("✅ API Key válida - ID: {}, Type: {}, Scopes: {}, RateLimit: {}/{} remaining",
+                                        apiKeyId, isLive ? "LIVE" : "TEST", key.getScopes(), 
+                                        info.getRemaining(), info.getLimit());
 
                                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                                         apiKeyId,
@@ -93,7 +127,6 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
                                         List.of(new SimpleGrantedAuthority("API_CLIENT")));
                                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                                 SecurityContextHolder.getContext().setAuthentication(authToken);
-                                log.info("✅ Autenticación establecida para apiKeyId: {}", apiKeyId);
                             }
                         } else {
                             log.warn("❌ Hash de API Key no coincide: keyPrefix={}", keyPrefix);
