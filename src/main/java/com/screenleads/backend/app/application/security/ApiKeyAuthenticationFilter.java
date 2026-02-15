@@ -67,8 +67,8 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
                     // Usar el ID de la API key como principal para identificar exactamente qué API
                     // key se está usando
                     Long apiKeyId = key.getId();
-                    log.info("✅ API Key válida encontrada - ID: {}, ClientDbId: {}, Permissions: {}",
-                            apiKeyId, client.getId(), key.getPermissions());
+                    log.info("✅ API Key válida encontrada - ID: {}, ClientDbId: {}, Scopes: {}",
+                            apiKeyId, client.getId(), key.getScopes());
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             apiKeyId,

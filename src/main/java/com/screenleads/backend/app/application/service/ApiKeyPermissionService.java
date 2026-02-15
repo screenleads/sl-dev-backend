@@ -62,10 +62,10 @@ public class ApiKeyPermissionService {
             return false;
         }
 
-        log.info("✅ API key encontrada - ID: {}, Permissions: {}", apiKey.getId(), apiKey.getPermissions());
+        log.info("✅ API key encontrada - ID: {}, Scopes: {}", apiKey.getId(), apiKey.getScopes());
         String requiredPermission = resource + ":" + action;
-        boolean hasPermission = apiKey.getPermissions() != null && apiKey.getPermissions().contains(requiredPermission);
-        log.info("Buscando permiso '{}' en '{}': {}", requiredPermission, apiKey.getPermissions(), hasPermission);
+        boolean hasPermission = apiKey.getScopes() != null && apiKey.getScopes().contains(requiredPermission);
+        log.info("Buscando permiso '{}' en '{}': {}", requiredPermission, apiKey.getScopes(), hasPermission);
 
         return hasPermission;
     }

@@ -22,11 +22,11 @@ public class ClientController {
                     .map(apiKey -> {
                         com.screenleads.backend.app.web.dto.ApiKeyDTO akDto = new com.screenleads.backend.app.web.dto.ApiKeyDTO();
                         akDto.setId(apiKey.getId());
-                        akDto.setKey(apiKey.getKey());
+                        akDto.setKeyPrefix(apiKey.getKeyPrefix());
                         akDto.setActive(apiKey.isActive());
                         akDto.setCreatedAt(apiKey.getCreatedAt());
                         akDto.setExpiresAt(apiKey.getExpiresAt());
-                        akDto.setPermissions(apiKey.getPermissions());
+                        akDto.setScopes(apiKey.getScopes());
                         return akDto;
                     }).toList();
             dto.setApiKeys(apiKeyDTOs);
@@ -79,9 +79,9 @@ public class ClientController {
         client.setActive(true);
         ApiClient saved = clientRepository.save(client);
         // Crear la primera API Key con permisos básicos de lectura
-        String defaultPermissions = "device:read,customer:read,promotion:read,advice:read,media:read";
+        String defaultScopes = "customers:read,campaigns:read,leads:read,analytics:read";
         com.screenleads.backend.app.domain.model.ApiKey defaultApiKey = apiKeyService.createApiKeyByDbId(saved.getId(),
-                defaultPermissions, 365);
+                defaultScopes, 365, true);
         // Establecer nombre y descripción por defecto
         defaultApiKey.setName("API Key Principal - " + saved.getName());
         defaultApiKey.setDescription("API Key generada automáticamente al crear el cliente");
