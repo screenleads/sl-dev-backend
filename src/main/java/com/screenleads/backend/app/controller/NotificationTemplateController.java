@@ -30,7 +30,7 @@ public class NotificationTemplateController {
     private final CompanyRepository companyRepository;
 
     @PostMapping
-    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','create')")
+    @org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> createTemplate(@Valid @RequestBody NotificationTemplateRequest request) {
         try {
             Company company = companyRepository.findById(request.getCompanyId())
@@ -122,7 +122,7 @@ public class NotificationTemplateController {
     }
 
     @GetMapping("/{id}")
-    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
+    @org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getTemplateById(@PathVariable Long id) {
         return notificationTemplateService.getTemplateById(id)
                 .map(ResponseEntity::ok)
@@ -130,7 +130,7 @@ public class NotificationTemplateController {
     }
 
     @GetMapping("/company/{companyId}")
-    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
+    @org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<NotificationTemplate>> getTemplatesByCompany(
             @PathVariable Long companyId,
             @RequestParam(required = false) NotificationChannel channel,
