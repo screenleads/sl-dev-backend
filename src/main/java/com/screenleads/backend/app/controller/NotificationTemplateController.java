@@ -174,7 +174,7 @@ public class NotificationTemplateController {
     }
 
     @PostMapping("/preview")
-    @org.springframework.security.access.prepost.PreAuthorize("@perm.can('remarketing','read')")
+    @org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> previewTemplateContent(@RequestBody Map<String, Object> request) {
         try {
             String subject = (String) request.get("subject");
