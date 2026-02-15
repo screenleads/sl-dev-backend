@@ -52,9 +52,10 @@ class ApiKeyServiceImplTest {
 
         testApiKey = new ApiKey();
         testApiKey.setId(1L);
-        testApiKey.setKey("test-api-key-123");
+        testApiKey.setKeyHash("$2a$12$hashedkey123");
+        testApiKey.setKeyPrefix("sk_live_test");
         testApiKey.setApiClient(testClient);
-        testApiKey.setPermissions("read,write");
+        testApiKey.setScopes("customers:read,campaigns:write");
         testApiKey.setActive(true);
         testApiKey.setCreatedAt(LocalDateTime.now());
         testApiKey.setExpiresAt(LocalDateTime.now().plusDays(30));
@@ -69,11 +70,13 @@ class ApiKeyServiceImplTest {
         when(apiKeyRepository.save(any(ApiKey.class))).thenReturn(testApiKey);
 
         // Act
-        ApiKey result = apiKeyService.createApiKey("client-123", "read,write", 30);
+        ApiKeyService.ApiKeyCreationResult result = apiKeyService.createApiKey("client-123", "customers:read,campaigns:write", 30, true);
 
         // Assert
         assertThat(result).isNotNull();
-        assertThat(result.getApiClient()).isEqualTo(testClient);
+        assertThat(result.getApiKey()).isNotNull();
+        assertThat(result.getRawKey()).isNotNull();
+        assertThat(result.getApiKey().getApiClient()).isEqualTo(testClient);
         verify(clientRepository, times(1)).findByClientIdAndActiveTrue("client-123");
         verify(apiKeyRepository, times(1)).save(any(ApiKey.class));
     }
@@ -89,7 +92,7 @@ class ApiKeyServiceImplTest {
         when(apiKeyRepository.save(apiKeyCaptor.capture())).thenReturn(testApiKey);
 
         // Act
-        apiKeyService.createApiKey("client-123", "read", 7);
+        apiKeyService.createApiKey("client-123", "customers:read", 7, true);
 
         // Assert
         ApiKey capturedKey = apiKeyCaptor.getValue();
@@ -106,7 +109,7 @@ class ApiKeyServiceImplTest {
                 .thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> apiKeyService.createApiKey("invalid-client", "read", 30))
+        assertThatThrownBy(() -> apiKeyService.createApiKey("invalid-client", "customers:read", 30, true))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Cliente no encontrado o inactivo");
 
@@ -178,11 +181,12 @@ class ApiKeyServiceImplTest {
         when(apiKeyRepository.save(any(ApiKey.class))).thenReturn(testApiKey);
 
         // Act
-        ApiKey result = apiKeyService.createApiKeyByDbId(1L, "admin", 90);
+        ApiKeyService.ApiKeyCreationResult result = apiKeyService.createApiKeyByDbId(1L, "customers:read,customers:write,campaigns:read,campaigns:write", 90, true);
 
         // Assert
         assertThat(result).isNotNull();
-        assertThat(result.getApiClient()).isEqualTo(testClient);
+        assertThat(result.getApiKey()).isNotNull();
+        assertThat(result.getApiKey().getApiClient()).isEqualTo(testClient);
         verify(clientRepository, times(1)).findById(1L);
         verify(apiKeyRepository, times(1)).save(any(ApiKey.class));
     }
@@ -194,7 +198,7 @@ class ApiKeyServiceImplTest {
         when(clientRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> apiKeyService.createApiKeyByDbId(999L, "read", 30))
+        assertThatThrownBy(() -> apiKeyService.createApiKeyByDbId(999L, "customers:read", 30, true))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Cliente no encontrado por id");
 
@@ -207,7 +211,8 @@ class ApiKeyServiceImplTest {
         // Arrange
         ApiKey key2 = new ApiKey();
         key2.setId(2L);
-        key2.setKey("another-key");
+        key2.setKeyPrefix("sk_live_anot");
+        key2.setKeyHash("$2a$12$anotherhashedkey");
         key2.setApiClient(testClient);
 
         when(apiKeyRepository.findAllByApiClient_Id(1L))
@@ -246,11 +251,12 @@ class ApiKeyServiceImplTest {
         when(apiKeyRepository.save(apiKeyCaptor.capture())).thenReturn(testApiKey);
 
         // Act
-        apiKeyService.createApiKey("client-123", "read,write", 30);
+        apiKeyService.createApiKey("client-123", "customers:read,campaigns:write", 30, true);
 
         // Assert
         ApiKey capturedKey = apiKeyCaptor.getValue();
-        assertThat(capturedKey.getKey()).isNotNull();
-        assertThat(capturedKey.getKey()).doesNotContain("-"); // UUID without dashes
+        assertThat(capturedKey.getKeyHash()).isNotNull();
+        assertThat(capturedKey.getKeyPrefix()).isNotNull();
+        assertThat(capturedKey.getKeyPrefix()).startsWith("sk_"); // Should start with sk_
     }
 }
