@@ -26,14 +26,14 @@ public class MediaTypesController {
 
     @CrossOrigin
     @GetMapping("/medias/types")
-    @PreAuthorize("@perm.can('media-type', 'read')")
+    @PreAuthorize("@perm.can('media_type', 'read')")
     public ResponseEntity<List<MediaTypeDTO>> getAllMediaTypes() {
         return ResponseEntity.ok(mediaTypeService.getAllMediaTypes());
     }
 
     @CrossOrigin
     @GetMapping("/medias/types/{id}")
-    @PreAuthorize("@perm.can('media-type', 'read')")
+    @PreAuthorize("@perm.can('media_type', 'read')")
     public ResponseEntity<MediaTypeDTO> getMediaTypeById(@PathVariable Long id) {
         Optional<MediaTypeDTO> device = mediaTypeService.getMediaTypeById(id);
         return device.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
@@ -41,14 +41,14 @@ public class MediaTypesController {
 
     @CrossOrigin
     @PostMapping("/medias/types")
-    @PreAuthorize("@perm.can('media-type', 'write')")
+    @PreAuthorize("@perm.can('media_type', 'write')")
     public ResponseEntity<MediaTypeDTO> createMediaType(@RequestBody MediaTypeDTO deviceDTO) {
         return ResponseEntity.ok(mediaTypeService.saveMediaType(deviceDTO));
     }
 
     @CrossOrigin
     @PutMapping("/medias/types/{id}")
-    @PreAuthorize("@perm.can('media-type', 'write')")
+    @PreAuthorize("@perm.can('media_type', 'write')")
     public ResponseEntity<MediaTypeDTO> updateMediaType(@PathVariable Long id, @RequestBody MediaTypeDTO deviceDTO) {
 
         MediaTypeDTO updatedDevice = mediaTypeService.updateMediaType(id, deviceDTO);
@@ -58,7 +58,7 @@ public class MediaTypesController {
 
     @CrossOrigin
     @DeleteMapping("/medias/types/{id}")
-    @PreAuthorize("@perm.can('media-type', 'delete')")
+    @PreAuthorize("@perm.can('media_type', 'delete')")
     public ResponseEntity<Void> deleteMediaType(@PathVariable Long id) {
         mediaTypeService.deleteMediaType(id);
         return ResponseEntity.ok().build();
