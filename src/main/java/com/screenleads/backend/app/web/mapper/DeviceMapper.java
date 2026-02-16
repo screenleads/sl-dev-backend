@@ -20,7 +20,10 @@ public class DeviceMapper {
                 device.getWidth(),
                 device.getHeight(),
                 toDeviceTypeDTO(device.getType()),
-                toCompanyRefDTO(device.getCompany()));
+                toCompanyRefDTO(device.getCompany()),
+                device.getOnline(),
+                device.getLastSeenAt(),
+                device.getLastHeartbeatAt());
     }
 
     public static DeviceTypeDTO toDeviceTypeDTO(DeviceType type) {

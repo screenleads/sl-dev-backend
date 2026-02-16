@@ -1,4 +1,3 @@
-// src/main/java/com/screenleads/backend/app/web/controller/DevicesController.java
 package com.screenleads.backend.app.web.controller;
 
 import java.util.List;
