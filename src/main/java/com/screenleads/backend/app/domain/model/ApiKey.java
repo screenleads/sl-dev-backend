@@ -222,4 +222,15 @@ public class ApiKey {
         this.usageCount++;
         this.lastUsedAt = LocalDateTime.now();
     }
+
+    /**
+     * Determina si esta es una key LIVE o TEST basándose en el prefijo
+     * @return true si es LIVE (sk_live_*), false si es TEST (sk_test_*)
+     */
+    public boolean isLive() {
+        if (keyPrefix == null) {
+            return false; // Default a TEST si no hay prefijo
+        }
+        return keyPrefix.startsWith("sk_live_");
+    }
 }
