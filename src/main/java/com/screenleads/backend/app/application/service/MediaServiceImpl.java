@@ -46,11 +46,6 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
-    public List<com.screenleads.backend.app.domain.model.MediaType> getAllMediaTypes() {
-        return mediaTypeRepository.findAll();
-    }
-
-    @Override
     public Optional<MediaDTO> getMediaById(Long id) {
         return mediaRepository.findById(id).map(this::convertToDTO);
     }
@@ -76,16 +71,16 @@ public class MediaServiceImpl implements MediaService {
     public void deleteMedia(Long id) {
         mediaRepository.deleteById(id);
     }
-    
+
     @Override
     public MediaDTO saveMediaFromUpload(String url, String type) {
         // Determinar el MediaType ID basado en el tipo de archivo
         Long mediaTypeId = determineMediaTypeId(type);
-        
+
         // Buscar el MediaType en la BD
         var mediaType = mediaTypeRepository.findById(mediaTypeId)
                 .orElseThrow(() -> new IllegalArgumentException("MediaType not found with id: " + mediaTypeId));
-        
+
         // Obtener la compañía del usuario autenticado
         Long companyId = getCurrentCompanyId();
         Company company = null;
@@ -93,17 +88,17 @@ public class MediaServiceImpl implements MediaService {
             company = companyRepository.findById(companyId)
                     .orElseThrow(() -> new IllegalArgumentException("Company not found with id: " + companyId));
         }
-        
+
         // Crear y guardar la Media
         Media media = new Media();
         media.setSrc(url);
         media.setType(mediaType);
         media.setCompany(company);
-        
+
         Media savedMedia = mediaRepository.save(media);
         return convertToDTO(savedMedia);
     }
-    
+
     private Long determineMediaTypeId(String type) {
         // Mapear el tipo de archivo al ID del MediaType en la BD
         // Esto puede variar según tu configuración de MediaTypes
@@ -113,14 +108,14 @@ public class MediaServiceImpl implements MediaService {
             default -> 1L; // Por defecto imagen
         };
     }
-    
+
     private Long getCurrentCompanyId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated())
             return null;
         return resolveCompanyId(auth);
     }
-    
+
     private Long resolveCompanyId(Authentication auth) {
         Object principal = auth.getPrincipal();
 

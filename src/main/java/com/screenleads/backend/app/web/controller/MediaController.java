@@ -52,13 +52,6 @@ public class MediaController {
         return ResponseEntity.ok(mediaService.getAllMedias());
     }
 
-    @PreAuthorize("@perm.can('media', 'read')")
-    @CrossOrigin
-    @GetMapping("/medias/types")
-    public ResponseEntity<List<com.screenleads.backend.app.domain.model.MediaType>> getMediaTypes() {
-        return ResponseEntity.ok(mediaService.getAllMediaTypes());
-    }
-
     // ---------------- UPLOAD (SÍNCRONO) ----------------
 
     @PreAuthorize("@perm.can('media', 'write')")
@@ -96,7 +89,7 @@ public class MediaController {
 
             // Guardar Media en la base de datos
             MediaDTO savedMedia = mediaService.saveMediaFromUpload(result.mainUrl(), result.type());
-            
+
             // Limpiar temporal
             deleteTempFile(tmp);
 
