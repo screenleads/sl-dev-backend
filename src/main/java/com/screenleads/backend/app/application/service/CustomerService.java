@@ -72,6 +72,13 @@ public interface CustomerService {
     Page<CustomerDTO> searchCustomers(CustomerSearchCriteria criteria, Pageable pageable);
 
     /**
+     * Lista todos los customers
+     * 
+     * @return Lista de todos los customers
+     */
+    List<CustomerDTO> findAll();
+
+    /**
      * Elimina un customer (soft delete)
      * 
      * @param id ID del customer

@@ -332,6 +332,15 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<CustomerDTO> findAll() {
+        log.info("Listing all customers");
+        return customerRepository.findAll().stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public void deleteCustomer(Long id) {
         log.info("Deleting customer ID: {}", id);
 

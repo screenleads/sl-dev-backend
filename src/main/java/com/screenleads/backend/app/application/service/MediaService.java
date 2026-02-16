@@ -7,6 +7,8 @@ import com.screenleads.backend.app.web.dto.MediaDTO;
 
 public interface MediaService {
     List<MediaDTO> getAllMedias();
+    
+    List<com.screenleads.backend.app.domain.model.MediaType> getAllMediaTypes();
 
     Optional<MediaDTO> getMediaById(Long id);
 

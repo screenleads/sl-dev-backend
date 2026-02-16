@@ -46,6 +46,11 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
+    public List<com.screenleads.backend.app.domain.model.MediaType> getAllMediaTypes() {
+        return mediaTypeRepository.findAll();
+    }
+
+    @Override
     public Optional<MediaDTO> getMediaById(Long id) {
         return mediaRepository.findById(id).map(this::convertToDTO);
     }

@@ -79,6 +79,15 @@ public class CustomerController {
     // ========== Búsqueda ==========
 
     @PreAuthorize("@perm.can('customer', 'read')")
+    @GetMapping
+    @Operation(summary = "Listar todos los customers")
+    public ResponseEntity<List<CustomerDTO>> getAllCustomers() {
+        log.info("GET /api/customers - Listing all customers");
+        List<CustomerDTO> customers = customerService.findAll();
+        return ResponseEntity.ok(customers);
+    }
+
+    @PreAuthorize("@perm.can('customer', 'read')")
     @GetMapping("/email/{email}")
     @Operation(summary = "Buscar customer por email")
     public ResponseEntity<CustomerDTO> getCustomerByEmail(@PathVariable String email) {
