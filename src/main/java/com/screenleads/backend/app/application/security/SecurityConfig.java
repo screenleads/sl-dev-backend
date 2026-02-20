@@ -72,6 +72,9 @@ public class SecurityConfig {
                                                 // /auth/me requiere autenticación
                                                 .requestMatchers("/auth/me").authenticated()
 
+                                                // SSO: login/registro con Firebase público
+                                                .requestMatchers(HttpMethod.POST, "/api/customers/sso-login").permitAll()
+
                                                 // Invitations: verify es público, el resto requiere auth
                                                 .requestMatchers(HttpMethod.GET, "/api/invitations/verify").permitAll()
 
