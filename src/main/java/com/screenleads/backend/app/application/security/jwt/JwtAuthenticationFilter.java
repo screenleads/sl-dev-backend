@@ -39,11 +39,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
-    // Rutas públicas (no requieren autenticación)
-    private static final String[] WHITELIST = new String[] {
+        // Rutas públicas (no requieren autenticación)
+        private static final String[] WHITELIST = new String[] {
             // Auth: SOLO login y refresh son públicos (NO /auth/me)
             "/auth/login",
             "/auth/refresh",
+
+            // SSO login de customers (Firebase)
+            "/api/customers/sso-login",
 
             // Swagger / OpenAPI
             "/v3/api-docs/**",
@@ -56,7 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // WebSocket público (handshake/info)
             "/chat-socket/**",
             "/ws/status"
-    };
+        };
 
     private final JwtService jwtService; // extractUsername(), isTokenValid(), ...
     private final UserDetailsService userDetailsService;
