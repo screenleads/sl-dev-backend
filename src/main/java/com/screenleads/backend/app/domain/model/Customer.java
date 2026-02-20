@@ -38,6 +38,10 @@ public class Customer extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // Identificador principal (email o teléfono)
+    @Column(name = "identifier", nullable = false, length = 320)
+    private String identifier;
     
     // === Datos personales ===
     @Column(name = "first_name", length = 100)
@@ -211,6 +215,9 @@ public class Customer extends Auditable {
      * Retorna el identificador principal (email o teléfono)
      */
     public String getPrimaryIdentifier() {
+        if (identifier != null) {
+            return identifier;
+        }
         if (email != null) {
             return email;
         }
@@ -220,6 +227,18 @@ public class Customer extends Auditable {
         return "user-" + id;
     }
     
+    /**
+     * Establece el identificador principal (email o teléfono)
+     */
+    public void setPrimaryIdentifier() {
+        if (email != null) {
+            this.identifier = email;
+        } else if (phone != null) {
+            this.identifier = phone;
+        } else {
+            this.identifier = "user-" + id;
+        }
+    }
     /**
      * Verifica si el usuario ha dado consentimiento para marketing
      */

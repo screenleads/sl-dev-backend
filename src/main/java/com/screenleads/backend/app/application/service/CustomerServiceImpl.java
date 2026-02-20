@@ -75,30 +75,33 @@ public class CustomerServiceImpl implements CustomerService {
 
         // Crear customer
         Customer customer = Customer.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .email(request.getEmail())
-                .phone(request.getPhone())
-                .birthDate(request.getBirthDate())
-                .gender(request.getGender())
-                .city(request.getCity())
-                .postalCode(request.getPostalCode())
-                .country(request.getCountry())
-                .preferredLanguage(request.getPreferredLanguage() != null ? request.getPreferredLanguage() : "es")
-                .socialProfiles(request.getSocialProfiles())
-                .marketingOptIn(request.getMarketingOptIn())
-                .dataProcessingConsent(request.getDataProcessingConsent())
-                .thirdPartyDataSharing(request.getThirdPartyDataSharing())
-                .emailVerified(false)
-                .phoneVerified(false)
-                .engagementScore(0)
-                .segment(UserSegment.COLD)
-                .totalRedemptions(0)
-                .uniquePromotionsRedeemed(0)
-                .lifetimeValue(BigDecimal.ZERO)
-                .firstInteractionAt(Instant.now())
-                .lastInteractionAt(Instant.now())
-                .build();
+            .firstName(request.getFirstName())
+            .lastName(request.getLastName())
+            .email(request.getEmail())
+            .phone(request.getPhone())
+            .birthDate(request.getBirthDate())
+            .gender(request.getGender())
+            .city(request.getCity())
+            .postalCode(request.getPostalCode())
+            .country(request.getCountry())
+            .preferredLanguage(request.getPreferredLanguage() != null ? request.getPreferredLanguage() : "es")
+            .socialProfiles(request.getSocialProfiles())
+            .marketingOptIn(request.getMarketingOptIn())
+            .dataProcessingConsent(request.getDataProcessingConsent())
+            .thirdPartyDataSharing(request.getThirdPartyDataSharing())
+            .emailVerified(false)
+            .phoneVerified(false)
+            .engagementScore(0)
+            .segment(UserSegment.COLD)
+            .totalRedemptions(0)
+            .uniquePromotionsRedeemed(0)
+            .lifetimeValue(BigDecimal.ZERO)
+            .firstInteractionAt(Instant.now())
+            .lastInteractionAt(Instant.now())
+            .build();
+
+        // Rellenar identifier
+        customer.setPrimaryIdentifier();
 
         // Añadir método de autenticación
         customer.addAuthMethod(request.getAuthMethod());
