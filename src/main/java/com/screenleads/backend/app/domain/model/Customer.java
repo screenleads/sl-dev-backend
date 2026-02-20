@@ -34,6 +34,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Customer extends Auditable {
+        @Enumerated(EnumType.STRING)
+        @Column(name = "identifier_type", nullable = false, length = 20)
+        private LeadIdentifierType identifierType;
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -233,10 +236,13 @@ public class Customer extends Auditable {
     public void setPrimaryIdentifier() {
         if (email != null) {
             this.identifier = email;
+            this.identifierType = LeadIdentifierType.EMAIL;
         } else if (phone != null) {
             this.identifier = phone;
+            this.identifierType = LeadIdentifierType.PHONE;
         } else {
             this.identifier = "user-" + id;
+            this.identifierType = LeadIdentifierType.OTHER;
         }
     }
     /**
