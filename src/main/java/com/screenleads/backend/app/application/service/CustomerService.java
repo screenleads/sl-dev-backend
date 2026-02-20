@@ -141,4 +141,13 @@ public interface CustomerService {
      * @param customerId ID del customer
      */
     void updateLifetimeValue(Long customerId);
+
+    /**
+     * Obtiene todos los customers que han canjeado promociones de una compañía
+     * La relación es: Customer -> PromotionRedemption -> Promotion -> Company
+     * 
+     * @param companyId ID de la compañía
+     * @return Lista de customers únicos que han canjeado promociones de la compañía
+     */
+    List<CustomerDTO> findCustomersByCompany(Long companyId);
 }

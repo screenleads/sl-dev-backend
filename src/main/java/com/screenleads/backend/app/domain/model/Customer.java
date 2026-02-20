@@ -34,9 +34,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Customer extends Auditable {
-        @Enumerated(EnumType.STRING)
-        @Column(name = "identifier_type", nullable = false, length = 20)
-        private LeadIdentifierType identifierType;
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,6 +42,10 @@ public class Customer extends Auditable {
     // Identificador principal (email o teléfono)
     @Column(name = "identifier", nullable = false, length = 320)
     private String identifier;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "identifier_type", nullable = false, length = 20)
+    private LeadIdentifierType identifierType;
     
     // === Datos personales ===
     @Column(name = "first_name", length = 100)

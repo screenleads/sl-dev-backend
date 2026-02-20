@@ -548,6 +548,20 @@ public class CustomerServiceImpl implements CustomerService {
         log.info("Lifetime value updated to {} for customer: {}", lifetimeValue, customerId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<CustomerDTO> findCustomersByCompany(Long companyId) {
+        log.info("Finding customers for company ID: {}", companyId);
+        
+        List<Customer> customers = customerRepository.findByCompanyId(companyId);
+        
+        log.info("Found {} unique customers for company: {}", customers.size(), companyId);
+        
+        return customers.stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
     // ==================== Métodos privados ====================
 
     private CustomerDTO mapToDTO(Customer customer) {

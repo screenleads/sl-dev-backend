@@ -63,6 +63,7 @@ public class CustomerController {
                 createReq.setFirstName(request.getDisplayName());
                 createReq.setLastName("");
                 createReq.setPhone(null);
+                createReq.setAuthMethod(com.screenleads.backend.app.domain.model.AuthMethod.GOOGLE);
                 customer = customerService.createCustomer(createReq);
             }
             // Aquí podrías emitir tu propio token JWT si lo necesitas
@@ -122,6 +123,15 @@ public class CustomerController {
     public ResponseEntity<List<CustomerDTO>> getAllCustomers() {
         log.info("GET /api/customers - Listing all customers");
         List<CustomerDTO> customers = customerService.findAll();
+        return ResponseEntity.ok(customers);
+    }
+
+    @PreAuthorize("@perm.can('customer', 'read')")
+    @GetMapping("/company/{companyId}")
+    @Operation(summary = "Obtener customers de una compañía", description = "Retorna todos los customers que han canjeado promociones de esta compañía")
+    public ResponseEntity<List<CustomerDTO>> getCustomersByCompany(@PathVariable Long companyId) {
+        log.info("GET /api/customers/company/{} - Finding customers by company", companyId);
+        List<CustomerDTO> customers = customerService.findCustomersByCompany(companyId);
         return ResponseEntity.ok(customers);
     }
 
