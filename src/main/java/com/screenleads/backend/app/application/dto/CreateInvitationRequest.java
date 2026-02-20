@@ -13,13 +13,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateInvitationRequest {
-    
+
     @NotBlank(message = "Email es obligatorio")
     @Email(message = "Email debe ser válido")
     private String email;
-    
+
     @NotNull(message = "Role ID es obligatorio")
     private Long roleId;
-    
+
     private String customMessage;
 }

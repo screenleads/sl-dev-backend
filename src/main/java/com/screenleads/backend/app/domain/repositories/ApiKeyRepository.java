@@ -15,7 +15,7 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, Long> {
 
     // Buscar por prefijo solamente
     Optional<ApiKey> findByKeyPrefix(String keyPrefix);
-    
+
     // Buscar por hash de key (uso interno si necesario)
     Optional<ApiKey> findByKeyHash(String keyHash);
 }

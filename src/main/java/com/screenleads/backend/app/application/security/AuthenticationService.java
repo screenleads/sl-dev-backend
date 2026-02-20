@@ -251,8 +251,7 @@ public class AuthenticationService {
     @Transactional
     public JwtResponse acceptInvitation(AcceptInvitationRequest request) {
         // Convertir AcceptInvitationRequest a AcceptInvitationRequest del servicio
-        com.screenleads.backend.app.application.dto.AcceptInvitationRequest serviceRequest = 
-            new com.screenleads.backend.app.application.dto.AcceptInvitationRequest();
+        com.screenleads.backend.app.application.dto.AcceptInvitationRequest serviceRequest = new com.screenleads.backend.app.application.dto.AcceptInvitationRequest();
         serviceRequest.setToken(request.getToken());
         serviceRequest.setEmail(request.getEmail());
         serviceRequest.setName(request.getName());
@@ -266,8 +265,7 @@ public class AuthenticationService {
         // Autenticar al nuevo usuario
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-            );
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
         } catch (AuthenticationException e) {
             log.error("Authentication failed for newly created user: {}", request.getUsername(), e);
             throw new RuntimeException("Error en la autenticación del usuario recién creado");

@@ -193,7 +193,7 @@ public class CompaniesServiceImpl implements CompaniesService {
     public CompanyDTO syncStripeData(Long companyId) throws BillingException {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new IllegalArgumentException(COMPANY_NOT_FOUND_WITH_ID + companyId));
-        
+
         Company updatedCompany = stripeBillingService.syncStripeData(company);
         return convertToDTO(updatedCompany);
     }
@@ -203,7 +203,7 @@ public class CompaniesServiceImpl implements CompaniesService {
     public String createCheckoutSession(Long companyId) throws BillingException {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new IllegalArgumentException(COMPANY_NOT_FOUND_WITH_ID + companyId));
-        
+
         return stripeBillingService.createCheckoutSession(company);
     }
 
@@ -212,7 +212,7 @@ public class CompaniesServiceImpl implements CompaniesService {
     public String createBillingPortalSession(Long companyId) throws BillingException {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new IllegalArgumentException(COMPANY_NOT_FOUND_WITH_ID + companyId));
-        
+
         return stripeBillingService.createBillingPortalSession(company);
     }
 

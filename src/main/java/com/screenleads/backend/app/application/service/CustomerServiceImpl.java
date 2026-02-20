@@ -120,14 +120,15 @@ public class CustomerServiceImpl implements CustomerService {
 
         // Enviar email de bienvenida al cliente
         try {
-            // Buscar la compañía asociada si existe (puede ser null para clientes sin compañía asignada aún)
+            // Buscar la compañía asociada si existe (puede ser null para clientes sin
+            // compañía asignada aún)
             Long companyId = null; // TODO: Extraer companyId del contexto o request si está disponible
             emailService.sendCustomerWelcomeEmail(saved, companyId);
             log.info("Welcome email sent to customer: {}", saved.getEmail());
         } catch (Exception e) {
             // No lanzar excepción para no bloquear el registro del cliente
-            log.error("Failed to send customer welcome email to: {} - Error: {}", 
-                     saved.getEmail(), e.getMessage());
+            log.error("Failed to send customer welcome email to: {} - Error: {}",
+                    saved.getEmail(), e.getMessage());
         }
 
         return mapToDTO(saved);

@@ -54,7 +54,8 @@ public class DevicesController {
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    // @PreAuthorize removed - Allow devices to update themselves (e.g., device name)
+    // @PreAuthorize removed - Allow devices to update themselves (e.g., device
+    // name)
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar dispositivo")
     public ResponseEntity<DeviceDTO> updateDevice(@PathVariable Long id, @RequestBody DeviceDTO deviceDTO) {

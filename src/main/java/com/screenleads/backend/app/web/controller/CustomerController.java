@@ -1,3 +1,7 @@
+import com.screenleads.backend.app.web.dto.SSOLoginRequest;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseToken;
+import com.google.firebase.auth.FirebaseAuthException;
 package com.screenleads.backend.app.web.controller;
 
 import java.util.List;
@@ -35,6 +39,38 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "Customers", description = "Gestión de clientes finales que canjean promociones")
 @RequiredArgsConstructor
 public class CustomerController {
+
+    /**
+     * Registro/login SSO con Firebase
+     */
+    @PostMapping("/sso-login")
+    @Operation(summary = "Registro/login SSO con Firebase", description = "Permite registrar o loguear un customer usando SSO (Google, Facebook, etc) validando el token de Firebase")
+    public ResponseEntity<?> ssoLogin(@RequestBody SSOLoginRequest request) {
+        try {
+            // Validar el token de Firebase
+            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(request.getFirebaseToken());
+            // Comprobar que el email del token coincide con el del request
+            if (request.getEmail() == null || !request.getEmail().equalsIgnoreCase(decodedToken.getEmail())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email no coincide con el token");
+            }
+            // Buscar o crear el customer
+            CustomerDTO customer = customerService.findByEmail(request.getEmail());
+            if (customer == null) {
+                // Crear nuevo customer
+                CreateCustomerRequest createReq = new CreateCustomerRequest();
+                createReq.setEmail(request.getEmail());
+                createReq.setFirstName(request.getDisplayName());
+                createReq.setLastName("");
+                createReq.setPhone(null);
+                customer = customerService.createCustomer(createReq);
+            }
+            // Aquí podrías emitir tu propio token JWT si lo necesitas
+            return ResponseEntity.ok(customer);
+        } catch (FirebaseAuthException e) {
+            log.error("Error validando token Firebase", e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token Firebase inválido: " + e.getMessage());
+        }
+    }
 
     private final CustomerService customerService;
 

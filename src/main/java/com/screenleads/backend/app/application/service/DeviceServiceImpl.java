@@ -77,7 +77,7 @@ public class DeviceServiceImpl implements DeviceService {
         if (dto.type() == null || dto.type().id() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Device type is required");
         }
-        
+
         DeviceType type = deviceTypeRepository.findById(dto.type().id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_TYPE_NOT_FOUND));
 
@@ -106,20 +106,22 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public DeviceDTO updateDevice(Long id, DeviceDTO deviceDTO) {
         log.info("🔧 updateDevice called - ID: {}, DTO: {}", id, deviceDTO);
-        
+
         Device device = deviceRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_NOT_FOUND));
-        
-        log.info("✅ Device found - ID: {}, UUID: {}, Company: {}", device.getId(), device.getUuid(), device.getCompany());
+
+        log.info("✅ Device found - ID: {}, UUID: {}, Company: {}", device.getId(), device.getUuid(),
+                device.getCompany());
 
         if (deviceDTO.type() == null || deviceDTO.type().id() == null || deviceDTO.type().id() == 0) {
             log.error("❌ Invalid device type: {}", deviceDTO.type());
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Device type is required and must have a valid ID");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Device type is required and must have a valid ID");
         }
 
         DeviceType type = deviceTypeRepository.findById(deviceDTO.type().id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DEVICE_TYPE_NOT_FOUND));
-        
+
         log.info("✅ Device type found - ID: {}, Type: {}", type.getId(), type.getType());
 
         device.setUuid(deviceDTO.uuid());
@@ -138,9 +140,11 @@ public class DeviceServiceImpl implements DeviceService {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, COMPANY_NOT_FOUND));
             device.setCompany(company);
         } else {
-            log.info("🏢 Keeping existing company - ID: {}", device.getCompany() != null ? device.getCompany().getId() : "null");
+            log.info("🏢 Keeping existing company - ID: {}",
+                    device.getCompany() != null ? device.getCompany().getId() : "null");
         }
-        // Si no se proporciona company o es inválido, mantener el company existente (no hacer nada)
+        // Si no se proporciona company o es inválido, mantener el company existente (no
+        // hacer nada)
 
         log.info("💾 Saving device...");
         Device updatedDevice = deviceRepository.save(device);

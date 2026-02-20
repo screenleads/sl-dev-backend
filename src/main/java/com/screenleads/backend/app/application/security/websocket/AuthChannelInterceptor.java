@@ -40,7 +40,7 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
                         Authentication authentication = new UsernamePasswordAuthenticationToken(
                                 userDetails, null, userDetails.getAuthorities());
                         accessor.setUser(authentication);
-                        
+
                         // Extraer deviceId si viene en los headers
                         String deviceIdHeader = accessor.getFirstNativeHeader("X-Device-Id");
                         if (deviceIdHeader != null) {

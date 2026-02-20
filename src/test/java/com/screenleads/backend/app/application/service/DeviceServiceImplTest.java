@@ -196,7 +196,8 @@ class DeviceServiceImplTest {
             // Arrange
             DeviceTypeDTO typeDTO = new DeviceTypeDTO(1L, "TABLET", true);
             CompanyRefDTO companyDTO = new CompanyRefDTO(100L, "Test Company");
-            DeviceDTO inputDTO = new DeviceDTO(null, "new-uuid", "New Device", 1920.0, 1080.0, typeDTO, companyDTO, null, null, null);
+            DeviceDTO inputDTO = new DeviceDTO(null, "new-uuid", "New Device", 1920.0, 1080.0, typeDTO, companyDTO,
+                    null, null, null);
 
             when(deviceRepository.findOptionalByUuid("new-uuid")).thenReturn(Optional.empty());
             when(deviceTypeRepository.findById(1L)).thenReturn(Optional.of(testDeviceType));
@@ -243,7 +244,8 @@ class DeviceServiceImplTest {
         void whenSaveDeviceWithInvalidType_thenThrowsException() {
             // Arrange
             DeviceTypeDTO typeDTO = new DeviceTypeDTO(999L, "INVALID", true);
-            DeviceDTO inputDTO = new DeviceDTO(null, "new-uuid", "New Device", 1920.0, 1080.0, typeDTO, null, null, null, null);
+            DeviceDTO inputDTO = new DeviceDTO(null, "new-uuid", "New Device", 1920.0, 1080.0, typeDTO, null, null,
+                    null, null);
 
             when(deviceTypeRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -261,7 +263,8 @@ class DeviceServiceImplTest {
             // Arrange
             DeviceTypeDTO typeDTO = new DeviceTypeDTO(1L, "TABLET", true);
             CompanyRefDTO companyDTO = new CompanyRefDTO(999L, "Invalid");
-            DeviceDTO inputDTO = new DeviceDTO(null, "new-uuid", "New Device", 1920.0, 1080.0, typeDTO, companyDTO, null, null, null);
+            DeviceDTO inputDTO = new DeviceDTO(null, "new-uuid", "New Device", 1920.0, 1080.0, typeDTO, companyDTO,
+                    null, null, null);
 
             when(deviceRepository.findOptionalByUuid("new-uuid")).thenReturn(Optional.empty());
             when(deviceTypeRepository.findById(1L)).thenReturn(Optional.of(testDeviceType));
@@ -280,7 +283,8 @@ class DeviceServiceImplTest {
         void whenSaveDeviceWithoutCompany_thenThrowsException() {
             // Arrange
             DeviceTypeDTO typeDTO = new DeviceTypeDTO(1L, "TABLET", true);
-            DeviceDTO inputDTO = new DeviceDTO(null, "new-uuid", "New Device", 1920.0, 1080.0, typeDTO, null, null, null, null);
+            DeviceDTO inputDTO = new DeviceDTO(null, "new-uuid", "New Device", 1920.0, 1080.0, typeDTO, null, null,
+                    null, null);
 
             when(deviceTypeRepository.findById(1L)).thenReturn(Optional.of(testDeviceType));
             when(deviceRepository.findOptionalByUuid("new-uuid")).thenReturn(Optional.empty());
@@ -327,7 +331,8 @@ class DeviceServiceImplTest {
         void whenUpdateDeviceNotExists_thenThrowsException() {
             // Arrange
             DeviceTypeDTO typeDTO = new DeviceTypeDTO(1L, "TABLET", true);
-            DeviceDTO updateDTO = new DeviceDTO(999L, "uuid", "Device", 1920.0, 1080.0, typeDTO, null, null, null, null);
+            DeviceDTO updateDTO = new DeviceDTO(999L, "uuid", "Device", 1920.0, 1080.0, typeDTO, null, null, null,
+                    null);
 
             when(deviceRepository.findById(999L)).thenReturn(Optional.empty());
 

@@ -25,14 +25,14 @@ public class ApiKeyMapper {
         dto.setScopes(apiKey.getScopes());
         dto.setCompanyScope(apiKey.getCompanyScope());
         dto.setUsageCount(apiKey.getUsageCount());
-        
+
         // Campos de revocación
         dto.setRevokedAt(apiKey.getRevokedAt());
         dto.setRevokedReason(apiKey.getRevokedReason());
         if (apiKey.getRevokedBy() != null) {
             dto.setRevokedById(apiKey.getRevokedBy().getId());
         }
-        
+
         // Determinar si es live o test por el prefijo
         dto.setLive(apiKey.getKeyPrefix() != null && apiKey.getKeyPrefix().startsWith("sk_live_"));
 

@@ -15,12 +15,12 @@ public class ApiKeyDTO {
     private String scopes; // Reemplaza "permissions"
     private Long companyScope;
     private Integer usageCount;
-    
+
     // Campos de revocación
     private LocalDateTime revokedAt;
     private String revokedReason;
     private Long revokedById;
-    
+
     // Indicador de ambiente
     private Boolean isLive;
 

@@ -20,22 +20,23 @@ public class RateLimitService {
 
     private static final int TEST_KEY_LIMIT_PER_MINUTE = 100;
     private static final int LIVE_KEY_LIMIT_PER_MINUTE = 1000;
-    
+
     // Map: apiKeyId -> RequestWindow
     private final Map<Long, RequestWindow> requestWindows = new ConcurrentHashMap<>();
 
     /**
      * Verifica si la API key puede realizar una petición
+     * 
      * @param apiKeyId ID de la API key
-     * @param isLive true si es live key, false si es test
+     * @param isLive   true si es live key, false si es test
      * @return true si puede hacer la petición, false si excede el límite
      */
     public boolean allowRequest(Long apiKeyId, boolean isLive) {
         int limit = isLive ? LIVE_KEY_LIMIT_PER_MINUTE : TEST_KEY_LIMIT_PER_MINUTE;
-        
-        RequestWindow window = requestWindows.computeIfAbsent(apiKeyId, 
-            k -> new RequestWindow(Instant.now()));
-        
+
+        RequestWindow window = requestWindows.computeIfAbsent(apiKeyId,
+                k -> new RequestWindow(Instant.now()));
+
         return window.allowRequest(limit);
     }
 
@@ -45,14 +46,14 @@ public class RateLimitService {
     public RateLimitInfo getRateLimitInfo(Long apiKeyId, boolean isLive) {
         int limit = isLive ? LIVE_KEY_LIMIT_PER_MINUTE : TEST_KEY_LIMIT_PER_MINUTE;
         RequestWindow window = requestWindows.get(apiKeyId);
-        
+
         if (window == null) {
             return new RateLimitInfo(limit, limit, 60);
         }
-        
+
         int remaining = Math.max(0, limit - window.getCount());
         long resetIn = window.getSecondsUntilReset();
-        
+
         return new RateLimitInfo(limit, remaining, resetIn);
     }
 
@@ -62,11 +63,9 @@ public class RateLimitService {
     @Scheduled(fixedRate = 300000) // 5 minutos
     public void cleanupOldWindows() {
         Instant fiveMinutesAgo = Instant.now().minusSeconds(300);
-        
-        requestWindows.entrySet().removeIf(entry -> 
-            entry.getValue().getWindowStart().isBefore(fiveMinutesAgo)
-        );
-        
+
+        requestWindows.entrySet().removeIf(entry -> entry.getValue().getWindowStart().isBefore(fiveMinutesAgo));
+
         log.debug("🧹 Limpieza de rate limit windows. Activas: {}", requestWindows.size());
     }
 

@@ -28,10 +28,10 @@ public class ApiKey {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-    
+
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
-    
+
     @Column(name = "last_used_at")
     private LocalDateTime lastUsedAt;
 
@@ -43,17 +43,17 @@ public class ApiKey {
     private Long companyScope; // NULL = acceso global, ID = compañía específica
 
     private String name; // Nombre descriptivo de la API Key
-    
+
     @Column(length = 1000)
     private String description; // Descripción de la API Key
 
     // ===== CAMPOS DE REVOCACIÓN =====
     @Column(name = "revoked_at")
     private LocalDateTime revokedAt;
-    
+
     @Column(name = "revoked_reason", length = 500)
     private String revokedReason;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "revoked_by")
     private User revokedBy;
@@ -225,6 +225,7 @@ public class ApiKey {
 
     /**
      * Determina si esta es una key LIVE o TEST basándose en el prefijo
+     * 
      * @return true si es LIVE (sk_live_*), false si es TEST (sk_test_*)
      */
     public boolean isLive() {

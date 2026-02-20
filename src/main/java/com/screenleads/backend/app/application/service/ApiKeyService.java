@@ -8,6 +8,7 @@ import java.util.Optional;
 public interface ApiKeyService {
     /**
      * Crea una nueva API key con hash seguro
+     * 
      * @return Objeto con la API key Y la key en texto plano (solo visible una vez)
      */
     ApiKeyCreationResult createApiKey(String clientId, String scopes, int daysValid, boolean isLive);
@@ -36,15 +37,17 @@ public interface ApiKeyService {
 
     /**
      * Revoca una API key permanentemente
-     * @param id ID de la key a revocar
-     * @param reason Motivo de la revocación
+     * 
+     * @param id              ID de la key a revocar
+     * @param reason          Motivo de la revocación
      * @param revokedByUserId ID del usuario que revoca
      */
     ApiKey revokeApiKey(Long id, String reason, Long revokedByUserId);
 
     /**
      * Rota una API key (crea una nueva y marca la vieja como revocada)
-     * @param id ID de la key a rotar
+     * 
+     * @param id        ID de la key a rotar
      * @param daysValid Días de validez para la nueva key
      * @return Resultado con la nueva key en texto plano
      */
@@ -52,6 +55,7 @@ public interface ApiKeyService {
 
     /**
      * Valida una API key en texto plano contra su hash
+     * 
      * @param rawApiKey Key en texto plano
      * @return Optional con la ApiKey si es válida
      */

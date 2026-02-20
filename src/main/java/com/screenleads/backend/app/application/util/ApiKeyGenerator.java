@@ -11,7 +11,7 @@ import java.util.Base64;
  */
 @Component
 public class ApiKeyGenerator {
-    
+
     private static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final String LIVE_PREFIX = "sk_live_";
@@ -20,6 +20,7 @@ public class ApiKeyGenerator {
 
     /**
      * Genera una nueva API key completa con prefijo
+     * 
      * @param isLive true para ambiente live, false para test
      * @return API key completa: sk_live_xxxxx... o sk_test_xxxxx...
      */
@@ -38,6 +39,7 @@ public class ApiKeyGenerator {
 
     /**
      * Hashea una API key usando BCrypt
+     * 
      * @param apiKey La key en texto plano
      * @return Hash BCrypt de la key
      */
@@ -50,7 +52,8 @@ public class ApiKeyGenerator {
 
     /**
      * Verifica si una API key coincide con un hash
-     * @param rawApiKey API key en texto plano
+     * 
+     * @param rawApiKey    API key en texto plano
      * @param hashedApiKey Hash almacenado en BD
      * @return true si coincide, false si no
      */
@@ -64,6 +67,7 @@ public class ApiKeyGenerator {
     /**
      * Extrae el prefijo visible de una API key (primeros 12 caracteres)
      * Ejemplo: "sk_live_abc1"
+     * 
      * @param apiKey API key completa
      * @return Prefijo de 12 caracteres
      */
@@ -80,7 +84,7 @@ public class ApiKeyGenerator {
     private String generateRandomString(int byteLength) {
         byte[] randomBytes = new byte[byteLength];
         secureRandom.nextBytes(randomBytes);
-        
+
         // Codificar en base64 URL-safe y eliminar caracteres problemáticos
         return Base64.getUrlEncoder()
                 .withoutPadding()
@@ -91,6 +95,7 @@ public class ApiKeyGenerator {
 
     /**
      * Valida el formato de una API key
+     * 
      * @param apiKey Key a validar
      * @return true si el formato es válido
      */
@@ -98,18 +103,19 @@ public class ApiKeyGenerator {
         if (apiKey == null || apiKey.isEmpty()) {
             return false;
         }
-        
+
         // Debe empezar con sk_live_ o sk_test_
         if (!apiKey.startsWith(LIVE_PREFIX) && !apiKey.startsWith(TEST_PREFIX)) {
             return false;
         }
-        
+
         // Longitud mínima razonable
         return apiKey.length() >= 20;
     }
 
     /**
      * Determina si una API key es de ambiente live o test
+     * 
      * @param apiKey Key a verificar
      * @return true si es live, false si es test
      */

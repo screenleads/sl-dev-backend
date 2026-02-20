@@ -70,7 +70,8 @@ class ApiKeyServiceImplTest {
         when(apiKeyRepository.save(any(ApiKey.class))).thenReturn(testApiKey);
 
         // Act
-        ApiKeyService.ApiKeyCreationResult result = apiKeyService.createApiKey("client-123", "customers:read,campaigns:write", 30, true);
+        ApiKeyService.ApiKeyCreationResult result = apiKeyService.createApiKey("client-123",
+                "customers:read,campaigns:write", 30, true);
 
         // Assert
         assertThat(result).isNotNull();
@@ -181,7 +182,8 @@ class ApiKeyServiceImplTest {
         when(apiKeyRepository.save(any(ApiKey.class))).thenReturn(testApiKey);
 
         // Act
-        ApiKeyService.ApiKeyCreationResult result = apiKeyService.createApiKeyByDbId(1L, "customers:read,customers:write,campaigns:read,campaigns:write", 90, true);
+        ApiKeyService.ApiKeyCreationResult result = apiKeyService.createApiKeyByDbId(1L,
+                "customers:read,customers:write,campaigns:read,campaigns:write", 90, true);
 
         // Assert
         assertThat(result).isNotNull();

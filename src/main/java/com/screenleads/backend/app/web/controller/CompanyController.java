@@ -108,7 +108,12 @@ public class CompanyController {
     }
 
     // DTOs para respuestas
-    private record ErrorResponse(String message) {}
-    private record CheckoutResponse(String checkoutUrl) {}
-    private record BillingPortalResponse(String portalUrl) {}
+    private record ErrorResponse(String message) {
+    }
+
+    private record CheckoutResponse(String checkoutUrl) {
+    }
+
+    private record BillingPortalResponse(String portalUrl) {
+    }
 }

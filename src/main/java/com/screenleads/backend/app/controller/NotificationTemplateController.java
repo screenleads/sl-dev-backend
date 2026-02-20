@@ -207,7 +207,7 @@ public class NotificationTemplateController {
         if (content == null || variables == null) {
             return content;
         }
-        
+
         String result = content;
         for (Map.Entry<String, String> entry : variables.entrySet()) {
             String placeholder = "{{" + entry.getKey() + "}}";

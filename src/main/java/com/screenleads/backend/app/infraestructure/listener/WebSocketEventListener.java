@@ -23,7 +23,7 @@ public class WebSocketEventListener {
     private void handleSessionConnected(SessionConnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         Long deviceId = (Long) accessor.getSessionAttributes().get("deviceId");
-        
+
         if (deviceId != null) {
             log.info("Device {} conectado al websocket", deviceId);
             updateDeviceStatus(deviceId, true);
@@ -36,7 +36,7 @@ public class WebSocketEventListener {
     private void handleSessionDisconnect(SessionDisconnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         Long deviceId = (Long) accessor.getSessionAttributes().get("deviceId");
-        
+
         if (deviceId != null) {
             log.info("Device {} desconectado del websocket", deviceId);
             updateDeviceStatus(deviceId, false);

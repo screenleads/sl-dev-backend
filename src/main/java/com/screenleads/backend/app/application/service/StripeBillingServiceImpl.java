@@ -57,12 +57,12 @@ public class StripeBillingServiceImpl implements StripeBillingService {
             if (c.getStripeCustomerId() == null) {
                 c = syncStripeData(c);
             }
-            
+
             String customerId = c.getStripeCustomerId();
             if (customerId == null) {
                 throw new BillingException("No se pudo obtener el Customer ID de Stripe. Intenta sincronizar primero.");
             }
-            
+
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
                     .setCustomer(customerId)
@@ -74,7 +74,7 @@ public class StripeBillingServiceImpl implements StripeBillingService {
                                     .build())
                     .build();
             com.stripe.model.checkout.Session session = com.stripe.model.checkout.Session.create(params);
-            return session.getUrl();  // Retornar URL directamente en lugar de session ID
+            return session.getUrl(); // Retornar URL directamente en lugar de session ID
         } catch (BillingException e) {
             throw e;
         } catch (Exception e) {
@@ -86,9 +86,10 @@ public class StripeBillingServiceImpl implements StripeBillingService {
     public String createBillingPortalSession(Company c) throws BillingException {
         try {
             if (c.getStripeCustomerId() == null) {
-                throw new BillingException("La empresa no tiene un Customer ID de Stripe. Sincroniza primero con Stripe.");
+                throw new BillingException(
+                        "La empresa no tiene un Customer ID de Stripe. Sincroniza primero con Stripe.");
             }
-            
+
             com.stripe.param.billingportal.SessionCreateParams params = com.stripe.param.billingportal.SessionCreateParams
                     .builder()
                     .setCustomer(c.getStripeCustomerId())
@@ -144,14 +145,14 @@ public class StripeBillingServiceImpl implements StripeBillingService {
     public Company syncStripeData(Company company) throws BillingException {
         try {
             Customer customer;
-            
+
             // 1. Buscar customer en Stripe por nombre de empresa
             CustomerSearchParams searchParams = CustomerSearchParams.builder()
                     .setQuery(String.format("name:'%s'", company.getName().replace("'", "\\'")))
                     .build();
-            
+
             CustomerSearchResult customers = Customer.search(searchParams);
-            
+
             if (customers.getData().isEmpty()) {
                 // No existe el customer, crearlo automáticamente
                 CustomerCreateParams createParams = CustomerCreateParams.builder()
@@ -159,29 +160,29 @@ public class StripeBillingServiceImpl implements StripeBillingService {
                         .setDescription("Customer creado automáticamente desde ScreenLeads Dashboard")
                         .putMetadata("companyId", String.valueOf(company.getId()))
                         .build();
-                
+
                 customer = Customer.create(createParams);
             } else {
                 // Tomar el primer resultado
                 customer = customers.getData().get(0);
             }
-            
+
             company.setStripeCustomerId(customer.getId());
-            
+
             // 2. Buscar subscripción activa del customer
             SubscriptionListParams subParams = SubscriptionListParams.builder()
                     .setCustomer(customer.getId())
                     .setStatus(SubscriptionListParams.Status.ACTIVE)
                     .setLimit(1L)
                     .build();
-            
+
             SubscriptionCollection subscriptions = Subscription.list(subParams);
-            
+
             if (!subscriptions.getData().isEmpty()) {
                 Subscription subscription = subscriptions.getData().get(0);
                 company.setStripeSubscriptionId(subscription.getId());
                 company.setBillingStatus(BillingStatus.ACTIVE.name());
-                
+
                 // 3. Obtener subscription item ID (para usage-based billing)
                 if (!subscription.getItems().getData().isEmpty()) {
                     String subscriptionItemId = subscription.getItems().getData().get(0).getId();
@@ -193,10 +194,10 @@ public class StripeBillingServiceImpl implements StripeBillingService {
                 company.setStripeSubscriptionItemId(null);
                 company.setBillingStatus(BillingStatus.INCOMPLETE.name());
             }
-            
+
             // 4. Guardar y retornar
             return companyRepo.save(company);
-            
+
         } catch (Exception e) {
             throw new BillingException("Error al sincronizar datos de Stripe: " + e.getMessage(), e);
         }

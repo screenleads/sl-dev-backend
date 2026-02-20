@@ -151,8 +151,8 @@ public class EmailService {
     /**
      * Enviar email de invitación de usuario
      */
-    public void sendUserInvitationEmail(String toEmail, String inviterName, String companyName, 
-                                       String roleName, String token, String customMessage) {
+    public void sendUserInvitationEmail(String toEmail, String inviterName, String companyName,
+            String roleName, String token, String customMessage) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -162,8 +162,8 @@ public class EmailService {
             helper.setSubject(inviterName + " te invita a unirte a " + companyName + " en ScreenLeads");
 
             String acceptLink = frontendUrl + "/accept-invitation?token=" + token;
-            String htmlContent = buildInvitationEmailTemplate(toEmail, inviterName, companyName, 
-                                                              roleName, acceptLink, customMessage);
+            String htmlContent = buildInvitationEmailTemplate(toEmail, inviterName, companyName,
+                    roleName, acceptLink, customMessage);
 
             helper.setText(htmlContent, true);
 
@@ -180,7 +180,7 @@ public class EmailService {
      * Template HTML para el email de invitación de usuario
      */
     private String buildInvitationEmailTemplate(String email, String inviterName, String companyName,
-                                               String roleName, String acceptLink, String customMessage) {
+            String roleName, String acceptLink, String customMessage) {
         String messageSection = "";
         if (customMessage != null && !customMessage.isBlank()) {
             messageSection = """
@@ -204,58 +204,59 @@ public class EmailService {
                     <div style="background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
                         <h1 style="color: white; margin: 0; font-size: 28px;">📧 Invitación a ScreenLeads</h1>
                     </div>
-                    
+
                     <div style="background-color: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
                         <p style="font-size: 16px; margin-bottom: 20px;">Hola,</p>
-                        
+
                         <p style="font-size: 16px; margin-bottom: 20px;">
                             <strong>%s</strong> te ha invitado a unirte a <strong>%s</strong> en ScreenLeads.
                         </p>
-                        
+
                         %s
-                        
+
                         <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 25px 0;">
                             <p style="margin: 0 0 10px 0; color: #1976d2;"><strong>📧 Email de registro:</strong></p>
                             <p style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold;">%s</p>
-                            
+
                             <p style="margin: 0 0 10px 0; color: #1976d2;"><strong>🎭 Rol asignado:</strong></p>
                             <p style="margin: 0; font-size: 16px; font-weight: bold;">%s</p>
                         </div>
-                        
+
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="%s" 
-                               style="display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); 
-                                      color: white; text-decoration: none; border-radius: 8px; font-weight: bold; 
+                            <a href="%s"
+                               style="display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%);
+                                      color: white; text-decoration: none; border-radius: 8px; font-weight: bold;
                                       font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                                 ✅ Aceptar Invitación
                             </a>
                         </div>
-                        
+
                         <div style="background-color: #fff3e0; padding: 15px; border-radius: 8px; margin-top: 25px;">
                             <p style="margin: 0; font-size: 14px; color: #e65100;">
                                 ⚠️ <strong>Importante:</strong> Debes registrarte con el email <strong>%s</strong>
                             </p>
                         </div>
-                        
+
                         <p style="font-size: 14px; color: #666; margin-top: 25px;">
                             Este enlace expira en 7 días. Si no solicitaste esta invitación, puedes ignorar este email.
                         </p>
-                        
+
                         <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
-                        
+
                         <p style="font-size: 14px; color: #999; text-align: center; margin: 0;">
                             Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
                             <a href="%s" style="color: #667eea; word-break: break-all;">%s</a>
                         </p>
-                        
+
                         <p style="font-size: 12px; color: #999; text-align: center; margin-top: 20px;">
                             © 2026 ScreenLeads. Todos los derechos reservados.
                         </p>
                     </div>
                 </body>
                 </html>
-                """.formatted(inviterName, companyName, messageSection, email, roleName, 
-                            acceptLink, email, acceptLink, acceptLink);
+                """
+                .formatted(inviterName, companyName, messageSection, email, roleName,
+                        acceptLink, email, acceptLink, acceptLink);
     }
 
     /**
@@ -282,46 +283,47 @@ public class EmailService {
 
     /**
      * Enviar email de bienvenida al nuevo usuario
-     * Busca una plantilla personalizada de bienvenida o usa una plantilla por defecto
+     * Busca una plantilla personalizada de bienvenida o usa una plantilla por
+     * defecto
      */
     public void sendWelcomeEmail(User user) {
         try {
             log.info("Sending welcome email to user: {} ({})", user.getUsername(), user.getEmail());
-            
+
             // Intentar obtener plantilla personalizada de la compañía
             List<NotificationTemplate> templates = notificationTemplateService
                     .getTemplatesByCompanyAndChannel(user.getCompany().getId(), NotificationChannel.EMAIL);
-            
+
             NotificationTemplate welcomeTemplate = templates.stream()
-                    .filter(t -> t.getName().equalsIgnoreCase("WELCOME_EMAIL") || 
-                                 t.getName().contains("Bienvenida") ||
-                                 t.getName().contains("Welcome"))
+                    .filter(t -> t.getName().equalsIgnoreCase("WELCOME_EMAIL") ||
+                            t.getName().contains("Bienvenida") ||
+                            t.getName().contains("Welcome"))
                     .findFirst()
                     .orElse(null);
-            
+
             String subject;
             String htmlContent;
-            
+
             if (welcomeTemplate != null) {
                 // Usar plantilla personalizada
                 log.info("Using custom welcome template: {}", welcomeTemplate.getName());
-                
+
                 Map<String, String> variables = new HashMap<>();
                 variables.put("userName", user.getName());
                 variables.put("userFullName", user.getName() + " " + user.getLastName());
                 variables.put("userEmail", user.getEmail());
                 variables.put("companyName", user.getCompany().getName());
-                variables.put("roleName", user.getRole().getDescription() != null ? 
-                    user.getRole().getDescription() : user.getRole().getRole());
+                variables.put("roleName", user.getRole().getDescription() != null ? user.getRole().getDescription()
+                        : user.getRole().getRole());
                 variables.put("dashboardUrl", frontendUrl);
-                
+
                 subject = notificationTemplateService.renderTemplateSubject(welcomeTemplate, variables);
-                
+
                 // Si la plantilla tiene HTML body, usarlo; sino usar el body normal
-                String bodyTemplate = welcomeTemplate.getHtmlBody() != null ? 
-                        welcomeTemplate.getHtmlBody() : welcomeTemplate.getBody();
+                String bodyTemplate = welcomeTemplate.getHtmlBody() != null ? welcomeTemplate.getHtmlBody()
+                        : welcomeTemplate.getBody();
                 htmlContent = renderVariables(bodyTemplate, variables);
-                
+
                 // Incrementar contador de uso de la plantilla
                 notificationTemplateService.incrementUsageCount(welcomeTemplate.getId());
             } else {
@@ -330,19 +332,19 @@ public class EmailService {
                 subject = "¡Bienvenido a " + user.getCompany().getName() + " en ScreenLeads!";
                 htmlContent = buildDefaultWelcomeEmailTemplate(user);
             }
-            
+
             // Enviar el email
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            
+
             helper.setFrom(fromEmail);
             helper.setTo(user.getEmail());
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
-            
+
             mailSender.send(message);
             log.info("Welcome email sent successfully to: {}", user.getEmail());
-            
+
         } catch (Exception e) {
             // No lanzar excepción para no bloquear el registro del usuario
             // Solo loguear el error
@@ -364,46 +366,47 @@ public class EmailService {
 
     /**
      * Enviar email de bienvenida a nuevo cliente (consumidor final)
-     * Busca una plantilla personalizada de bienvenida para clientes o usa una plantilla por defecto
+     * Busca una plantilla personalizada de bienvenida para clientes o usa una
+     * plantilla por defecto
      */
     public void sendCustomerWelcomeEmail(com.screenleads.backend.app.domain.model.Customer customer, Long companyId) {
         try {
             log.info("Sending customer welcome email to: {} ({})", customer.getFirstName(), customer.getEmail());
-            
+
             // Intentar obtener plantilla personalizada de la compañía
             List<NotificationTemplate> templates = notificationTemplateService
                     .getTemplatesByCompanyAndChannel(companyId, NotificationChannel.EMAIL);
-            
+
             NotificationTemplate welcomeTemplate = templates.stream()
-                    .filter(t -> t.getName().equalsIgnoreCase("CUSTOMER_WELCOME_EMAIL") || 
-                                 t.getName().contains("Bienvenida Cliente") ||
-                                 t.getName().contains("Customer Welcome"))
+                    .filter(t -> t.getName().equalsIgnoreCase("CUSTOMER_WELCOME_EMAIL") ||
+                            t.getName().contains("Bienvenida Cliente") ||
+                            t.getName().contains("Customer Welcome"))
                     .findFirst()
                     .orElse(null);
-            
+
             String subject;
             String htmlContent;
-            
+
             if (welcomeTemplate != null) {
                 // Usar plantilla personalizada
                 log.info("Using custom customer welcome template: {}", welcomeTemplate.getName());
-                
+
                 Map<String, String> variables = new HashMap<>();
                 variables.put("customerName", customer.getFirstName());
-                variables.put("customerFullName", 
-                    (customer.getFirstName() != null ? customer.getFirstName() : "") + " " + 
-                    (customer.getLastName() != null ? customer.getLastName() : ""));
+                variables.put("customerFullName",
+                        (customer.getFirstName() != null ? customer.getFirstName() : "") + " " +
+                                (customer.getLastName() != null ? customer.getLastName() : ""));
                 variables.put("customerEmail", customer.getEmail());
                 variables.put("customerPhone", customer.getPhone() != null ? customer.getPhone() : "");
                 variables.put("frontendUrl", frontendUrl);
-                
+
                 subject = notificationTemplateService.renderTemplateSubject(welcomeTemplate, variables);
-                
+
                 // Si la plantilla tiene HTML body, usarlo; sino usar el body normal
-                String bodyTemplate = welcomeTemplate.getHtmlBody() != null ? 
-                        welcomeTemplate.getHtmlBody() : welcomeTemplate.getBody();
+                String bodyTemplate = welcomeTemplate.getHtmlBody() != null ? welcomeTemplate.getHtmlBody()
+                        : welcomeTemplate.getBody();
                 htmlContent = renderVariables(bodyTemplate, variables);
-                
+
                 // Incrementar contador de uso de la plantilla
                 notificationTemplateService.incrementUsageCount(welcomeTemplate.getId());
             } else {
@@ -412,33 +415,34 @@ public class EmailService {
                 subject = "¡Bienvenido a ScreenLeads!";
                 htmlContent = buildDefaultCustomerWelcomeEmailTemplate(customer);
             }
-            
+
             // Enviar el email
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            
+
             helper.setFrom(fromEmail);
             helper.setTo(customer.getEmail());
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
-            
+
             mailSender.send(message);
             log.info("Customer welcome email sent successfully to: {}", customer.getEmail());
-            
+
         } catch (Exception e) {
             // No lanzar excepción para no bloquear el registro del cliente
             // Solo loguear el error
-            log.error("Failed to send customer welcome email to: {} - Error: {}", 
-                     customer.getEmail(), e.getMessage(), e);
+            log.error("Failed to send customer welcome email to: {} - Error: {}",
+                    customer.getEmail(), e.getMessage(), e);
         }
     }
 
     /**
      * Plantilla HTML predeterminada para email de bienvenida de clientes
      */
-    private String buildDefaultCustomerWelcomeEmailTemplate(com.screenleads.backend.app.domain.model.Customer customer) {
+    private String buildDefaultCustomerWelcomeEmailTemplate(
+            com.screenleads.backend.app.domain.model.Customer customer) {
         String customerName = customer.getFirstName() != null ? customer.getFirstName() : "Cliente";
-        
+
         return """
                 <!DOCTYPE html>
                 <html lang="es">
@@ -466,7 +470,7 @@ public class EmailService {
                                             <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Hola, %s 👋</h2>
 
                                             <p style="color: #666666; line-height: 1.6; margin: 0 0 20px 0; font-size: 16px;">
-                                                ¡Nos alegra tenerte con nosotros! Tu registro ha sido completado exitosamente 
+                                                ¡Nos alegra tenerte con nosotros! Tu registro ha sido completado exitosamente
                                                 y ya puedes disfrutar de todas nuestras promociones y ofertas especiales.
                                             </p>
 
@@ -653,14 +657,13 @@ public class EmailService {
                 </html>
                 """
                 .formatted(
-                    user.getName(),
-                    user.getCompany().getName(),
-                    user.getUsername(),
-                    user.getEmail(),
-                    user.getCompany().getName(),
-                    user.getRole().getDescription() != null ? 
-                        user.getRole().getDescription() : user.getRole().getRole(),
-                    frontendUrl
-                );
+                        user.getName(),
+                        user.getCompany().getName(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getCompany().getName(),
+                        user.getRole().getDescription() != null ? user.getRole().getDescription()
+                                : user.getRole().getRole(),
+                        frontendUrl);
     }
 }

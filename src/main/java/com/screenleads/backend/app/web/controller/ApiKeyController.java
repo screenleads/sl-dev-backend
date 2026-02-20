@@ -42,26 +42,24 @@ public class ApiKeyController {
         if (apiKeyDTO.getClientId() == null) {
             return ResponseEntity.badRequest().build();
         }
-        
+
         // Calculate days valid from expiresAt or use default
         int daysValid = 365;
         if (apiKeyDTO.getExpiresAt() != null) {
             daysValid = (int) java.time.temporal.ChronoUnit.DAYS.between(
-                java.time.LocalDateTime.now(), 
-                apiKeyDTO.getExpiresAt()
-            );
+                    java.time.LocalDateTime.now(),
+                    apiKeyDTO.getExpiresAt());
         }
-        
+
         // Determinar si es live o test (por defecto live)
         boolean isLive = apiKeyDTO.isLive() != null ? apiKeyDTO.isLive() : true;
-        
+
         ApiKeyCreationResult result = apiKeyService.createApiKeyByDbId(
-            apiKeyDTO.getClientId(), 
-            apiKeyDTO.getScopes(), 
-            daysValid,
-            isLive
-        );
-        
+                apiKeyDTO.getClientId(),
+                apiKeyDTO.getScopes(),
+                daysValid,
+                isLive);
+
         if (apiKeyDTO.getName() != null) {
             result.getApiKey().setName(apiKeyDTO.getName());
         }
@@ -69,36 +67,36 @@ public class ApiKeyController {
             result.getApiKey().setDescription(apiKeyDTO.getDescription());
         }
         ApiKey saved = apiKeyService.saveApiKey(result.getApiKey());
-        
+
         // IMPORTANTE: Devolver la key en texto plano SOLO al crear
         return ResponseEntity.ok(Map.of(
-            "apiKey", ApiKeyMapper.toDto(saved),
-            "rawKey", result.getRawKey() // Solo visible una vez
+                "apiKey", ApiKeyMapper.toDto(saved),
+                "rawKey", result.getRawKey() // Solo visible una vez
         ));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiKeyDTO> updateApiKey(@PathVariable Long id, @RequestBody ApiKeyDTO apiKeyDTO) {
         return apiKeyService.getApiKeyById(id)
-            .map(existingKey -> {
-                if (apiKeyDTO.getName() != null) {
-                    existingKey.setName(apiKeyDTO.getName());
-                }
-                if (apiKeyDTO.getScopes() != null) {
-                    existingKey.setScopes(apiKeyDTO.getScopes());
-                }
-                if (apiKeyDTO.getDescription() != null) {
-                    existingKey.setDescription(apiKeyDTO.getDescription());
-                }
-                if (apiKeyDTO.getExpiresAt() != null) {
-                    existingKey.setExpiresAt(apiKeyDTO.getExpiresAt());
-                }
-                existingKey.setActive(apiKeyDTO.isActive());
-                
-                ApiKey updated = apiKeyService.saveApiKey(existingKey);
-                return ResponseEntity.ok(ApiKeyMapper.toDto(updated));
-            })
-            .orElse(ResponseEntity.notFound().build());
+                .map(existingKey -> {
+                    if (apiKeyDTO.getName() != null) {
+                        existingKey.setName(apiKeyDTO.getName());
+                    }
+                    if (apiKeyDTO.getScopes() != null) {
+                        existingKey.setScopes(apiKeyDTO.getScopes());
+                    }
+                    if (apiKeyDTO.getDescription() != null) {
+                        existingKey.setDescription(apiKeyDTO.getDescription());
+                    }
+                    if (apiKeyDTO.getExpiresAt() != null) {
+                        existingKey.setExpiresAt(apiKeyDTO.getExpiresAt());
+                    }
+                    existingKey.setActive(apiKeyDTO.isActive());
+
+                    ApiKey updated = apiKeyService.saveApiKey(existingKey);
+                    return ResponseEntity.ok(ApiKeyMapper.toDto(updated));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{id}/activate")
@@ -154,16 +152,17 @@ public class ApiKeyController {
             @PathVariable Long id,
             @RequestBody Map<String, String> body,
             Authentication authentication) {
-        
+
         String reason = body.getOrDefault("reason", "No especificado");
-        
+
         // Obtener ID del usuario autenticado (si existe)
         Long userId = null;
-        if (authentication != null && authentication.getPrincipal() instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
+        if (authentication != null && authentication
+                .getPrincipal() instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
             // Extraer ID del usuario si está disponible
             // Ajustar según tu implementación de UserDetails
         }
-        
+
         ApiKey revoked = apiKeyService.revokeApiKey(id, reason, userId);
         return ResponseEntity.ok(ApiKeyMapper.toDto(revoked));
     }
@@ -174,10 +173,10 @@ public class ApiKeyController {
     @PostMapping("/{id}/rotate")
     public ResponseEntity<Map<String, Object>> rotateApiKey(@PathVariable Long id) {
         ApiKeyCreationResult result = apiKeyService.rotateApiKey(id, 365); // 1 año default
-        
+
         return ResponseEntity.ok(Map.of(
-            "apiKey", ApiKeyMapper.toDto(result.getApiKey()),
-            "rawKey", result.getRawKey() // Nueva key en texto plano
+                "apiKey", ApiKeyMapper.toDto(result.getApiKey()),
+                "rawKey", result.getRawKey() // Nueva key en texto plano
         ));
     }
 }

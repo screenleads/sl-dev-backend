@@ -7,17 +7,17 @@ import com.screenleads.backend.app.domain.model.Device;
 import com.screenleads.backend.app.domain.model.BillingStatus;
 
 public record CompanyDTO(
-        Long id,
-        String name,
-        String observations,
-        MediaSlimDTO logo,
-        Long logoId, // ID del logo para crear/actualizar
-        List<Device> devices,
-        List<Advice> advices,
-        String primaryColor,
-        String secondaryColor,
-        String stripeCustomerId,
-        String stripeSubscriptionId,
-        String stripeSubscriptionItemId,
-        BillingStatus billingStatus) {
+                Long id,
+                String name,
+                String observations,
+                MediaSlimDTO logo,
+                Long logoId, // ID del logo para crear/actualizar
+                List<Device> devices,
+                List<Advice> advices,
+                String primaryColor,
+                String secondaryColor,
+                String stripeCustomerId,
+                String stripeSubscriptionId,
+                String stripeSubscriptionItemId,
+                BillingStatus billingStatus) {
 }

@@ -25,10 +25,10 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     private final UserRepository userRepository;
     private final ApiKeyGenerator apiKeyGenerator;
 
-    public ApiKeyServiceImpl(ApiKeyRepository apiKeyRepository, 
-                            ClientRepository clientRepository,
-                            UserRepository userRepository,
-                            ApiKeyGenerator apiKeyGenerator) {
+    public ApiKeyServiceImpl(ApiKeyRepository apiKeyRepository,
+            ClientRepository clientRepository,
+            UserRepository userRepository,
+            ApiKeyGenerator apiKeyGenerator) {
         this.apiKeyRepository = apiKeyRepository;
         this.clientRepository = clientRepository;
         this.userRepository = userRepository;
@@ -52,7 +52,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     private ApiKeyCreationResult createApiKeyInternal(ApiClient client, String scopes, int daysValid, boolean isLive) {
         // Generar API key en texto plano
         String rawApiKey = apiKeyGenerator.generateApiKey(isLive);
-        
+
         // Crear entidad ApiKey
         ApiKey key = new ApiKey();
         key.setKeyHash(apiKeyGenerator.hashApiKey(rawApiKey));
@@ -62,13 +62,13 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         key.setActive(true);
         key.setCreatedAt(LocalDateTime.now());
         key.setUsageCount(0);
-        
+
         if (daysValid > 0) {
             key.setExpiresAt(LocalDateTime.now().plusDays(daysValid));
         }
-        
+
         ApiKey saved = apiKeyRepository.save(key);
-        
+
         // Devolver resultado con la key en texto plano (solo visible una vez)
         return new ApiKeyCreationResult(saved, rawApiKey);
     }
@@ -142,20 +142,20 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     public ApiKey revokeApiKey(Long id, String reason, Long revokedByUserId) {
         ApiKey key = apiKeyRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(API_KEY_NOT_FOUND + id));
-        
+
         if (key.isRevoked()) {
             throw new IllegalStateException("La API key ya está revocada");
         }
-        
+
         key.setRevokedAt(LocalDateTime.now());
         key.setRevokedReason(reason);
         key.setActive(false);
-        
+
         if (revokedByUserId != null) {
             User revokedBy = userRepository.findById(revokedByUserId).orElse(null);
             key.setRevokedBy(revokedBy);
         }
-        
+
         return apiKeyRepository.save(key);
     }
 
@@ -163,28 +163,27 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     public ApiKeyCreationResult rotateApiKey(Long id, int daysValid) {
         ApiKey oldKey = apiKeyRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(API_KEY_NOT_FOUND + id));
-        
+
         // Revocar la key antigua
         oldKey.setRevokedAt(LocalDateTime.now());
         oldKey.setRevokedReason("Rotada - reemplazada por nueva key");
         oldKey.setActive(false);
         apiKeyRepository.save(oldKey);
-        
+
         // Crear nueva key con los mismos scopes y companyScope
         boolean isLive = apiKeyGenerator.isLiveKey(oldKey.getKeyPrefix() + "dummy");
         ApiKeyCreationResult newKey = createApiKeyInternal(
-            oldKey.getApiClient(), 
-            oldKey.getScopes(), 
-            daysValid, 
-            isLive
-        );
-        
+                oldKey.getApiClient(),
+                oldKey.getScopes(),
+                daysValid,
+                isLive);
+
         // Copiar metadatos
         newKey.getApiKey().setName(oldKey.getName());
         newKey.getApiKey().setDescription(oldKey.getDescription());
         newKey.getApiKey().setCompanyScope(oldKey.getCompanyScope());
         apiKeyRepository.save(newKey.getApiKey());
-        
+
         return newKey;
     }
 
@@ -193,14 +192,14 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         if (!apiKeyGenerator.isValidFormat(rawApiKey)) {
             return Optional.empty();
         }
-        
+
         String prefix = apiKeyGenerator.extractPrefix(rawApiKey);
-        
+
         // Buscar todas las keys con ese prefijo (debería ser solo una)
         List<ApiKey> candidateKeys = apiKeyRepository.findAll().stream()
                 .filter(k -> prefix.equals(k.getKeyPrefix()))
                 .toList();
-        
+
         for (ApiKey key : candidateKeys) {
             if (apiKeyGenerator.matchesHash(rawApiKey, key.getKeyHash())) {
                 // Verificar que la key sea válida
@@ -209,7 +208,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 }
             }
         }
-        
+
         return Optional.empty();
     }
 
