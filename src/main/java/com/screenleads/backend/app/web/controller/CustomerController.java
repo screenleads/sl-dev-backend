@@ -1,8 +1,9 @@
+package com.screenleads.backend.app.web.controller;
+
 import com.screenleads.backend.app.web.dto.SSOLoginRequest;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.FirebaseAuthException;
-package com.screenleads.backend.app.web.controller;
 
 import java.util.List;
 import java.util.Set;
