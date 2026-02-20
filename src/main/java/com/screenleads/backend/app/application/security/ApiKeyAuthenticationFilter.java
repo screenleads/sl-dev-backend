@@ -46,6 +46,13 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
+        // Permitir explícitamente la ruta SSO-login sin API-KEY ni client-id
+        String uri = request.getRequestURI();
+        if (uri.equals("/api/customers/sso-login")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // ✅ Si ya hay autenticación (por ejemplo JWT), no machacamos
         if (SecurityContextHolder.getContext().getAuthentication() != null) {
             filterChain.doFilter(request, response);
@@ -59,7 +66,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         }
 
         log.info("🔐 ApiKeyAuthenticationFilter - Path: {}, API-KEY: {}, client-id: {}",
-                request.getRequestURI(),
+                uri,
                 maskApiKey(apiKey),
                 clientId);
 
